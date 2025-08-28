@@ -1,5 +1,6 @@
 import express from 'express'; 
 import dotenv from 'dotenv';
+import { connectToDatabase } from './database/database.js';
 
 dotenv.config();
 
@@ -17,6 +18,6 @@ app.listen(PORT, () => {
 
 
 
-    
+connectToDatabase();
     
     
