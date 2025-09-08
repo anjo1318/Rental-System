@@ -1,10 +1,10 @@
 import React from "react";
 import {
-  SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,Platform,
+  SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 
-const { width: WINDOW_WIDTH } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 export default function Index() {
   const router = useRouter();
@@ -30,7 +30,10 @@ export default function Index() {
       </View>
 
       <View style={styles.bottom}>
-        <Text style={{ color: "black", fontSize: 13, marginBottom: 10 }}>How do you prefer to use this application</Text>
+        <Text style={styles.prompt}>
+          How do you prefer to use this application
+        </Text>
+
         <Pressable
           style={({ pressed }) => [
             styles.button,
@@ -39,10 +42,8 @@ export default function Index() {
           ]}
           onPress={() => router.push("/customer")}
           android_ripple={{ color: "#ddd" }}
-          accessibilityRole="button"
-          accessibilityLabel="Continue as Customer"
         >
-          <Text style={[styles.buttonText, {color: "#057474"}]}>Customer</Text>
+          <Text style={[styles.buttonText, { color: "#057474" }]}>Customer</Text>
         </Pressable>
 
         <Pressable
@@ -53,8 +54,6 @@ export default function Index() {
           ]}
           onPress={() => router.push("/owner")}
           android_ripple={{ color: "#ddd" }}
-          accessibilityRole="button"
-          accessibilityLabel="Continue as Owner"
         >
           <Text style={styles.buttonText}>Owner</Text>
         </Pressable>
@@ -67,45 +66,41 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#ffffff",
-    justifyContent: "space-between",
   },
   headerImage: {
     width: "100%",
-    height: Math.round(WINDOW_WIDTH * 0.45),
+    height: height * 0.22, // 25% of screen height
   },
   middle: {
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 18,
+    marginTop: height * 0.13, // 5% of screen height
   },
   logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 100,
+    width: width * 0.3, // 30% of screen width
+    height: width * 0.3,
+    marginBottom: height * 0.08,
   },
   bottom: {
-  marginBottom: 100,
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "flex-end",
-  paddingBottom: 32,
-  marginBottom: 220,   
-  gap: 12,
-
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingBottom: height * 0.12, // 8% of screen height
+    gap: 12,
+  },
+  prompt: {
+    color: "black",
+    fontSize: width * 0.035, // scalable text
+    marginBottom: 10,
   },
   button: {
-    width: 300,
-    paddingVertical: 14,
-    paddingHorizontal: 32, 
-    borderRadius: 12,
+    width: width * 0.8, // 80% of screen width
+    paddingVertical: height * 0.018,
+    borderRadius: 50,
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 50,
-    gap: 2-0,
-    borderWidth: 1,        
-    borderColor: "#057474"
+    borderWidth: 1,
+    borderColor: "#057474",
   },
-
   buttonLower: {
     backgroundColor: "#FFFFFF",
   },
@@ -114,7 +109,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: width * 0.04,
     fontWeight: "600",
   },
   buttonPressed: {
