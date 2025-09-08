@@ -91,4 +91,4 @@ const mobileLogin = async (req, res) => {
 
 
 
-export { login, verify };
+export { login, verify, mobileLogin};

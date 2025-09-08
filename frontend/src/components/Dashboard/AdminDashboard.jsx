@@ -10,7 +10,7 @@ const AdminDashboard = () => {
     const [showConfirmation, setShowConfirmation] = useState(false);
     const navigate = useNavigate();
 
-    console.log("AdminDashboard.jsx loaded");
+    console.log("AdminDashboard.jsx toooooo");
 
     const handleLogoutClick = () => {
         setShowConfirmation(true);
