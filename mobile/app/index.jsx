@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,
+  SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 
@@ -10,55 +10,69 @@ export default function Index() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <Image
-        source={require("../assets/images/header.png")}
-        style={styles.headerImage}
-        resizeMode="cover"
-        accessible
-        accessibilityLabel="Top banner"
+    <>
+      {/* Status bar settings */}
+      <StatusBar
+        barStyle="light-content"        // White icons/text
+        backgroundColor="#2007F7F"       // Android status bar color
+        translucent={false}             // Keep layout unaffected
       />
 
-      <View style={styles.middle}>
+      <SafeAreaView style={styles.safe}>
+        {/* Header image */}
         <Image
-          source={require("../assets/images/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
+          source={require("../assets/images/header.png")}
+          style={styles.headerImage}
+          resizeMode="cover"
           accessible
-          accessibilityLabel="App logo"
+          accessibilityLabel="Top banner"
         />
-      </View>
 
-      <View style={styles.bottom}>
-        <Text style={styles.prompt}>
-          How do you prefer to use this application
-        </Text>
+        {/* Logo section */}
+        <View style={styles.middle}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+            accessible
+            accessibilityLabel="App logo"
+          />
+        </View>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            styles.buttonLower,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={() => router.push("/customer")}
-          android_ripple={{ color: "#ddd" }}
-        >
-          <Text style={[styles.buttonText, { color: "#057474" }]}>Customer</Text>
-        </Pressable>
+        {/* Buttons section */}
+        <View style={styles.bottom}>
+          <Text style={styles.prompt}>
+            How do you prefer to use this application
+          </Text>
 
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            styles.buttonTop,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={() => router.push("/owner")}
-          android_ripple={{ color: "#ddd" }}
-        >
-          <Text style={styles.buttonText}>Owner</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              styles.buttonLower,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => router.push("/login")}
+            android_ripple={{ color: "#ddd" }}
+          >
+            <Text style={[styles.buttonText, { color: "#057474" }]}>
+              Customer
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              styles.buttonTop,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => router.push("/owner")}
+            android_ripple={{ color: "#ddd" }}
+          >
+            <Text style={styles.buttonText}>Owner</Text>
+          </Pressable>
+        </View>
+      </SafeAreaView>
+    </>
   );
 }
 
@@ -69,14 +83,14 @@ const styles = StyleSheet.create({
   },
   headerImage: {
     width: "100%",
-    height: height * 0.22, // 25% of screen height
+    height: height * 0.22,
   },
   middle: {
     alignItems: "center",
-    marginTop: height * 0.13, // 5% of screen height
+    marginTop: height * 0.13,
   },
   logo: {
-    width: width * 0.3, // 30% of screen width
+    width: width * 0.3,
     height: width * 0.3,
     marginBottom: height * 0.08,
   },
@@ -84,16 +98,16 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     alignItems: "center",
-    paddingBottom: height * 0.12, // 8% of screen height
+    paddingBottom: height * 0.12,
     gap: 12,
   },
   prompt: {
     color: "black",
-    fontSize: width * 0.035, // scalable text
+    fontSize: width * 0.035,
     marginBottom: 10,
   },
   button: {
-    width: width * 0.8, // 80% of screen width
+    width: width * 0.8,
     paddingVertical: height * 0.018,
     borderRadius: 50,
     alignItems: "center",
@@ -116,3 +130,4 @@ const styles = StyleSheet.create({
     opacity: 0.85,
   },
 });
+ 
