@@ -5,6 +5,7 @@ import adminRouter from './routes/admin.js';
 import userRouter from './routes/user.js';
 import ownerRouter from './routes/owner.js';
 import authRouter from './routes/auth.js';
+import customerRouter from './routes/customer.js'
 import cors from 'cors';
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
 app.use('/api/owner', ownerRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/customer', customerRouter);
 
 
 
