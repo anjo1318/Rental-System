@@ -1,35 +1,63 @@
-import { DataTypes } from 'sequelize';
-import sequelize from '../database/db.js';
+// models/Owner.js
+import { DataTypes } from "sequelize";
+import sequelize from "../database/database.js";
 
-const Admin = sequelize.define('Owner', {
+const Owner = sequelize.define("Owner", {
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
-    primaryKey: true
+    primaryKey: true,
   },
-  name: {
+
+  firstName: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: false,
   },
+
+  lastName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: "unique_email", 
+    unique: true,
+    validate: {
+      isEmail: true,
+    },
   },
-  password: {
+
+  phone: {
     type: DataTypes.STRING,
-    allowNull: false
+    allowNull: true,
   },
-  createdAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+
+  passwordHash: {
+    type: DataTypes.STRING,
+    allowNull: false,
   },
-  updatedAt: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW
+
+  bio: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+
+  address: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+
+  profileImage: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  defaultValue: "N/A",
   }
-}, {
-  tableName: 'owner',
-  timestamps: true  
 });
+
 export default Owner;
