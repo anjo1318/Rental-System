@@ -46,7 +46,7 @@ export default function Login() {
         await AsyncStorage.setItem("user", JSON.stringify(user));
 
         Alert.alert("Success", "Login successful!");
-        router.push("/signup/person_info");
+        router.push("/home");
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
