@@ -1,8 +1,7 @@
 // App.jsx
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
-import Navbar from "./components/Navbar";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
 import Sidebar from "./components/Sidebar";
 import Home from "./components/Dashboard/Home";
@@ -11,18 +10,25 @@ import Customers from "./components/Dashboard/Customers";
 import Settings from "./components/Dashboard/Settings";
 
 function App() {
-  return (
-    <div>
-      <Sidebar />
+  const location = useLocation();
+  const hideSidebar = location.pathname === "/";
 
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/admin-dashboard" element={< AdminDashboard/>} />
-        <Route path="/home" element={< Home/>} />
-        <Route path="/owners" element={< Owners/>} />
-        <Route path="/customers" element={< Customers/>} />
-        <Route path="/settings" element={< Settings/>} />
-      </Routes>
+  return (
+    <div className="flex">
+      {/* Sidebar stays fixed on all pages except login */}
+      {!hideSidebar && <Sidebar />}
+
+      {/* Content area */}
+      <main className="flex-1 flex items-center justify-center p-6">
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/admin-dashboard" element={<AdminDashboard />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/owners" element={<Owners />} />
+          <Route path="/customers" element={<Customers />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </main>
     </div>
   );
 }

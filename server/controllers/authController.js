@@ -48,37 +48,44 @@ const verify = (req, res) => {
 
 
 
-//di pa ok, dapat role based
 const mobileLogin = async (req, res) => {
+  console.log("Trying to login using mobileLogin");
   try {
     const { email, password } = req.body;
 
-    console.log(req.body);
+    console.log("Login attempt:", req.body);
 
-    const admin = await Customer.findOne({ where: { email } });
+    // 🔹 Use emailAddress instead of email (since that's your DB column)
+    const customer = await Customer.findOne({ where: { emailAddress: email } });
 
-    if (!admin) {
-      return res.status(404).json({ success: false, error: 'Admin not found' });
+    if (!customer) {
+      return res.status(404).json({ success: false, error: 'Customer not found' });
     }
 
-
-    const isMatch = await bcrypt.compare(password, admin.password);
+    // 🔹 Compare passwords
+    const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Wrong password' });
     }
 
+    // 🔹 Generate JWT with role = customer
     const token = jwt.sign(
-      { id: admin.id, role: admin.role },
+      { id: customer.id, role: 'customer' },
       process.env.JWT_KEY,
       { expiresIn: '10d' }
     );
 
-    console.log(`${admin.email}, successfully logged in`);
+    console.log(`${customer.emailAddress}, successfully logged in`);
 
+    // 🔹 Send response (build full name)
     res.status(200).json({
       success: true,
       token,
-      user: { id: admin.id, name: admin.name, role: admin.role },
+      user: { 
+        id: customer.id, 
+        name: `${customer.firstName} ${customer.lastName}`, 
+        role: 'customer' 
+      },
     });
 
   } catch (error) {
@@ -86,6 +93,8 @@ const mobileLogin = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+
 
 
 

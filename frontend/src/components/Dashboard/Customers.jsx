@@ -1,20 +1,12 @@
-import React, { useState } from 'react';
-import { useAuth } from '../../context/authContext';
-import { useNavigate } from 'react-router-dom';
+import React from 'react'
 
 const Customers = () => {
-   
-    const navigate = useNavigate();
+  return(
+    <div>
+      Customers.jsx tooooo
+    </div>
+  )
+}
 
-    console.log("Customers.jsx toooooo");
-
-
-    return (
-        <div>
-            <h1>Customers</h1>
-           
-        </div>
-    );
-};
 
 export default Customers;
