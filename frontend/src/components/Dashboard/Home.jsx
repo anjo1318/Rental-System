@@ -50,7 +50,6 @@ const Home = () => {
               </span>
             </p>
 
-            {/* ✅ Owner Info (First + Last Name only) */}
             {item.Owner && (
               <div className="mt-3 text-sm text-gray-700">
 

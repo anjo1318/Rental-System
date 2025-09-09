@@ -31,7 +31,7 @@ const Sidebar = () => {
     <div className="h-screen w-60 bg-gray-800 text-white flex flex-col p-4 justify-between">
       {/* Top links */}
       <div>
-        <h2 className="text-xl font-bold mb-6">My App</h2>
+        <h2 className="text-xl font-bold mb-6">EzRent</h2>
         <nav className="flex flex-col gap-2">
           {links.map((link) => (
             <Link
