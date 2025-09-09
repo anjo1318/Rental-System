@@ -1,15 +1,5 @@
 import React, { useState } from "react";
-import {
-  SafeAreaView,
-  View,
-  Image,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  Dimensions,
-  StatusBar,
-  ScrollView,
+import {SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -146,8 +136,6 @@ export default function PersonalInfo() {
   );
 }
 
-
-
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -262,7 +250,7 @@ const styles = StyleSheet.create({
     fontSize: width * 0.042,
     fontWeight: "600",
     color: "#333",
-    paddingVertical: height * 0.001,
+    paddingVertical: height * 0.002,
     marginBottom: 6, 
   },
 
@@ -282,9 +270,8 @@ const styles = StyleSheet.create({
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginTop: height * 0.03,
+    marginTop: height * 0.25,
     paddingHorizontal: width * 0.08,
-    marginTop: 170,
   },
 
 checkbox: {

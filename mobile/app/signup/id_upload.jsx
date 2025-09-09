@@ -1,18 +1,5 @@
 import React, { useState } from "react";
-import {
-  SafeAreaView,
-  View,
-  Image,
-  Text,
-  TextInput,
-  Pressable,
-  StyleSheet,
-  Dimensions,
-  StatusBar,
-  ScrollView,
-  Platform,
-  Image as RNImage,
-} from "react-native";
+import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -29,7 +16,6 @@ export default function PersonalInfo() {
   const [fullName1, setFullName1] = useState("");
   const [address1, setAddress1] = useState("");
   const [mobileNumber1, setMobileNumber1] = useState("");
-  const [iD, setID] = useState("");
   const [idNumber, setIdNumber] = useState("")
   const [photoId, setPhotoId] = useState(null);
   const [selfie, setSelfie] = useState(null);
@@ -135,7 +121,8 @@ export default function PersonalInfo() {
             placeholderTextColor="#888"
             value={mobileNumber}
             onChangeText={setMobileNumber}
-            autoCapitalize="phone-pad"
+            keyboardType="phone-pad"
+            autoCapitalize="none"
             onFocus={() => setFocusField("mobileNumber")}
             onBlur={() => setFocusField("")}
           />
@@ -175,7 +162,8 @@ export default function PersonalInfo() {
             placeholderTextColor="#888"
             value={mobileNumber1}
             onChangeText={setMobileNumber1}
-            autoCapitalize="phone-pad"
+            keyboardType="phone-pad"
+            autoCapitalize="none"
             onFocus={() => setFocusField("mobileNumber1")}
             onBlur={() => setFocusField("")}
           />
@@ -216,43 +204,37 @@ export default function PersonalInfo() {
             placeholderTextColor="#888"
             value={idNumber}
             onChangeText={setIdNumber}
-            autoCapitalize="phone-pad"
+            keyboardType="phone-pad"
+            autoCapitalize="none"
             onFocus={() => setFocusField("idNumber")}
             onBlur={() => setFocusField("")}
           />
 
 
           {/* Photo of valid ID */}
-<Pressable style={styles.input} onPress={pickIdPhoto}>
-  {photoId ? (
-    <Text style={styles.uploadText}>{photoId.split("/").pop()}</Text> 
-  ) : (
-    <>
-      <Text style={styles.uploadText}>Photo of Your Valid ID *</Text>
-      <Image
-        source={require("../../assets/images/upload.png")}
-        style={styles.iconRight}
-        resizeMode="contain"
-      />
-    </>
-  )}
-</Pressable>
+          <Pressable style={styles.uploadBox} onPress={pickIdPhoto}>
+            <Text style={styles.uploadText}>
+              {photoId ? photoId.split("/").pop() : "Photo of Your Valid ID *"}
+            </Text>
+            <Image
+              source={require("../../assets/images/upload.png")}
+              style={styles.iconRight}
+              resizeMode="contain"
+            />
+          </Pressable>
 
-{/* Selfie */}
-<Pressable style={styles.input} onPress={takeSelfie}>
-  {selfie ? (
-    <Text style={styles.uploadText}>{selfie.split("/").pop()}</Text>
-  ) : (
-    <>
-      <Text style={styles.uploadText}>Selfie *</Text>
-      <Image
-        source={require("../../assets/images/camera.png")}
-        style={styles.iconRight}
-        resizeMode="contain"
-      />
-    </>
-  )}
-</Pressable>
+          {/* Selfie */}
+          <Pressable style={styles.uploadBox} onPress={takeSelfie}>
+            <Text style={styles.uploadText}>
+              {selfie ? selfie.split("/").pop() : "Selfie *"}
+            </Text>
+            <Image
+              source={require("../../assets/images/camera.png")}
+              style={styles.iconRight}
+              resizeMode="contain"
+            />
+          </Pressable>
+
 
           {/* Next Button */}
           <Pressable
@@ -433,20 +415,33 @@ pickerOverlayText: {
   zIndex: 2,
 },
 
-  uploadText: {
-    color: "#888",
-    fontSize: width * 0.034,
-    textAlign: "left",         
-    paddingVertical: inputPaddingVertical, 
-    lineHeight: lockedHeight * 0.1,       
-  },
+  uploadBox: {
+  width: "100%",
+  minHeight: lockedHeight, // ensures minimum size
+  borderWidth: 1,
+  borderColor: "#057474",
+  borderRadius: 12,
+  backgroundColor: "#FFF6F6",
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "flex-start",
+  paddingHorizontal: 14,
+  paddingVertical: 10,
+  marginBottom: 16,
+},
 
-  uploadImage: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 12,
-    resizeMode: "cover",
-  },
+uploadText: {
+  fontSize: Math.min(width * 0.031, 18), // responsive but max 18
+  color: "#888",
+  flexShrink: 1, // allows text to shrink instead of overflow
+},
+
+iconRight: {
+  width: 24,
+  height: 24,
+  marginLeft: 10,
+  tintColor: "#057474",
+},
 
   cameraContainer: {
     width: "100%",

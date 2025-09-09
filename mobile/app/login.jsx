@@ -18,12 +18,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
+
+
+
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hidden, setHidden] = useState(true);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -107,14 +111,20 @@ export default function Login() {
           autoCapitalize="none"
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#888"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.passwordWrapper}>
+          <TextInput
+            style={styles.inputPassword}
+            placeholder="Password"
+            placeholderTextColor="#888"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={hidden} // toggle password visibility
+            autoCapitalize="none"
+          />
+          <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
+            <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
+          </Pressable>
+        </View>
 
         {/* Row: Remember Me + Forgot Password */}
         <View style={styles.row}>
@@ -199,11 +209,35 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 12,
     paddingVertical: height * 0.018,
+    backgroundColor: "#FFF6F6",
     paddingHorizontal: 14,
     marginBottom: 15,
     fontSize: width * 0.04,
     color: "#000",
   },
+
+   passwordWrapper: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#057474",
+    borderRadius: 12,
+    backgroundColor: "#FFF6F6",
+    paddingHorizontal: 14,
+    height: 50,
+    marginBottom: 15,
+  },
+
+  inputPassword: { 
+    flex: 1, 
+    fontSize: 16, 
+    color: "#000" },
+
+    eyeIcon: { 
+      marginLeft: 10 
+    },
+
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -211,7 +245,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  checkboxContainer: { flexDirection: "row", alignItems: "center" },
+  checkboxContainer: { 
+    flexDirection: "row", 
+    alignItems: "center" 
+  },
   checkbox: {
     width: 10,
     height: 10,
@@ -221,10 +258,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: { backgroundColor: "black" },
-  checkboxText: { fontSize: width * 0.03, color: "#000" },
-  checkmark: { color: "#fff", fontSize: 9, textAlign: "center", lineHeight: 7 },
-  forgotText: { fontSize: width * 0.03, color: "black" },
+  checkboxChecked: { 
+    backgroundColor: "black" 
+  },
+  checkboxText: { 
+    fontSize: width * 0.03, 
+    color: "#000" 
+  },
+
+  checkmark: { 
+    color: "#fff", 
+    fontSize: 9, 
+    textAlign: "center", 
+    lineHeight: 7 
+  },
+
+  forgotText: { 
+    fontSize: width * 0.03, 
+    color: "black" 
+  },
+
   button: {
     width: "60%",
     backgroundColor: "#057474",
