@@ -8,6 +8,7 @@ import Home from "./components/Dashboard/Home";
 import Owners from "./components/Dashboard/Owners";
 import Customers from "./components/Dashboard/Customers";
 import Settings from "./components/Dashboard/Settings";
+import Approvals from "./components/Dashboard/Approvals";
 
 function App() {
   const location = useLocation();
@@ -27,6 +28,7 @@ function App() {
           <Route path="/owners" element={<Owners />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/approvals" element={<Approvals />} />
         </Routes>
       </main>
     </div>
