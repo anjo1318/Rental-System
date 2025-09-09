@@ -15,6 +15,7 @@ const Sidebar = () => {
     { path: "/owners", label: "Owners" },
     { path: "/customers", label: "Customers" },
     { path: "/settings", label: "Settings" },
+    { path: "/approvals", label: "Approvals" },
   ];
 
   const handleLogoutClick = () => {
