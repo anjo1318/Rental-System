@@ -1,7 +1,22 @@
 import React, { useState } from "react";
-import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,} from "react-native";
+import {
+  SafeAreaView,
+  View,
+  Image,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  ScrollView,
+  Platform,
+  Image as RNImage,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { Picker } from "@react-native-picker/picker";
+import * as ImagePicker from "expo-image-picker";
 
 const { width, height } = Dimensions.get("window");
 
@@ -11,14 +26,42 @@ export default function PersonalInfo() {
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [fullName1, setFullName1] = useState("");
+  const [address1, setAddress1] = useState("");
+  const [mobileNumber1, setMobileNumber1] = useState("");
   const [iD, setID] = useState("");
-  const [idNumber, setIdNumber] = useState("");
-  const [photoId, setPhotoId] = useState("");
-  const [selfie, setSelfie] = useState("");
+  const [idNumber, setIdNumber] = useState("")
+  const [photoId, setPhotoId] = useState(null);
+  const [selfie, setSelfie] = useState(null);
+  const [idType, setIdType] = useState("");
   const [focusField, setFocusField] = useState("");
+  
+
   const isTextMode = (fieldName, value) => {
     const hasValue = value !== null && value !== "" && value !== undefined;
     return focusField === fieldName || hasValue;
+  };
+
+  // Pick image from gallery
+  const pickIdPhoto = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) return alert("Permission denied!");
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+    if (!result.canceled) setPhotoId(result.assets[0].uri);
+  };
+
+  // Take selfie using camera
+  const takeSelfie = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) return alert("Permission denied!");
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+    if (!result.canceled) setSelfie(result.assets[0].uri);
   };
 
   return (
@@ -60,16 +103,10 @@ export default function PersonalInfo() {
         </View>
 
         <View style={styles.container}>
+          {/* Full Name */}
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("fullName", fullName) && styles.placeholderInput,
-            ]}
-            placeholder={
-              !isTextMode("fullName", fullName)
-                ? "Full Name *"
-                : ""
-            }
+            style={[styles.input, !isTextMode("fullName", fullName) && styles.placeholderInput]}
+            placeholder={!isTextMode("fullName", fullName) ? "Full Name *" : ""}
             placeholderTextColor="#888"
             value={fullName}
             onChangeText={setFullName}
@@ -79,11 +116,9 @@ export default function PersonalInfo() {
             onBlur={() => setFocusField("")}
           />
 
+          {/* Address */}
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("address", address) && styles.placeholderInput,
-            ]}
+            style={[styles.input, !isTextMode("address", address) && styles.placeholderInput]}
             placeholder={!isTextMode("address", address) ? "Address *" : ""}
             placeholderTextColor="#888"
             value={address}
@@ -93,100 +128,136 @@ export default function PersonalInfo() {
             onBlur={() => setFocusField("")}
           />
 
+          {/* Mobile Number */}
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("mobileNumber",mobileNumber) && styles.placeholderInput,
-            ]}
+            style={[styles.input, !isTextMode("mobileNumber", mobileNumber) && styles.placeholderInput]}
             placeholder={!isTextMode("mobileNumber", mobileNumber) ? "Mobile Number *" : ""}
             placeholderTextColor="#888"
             value={mobileNumber}
             onChangeText={setMobileNumber}
             autoCapitalize="phone-pad"
-            onFocus={() => setFocusField("phoneNumber")}
+            onFocus={() => setFocusField("mobileNumber")}
             onBlur={() => setFocusField("")}
           />
 
+          {/* Guarantor 2 */}
           <Text style={styles.sub3Text}>Guarantor 2</Text>
           <Text style={styles.sub4Text}>
             People that can be contacted if renter is unavailable.
           </Text>
-          
+
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("fullName", fullName) && styles.placeholderInput,
-            ]}
-            placeholder={
-              !isTextMode("fullName", fullName)
-                ? "Full Name *"
-                : ""
-            }
+            style={[styles.input, !isTextMode("fullName1", fullName1) && styles.placeholderInput]}
+            placeholder={!isTextMode("fullName1", fullName1) ? "Full Name *" : ""}
             placeholderTextColor="#888"
-            value={fullName}
-            onChangeText={setFullName}
+            value={fullName1}
+            onChangeText={setFullName1}
             autoCapitalize="sentences"
             keyboardType="default"
-            onFocus={() => setFocusField("fullName")}
+            onFocus={() => setFocusField("fullName1")}
             onBlur={() => setFocusField("")}
           />
 
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("address", address) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("address", address) ? "Address *" : ""}
+            style={[styles.input, !isTextMode("address1", address1) && styles.placeholderInput]}
+            placeholder={!isTextMode("address1", address1) ? "Address *" : ""}
             placeholderTextColor="#888"
-            value={address}
-            onChangeText={setAddress}
+            value={address1}
+            onChangeText={setAddress1}
             autoCapitalize="sentences"
-            onFocus={() => setFocusField("address")}
+            onFocus={() => setFocusField("address1")}
             onBlur={() => setFocusField("")}
           />
 
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("mobileNumber",mobileNumber) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("mobileNumber", mobileNumber) ? "Mobile Number *" : ""}
+            style={[styles.input, !isTextMode("mobileNumber1", mobileNumber1) && styles.placeholderInput]}
+            placeholder={!isTextMode("mobileNumber1", mobileNumber1) ? "Mobile Number *" : ""}
             placeholderTextColor="#888"
-            value={mobileNumber}
-            onChangeText={setMobileNumber}
+            value={mobileNumber1}
+            onChangeText={setMobileNumber1}
             autoCapitalize="phone-pad"
-            onFocus={() => setFocusField("phoneNumber")}
+            onFocus={() => setFocusField("mobileNumber1")}
             onBlur={() => setFocusField("")}
           />
 
-
+          {/* ID Verification Section */}
           <Text style={styles.sub5Text}>ID Verification</Text>
           <Text style={styles.sub6Text}>
             Only JPEG, JPG and PNG files with max size of 4mb.
           </Text>
 
+         <View style={styles.pickerContainer}>
+            {/* Overlay placeholder text */}
+            {!idType && (
+              <Text style={styles.pickerOverlayText}>
+                Select Type of ID *
+              </Text>
+            )}
+
+            <Picker
+              selectedValue={idType}
+              onValueChange={(itemValue) => setIdType(itemValue)}
+              style={{ color: idType ? "#000" : "transparent", width: "100%" }}
+            >
+              <Picker.Item label="Select Type of ID " value="" color="#888" /> 
+              <Picker.Item label="Driver's ID" value="drivers" />
+              <Picker.Item label="Postal ID" value="postal" />
+              <Picker.Item label="SSS ID" value="sss" />
+              <Picker.Item label="PhilHealth ID" value="philhealth" />
+              <Picker.Item label="National ID" value="national" />
+            </Picker>
+          </View>
+
+
+
           <TextInput
-            style={[
-              styles.input,
-              !isTextMode("address", address) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("address", address) ? "Address *" : ""}
+            style={[styles.input, !isTextMode("idNumber", idNumber) && styles.placeholderInput]}
+            placeholder={!isTextMode("idNumber", idNumber) ? "Id Number *" : ""}
             placeholderTextColor="#888"
-            value={address}
-            onChangeText={setAddress}
-            autoCapitalize="sentences"
-            onFocus={() => setFocusField("address")}
+            value={idNumber}
+            onChangeText={setIdNumber}
+            autoCapitalize="phone-pad"
+            onFocus={() => setFocusField("idNumber")}
             onBlur={() => setFocusField("")}
           />
-          
-          
-          
 
+
+          {/* Photo of valid ID */}
+<Pressable style={styles.input} onPress={pickIdPhoto}>
+  {photoId ? (
+    <Text style={styles.uploadText}>{photoId.split("/").pop()}</Text> 
+  ) : (
+    <>
+      <Text style={styles.uploadText}>Photo of Your Valid ID *</Text>
+      <Image
+        source={require("../../assets/images/upload.png")}
+        style={styles.iconRight}
+        resizeMode="contain"
+      />
+    </>
+  )}
+</Pressable>
+
+{/* Selfie */}
+<Pressable style={styles.input} onPress={takeSelfie}>
+  {selfie ? (
+    <Text style={styles.uploadText}>{selfie.split("/").pop()}</Text>
+  ) : (
+    <>
+      <Text style={styles.uploadText}>Selfie *</Text>
+      <Image
+        source={require("../../assets/images/camera.png")}
+        style={styles.iconRight}
+        resizeMode="contain"
+      />
+    </>
+  )}
+</Pressable>
 
           {/* Next Button */}
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => router.push("/signup/address")}
+            onPress={() => router.push("/signup/review")}
           >
             <Text style={styles.buttonText}>Next</Text>
           </Pressable>
@@ -194,7 +265,7 @@ export default function PersonalInfo() {
           {/* Previous Button */}
           <Pressable
             style={({ pressed }) => [styles.previous, pressed && styles.previousPressed]}
-            onPress={() => router.push("/signup/review")}
+            onPress={() => router.push("/signup/address")}
           >
             <Text style={styles.previousText}>Previous</Text>
           </Pressable>
@@ -204,6 +275,7 @@ export default function PersonalInfo() {
   );
 }
 
+// Styles (untouched except adding uploadBox and uploadText)
 const inputFontSize = width * 0.04;
 const inputPaddingVertical = height * 0.015;
 const lockedHeight = inputPaddingVertical * 2 + inputFontSize + 10;
@@ -287,7 +359,7 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     color: "#000",
   },
-   sub3Text: {
+  sub3Text: {
     right: width * 0.34,
     fontSize: width * 0.04,
     fontWeight: "600",
@@ -300,7 +372,6 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     color: "#000",
     marginBottom: height * 0.02,
-    
   },
   sub5Text: {
     right: width * 0.310,
@@ -315,14 +386,12 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     color: "#000",
     marginBottom: height * 0.02,
-    
   },
   container: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.13,
-    
   },
   input: {
     width: "100%",
@@ -330,7 +399,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 14,
-    marginBottom: 15,
+    marginBottom: 16,
     fontSize: inputFontSize,
     color: "#000",
     borderColor: "#057474",
@@ -344,6 +413,59 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     transform: [{ translateY: -2 }],
   },
+  pickerContainer: { 
+    width: "100%",
+    height: lockedHeight,
+    borderWidth: 1,
+    borderRadius: 12,
+    borderColor: "#057474",
+    backgroundColor: "#FFF6F6",
+    justifyContent: "center",
+    marginBottom: 17,
+  },
+
+pickerOverlayText: {
+  position: "absolute",
+  top: 9,
+  left: 14,
+  fontSize: width * 0.03, // 👈 you control font size here
+  color: "#888",
+  zIndex: 2,
+},
+
+  uploadText: {
+    color: "#888",
+    fontSize: width * 0.034,
+    textAlign: "left",         
+    paddingVertical: inputPaddingVertical, 
+    lineHeight: lockedHeight * 0.1,       
+  },
+
+  uploadImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+    resizeMode: "cover",
+  },
+
+  cameraContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginVertical: height * 0.02,
+  },
+  cameraImage: {
+    width: "90%",
+    height: height * 0.05,
+  },
+
+  iconRight: {
+  position: "absolute",
+  right: 14,       
+  width: 20,      
+  tintColor: "#057474", 
+},
+
+
   button: {
     width: "100%",
     backgroundColor: "#057474",
