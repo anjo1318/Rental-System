@@ -30,17 +30,28 @@ export default function PersonalInfo() {
   const [hidden, setHidden] = useState(true); // password toggle
   const [date, setDate] = useState(null);
   const [show, setShow] = useState(false);
+
+  // which field is focused: "firstName", "middleName", "lastName", "email", "phoneNumber", "birthday", "gender", "password"
+  const [focusField, setFocusField] = useState("");
+
   const formattedDate = date
-    ? `${String(date.getDate()).padStart(2, "0")}/${
-        String(date.getMonth() + 1).padStart(2, "0")}/${
-        date.getFullYear()}`
+    ? `${String(date.getDate()).padStart(2, "0")}/${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}/${date.getFullYear()}`
     : "";
+
+  const isTextMode = (fieldName, value) => {
+    // value may be string or object (date)
+    const hasValue = value !== null && value !== "" && value !== undefined;
+    return focusField === fieldName || hasValue;
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1}}>
-        
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}
+      >
         <View style={styles.headerWrapper}>
           <Image
             source={require("../../assets/images/header.png")}
@@ -64,7 +75,7 @@ export default function PersonalInfo() {
 
         <View style={styles.photoContainer}>
           <Image
-            source={require("../../assets/images/personal_info.png")} 
+            source={require("../../assets/images/personal_info.png")}
             style={styles.photoImage}
             resizeMode="contain"
           />
@@ -72,56 +83,107 @@ export default function PersonalInfo() {
         </View>
 
         <View style={styles.container}>
+          {/* First Name */}
           <TextInput
-            style={styles.input}
-            placeholder="First Name *"
+            style={[
+              styles.input,
+              !isTextMode("firstName", firstName) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("firstName", firstName) ? "First Name *" : ""}
             placeholderTextColor="#888"
             value={firstName}
             onChangeText={setFirstName}
             autoCapitalize="sentences"
+            allowFontScaling={false}
+            onFocus={() => setFocusField("firstName")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Middle Name */}
           <TextInput
-            style={styles.input}
-            placeholder="Middle Name *"
+            style={[
+              styles.input,
+              !isTextMode("middleName", middleName) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("middleName", middleName) ? "Middle Name *" : ""}
             placeholderTextColor="#888"
             value={middleName}
             onChangeText={setMiddleName}
             autoCapitalize="sentences"
+            allowFontScaling={false}
+            onFocus={() => setFocusField("middleName")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Last Name */}
           <TextInput
-            style={styles.input}
-            placeholder="Last Name *"
+            style={[
+              styles.input,
+              !isTextMode("lastName", lastName) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("lastName", lastName) ? "Last Name *" : ""}
             placeholderTextColor="#888"
             value={lastName}
             onChangeText={setLastName}
             autoCapitalize="sentences"
+            allowFontScaling={false}
+            onFocus={() => setFocusField("lastName")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Email */}
           <TextInput
-            style={styles.input}
-            placeholder="Email *"
+            style={[
+              styles.input,
+              !isTextMode("email", email) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("email", email) ? "Email *" : ""}
             placeholderTextColor="#888"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
+            allowFontScaling={false}
+            onFocus={() => setFocusField("email")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Phone Number */}
           <TextInput
-            style={styles.input}
-            placeholder="Phone Number *"
+            style={[
+              styles.input,
+              !isTextMode("phoneNumber", phoneNumber) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("phoneNumber", phoneNumber) ? "Phone Number *" : ""}
             placeholderTextColor="#888"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="phone-pad"
+            allowFontScaling={false}
+            onFocus={() => setFocusField("phoneNumber")}
+            onBlur={() => setFocusField("")}
           />
-          {/* Birthday picker */}
+
+          {/* Birthday picker (Pressable) */}
           <Pressable
-            style={styles.input}
-            onPress={() => setShow(true)}
+            style={[styles.input /* container style */]}
+            onPress={() => {
+              setShow(true);
+              setFocusField("birthday");
+            }}
           >
-            <Text style={{ color: date ? "#000" : "#888" }}>
+            <Text
+              style={{
+                color: date ? "#000" : "#888",
+                fontSize: isTextMode("birthday", date) ? inputFontSize : inputFontSize * 0.8,
+                textAlignVertical: isTextMode("birthday", date) ? "center" : "top",
+                transform: [{ translateY: isTextMode("birthday", date) ? 0 : 7 }],
+              }}
+            >
               {date ? formattedDate : "Birthday *"}
             </Text>
           </Pressable>
+
           {show && (
             <DateTimePicker
               value={date || new Date()}
@@ -129,37 +191,54 @@ export default function PersonalInfo() {
               display="default"
               maximumDate={new Date()}
               onChange={(event, selectedDate) => {
-                const currentDate = selectedDate || date;
+                // selectedDate is undefined on dismiss in Android
+                if (selectedDate) {
+                  setDate(selectedDate);
+                }
                 setShow(false);
-                setDate(currentDate);
+                setFocusField(""); // clear focus after picker closes
               }}
             />
           )}
+
+          {/* Gender */}
           <TextInput
-            style={styles.input}
-            placeholder="Gender *"
+            style={[
+              styles.input,
+              !isTextMode("gender", gender) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("gender", gender) ? "Gender *" : ""}
             placeholderTextColor="#888"
             value={gender}
             onChangeText={setGender}
             autoCapitalize="words"
+            allowFontScaling={false}
+            onFocus={() => setFocusField("gender")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Password */}
           <View style={styles.passwordWrapper}>
             <TextInput
-              style={styles.inputPassword}
-              placeholder="Password *"
+              style={[
+                styles.inputPassword,
+                !isTextMode("password", password) && styles.placeholderInput,
+              ]}
+              placeholder={!isTextMode("password", password) ? "Password *" : ""}
               placeholderTextColor="#888"
               value={password}
               onChangeText={setPassword}
               autoCapitalize="none"
-              secureTextEntry={hidden}/>
+              secureTextEntry={hidden}
+              allowFontScaling={false}
+              onFocus={() => setFocusField("password")}
+              onBlur={() => setFocusField("")}
+            />
             <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
-              <Ionicons
-                name={hidden ? "eye-off" : "eye"}
-                size={24}
-                color="#888"
-              />
+              <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
             </Pressable>
           </View>
+
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
             onPress={() => router.push("/signup/address")}
@@ -171,6 +250,10 @@ export default function PersonalInfo() {
     </SafeAreaView>
   );
 }
+
+const inputFontSize = width * 0.04;
+const inputPaddingVertical = height * 0.015;
+const lockedHeight = inputPaddingVertical * 2 + inputFontSize + 10; // locked height
 
 const styles = StyleSheet.create({
   safe: {
@@ -194,45 +277,39 @@ const styles = StyleSheet.create({
   },
   titleText: {
     position: "absolute",
-    top: height * 0.10,
+    top: height * 0.1,
     left: width * 0.1,
     fontSize: width * 0.07,
     fontWeight: "700",
     color: "#fff",
   },
-
   headerTextRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
     paddingHorizontal: width * 0.08,
-    marginTop: height * 0.01, 
+    marginTop: height * 0.01,
   },
-
   stepText: {
     color: "#000",
     fontSize: width * 0.035,
     fontWeight: "900",
   },
-
   personalText: {
     color: "#000",
     fontSize: width * 0.035,
     fontWeight: "600",
   },
-
   photoContainer: {
     width: "100%",
     alignItems: "center",
     marginVertical: height * 0.02,
   },
-
   photoImage: {
     width: "90%",
     height: height * 0.05,
   },
-
   subText: {
     position: "absolute",
     top: height * 0.08,
@@ -241,44 +318,52 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     color: "#A95E09",
   },
-
   container: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.07,
   },
-
   input: {
     width: "100%",
+    height: lockedHeight,
     borderWidth: 1,
     borderRadius: 12,
-    paddingVertical: height * 0.015,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     marginBottom: 15,
-    fontSize: width * 0.04,
+    fontSize: inputFontSize,
+    lineHeight: Math.round(inputFontSize * 1.2),
     color: "#000",
-    borderColor: '#057474',
+    borderColor: "#057474",
     backgroundColor: "#FFF6F6",
+    textAlign: "left",
+    textAlignVertical: "center", // typed text centered
+    includeFontPadding: false,
+  },
+  placeholderInput: {
+    fontSize: inputFontSize * 0.8, // smaller placeholder
+    textAlignVertical: "top", // sits higher
+    transform: [{ translateY: -2 }],
   },
   passwordWrapper: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#ccc",
     borderRadius: 12,
     paddingHorizontal: 14,
     marginBottom: 15,
-    borderColor: '#057474',
+    borderColor: "#057474",
     backgroundColor: "#FFF6F6",
+    height: lockedHeight,
   },
   inputPassword: {
     flex: 1,
-    paddingVertical: height * 0.018,
-    fontSize: width * 0.04,
+    fontSize: inputFontSize,
+    lineHeight: Math.round(inputFontSize * 1.5),
     color: "#000",
-    
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   eyeIcon: {
     marginLeft: 10,

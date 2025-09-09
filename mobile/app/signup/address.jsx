@@ -13,11 +13,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
 
 const { width, height } = Dimensions.get("window");
 
-export default function PersonalInfo() {
+export default function AddressInfo() {
   const router = useRouter();
 
   const [houseBuilding, setHouseBuilding] = useState("");
@@ -28,11 +27,20 @@ export default function PersonalInfo() {
   const [country, setCountry] = useState("");
   const [zipCode, setZipCode] = useState("");
 
+  // track focus
+  const [focusField, setFocusField] = useState("");
+
+  const isTextMode = (fieldName, value) => {
+    const hasValue = value !== null && value !== "" && value !== undefined;
+    return focusField === fieldName || hasValue;
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1}}>
-        
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}
+      >
         <View style={styles.headerWrapper}>
           <Image
             source={require("../../assets/images/header.png")}
@@ -56,7 +64,7 @@ export default function PersonalInfo() {
 
         <View style={styles.photoContainer}>
           <Image
-            source={require("../../assets/images/address.png")} 
+            source={require("../../assets/images/address.png")}
             style={styles.photoImage}
             resizeMode="contain"
           />
@@ -64,84 +72,140 @@ export default function PersonalInfo() {
         </View>
 
         <View style={styles.container}>
+          {/* House No./Building No. */}
           <TextInput
-            style={styles.input}
-            placeholder="House No./Building No. *"
+            style={[
+              styles.input,
+              !isTextMode("houseBuilding", houseBuilding) && styles.placeholderInput,
+            ]}
+            placeholder={
+              !isTextMode("houseBuilding", houseBuilding)
+                ? "House No./Building No. *"
+                : ""
+            }
             placeholderTextColor="#888"
             value={houseBuilding}
             onChangeText={setHouseBuilding}
             autoCapitalize="sentences"
             keyboardType="default"
+            onFocus={() => setFocusField("houseBuilding")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Street */}
           <TextInput
-            style={styles.input}
-            placeholder="Street *"
+            style={[
+              styles.input,
+              !isTextMode("street", street) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("street", street) ? "Street *" : ""}
             placeholderTextColor="#888"
             value={street}
             onChangeText={setStreet}
             autoCapitalize="sentences"
+            onFocus={() => setFocusField("street")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Barangay */}
           <TextInput
-            style={styles.input}
-            placeholder="Barangay *"
+            style={[
+              styles.input,
+              !isTextMode("barangay", barangay) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("barangay", barangay) ? "Barangay *" : ""}
             placeholderTextColor="#888"
             value={barangay}
             onChangeText={setBarangay}
             autoCapitalize="sentences"
+            onFocus={() => setFocusField("barangay")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Town */}
           <TextInput
-            style={styles.input}
-            placeholder="Town *"
+            style={[
+              styles.input,
+              !isTextMode("town", town) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("town", town) ? "Town *" : ""}
             placeholderTextColor="#888"
             value={town}
             onChangeText={setTown}
             autoCapitalize="sentences"
+            onFocus={() => setFocusField("town")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Province */}
           <TextInput
-            style={styles.input}
-            placeholder="Province *"
+            style={[
+              styles.input,
+              !isTextMode("province", province) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("province", province) ? "Province *" : ""}
             placeholderTextColor="#888"
             value={province}
             onChangeText={setProvince}
-            keyboardType="default"
-            autoCapitalize="sentences"       
+            autoCapitalize="sentences"
+            onFocus={() => setFocusField("province")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Country */}
           <TextInput
-            style={styles.input}
-            placeholder="Country *"
+            style={[
+              styles.input,
+              !isTextMode("country", country) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("country", country) ? "Country *" : ""}
             placeholderTextColor="#888"
             value={country}
             onChangeText={setCountry}
             autoCapitalize="sentences"
+            onFocus={() => setFocusField("country")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Zip Code */}
           <TextInput
-            style={styles.input}
-            placeholder="Zip Code *"
+            style={[
+              styles.input,
+              !isTextMode("zipCode", zipCode) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("zipCode", zipCode) ? "Zip Code *" : ""}
             placeholderTextColor="#888"
             value={zipCode}
             onChangeText={setZipCode}
-            autoCapitalize="sentences"
+            keyboardType="numeric"
+            onFocus={() => setFocusField("zipCode")}
+            onBlur={() => setFocusField("")}
           />
+
+          {/* Next Button */}
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
             onPress={() => router.push("/signup/id_upload")}
           >
             <Text style={styles.buttonText}>Next</Text>
-            
           </Pressable>
+
+          {/* Previous Button */}
           <Pressable
             style={({ pressed }) => [styles.previous, pressed && styles.previousPressed]}
             onPress={() => router.push("/signup/person_info")}
           >
             <Text style={styles.previousText}>Previous</Text>
           </Pressable>
-          
-
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+const inputFontSize = width * 0.04;
+const inputPaddingVertical = height * 0.015;
+const lockedHeight = inputPaddingVertical * 2 + inputFontSize + 10;
 
 const styles = StyleSheet.create({
   safe: {
@@ -165,45 +229,39 @@ const styles = StyleSheet.create({
   },
   titleText: {
     position: "absolute",
-    top: height * 0.10,
+    top: height * 0.1,
     left: width * 0.1,
     fontSize: width * 0.07,
     fontWeight: "700",
     color: "#fff",
   },
-
   headerTextRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
     paddingHorizontal: width * 0.08,
-    marginTop: height * 0.01, 
+    marginTop: height * 0.01,
   },
-
   stepText: {
     color: "#000",
     fontSize: width * 0.035,
     fontWeight: "900",
   },
-
   personalText: {
     color: "#000",
     fontSize: width * 0.035,
     fontWeight: "600",
   },
-
   photoContainer: {
     width: "100%",
     alignItems: "center",
     marginVertical: height * 0.02,
   },
-
   photoImage: {
     width: "90%",
     height: height * 0.05,
   },
-
   subText: {
     position: "absolute",
     top: height * 0.08,
@@ -212,25 +270,31 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     color: "#A95E09",
   },
-
   container: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.07,
   },
-
   input: {
     width: "100%",
+    height: lockedHeight,
     borderWidth: 1,
     borderRadius: 12,
-    paddingVertical: height * 0.015,
     paddingHorizontal: 14,
     marginBottom: 15,
-    fontSize: width * 0.04,
+    fontSize: inputFontSize,
     color: "#000",
-    borderColor: '#057474',
+    borderColor: "#057474",
     backgroundColor: "#FFF6F6",
+    textAlign: "left",
+    textAlignVertical: "center", // keep text vertically centered
+    includeFontPadding: false,
+  },
+  placeholderInput: {
+    fontSize: inputFontSize * 0.8,
+    textAlignVertical: "top",
+    transform: [{ translateY: -2 }],
   },
   button: {
     width: "100%",
@@ -248,7 +312,7 @@ const styles = StyleSheet.create({
   buttonPressed: {
     opacity: 0.85,
   },
-   previous: {
+  previous: {
     width: "100%",
     backgroundColor: "#FFF",
     paddingVertical: height * 0.018,
