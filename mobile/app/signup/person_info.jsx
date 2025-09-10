@@ -1,8 +1,21 @@
 import React, { useState } from "react";
-import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,} from "react-native";
+import {
+  SafeAreaView,
+  View,
+  Image,
+  Text,
+  TextInput,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  ScrollView,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import axios from "axios";
 
 const { width, height } = Dimensions.get("window");
 
@@ -16,11 +29,13 @@ export default function PersonalInfo() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
-  const [hidden, setHidden] = useState(true); // password toggle
-  const [date, setDate] = useState(null);
+  const [hidden, setHidden] = useState(true);
+  const [date, setDate] = useState(new Date()); // default = today
+  //const [date, setDate] = useState(null);
   const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
 
-  // which field is focused: "firstName", "middleName", "lastName", "email", "phoneNumber", "birthday", "gender", "password"
   const [focusField, setFocusField] = useState("");
 
   const formattedDate = date
@@ -29,11 +44,54 @@ export default function PersonalInfo() {
       ).padStart(2, "0")}/${date.getFullYear()}`
     : "";
 
-  const isTextMode = (fieldName, value) => {
-    // value may be string or object (date)
-    const hasValue = value !== null && value !== "" && value !== undefined;
-    return focusField === fieldName || hasValue;
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+  // helper function (add this before return)
+  const isTextMode = (field, value) => {
+    if (focusField === field) return true;
+    return value !== "" && value !== null && value !== undefined;
   };
+
+
+  // 👉 Handle backend call
+  const handleNext = async () => {
+    if (!firstName || !lastName || !email || !phoneNumber || !gender || !password || !date) {
+      Alert.alert("Missing Info", "Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await axios.post(`${API_URL}/api/customer/sign-up/personal-info`, {
+        firstName,
+        middleName,
+        lastName,
+        emailAddress: email, // must match backend field name
+        phoneNumber,
+        birthday: date ? date.toISOString().split("T")[0] : "2000-01-01",
+        gender,
+        password,
+      });
+
+      if (res.data.success) {
+        Alert.alert("Success", "Step 1 completed!");
+        // 👉 Pass customerId to the next step
+        router.push({
+          pathname: "/signup/address",
+          params: { customerId: res.data.customerId },
+        });
+      } else {
+        Alert.alert("Error", res.data.message || "Something went wrong");
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", err.response?.data?.message || "Server error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -228,12 +286,15 @@ export default function PersonalInfo() {
             </Pressable>
           </View>
 
-          <Pressable
-            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => router.push("/signup/address")}
-          >
-            <Text style={styles.buttonText}>Next</Text>
-          </Pressable>
+        <Pressable
+                style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+                onPress={handleNext}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? "Saving..." : "Next"}
+                </Text>
+        </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>

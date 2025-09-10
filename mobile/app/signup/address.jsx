@@ -14,6 +14,9 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
+import axios from "axios"; 
+import { Alert } from "react-native";
+
 const { width, height } = Dimensions.get("window");
 
 export default function AddressInfo() {
@@ -29,6 +32,45 @@ export default function AddressInfo() {
 
   // track focus
   const [focusField, setFocusField] = useState("");
+
+  // 👇 add API URL
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  console.log("API_URL:", API_URL);
+
+
+  const handleNext = async () => {
+    if (!houseBuilding || !street || !barangay || !town || !province || !country || !zipCode) {
+      Alert.alert("Missing Info", "Please fill in all required fields.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(`${API_URL}/api/customer/sign-up/address`, {
+        customerId: router.params?.customerId, // get from Step 1
+        houseNumber: houseBuilding,
+        street,
+        barangay,
+        town,
+        province,
+        country,
+        zipCode,
+      });
+
+      if (res.data.success) {
+        Alert.alert("Success", "Address saved!");
+        router.push({
+          pathname: "/signup/id_upload",
+          params: { customerId: res.data.customerId },
+        });
+      } else {
+        Alert.alert("Error", res.data.message);
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Error", err.response?.data?.message || "Server error");
+    }
+  };
+
 
   const isTextMode = (fieldName, value) => {
     const hasValue = value !== null && value !== "" && value !== undefined;
@@ -185,10 +227,11 @@ export default function AddressInfo() {
           {/* Next Button */}
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => router.push("/signup/id_upload")}
+            onPress={handleNext}
           >
             <Text style={styles.buttonText}>Next</Text>
           </Pressable>
+
 
           {/* Previous Button */}
           <Pressable
