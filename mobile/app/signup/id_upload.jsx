@@ -86,7 +86,7 @@ export default function PersonalInfo() {
       }
 
       const res = await axios.post(
-        `${API_URL}api/customer/sign-up/guarantors-id`,
+        `${API_URL}/api/customer/sign-up/guarantors-id`,
         formData,
         {
           headers: {

@@ -10,6 +10,7 @@ import itemRouter from './routes/item.js';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 
 dotenv.config();
 
@@ -20,6 +21,12 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Ensure uploads folder exists
+const uploadDir = "uploads";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
 
 // Setup Multer for file uploads
 const storage = multer.diskStorage({
@@ -39,7 +46,7 @@ const upload = multer({ storage });
 // Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));
 
-// Example test route (you can move logic to customerRouter)
+// Example test route
 app.post(
   "/api/customer/sign-up/guarantors-id",
   upload.fields([
