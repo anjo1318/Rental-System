@@ -310,32 +310,65 @@ const getSignupProgress = async (req, res) => {
     const { customerId } = req.params;
 
     const customer = await Customer.findByPk(customerId, {
-      attributes: ['id', 'signupStep', 'isSignupComplete', 'firstName', 'lastName']
+      attributes: [
+        "id",
+        "signupStep",
+        "isSignupComplete",
+
+        // personal info
+        "firstName",
+        "middleName",
+        "lastName",
+        "emailAddress",
+        "phoneNumber",
+        "birthday",
+        "gender",
+
+        // address
+        "houseNumber",
+        "street",
+        "barangay",
+        "town",
+        "province",
+        "country",
+        "zipCode",
+
+        // guarantors
+        "guarantor1FullName",
+        "guarantor1Address",
+        "guarantor1MobileNumber",
+        "guarantor2FullName",
+        "guarantor2Address",
+        "guarantor2MobileNumber",
+
+        // ID upload
+        "idType",
+        "idNumber",
+        "idPhotoUrl",
+        "selfieUrl",
+      ],
     });
 
     if (!customer) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Customer not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
       });
     }
 
     return res.status(200).json({
       success: true,
-      customerId: customer.id,
-      currentStep: customer.signupStep,
-      isComplete: customer.isSignupComplete,
-      customerName: `${customer.firstName} ${customer.lastName}`
+      customer, // ✅ return full customer object
     });
-
   } catch (error) {
     console.error("❌ Error in getSignupProgress:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: "Internal server error" 
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
     });
   }
 };
+
 
 export { 
   signupPersonalInfo, 
