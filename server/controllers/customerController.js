@@ -369,11 +369,25 @@ const getSignupProgress = async (req, res) => {
   }
 };
 
+const fetchCustomers = async (req, res) => {
+  try{
+    const response = await Customer.findAll();
+
+    return res.status(200).json({success:true, message:response});
+
+    } catch (error) {
+    
+      return res.status(500).json({success:false, message:error});
+
+  }
+};
+
 
 export { 
   signupPersonalInfo, 
   signupAddress, 
   signupGuarantorsAndId, 
   finalizeSignup,
-  getSignupProgress 
+  getSignupProgress,
+  fetchCustomers 
 };

@@ -5,7 +5,8 @@ import {
   signupAddress,
   signupGuarantorsAndId,
   finalizeSignup,
-  getSignupProgress
+  getSignupProgress,
+  fetchCustomers
 } from "../controllers/customerController.js";
 
 const router = express.Router();
@@ -65,5 +66,7 @@ router.post("/sign-up/finalize", validateFinalize, finalizeSignup);
 
 // Get signup progress
 router.get("/sign-up/progress/:customerId", validateProgress, getSignupProgress);
+
+router.get("/", fetchCustomers);
 
 export default router;
