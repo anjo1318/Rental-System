@@ -1,3 +1,7 @@
+
+
+
+
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -260,46 +264,43 @@ const styles = StyleSheet.create({
   },
 
   searchContainer: {
-  flexDirection: "row",
-  alignItems: "center",
-  borderWidth: 1,
-  borderColor: "#007F7F",
-  borderRadius: 20,
-  paddingHorizontal: 10,
-  marginHorizontal: 16,
-  marginVertical: 10,
-  height: 45,
-  backgroundColor: "#fff",
-},
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#007F7F",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    height: 45,
+    backgroundColor: "#fff",
+  },
 
-leftIcon: {
-  marginRight: 8,
-},
+  leftIcon: {
+    marginRight: 8,
+  },
 
-searchInput: {
-  flex: 1,
-  fontSize: 14,
-  color: "#000",
-},
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: "#000",
+  },
 
-rightIcon: {
-  marginLeft: 8,
-},
+  rightIcon: {
+    marginLeft: 8,
+  },
 
 
   sectionTitle: {
     fontWeight: "bold",
     fontSize: width * 0.045,
     marginLeft: width * 0.04,
-    marginBottom: height * 0.025,
-  },
-  featuredSection: {
-  marginTop: 20, 
+    paddingVertical: height * 0.025,
   },
 
   featuredCard: {
-    width: width * 0.4,
-    height: height * 0.18,
+    width: width * 0.65,
+    height: height * 0.30,
     borderRadius: width * 0.03,
     marginLeft: width * 0.04,
     overflow: "hidden",
@@ -309,6 +310,7 @@ rightIcon: {
     height: "100%", 
     resizeMode: "cover" 
   },
+
   card: {
     width: CARD_WIDTH,
     backgroundColor: "#fff",
@@ -318,14 +320,17 @@ rightIcon: {
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginTop: width * 0.04,
   },
   itemImage: {
     width: "100%",
-    height: height * 0.15,
-    borderRadius: width * 0.02,
+    height: height * 0.19,
+    borderRadius: width * 0.03,
     marginBottom: height * 0.01,
+    backgroundColor: "#EDEDED",
     resizeMode: "cover",
   },
+  
   title: { 
     fontWeight: "bold", 
     fontSize: width * 0.04 
@@ -340,14 +345,14 @@ rightIcon: {
     color: "#555" 
   },
   categoryButton: {
-    paddingHorizontal: width * 0.03,
-    paddingVertical: height * 0.008,
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.01,
     borderRadius: 20,
-    backgroundColor: "#eee",
+    backgroundColor: "transparent",
     marginLeft: width * 0.04,
   },
   activeCategory: { 
-    backgroundColor: "#057474" 
+    backgroundColor: "#007F7F" 
   },
   categoryText: { 
     fontSize: width * 0.035, 
