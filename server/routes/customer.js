@@ -1,5 +1,8 @@
 import express from "express";
 import { body, param } from 'express-validator';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import {
   signupPersonalInfo,
   signupAddress,
@@ -12,6 +15,37 @@ import {
 const router = express.Router();
 
 console.log("Customer router is being loaded...");
+
+// ✅ SETUP MULTER STORAGE (move from server.js to here)
+const uploadDir = "uploads";
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+    cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({ 
+  storage,
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  }
+});
 
 // Validation middleware
 const validatePersonalInfo = [
@@ -35,6 +69,7 @@ const validateAddress = [
   body('zipCode').trim().notEmpty().withMessage('Zip code is required'),
 ];
 
+// ✅ UPDATED VALIDATION - No longer validate URLs since we handle file uploads
 const validateGuarantors = [
   body('customerId').isNumeric().withMessage('Valid customer ID is required'),
   body('guarantor1FullName').trim().notEmpty().withMessage('Guarantor 1 full name is required'),
@@ -45,6 +80,7 @@ const validateGuarantors = [
   body('guarantor2MobileNumber').isMobilePhone().withMessage('Guarantor 2 valid mobile number is required'),
   body('idType').trim().notEmpty().withMessage('ID type is required'),
   body('idNumber').trim().notEmpty().withMessage('ID number is required'),
+  // Files will be validated by multer
 ];
 
 const validateFinalize = [
@@ -55,18 +91,53 @@ const validateProgress = [
   param('customerId').isNumeric().withMessage('Valid customer ID is required'),
 ];
 
-// Routes with validation
+// ✅ ROUTES WITH PROPER FILE UPLOAD HANDLING
+
+// Step 1 - Personal Info
 router.post("/sign-up/personal-info", validatePersonalInfo, signupPersonalInfo);
 
+// Step 2 - Address
 router.post("/sign-up/address", validateAddress, signupAddress);
 
-router.post("/sign-up/guarantors-id", validateGuarantors, signupGuarantorsAndId);
+// ✅ Step 3 - UPDATED: Use multer for file uploads + validation
+router.post(
+  "/sign-up/guarantors-id", 
+  upload.fields([
+    { name: "photoId", maxCount: 1 },
+    { name: "selfie", maxCount: 1 },
+  ]),
+  validateGuarantors, 
+  signupGuarantorsAndId
+);
 
+// Step 4 - Finalize
 router.post("/sign-up/finalize", validateFinalize, finalizeSignup);
 
 // Get signup progress
 router.get("/sign-up/progress/:customerId", validateProgress, getSignupProgress);
 
+// Get all customers
 router.get("/", fetchCustomers);
+
+// ✅ ERROR HANDLING MIDDLEWARE for multer
+router.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        message: 'File too large. Maximum size is 5MB.'
+      });
+    }
+  }
+  
+  if (error.message === 'Only image files are allowed!') {
+    return res.status(400).json({
+      success: false,
+      message: 'Only image files are allowed!'
+    });
+  }
+  
+  next(error);
+});
 
 export default router;

@@ -16,11 +16,10 @@ const handleValidationErrors = (req, res) => {
   return null;
 };
 
-// STEP 1 - Personal Info
+// STEP 1 - Personal Info (unchanged)
 const signupPersonalInfo = async (req, res) => {
   console.log("🚀 Starting personal info signup");
   
-  // Check for validation errors
   const validationError = handleValidationErrors(req, res);
   if (validationError) return validationError;
 
@@ -38,7 +37,6 @@ const signupPersonalInfo = async (req, res) => {
       password 
     } = req.body;
 
-    // Check if user already exists
     const existingUser = await Customer.findOne({ 
       where: { emailAddress },
       transaction
@@ -52,10 +50,8 @@ const signupPersonalInfo = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create new customer
     const newCustomer = await Customer.create({
       firstName,
       middleName,
@@ -91,11 +87,10 @@ const signupPersonalInfo = async (req, res) => {
   }
 };
 
-// STEP 2 - Address
+// STEP 2 - Address (unchanged)
 const signupAddress = async (req, res) => {
   console.log("🏠 Starting address signup");
   
-  // Check for validation errors
   const validationError = handleValidationErrors(req, res);
   if (validationError) return validationError;
 
@@ -113,7 +108,6 @@ const signupAddress = async (req, res) => {
       zipCode 
     } = req.body;
 
-    // Find customer and verify they're on the correct step
     const customer = await Customer.findByPk(customerId, { transaction });
     
     if (!customer) {
@@ -132,7 +126,6 @@ const signupAddress = async (req, res) => {
       });
     }
 
-    // Update address information
     await customer.update({
       houseNumber,
       street,
@@ -165,14 +158,10 @@ const signupAddress = async (req, res) => {
   }
 };
 
-// STEP 3 - Guarantors + ID
+// ✅ STEP 3 - COMPLETELY REWRITTEN for file uploads
 const signupGuarantorsAndId = async (req, res) => {
-  console.log("👥 Starting guarantors and ID signup");
+  console.log("👥 Starting guarantors and ID signup with file uploads");
   
-  // Check for validation errors
-  const validationError = handleValidationErrors(req, res);
-  if (validationError) return validationError;
-
   const transaction = await sequelize.transaction();
 
   try {
@@ -185,9 +174,13 @@ const signupGuarantorsAndId = async (req, res) => {
       guarantor2Address, 
       guarantor2MobileNumber, 
       idType, 
-      idNumber, 
-      idPhoto 
+      idNumber
     } = req.body;
+
+    // Get uploaded files
+    const files = req.files;
+    console.log("📁 Received files:", files);
+    console.log("📋 Received body data:", req.body);
 
     // Find customer and verify they're on the correct step
     const customer = await Customer.findByPk(customerId, { transaction });
@@ -208,8 +201,10 @@ const signupGuarantorsAndId = async (req, res) => {
       });
     }
 
-    // Update guarantor and ID information
-    await customer.update({
+    // ✅ CONSTRUCT FULL URLs for uploaded files
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    
+    const updateData = {
       guarantor1FullName,
       guarantor1Address,
       guarantor1MobileNumber,
@@ -218,9 +213,23 @@ const signupGuarantorsAndId = async (req, res) => {
       guarantor2MobileNumber,
       idType,
       idNumber,
-      idPhoto,
       signupStep: 3
-    }, { transaction });
+    };
+
+    // ✅ ADD FILE PATHS/URLS if files were uploaded
+    if (files?.photoId?.[0]) {
+      updateData.idPhoto = files.photoId[0].path; // Store file path
+      updateData.idPhotoUrl = `${baseUrl}/${files.photoId[0].path}`; // Store full URL
+      console.log("📸 ID Photo saved:", updateData.idPhotoUrl);
+    }
+
+    if (files?.selfie?.[0]) {
+      updateData.selfieUrl = `${baseUrl}/${files.selfie[0].path}`; // Store full URL  
+      console.log("🤳 Selfie saved:", updateData.selfieUrl);
+    }
+
+    // Update customer with all data
+    await customer.update(updateData, { transaction });
 
     await transaction.commit();
 
@@ -230,7 +239,11 @@ const signupGuarantorsAndId = async (req, res) => {
       success: true, 
       message: "Guarantors and ID information saved successfully",
       customerId,
-      nextStep: 4
+      nextStep: 4,
+      uploadedFiles: {
+        idPhoto: updateData.idPhotoUrl || null,
+        selfie: updateData.selfieUrl || null
+      }
     });
 
   } catch (error) {
@@ -238,16 +251,16 @@ const signupGuarantorsAndId = async (req, res) => {
     console.error("❌ Error in signupGuarantorsAndId:", error);
     return res.status(500).json({ 
       success: false, 
-      message: "Internal server error. Please try again." 
+      message: "Internal server error. Please try again.",
+      error: error.message
     });
   }
 };
 
-// STEP 4 - Finalize
+// STEP 4 - Finalize (unchanged)
 const finalizeSignup = async (req, res) => {
   console.log("🎯 Finalizing signup");
   
-  // Check for validation errors
   const validationError = handleValidationErrors(req, res);
   if (validationError) return validationError;
 
@@ -256,7 +269,6 @@ const finalizeSignup = async (req, res) => {
   try {
     const { customerId } = req.body;
 
-    // Find customer and verify they've completed all previous steps
     const customer = await Customer.findByPk(customerId, { transaction });
     
     if (!customer) {
@@ -275,7 +287,6 @@ const finalizeSignup = async (req, res) => {
       });
     }
 
-    // Finalize signup
     await customer.update({
       role: "customer",
       signupStep: 4,
@@ -304,7 +315,7 @@ const finalizeSignup = async (req, res) => {
   }
 };
 
-// Helper function to get signup progress
+// Helper function to get signup progress (unchanged)
 const getSignupProgress = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -356,9 +367,11 @@ const getSignupProgress = async (req, res) => {
       });
     }
 
+    console.log("📊 Returning customer data:", customer.toJSON());
+
     return res.status(200).json({
       success: true,
-      customer, // ✅ return full customer object
+      customer,
     });
   } catch (error) {
     console.error("❌ Error in getSignupProgress:", error);
@@ -372,16 +385,11 @@ const getSignupProgress = async (req, res) => {
 const fetchCustomers = async (req, res) => {
   try{
     const response = await Customer.findAll();
-
     return res.status(200).json({success:true, message:response});
-
-    } catch (error) {
-    
-      return res.status(500).json({success:false, message:error});
-
+  } catch (error) {
+    return res.status(500).json({success:false, message:error});
   }
 };
-
 
 export { 
   signupPersonalInfo, 

@@ -8,8 +8,6 @@ import authRouter from './routes/auth.js';
 import customerRouter from './routes/customer.js';
 import itemRouter from './routes/item.js';
 import cors from 'cors';
-import multer from 'multer';
-import path from 'path';
 import fs from 'fs';
 
 dotenv.config();
@@ -28,65 +26,42 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
-// Setup Multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/"); // folder to save uploaded files
-  },
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`
-    );
-  },
-});
-
-const upload = multer({ storage });
-
-// Serve uploaded files statically
+// ✅ IMPORTANT: Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));
 
-// Example test route
-app.post(
-  "/api/customer/sign-up/guarantors-id",
-  upload.fields([
-    { name: "photoId", maxCount: 1 },
-    { name: "selfie", maxCount: 1 },
-  ]),
-  (req, res) => {
-    try {
-      const body = req.body;
-      const files = req.files;
-
-      console.log("✅ Received data:", body);
-      console.log("✅ Received files:", files);
-
-      res.json({
-        success: true,
-        message: "Guarantors and ID uploaded successfully",
-        data: {
-          ...body,
-          photoId: files?.photoId?.[0]?.path,
-          selfie: files?.selfie?.[0]?.path,
-        },
-      });
-    } catch (err) {
-      console.error("❌ Upload error:", err);
-      res.status(500).json({ success: false, message: "Upload failed" });
-    }
-  }
-);
+// ✅ REMOVED: The duplicate route handler - it's now in customer router
 
 // Routers
 app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
 app.use('/api/owner', ownerRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/customer', customerRouter);
+app.use('/api/customer', customerRouter); // This handles the file upload now
 app.use('/api/item', itemRouter);
+
+// ✅ ADD: Basic health check route
+app.get('/', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Server is running!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ✅ ADD: Global error handler
+app.use((err, req, res, next) => {
+  console.error('❌ Global error:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Something went wrong!',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
 
 // Database + Server Start
 connectToDatabase();
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📁 Static files served from: ${uploadDir}`);
+  console.log(`🌐 Health check: http://localhost:${PORT}`);
 });
