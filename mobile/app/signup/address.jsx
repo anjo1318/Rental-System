@@ -11,7 +11,7 @@ import {
   StatusBar,
   ScrollView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 import axios from "axios"; 
@@ -21,6 +21,8 @@ const { width, height } = Dimensions.get("window");
 
 export default function AddressInfo() {
   const router = useRouter();
+  const { customerId } = useLocalSearchParams();
+
 
   const [houseBuilding, setHouseBuilding] = useState("");
   const [street, setStreet] = useState("");
@@ -46,7 +48,7 @@ export default function AddressInfo() {
 
     try {
       const res = await axios.post(`${API_URL}/api/customer/sign-up/address`, {
-        customerId: router.params?.customerId, // get from Step 1
+        customerId, // now correctly populated
         houseNumber: houseBuilding,
         street,
         barangay,
@@ -56,12 +58,14 @@ export default function AddressInfo() {
         zipCode,
       });
 
+
       if (res.data.success) {
         Alert.alert("Success", "Address saved!");
         router.push({
           pathname: "/signup/id_upload",
-          params: { customerId: res.data.customerId },
+          params: { customerId: res.data.customerId },  // returned from backend
         });
+
       } else {
         Alert.alert("Error", res.data.message);
       }
