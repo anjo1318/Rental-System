@@ -1,16 +1,66 @@
-import React, { useState } from "react";
-import {SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,
+import React, { useState, useEffect } from "react";
+import {
+  SafeAreaView,
+  View,
+  Image,
+  Text,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
+import axios from "axios";
 
 const { width, height } = Dimensions.get("window");
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export default function PersonalInfo() {
   const router = useRouter();
   const [isChecked, setIsChecked] = useState(false);
+  const [customer, setCustomer] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  const customerId = 1; // ✅ replace with logged-in user ID or pass via params
+
+  useEffect(() => {
+    const fetchCustomer = async () => {
+      try {
+        const res = await axios.get(
+          `${API_URL}/api/customer/sign-up/progress/${customerId}`
+        );
+        setCustomer(res.data.customer);
+      } catch (error) {
+        console.error("❌ Error fetching customer:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomer();
+  }, []);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator size="large" color="#057474" />
+      </SafeAreaView>
+    );
+  }
+
+  if (!customer) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <Text style={{ textAlign: "center", marginTop: 50 }}>
+          No customer data found.
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -46,33 +96,30 @@ export default function PersonalInfo() {
             resizeMode="contain"
           />
           <Text style={styles.subText}>Check all your provided details</Text>
-
         </View>
 
         <View style={styles.info}>
           <Text style={styles.sectionTitle}>Personal Info</Text>
-
-          <Text style={styles.infoText}>First Name:</Text>
-          <Text style={styles.infoText}>Second Name:</Text>
-          <Text style={styles.infoText}>Last Name:</Text>
-          <Text style={styles.infoText}>Email Address:</Text>
-          <Text style={styles.infoText}>Phone Number:</Text>
-          <Text style={styles.infoText}>Birthday:</Text>
-          <Text style={styles.infoText}>Gender:</Text>
-          <Text style={styles.infoText}>Password:</Text>
+          <Text style={styles.infoText}>First Name: {customer.firstName}</Text>
+          <Text style={styles.infoText}>Second Name: {customer.middleName}</Text>
+          <Text style={styles.infoText}>Last Name: {customer.lastName}</Text>
+          <Text style={styles.infoText}>Email Address: {customer.emailAddress}</Text>
+          <Text style={styles.infoText}>Phone Number: {customer.phoneNumber}</Text>
+          <Text style={styles.infoText}>Birthday: {customer.birthday}</Text>
+          <Text style={styles.infoText}>Gender: {customer.gender}</Text>
+          <Text style={styles.infoText}>Password: ******</Text>
           <View style={styles.divider} />
         </View>
 
         <View style={styles.address}>
-          <Text style={styles.sectionTitle1}>Personal Info</Text>
-
-          <Text style={styles.addressText}>House No./Building No.:</Text>
-          <Text style={styles.addressText}>Street:</Text>
-          <Text style={styles.addressText}>Barangay:</Text>
-          <Text style={styles.addressText}>Town:</Text>
-          <Text style={styles.addressText}>Province:</Text>
-          <Text style={styles.addressText}>Country:</Text>
-          <Text style={styles.addressText}>Zip Code:</Text>
+          <Text style={styles.sectionTitle1}>Address</Text>
+          <Text style={styles.addressText}>House No./Building No.: {customer.houseNumber}</Text>
+          <Text style={styles.addressText}>Street: {customer.street}</Text>
+          <Text style={styles.addressText}>Barangay: {customer.barangay}</Text>
+          <Text style={styles.addressText}>Town: {customer.town}</Text>
+          <Text style={styles.addressText}>Province: {customer.province}</Text>
+          <Text style={styles.addressText}>Country: {customer.country}</Text>
+          <Text style={styles.addressText}>Zip Code: {customer.zipCode}</Text>
           <View style={styles.divider1} />
         </View>
 
@@ -80,23 +127,34 @@ export default function PersonalInfo() {
           <Text style={styles.sectionTitle1}>ID Upload/Guarantor</Text>
 
           <Text style={styles.addressText1}>Guarantor 1:</Text>
-
-          <Text style={styles.addressText}>Full Name:</Text>
-          <Text style={styles.addressText}>Address:</Text>
-          <Text style={styles.addressText}>Mobile Number:</Text>
+          <Text style={styles.addressText}>Full Name: {customer.guarantor1FullName}</Text>
+          <Text style={styles.addressText}>Address: {customer.guarantor1Address}</Text>
+          <Text style={styles.addressText}>Mobile Number: {customer.guarantor1MobileNumber}</Text>
 
           <Text style={styles.addressText1}>Guarantor 2:</Text>
-
-          <Text style={styles.addressText}>Full Name:</Text>
-          <Text style={styles.addressText}>Address:</Text>
-          <Text style={styles.addressText}>Mobile Number:</Text>
+          <Text style={styles.addressText}>Full Name: {customer.guarantor2FullName}</Text>
+          <Text style={styles.addressText}>Address: {customer.guarantor2Address}</Text>
+          <Text style={styles.addressText}>Mobile Number: {customer.guarantor2MobileNumber}</Text>
           
           <Text style={styles.addressText1}>ID Upload:</Text>
+          <Text style={styles.addressText}>Type of ID: {customer.idType}</Text>
+          <Text style={styles.addressText}>ID Number: {customer.idNumber}</Text>
 
-          <Text style={styles.addressText}>Type of ID:</Text>
-          <Text style={styles.addressText}>ID Number:</Text>
-          <Text style={styles.addressText}>Photo of your Valid ID:</Text>
-          <Text style={styles.addressText2}>Selfie:</Text>
+          {customer.idPhotoUrl && (
+            <Image
+              source={{ uri: customer.idPhotoUrl }}
+              style={{ width: width * 0.6, height: height * 0.25, marginTop: 10 }}
+              resizeMode="contain"
+            />
+          )}
+
+          {customer.selfieUrl && (
+            <Image
+              source={{ uri: customer.selfieUrl }}
+              style={{ width: width * 0.6, height: height * 0.25, marginTop: 10 }}
+              resizeMode="contain"
+            />
+          )}
         </View>
 
         <View style={styles.checkboxContainer}>
@@ -110,9 +168,8 @@ export default function PersonalInfo() {
           <Text style={styles.checkboxText}>
             I confirm that I have read, understood, and agree to be bound by the Terms and Conditions.
           </Text>
-          </View>
+        </View>
 
-        {/* Buttons Section */}
         <View style={styles.buttonContainer}>
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
@@ -128,9 +185,6 @@ export default function PersonalInfo() {
             <Text style={styles.previousText}>Previous</Text>
           </Pressable>
         </View>
-
-        
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -204,48 +258,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.06,
   },
-
   sectionTitle: {
     fontSize: width * 0.05,
     fontWeight: "700",
     color: "#000",
     marginBottom: height * 0.015,
   },
-
   infoText: {
     fontSize: width * 0.038,
     fontWeight: "400",
     color: "#333",
-    marginBottom: height * 0.01, // controls spacing between each line
+    marginBottom: height * 0.01,
   },
-
   divider: {
     borderBottomColor: "#ccc",
     borderBottomWidth: 1.5,
     marginTop: height * 0.015,
     borderColor: "#057474",
   },
-
   address: {
     width: "100%",
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.03
   },
-
   sectionTitle1: {
     fontSize: width * 0.05,
     fontWeight: "700",
     color: "#000",
     marginBottom: height * 0.02,
   },
-
   addressText: {
     fontSize: width * 0.038,
     fontWeight: "400",
     color: "#333",
     marginBottom: height * 0.01, 
   },
-
   addressText1: {
     fontSize: width * 0.042,
     fontWeight: "600",
@@ -253,50 +300,43 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.002,
     marginBottom: 6, 
   },
-
   addressText2: {
     fontSize: width * 0.042,
     color: "#333",
     marginTop: height * 0.2, 
   },
-
   divider1: {
     borderBottomColor: "#ccc",
     borderBottomWidth: 1.5,
     marginTop: height * 0.015,
     borderColor: "#057474",
   },
-
   checkboxContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: height * 0.25,
     paddingHorizontal: width * 0.08,
   },
-
-checkbox: {
-  width: width * 0.045,
-  height: width * 0.045,
-  borderWidth: 1.5,
-  borderColor: "#057474",
-  borderRadius: 2,
-  justifyContent: "center",
-  alignItems: "center",
-  marginRight: width * 0.03,
-  backgroundColor: "#FFF",
-},
-
-checkboxChecked: {
-  backgroundColor: "#057474",
-},
-
-checkboxText: {
-  flex: 1,
-  fontSize: width * 0.030,
-  color: "#333",
-},
-
-button: {
+  checkbox: {
+    width: width * 0.045,
+    height: width * 0.045,
+    borderWidth: 1.5,
+    borderColor: "#057474",
+    borderRadius: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: width * 0.03,
+    backgroundColor: "#FFF",
+  },
+  checkboxChecked: {
+    backgroundColor: "#057474",
+  },
+  checkboxText: {
+    flex: 1,
+    fontSize: width * 0.030,
+    color: "#333",
+  },
+  button: {
     width: "85%",
     backgroundColor: "#057474",
     paddingVertical: height * 0.018,
@@ -304,12 +344,10 @@ button: {
     alignItems: "center",
     marginTop: 11,
   },
-
   buttonContainer: {
-  alignItems: "center",   
-  marginTop: 20,
-},
-
+    alignItems: "center",   
+    marginTop: 20,
+  },
   buttonText: {
     color: "#fff",
     fontSize: width * 0.045,

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,} from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import axios from "axios";   // 👈 make sure axios is imported
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
@@ -9,6 +10,7 @@ const { width, height } = Dimensions.get("window");
 
 export default function PersonalInfo() {
   const router = useRouter();
+  const { customerId } = useLocalSearchParams(); // 👈 get from Step 2
 
   const [fullName, setFullName] = useState("");
   const [address, setAddress] = useState("");
@@ -21,6 +23,9 @@ export default function PersonalInfo() {
   const [selfie, setSelfie] = useState(null);
   const [idType, setIdType] = useState("");
   const [focusField, setFocusField] = useState("");
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
   
 
   const isTextMode = (fieldName, value) => {
@@ -49,6 +54,62 @@ export default function PersonalInfo() {
     });
     if (!result.canceled) setSelfie(result.assets[0].uri);
   };
+
+  const handleNext = async () => {
+    try {
+      const formData = new FormData();
+
+      formData.append("customerId", customerId);
+      formData.append("guarantor1FullName", fullName);
+      formData.append("guarantor1Address", address);
+      formData.append("guarantor1MobileNumber", mobileNumber);
+      formData.append("guarantor2FullName", fullName1);
+      formData.append("guarantor2Address", address1);
+      formData.append("guarantor2MobileNumber", mobileNumber1);
+      formData.append("idType", idType);
+      formData.append("idNumber", idNumber);
+
+      if (photoId) {
+        formData.append("photoId", {
+          uri: photoId,
+          type: "image/jpeg", // adjust based on mime
+          name: "photoId.jpg",
+        });
+      }
+
+      if (selfie) {
+        formData.append("selfie", {
+          uri: selfie,
+          type: "image/jpeg",
+          name: "selfie.jpg",
+        });
+      }
+
+      const res = await axios.post(
+        `${API_URL}api/customer/sign-up/guarantors-id`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (res.data.success) {
+        router.push({
+          pathname: "/signup/review",
+          params: { customerId },
+        });
+      } else {
+        alert(res.data.message || "Something went wrong.");
+      }
+    } catch (error) {
+      console.error("❌ Error in Step 3 signup:", error);
+      alert("Failed to save guarantors and ID. Please try again.");
+    }
+  };
+
+
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -239,10 +300,11 @@ export default function PersonalInfo() {
           {/* Next Button */}
           <Pressable
             style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={() => router.push("/signup/review")}
+            onPress={handleNext}
           >
             <Text style={styles.buttonText}>Next</Text>
           </Pressable>
+
 
           {/* Previous Button */}
           <Pressable

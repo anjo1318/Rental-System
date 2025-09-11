@@ -56,19 +56,14 @@ const validateProgress = [
 
 // Routes with validation
 router.post("/sign-up/personal-info", validatePersonalInfo, signupPersonalInfo);
-console.log("✅ Route registered: POST /sign-up/personal-info");
 
 router.post("/sign-up/address", validateAddress, signupAddress);
-console.log("✅ Route registered: POST /sign-up/address");
 
 router.post("/sign-up/guarantors-id", validateGuarantors, signupGuarantorsAndId);
-console.log("✅ Route registered: POST /sign-up/guarantors-id");
 
 router.post("/sign-up/finalize", validateFinalize, finalizeSignup);
-console.log("✅ Route registered: POST /sign-up/finalize");
 
 // Get signup progress
 router.get("/sign-up/progress/:customerId", validateProgress, getSignupProgress);
-console.log("✅ Route registered: GET /sign-up/progress/:customerId");
 
 export default router;
