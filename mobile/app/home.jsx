@@ -13,11 +13,11 @@ import {
 } from "react-native";
 import axios from "axios";
 import { useNavigation } from "@react-navigation/native";
-// Import React Native Vector Icons
 import Icon from "react-native-vector-icons/MaterialIcons";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = (width - 48) / 2;
+
 
 export default function Review() {
   const navigation = useNavigation();
@@ -29,12 +29,11 @@ export default function Review() {
 
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
-  // Navigation items with their respective icons and routes
   const navigationItems = [
     { name: "Home", icon: "home", route: "Home" },
     { name: "Book", icon: "book", route: "Book" },
     { name: "Message", icon: "message", route: "Message" },
-    { name: "Time", icon: "schedule", route: "Time" }
+    { name: "Time", icon: "schedule", route: "Time" },
   ];
 
   useEffect(() => {
@@ -91,7 +90,7 @@ export default function Review() {
   );
 
   return (
-    <View style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Top Profile Section */}
         <View style={styles.profileContainer}>
@@ -100,32 +99,56 @@ export default function Review() {
             style={styles.avatar}
           />
           <Text style={styles.username}>Marco Polo</Text>
-          <View style={styles.notification}>
-            <Text style={styles.notificationText}>2</Text>
+
+          {/* Notification Icon with Badge */}
+          <View style={styles.notificationWrapper}>
+            <Icon name="notifications-none" size={24} color="#057474" />
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>2</Text>
           </View>
         </View>
+      </View>
 
-        {/* Search Bar */}
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        {/* Left Search Icon */}
+        <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+
+        {/* TextInput */}
         <TextInput
-          placeholder="Search your devices..."
+          placeholder="Search your devices.."
           value={search}
           onChangeText={setSearch}
-          style={styles.searchBar}
+          style={styles.searchInput}
+          placeholderTextColor="#555"
         />
 
+        {/* Right Filter Icon */}
+        <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
+      </View>
+      
         {/* Featured Devices */}
+        <View style={styles.featuredSection}>
         <Text style={styles.sectionTitle}>Featured Devices</Text>
+        </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {filteredItems.slice(0, 5).map((item) => (
             <View key={item.id} style={styles.featuredCard}>
-              <Image source={{ uri: item.itemImage }} style={styles.featuredImage} />
+              <Image
+                source={{ uri: item.itemImage }}
+                style={styles.featuredImage}
+              />
             </View>
           ))}
         </ScrollView>
 
         {/* Recommendations */}
         <Text style={styles.sectionTitle}>Our Recommendations</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 10 }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginBottom: 10 }}
+        >
           {categories.map((cat) => (
             <Pressable
               key={cat}
@@ -153,7 +176,10 @@ export default function Review() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           numColumns={2}
-          columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 16 }}
+          columnWrapperStyle={{
+            justifyContent: "space-between",
+            marginBottom: 16,
+          }}
           scrollEnabled={false} // since inside ScrollView
           contentContainerStyle={{ paddingHorizontal: 16 }}
         />
@@ -162,8 +188,8 @@ export default function Review() {
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         {navigationItems.map((navItem, index) => (
-          <Pressable 
-            key={index} 
+          <Pressable
+            key={index}
             style={styles.navButton}
             onPress={() => handleNavigation(navItem.route)}
           >
@@ -180,67 +206,161 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
+    padding: width * 0.04,
     position: "relative",
+    marginTop: height * 0.03,
   },
-  avatar: { width: 40, height: 40, borderRadius: 20 },
-  username: { marginLeft: 12, fontWeight: "bold", fontSize: 16 },
-  notification: {
-    backgroundColor: "#057474",
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    position: "absolute",
-    right: 20,
+
+  avatar: { 
+    width: width * 0.1, 
+    height: width * 0.1, 
+    borderRadius: width * 0.05 
+  },
+  
+  username: { 
+    marginLeft: width * 0.03, 
+    fontWeight: "bold", 
+    fontSize: width * 0.04 
+  },
+  
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between", // avatar left, bell right
+    padding: 16,
+    marginTop: 40,
+  },
+  notificationWrapper: {
+    marginLeft: "auto", // pushes it to the right
+    marginRight: 16,
+    position: "relative",
+    width: width * 0.10,   // circle size
+    height: width * 0.10,
+    borderRadius: (width * 0.12) / 2,
+    borderWidth: 2,
+    borderColor: "#057474", // green border
     justifyContent: "center",
     alignItems: "center",
   },
-  notificationText: { color: "#fff", fontSize: 12, fontWeight: "bold" },
-  searchBar: {
-    backgroundColor: "#f0f0f0",
-    marginHorizontal: 16,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    marginBottom: 16,
+  badge: {
+    position: "absolute",
+    right: -2,
+    top: -2,
+    backgroundColor: "#057474",
+    borderRadius: 10,
+    width: 15,
+    height: 15,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  sectionTitle: { fontWeight: "bold", fontSize: 16, marginLeft: 16, marginBottom: 8 },
+  badgeText: {
+    color: "white",
+    fontSize: 8,
+    fontWeight: "bold",
+  },
+
+  searchContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  borderWidth: 1,
+  borderColor: "#007F7F",
+  borderRadius: 20,
+  paddingHorizontal: 10,
+  marginHorizontal: 16,
+  marginVertical: 10,
+  height: 45,
+  backgroundColor: "#fff",
+},
+
+leftIcon: {
+  marginRight: 8,
+},
+
+searchInput: {
+  flex: 1,
+  fontSize: 14,
+  color: "#000",
+},
+
+rightIcon: {
+  marginLeft: 8,
+},
+
+
+  sectionTitle: {
+    fontWeight: "bold",
+    fontSize: width * 0.045,
+    marginLeft: width * 0.04,
+    marginBottom: height * 0.025,
+  },
+  featuredSection: {
+  marginTop: 20, 
+  },
+
   featuredCard: {
-    width: 150,
-    height: 120,
-    borderRadius: 12,
-    marginLeft: 16,
+    width: width * 0.4,
+    height: height * 0.18,
+    borderRadius: width * 0.03,
+    marginLeft: width * 0.04,
     overflow: "hidden",
   },
-  featuredImage: { width: "100%", height: "100%" },
+  featuredImage: { 
+    width: "100%", 
+    height: "100%", 
+    resizeMode: "cover" 
+  },
   card: {
-    width: (width - 48) / 2,
+    width: CARD_WIDTH,
     backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 8,
+    borderRadius: width * 0.02,
+    padding: width * 0.02,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
-  itemImage: { width: "100%", height: 120, borderRadius: 8, marginBottom: 8 },
-  title: { fontWeight: "bold", fontSize: 14 },
-  price: { fontWeight: "bold", fontSize: 14, marginBottom: 4 },
-  location: { fontSize: 12, color: "#555" },
+  itemImage: {
+    width: "100%",
+    height: height * 0.15,
+    borderRadius: width * 0.02,
+    marginBottom: height * 0.01,
+    resizeMode: "cover",
+  },
+  title: { 
+    fontWeight: "bold", 
+    fontSize: width * 0.04 
+  },
+  price: { 
+    fontWeight: "bold", 
+    fontSize: width * 0.04, 
+    marginBottom: height * 0.005 
+  },
+  location: { 
+    fontSize: width * 0.035, 
+    color: "#555" 
+  },
   categoryButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: width * 0.03,
+    paddingVertical: height * 0.008,
     borderRadius: 20,
     backgroundColor: "#eee",
-    marginLeft: 16,
+    marginLeft: width * 0.04,
   },
-  activeCategory: { backgroundColor: "#057474" },
-  categoryText: { fontSize: 12, color: "#555" },
-  activeCategoryText: { color: "#fff", fontWeight: "bold" },
+  activeCategory: { 
+    backgroundColor: "#057474" 
+  },
+  categoryText: { 
+    fontSize: width * 0.035, 
+    color: "#555" 
+  },
+  activeCategoryText: { 
+    color: "#fff", 
+    fontWeight: "bold" 
+  },
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingVertical: 12,
+    paddingVertical: height * 0.015,
     backgroundColor: "#057474",
     position: "absolute",
     bottom: 0,
@@ -248,14 +368,18 @@ const styles = StyleSheet.create({
     right: 0,
   },
   navButton: { 
-    alignItems: "center",
-    flex: 1,
+    alignItems: "center", 
+    flex: 1 
   },
   navText: { 
     color: "#fff", 
-    fontWeight: "bold",
-    fontSize: 12,
-    marginTop: 4,
+    fontWeight: "bold", 
+    fontSize: width * 0.03, 
+    marginTop: height * 0.005 
   },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
+  },
 });
