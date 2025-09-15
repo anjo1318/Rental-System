@@ -13,6 +13,7 @@ const Home = () => {
       const response = await axios.get(
         `${import.meta.env.VITE_APP_URL}/api/item`
       );
+      console.log(response.data);
       setItems(response.data.message); // ✅ use response.data.message
     } catch (error) {
       console.log(error);

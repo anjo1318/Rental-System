@@ -87,7 +87,7 @@ const Login = () => {
       <div className="relative bg-white shadow-xl rounded-2xl w-full max-w-md p-10 z-10">
         <div className="text-center mb-6">
           <div className="">
-          Rental System Admin Dashboard
+           EzRent Admin Dashboard
           </div>
         </div>
 

@@ -1,9 +1,9 @@
-// App.jsx
+// src/App.jsx
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
+import Layout from "./components/Layout";
 import AdminDashboard from "./components/Dashboard/AdminDashboard";
-import Sidebar from "./components/Sidebar";
 import Home from "./components/Dashboard/Home";
 import Owners from "./components/Dashboard/Owners";
 import Customers from "./components/Dashboard/Customers";
@@ -11,26 +11,22 @@ import Settings from "./components/Dashboard/Settings";
 import Approvals from "./components/Dashboard/Approvals";
 
 function App() {
-  const location = useLocation();
-  const hideSidebar = location.pathname === "/";
-
   return (
     <div className="flex">
-      {/* Sidebar stays fixed on all pages except login */}
-      {!hideSidebar && <Sidebar />}
+      <Routes>
+        {/* Login has no sidebar/layout */}
+        <Route path="/login" element={<Login />} />
 
-      {/* Content area */}
-      <main className="flex-1 flex items-center justify-center p-6">
-        <Routes>
-          <Route path="/" element={<Login />} />
+        {/* All other pages inside Layout */}
+        <Route element={<Layout />}>
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           <Route path="/home" element={<Home />} />
           <Route path="/owners" element={<Owners />} />
           <Route path="/customers" element={<Customers />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/approvals" element={<Approvals />} />
-        </Routes>
-      </main>
+        </Route>
+      </Routes>
     </div>
   );
 }
