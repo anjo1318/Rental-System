@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   SafeAreaView,
   View,
-  Image,
   Text,
   TextInput,
   Pressable,
@@ -10,6 +9,11 @@ import {
   Dimensions,
   StatusBar,
   Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+  Keyboard,
+  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -18,9 +22,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
-
-
-
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -28,6 +29,53 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hidden, setHidden] = useState(true);
+
+  // animated value for moving the whole screen up/down
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  // derived animated value for logo scale (smaller when moved up)
+  const logoScale = translateY.interpolate({
+    inputRange: [-height, 0],
+    outputRange: [0.75, 1],
+    extrapolate: "clamp",
+  });
+
+  useEffect(() => {
+    // events differ on iOS vs Android for smoother animation
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
+
+    const onKeyboardShow = (e) => {
+      // keyboard height from event; fallback to 300 if missing
+      const kbHeight = e?.endCoordinates?.height ?? 300;
+
+      // compute how much to shift the whole screen up.
+      // use a fraction so screen doesn't go too far. tweak multiplier (0.6) if needed.
+      const shift = Math.min(kbHeight * 0.5, height * 0.4);
+
+      Animated.timing(translateY, {
+        toValue: -shift,
+        duration: Platform.OS === "ios" ? 250 : 200,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const onKeyboardHide = () => {
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: Platform.OS === "ios" ? 200 : 180,
+        useNativeDriver: true,
+      }).start();
+    };
+
+    const showSub = Keyboard.addListener(showEvent, onKeyboardShow);
+    const hideSub = Keyboard.addListener(hideEvent, onKeyboardHide);
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [translateY]);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -44,22 +92,15 @@ export default function Login() {
 
       if (response.data.success) {
         const { token, user } = response.data;
-
-        // 👉 Save token & user to AsyncStorage
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(user));
-
-        Alert.alert("Success", "Login successful!");
         router.push("/home");
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.error || "Something went wrong."
-      );
+      Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -69,106 +110,116 @@ export default function Login() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#007F7F" />
 
-      {/* Header wrapper */}
-      <View style={styles.headerWrapper}>
-        <Image
-          source={require("../assets/images/header.png")}
-          style={styles.headerImage}
-          resizeMode="cover"
-          accessible
-          accessibilityLabel="Top banner"
-        />
-
-        {/* Back button */}
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
-        </Pressable>
-
-        {/* Login text on header */}
-        <Text style={styles.loginText}>Login</Text>
-      </View>
-
-      <View style={styles.middle}>
-        <Image
-          source={require("../assets/images/logo2.png")}
-          style={styles.logo}
-          resizeMode="contain"
-          accessible
-          accessibilityLabel="App logo"
-        />
-      </View>
-
-      <View style={styles.container}>
-        <Text style={styles.title}></Text>
-
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#888"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            style={styles.inputPassword}
-            placeholder="Password"
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={hidden} // toggle password visibility
-            autoCapitalize="none"
-          />
-          <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
-            <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
-          </Pressable>
-        </View>
-
-        {/* Row: Remember Me + Forgot Password */}
-        <View style={styles.row}>
-          <Pressable
-            style={styles.checkboxContainer}
-            onPress={() => setRememberMe(!rememberMe)}
-          >
-            <View
-              style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
-            >
-              {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-            <Text style={styles.checkboxText}>Remember Me</Text>
-          </Pressable>
-
-          <Pressable onPress={() => router.push("/forgot-password")}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </Pressable>
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-          onPress={handleLogin}
-          disabled={loading}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.buttonText}>
-            {loading ? "Logging in..." : "Login"}
-          </Text>
-        </Pressable>
+          {/* Animated wrapper - moves everything up/down */}
+          <Animated.View style={[styles.animatedWrap, { transform: [{ translateY }] }]}>
+            {/* Header wrapper */}
+            <View style={styles.headerWrapper}>
+              <Animated.Image
+                // header graphic (keeps in place relative to the wrapper)
+                source={require("../assets/images/header.png")}
+                style={styles.headerImage}
+                resizeMode="cover"
+                accessible
+                accessibilityLabel="Top banner"
+              />
+              <Pressable style={styles.backButton} onPress={() => router.back()}>
+                <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
+              </Pressable>
+              <Text style={styles.loginText}>Login</Text>
+            </View>
 
-        {/* Bottom Sign Up link */}
-        <View style={styles.signupRow}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
-          <Pressable onPress={() => router.push("/signup/person_info")}>
-            <Text style={styles.signupLink}>Sign Up</Text>
-          </Pressable>
-        </View>
-      </View>
+            {/* Logo (Animated scale) */}
+            <View style={styles.middle}>
+              <Animated.Image
+                source={require("../assets/images/logo2.png")}
+                style={[
+                  styles.logo,
+                  { transform: [{ scale: logoScale }] }, // scale down while moving up
+                ]}
+                resizeMode="contain"
+                accessible
+                accessibilityLabel="App logo"
+              />
+            </View>
+
+            {/* Form container */}
+            <View style={styles.container}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#888"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                returnKeyType="next"
+              />
+
+              <View style={styles.passwordWrapper}>
+                <TextInput
+                  style={styles.inputPassword}
+                  placeholder="Password"
+                  placeholderTextColor="#888"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={hidden}
+                  autoCapitalize="none"
+                  returnKeyType="done"
+                />
+                <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
+                  <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
+                </Pressable>
+              </View>
+
+              <View style={styles.row}>
+                <Pressable style={styles.checkboxContainer} onPress={() => setRememberMe(!rememberMe)}>
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                    {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.checkboxText}>Remember Me</Text>
+                </Pressable>
+
+                <Pressable onPress={() => router.push("/forgot-password")}>
+                  <Text style={styles.forgotText}>Forgot Password?</Text>
+                </Pressable>
+              </View>
+
+              <Pressable
+                style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>{loading ? "Logging in..." : "Login"}</Text>
+              </Pressable>
+
+              <View style={styles.signupRow}>
+                <Text style={styles.signupText}>Don't have an account? </Text>
+                <Pressable onPress={() => router.push("/signup/person_info")}>
+                  <Text style={styles.signupLink}>Sign Up</Text>
+                </Pressable>
+              </View>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
+
+  // IMPORTANT: animated wrapper must at least fill the screen so translateY moves everything
+  animatedWrap: { flex: 1, minHeight: height },
+
   headerWrapper: { width: "100%", height: height * 0.22, position: "relative" },
   headerImage: { width: "100%", height: "100%" },
   backButton: {
@@ -185,24 +236,22 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#fff",
   },
-  middle: { alignItems: "center", marginTop: height * 0.04 },
+
+  middle: { alignItems: "center", marginTop: height * 0.02 },
   logo: {
     width: width * 0.35,
     height: width * 0.35,
-    marginBottom: height * 0.08,
+    marginBottom: height * 0.04,
   },
+
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start", // keep inputs nearer to top by default
     alignItems: "center",
     paddingHorizontal: width * 0.08,
+    paddingBottom: height * 0.06, // space for bottom row
   },
-  title: {
-    fontSize: width * 0.06,
-    fontWeight: "700",
-    marginBottom: height * -0.3,
-    color: "#057474",
-  },
+
   input: {
     width: "100%",
     borderWidth: 1,
@@ -216,7 +265,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 
-   passwordWrapper: {
+  passwordWrapper: {
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
@@ -229,14 +278,8 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  inputPassword: { 
-    flex: 1, 
-    fontSize: 16, 
-    color: "#000" },
-
-    eyeIcon: { 
-      marginLeft: 10 
-    },
+  inputPassword: { flex: 1, fontSize: 16, color: "#000" },
+  eyeIcon: { marginLeft: 10 },
 
   row: {
     flexDirection: "row",
@@ -245,38 +288,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  checkboxContainer: { 
-    flexDirection: "row", 
-    alignItems: "center" 
-  },
+
+  checkboxContainer: { flexDirection: "row", alignItems: "center" },
   checkbox: {
-    width: 10,
-    height: 10,
+    width: 18,
+    height: 18,
     borderWidth: 1,
     borderColor: "black",
     marginRight: 8,
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: { 
-    backgroundColor: "black" 
-  },
-  checkboxText: { 
-    fontSize: width * 0.03, 
-    color: "#000" 
-  },
+  checkboxChecked: { backgroundColor: "black" },
+  checkboxText: { fontSize: width * 0.035, color: "#000" },
 
-  checkmark: { 
-    color: "#fff", 
-    fontSize: 9, 
-    textAlign: "center", 
-    lineHeight: 7 
-  },
+  checkmark: { color: "#fff", fontSize: 12, textAlign: "center", lineHeight: 12 },
 
-  forgotText: { 
-    fontSize: width * 0.03, 
-    color: "black" 
-  },
+  forgotText: { fontSize: width * 0.035, color: "black" },
 
   button: {
     width: "60%",
@@ -284,11 +312,12 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.015,
     borderRadius: 20,
     alignItems: "center",
-    marginTop: 30,
+    marginTop: 20,
   },
   buttonText: { color: "#fff", fontSize: width * 0.045, fontWeight: "600" },
   buttonPressed: { opacity: 0.85 },
-  signupRow: { flexDirection: "row", justifyContent: "center", marginTop: 20 },
+
+  signupRow: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
   signupText: { fontSize: width * 0.035, color: "#000" },
   signupLink: { fontSize: width * 0.035, color: "#000", fontWeight: "700" },
 });
