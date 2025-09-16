@@ -20,7 +20,16 @@ import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const { width, height } = Dimensions.get("window");
-const CARD_WIDTH = (width - 48) / 2;
+
+
+const HORIZONTAL_PADDING = 16; // FlatList horizontal padding
+const CARD_MARGIN = 16; // space between two cards
+const CARD_WIDTH = (width - HORIZONTAL_PADDING * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.35; // adjustable card height
+const BORDER_RADIUS = Math.round(width * 0.02);
+const PADDING = Math.round(width * 0.02);
+const IMAGE_RATIO = 0.7; // 70%
+
 
 
 export default function Review() {
@@ -83,15 +92,33 @@ export default function Review() {
   });
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
+  <View style={styles.card}>
+    {/* Upper half for image */}
+    <View style={styles.upperHalf}>
       <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
-      <Text style={styles.title}>{item.title}</Text>
-      <Text style={styles.price}>₱{item.pricePerDay}</Text>
-      <Text style={styles.location}>
-        {item.Owner.firstName}, {item.Owner.lastName}
-      </Text>
     </View>
-  );
+
+    {/* Lower half for text */}
+    <View style={styles.lowerHalf}>
+      {/* Title */}
+      <Text style={styles.title}>{item.title}</Text>
+
+      {/* Rating */}
+      <View style={styles.ratingRow}>
+        <Text style={styles.ratingValue}>5.0</Text>
+        <Text style={styles.starIcon}>⭐</Text>
+      </View>
+
+      {/* Location */}
+      <Text style={styles.location}>{item.location}</Text>
+
+      {/* Price */}
+      <Text style={styles.price}>₱{item.pricePerDay}</Text>
+    </View>
+  </View>
+);
+
+
 
   return (
       <View style={{ flex: 1 }}>
@@ -311,39 +338,73 @@ const styles = StyleSheet.create({
     resizeMode: "cover" 
   },
 
-  card: {
+   card: {
     width: CARD_WIDTH,
+    height: CARD_HEIGHT,
     backgroundColor: "#fff",
-    borderRadius: width * 0.02,
-    padding: width * 0.02,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginTop: width * 0.04,
+    borderRadius: width * 0.05,
+    borderWidth: .1,
+    overflow: "hidden", // keeps rounded corners clean
+    marginBottom: width * 0.04,
   },
+
+  upperHalf: {
+    flex: 1, // 50% of card
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E6E1D6",
+
+  },
+
   itemImage: {
-    width: "100%",
-    height: height * 0.19,
+    width: "85%",   // adjustable
+    height: "85%",  // adjustable
+    resizeMode: "contain",
     borderRadius: width * 0.03,
-    marginBottom: height * 0.01,
-    backgroundColor: "#EDEDED",
-    resizeMode: "cover",
   },
-  
-  title: { 
-    fontWeight: "bold", 
-    fontSize: width * 0.04 
-  },
-  price: { 
-    fontWeight: "bold", 
-    fontSize: width * 0.04, 
-    marginBottom: height * 0.005 
-  },
-  location: { 
-    fontSize: width * 0.035, 
-    color: "#555" 
-  },
+
+  lowerHalf: {
+  flex: 1,
+  justifyContent: "flex-start",
+  paddingHorizontal: 8,   // left padding
+  paddingTop: 8,
+},
+
+title: {
+  fontWeight: "bold",
+  fontSize: width * 0.04,
+  marginBottom: 8,
+},
+
+ratingRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  marginBottom: 2,
+},
+
+ratingValue: {
+  fontSize: width * 0.035,
+  color: "#555",
+  marginRight: 4,
+},
+
+starIcon: {
+  fontSize: width * 0.035,
+  color: "#f5a623",  // golden star color
+},
+
+location: {
+  fontSize: width * 0.035,
+  color: "#555",
+  marginBottom: 2,
+},
+
+price: {
+  fontWeight: "bold",
+  fontSize: width * 0.04,
+  marginTop: 12,
+},
+
   categoryButton: {
     paddingHorizontal: width * 0.04,
     paddingVertical: height * 0.01,
