@@ -1,8 +1,6 @@
-
-
-
-
 import React, { useEffect, useState } from "react";
+import styles from "./home_styles";
+
 import {
   View,
   Text,
@@ -16,24 +14,12 @@ import {
   ScrollView,
 } from "react-native";
 import axios from "axios";
-import { useNavigation } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
-const { width, height } = Dimensions.get("window");
 
-
-const HORIZONTAL_PADDING = 16; // FlatList horizontal padding
-const CARD_MARGIN = 16; // space between two cards
-const CARD_WIDTH = (width - HORIZONTAL_PADDING * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.35; // adjustable card height
-const BORDER_RADIUS = Math.round(width * 0.02);
-const PADDING = Math.round(width * 0.02);
-const IMAGE_RATIO = 0.7; // 70%
-
-
-
-export default function Review() {
-  const navigation = useNavigation();
+export default function Home() {
+  const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,10 +29,10 @@ export default function Review() {
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
   const navigationItems = [
-    { name: "Home", icon: "home", route: "Home" },
-    { name: "Book", icon: "book", route: "Book" },
-    { name: "Message", icon: "message", route: "Message" },
-    { name: "Time", icon: "schedule", route: "Time" },
+    { name: "Home", icon: "home", route: "home" },
+    { name: "Book", icon: "shopping-cart", route: "book" },
+    { name: "Message", icon: "mail", route: "message" },
+    { name: "Time", icon: "schedule", route: "time" },
   ];
 
   useEffect(() => {
@@ -70,7 +56,7 @@ export default function Review() {
   }, []);
 
   const handleNavigation = (route) => {
-    navigation.navigate(route);
+    router.push(`/${route}`);
   };
 
   if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
@@ -163,7 +149,7 @@ export default function Review() {
         <Text style={styles.sectionTitle}>Featured Devices</Text>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {filteredItems.slice(0, 5).map((item) => (
+          {items.map((item) => (   // 🔄 use items instead of filteredItems
             <View key={item.id} style={styles.featuredCard}>
               <Image
                 source={{ uri: item.itemImage }}
@@ -233,219 +219,4 @@ export default function Review() {
   );
 }
 
-const styles = StyleSheet.create({
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: width * 0.04,
-    position: "relative",
-    marginTop: height * 0.03,
-  },
 
-  avatar: { 
-    width: width * 0.1, 
-    height: width * 0.1, 
-    borderRadius: width * 0.05 
-  },
-  
-  username: { 
-    marginLeft: width * 0.03, 
-    fontWeight: "bold", 
-    fontSize: width * 0.04 
-  },
-  
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between", // avatar left, bell right
-    padding: 16,
-    marginTop: 40,
-  },
-  notificationWrapper: {
-    marginLeft: "auto", // pushes it to the right
-    marginRight: 16,
-    position: "relative",
-    width: width * 0.10,   // circle size
-    height: width * 0.10,
-    borderRadius: (width * 0.12) / 2,
-    borderWidth: 2,
-    borderColor: "#057474", // green border
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badge: {
-    position: "absolute",
-    right: -2,
-    top: -2,
-    backgroundColor: "#057474",
-    borderRadius: 10,
-    width: 15,
-    height: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: {
-    color: "white",
-    fontSize: 8,
-    fontWeight: "bold",
-  },
-
-  searchContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#007F7F",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    marginHorizontal: 16,
-    marginVertical: 10,
-    height: 45,
-    backgroundColor: "#fff",
-  },
-
-  leftIcon: {
-    marginRight: 8,
-  },
-
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    color: "#000",
-  },
-
-  rightIcon: {
-    marginLeft: 8,
-  },
-
-
-  sectionTitle: {
-    fontWeight: "bold",
-    fontSize: width * 0.045,
-    marginLeft: width * 0.04,
-    paddingVertical: height * 0.025,
-  },
-
-  featuredCard: {
-    width: width * 0.65,
-    height: height * 0.30,
-    borderRadius: width * 0.03,
-    marginLeft: width * 0.04,
-    overflow: "hidden",
-  },
-  featuredImage: { 
-    width: "100%", 
-    height: "100%", 
-    resizeMode: "cover" 
-  },
-
-   card: {
-    width: CARD_WIDTH,
-    height: CARD_HEIGHT,
-    backgroundColor: "#fff",
-    borderRadius: width * 0.05,
-    borderWidth: .1,
-    overflow: "hidden", // keeps rounded corners clean
-    marginBottom: width * 0.04,
-  },
-
-  upperHalf: {
-    flex: 1, // 50% of card
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#E6E1D6",
-
-  },
-
-  itemImage: {
-    width: "85%",   // adjustable
-    height: "85%",  // adjustable
-    resizeMode: "contain",
-    borderRadius: width * 0.03,
-  },
-
-  lowerHalf: {
-  flex: 1,
-  justifyContent: "flex-start",
-  paddingHorizontal: 8,   // left padding
-  paddingTop: 8,
-},
-
-title: {
-  fontWeight: "bold",
-  fontSize: width * 0.04,
-  marginBottom: 8,
-},
-
-ratingRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  marginBottom: 2,
-},
-
-ratingValue: {
-  fontSize: width * 0.035,
-  color: "#555",
-  marginRight: 4,
-},
-
-starIcon: {
-  fontSize: width * 0.035,
-  color: "#f5a623",  // golden star color
-},
-
-location: {
-  fontSize: width * 0.035,
-  color: "#555",
-  marginBottom: 2,
-},
-
-price: {
-  fontWeight: "bold",
-  fontSize: width * 0.04,
-  marginTop: 12,
-},
-
-  categoryButton: {
-    paddingHorizontal: width * 0.04,
-    paddingVertical: height * 0.01,
-    borderRadius: 20,
-    backgroundColor: "transparent",
-    marginLeft: width * 0.04,
-  },
-  activeCategory: { 
-    backgroundColor: "#007F7F" 
-  },
-  categoryText: { 
-    fontSize: width * 0.035, 
-    color: "#555" 
-  },
-  activeCategoryText: { 
-    color: "#fff", 
-    fontWeight: "bold" 
-  },
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "#057474",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  navButton: { 
-    alignItems: "center", 
-    flex: 1 
-  },
-  navText: { 
-    color: "#fff", 
-    fontWeight: "bold", 
-    fontSize: width * 0.03, 
-    marginTop: height * 0.005 
-  },
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
-  },
-});
