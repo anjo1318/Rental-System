@@ -30,7 +30,7 @@ export default function PersonalInfo() {
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
   const [hidden, setHidden] = useState(true);
-  const [date, setDate] = useState(new Date()); // default = today
+  const [date, setDate] = useState(null); 
   //const [date, setDate] = useState(null);
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -213,7 +213,10 @@ export default function PersonalInfo() {
 
           {/* Birthday picker (Pressable) */}
           <Pressable
-            style={[styles.input /* container style */]}
+            style={[
+              styles.input,
+              { justifyContent: date ? "center" : "flex-start" } // 👈 changes alignment
+            ]}
             onPress={() => {
               setShow(true);
               setFocusField("birthday");
@@ -222,14 +225,14 @@ export default function PersonalInfo() {
             <Text
               style={{
                 color: date ? "#000" : "#888",
-                fontSize: isTextMode("birthday", date) ? inputFontSize : inputFontSize * 0.8,
-                textAlignVertical: isTextMode("birthday", date) ? "center" : "top",
-                transform: [{ translateY: isTextMode("birthday", date) ? 0 : 7 }],
+                fontSize: date ? inputFontSize : inputFontSize * 0.8, // smaller when placeholder
+                marginTop: date ? 0 : 8, // push placeholder down a little from the top
               }}
             >
               {date ? formattedDate : "Birthday *"}
             </Text>
           </Pressable>
+         
 
           {show && (
             <DateTimePicker
