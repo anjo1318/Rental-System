@@ -206,6 +206,12 @@ export default function Login() {
                   <Text style={styles.signupLink}>Sign Up</Text>
                 </Pressable>
               </View>
+              
+              <View style={styles.termsRow}>
+                <Pressable onPress={() => router.push("/terms")}>
+                  <Text style={styles.termsLink}>Terms</Text>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         </ScrollView>
@@ -317,7 +323,33 @@ const styles = StyleSheet.create({
   buttonText: { color: "#fff", fontSize: width * 0.045, fontWeight: "600" },
   buttonPressed: { opacity: 0.85 },
 
-  signupRow: { flexDirection: "row", justifyContent: "center", marginTop: 24 },
-  signupText: { fontSize: width * 0.035, color: "#000" },
-  signupLink: { fontSize: width * 0.035, color: "#000", fontWeight: "700" },
+  signupRow: { 
+    flexDirection: "row", 
+    justifyContent: "center", 
+    marginTop: 24 
+  },
+  signupText: { 
+    fontSize: width * 0.035, 
+    color: "#000" 
+  },
+  signupLink: { 
+    fontSize: width * 0.035, 
+    color: "#000", 
+    fontWeight: "700",
+  },
+    termsRow: { 
+    flexDirection: "row", 
+    justifyContent: "center", 
+    marginTop: 24 
+  },
+  termsText: { 
+    fontSize: width * 0.035, 
+    color: "#000" 
+  },
+  termsLink: { 
+    fontSize: width * 0.035, 
+    color: "#000", 
+    fontWeight: "700" 
+  },
 });
+

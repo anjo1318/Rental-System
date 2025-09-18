@@ -19,12 +19,23 @@ export default function ProfileHeader() {
           </Pressable>
 
           {/* center: page title */}
-          <Text style={styles.pageName}>Messages</Text>
+          <Text style={styles.pageName}>Terms and Conditions</Text>
         </View>
+      </View>
+
+      {/* Non-header Content */}
+      <View style={styles.bodyWrapper}>
+        <ScrollView contentContainerStyle={styles.scrollContent}></ScrollView>
+        <Text>RENTAL AGREEMENT</Text>
+        <Text>GENERAL TERMS AND CONDITION</Text>
+
       </View>
     </View>
   );
 }
+
+
+
 
 const styles = StyleSheet.create({
   container: {
@@ -60,51 +71,11 @@ const styles = StyleSheet.create({
   },
 
  
-  bodyWrapper: {
-  flex: 1,
-  paddingHorizontal: 16,
-  paddingBottom: 30,
-  justifyContent: "space-between", // pushes buttons to bottom
-},
+  
 
-scrollContent: {
-  flexGrow: 1, // makes scrollview expand
-},
 
-bottomContainer: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginTop: 20,
-},
 
-button: {
-  flex: 1,
-  paddingVertical: 12,
-  marginHorizontal: 5,
-  borderRadius: 8,
-  alignItems: "center",
-},
 
-deleteButton: {
-  backgroundColor: "#FFF",
-  borderColor: "#D40004",
-  borderWidth: .7,
-  borderRadius: 10,
-},
 
-proceedButton: {
-  backgroundColor: "#057474",
-  borderRadius: 10,
-},
-
-deleteText: {
-  color: "#D40004",
-  fontSize: 13,
-},
-
-proceedText: {
-  color: "#FFF",
-  fontSize: 13,
-},
 
 });
