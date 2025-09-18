@@ -3,7 +3,7 @@ import { fetchOwners } from '../controllers/ownerController.js';
 
 const router = express.Router();
 
-router.get('/', fetchOwners);
+// router.get('/', fetchOwners);
 
 
 export default router;

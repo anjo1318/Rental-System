@@ -22,7 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
-export default function Login() {
+export default function ownerLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -86,7 +86,7 @@ export default function Login() {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/user-login`,
+        `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/owner-login`,   
         { email, password }
       );
 
@@ -94,7 +94,7 @@ export default function Login() {
         const { token, user } = response.data;
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(user));
-        router.push("/home");
+        router.push("/owner/ownerHome");
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
@@ -124,7 +124,7 @@ export default function Login() {
             <View style={styles.headerWrapper}>
               <Animated.Image
                 // header graphic (keeps in place relative to the wrapper)
-                source={require("../assets/images/header.png")}
+                source={require("../../assets/images/header.png")}
                 style={styles.headerImage}
                 resizeMode="cover"
                 accessible
@@ -133,13 +133,13 @@ export default function Login() {
               <Pressable style={styles.backButton} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
               </Pressable>
-              <Text style={styles.loginText}>Login</Text>
+              <Text style={styles.loginText}>Owner Login</Text>
             </View>
 
             {/* Logo (Animated scale) */}
             <View style={styles.middle}>
               <Animated.Image
-                source={require("../assets/images/logo2.png")}
+                source={require("../../assets/images/header.png")}
                 style={[
                   styles.logo,
                   { transform: [{ scale: logoScale }] }, // scale down while moving up
