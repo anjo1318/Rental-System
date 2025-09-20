@@ -194,19 +194,44 @@ const sections = [
 
         {/* 👉 Dynamic sections */}
         {sections.map((section, index) => (
-          <View key={index} style={styles.section}>
+          <View
+            key={index}
+            style={[
+              styles.section,
+              index === sections.length - 1 ? { marginBottom: 0 } : {} // remove bottom margin for last section
+            ]}
+          >
             <Text style={styles.subTitle1}>{section.title}</Text>
-              <View style={styles.paragraphWrapper}>
-            <AutoHeightWebView
-              originWhitelist={["*"]}
-              source={{ html: buildHtml(section.content) }}
-              style={styles.webview}
-              scrollEnabled={false}
-            />
-          </View>
-
+            <View style={styles.paragraphWrapper}>
+              <AutoHeightWebView
+                originWhitelist={["*"]}
+                source={{ html: buildHtml(section.content) }}
+                style={styles.webview}
+                scrollEnabled={false}
+              />
+            </View>
           </View>
         ))}
+
+        {/* 👉 Contact Info immediately after Section 16 */}
+        <View>
+          <Text style={styles.subTitle2}>Contact Information</Text>
+          <Text style={styles.contactText}>
+            For inquiries, disputes, or assistance, please contact our customer support team:
+          </Text>
+
+          <View style={styles.infoSpace}>
+            <Text style={styles.infoText}>•  Email: ezrentsupport@gmail.com</Text>
+            <Text style={styles.infoText}>•  Phone: +63927 166 8762</Text>
+            <Text style={styles.infoText}>•  Address: Wawa, Pinamalayan, Oriental Mindoro</Text>
+          </View>
+
+          <View style={{ alignItems: "center", paddingVertical: 40 }}>
+            <Pressable style={styles.doneButton} onPress={() => console.log("Done pressed")}>
+              <Text style={styles.doneButtonText}>Done</Text>
+            </Pressable>
+          </View>
+        </View>
       </ScrollView>
     </View>
   </View>
@@ -270,12 +295,54 @@ const styles = StyleSheet.create({
     marginTop: -17,    // aligns closer to subtitle
   },
   webview: {
-    flex: 1,
+    width: "100%",
     backgroundColor: "transparent",
   },
   section: {
     marginBottom: 20,
   },
+  scrollContent: {
+    paddingBottom: 150, // 🔧 gives breathing room so section 16 isn’t cut
+  },
+  subTitle2: {
+    fontWeight: "600",
+    fontSize: 13,
+    marginTop: 30,
+    marginLeft: 17,
+  },
+  contactText: {
+    fontSize: 12,
+    marginLeft: 15,
+    marginTop: 5,
+    lineHeight: 18,
+    textAlign: "justify",
+  },
+  infoText: {
+    fontSize: 12,
+    marginLeft: 20,
+    marginTop: 5,
+    lineHeight: 18,
+    textAlign: "justify",
+  },
+  infoSpace: {
+    marginBottom: 20,
+  },
+  doneButton: {
+    width: "70%",
+    backgroundColor: "#057474",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  doneButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+},
+
+
   
 
 });

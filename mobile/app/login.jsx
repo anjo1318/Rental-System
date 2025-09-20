@@ -212,6 +212,7 @@ export default function Login() {
                   <Text style={styles.termsLink}>Terms</Text>
                 </Pressable>
               </View>
+              
             </View>
           </Animated.View>
         </ScrollView>
