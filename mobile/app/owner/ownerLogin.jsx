@@ -133,13 +133,13 @@ export default function ownerLogin() {
               <Pressable style={styles.backButton} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
               </Pressable>
-              <Text style={styles.loginText}>Owner Login</Text>
+              <Text style={styles.loginText}>Login</Text>
             </View>
 
             {/* Logo (Animated scale) */}
             <View style={styles.middle}>
               <Animated.Image
-                source={require("../../assets/images/header.png")}
+                source={require("../../assets/images/logo2.png")}
                 style={[
                   styles.logo,
                   { transform: [{ scale: logoScale }] }, // scale down while moving up
@@ -206,12 +206,6 @@ export default function ownerLogin() {
                   <Text style={styles.signupLink}>Sign Up</Text>
                 </Pressable>
               </View>
-              
-              <View style={styles.termsRow}>
-                <Pressable onPress={() => router.push("/terms")}>
-                  <Text style={styles.termsLink}>Terms</Text>
-                </Pressable>
-              </View>
             </View>
           </Animated.View>
         </ScrollView>
@@ -224,10 +218,20 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
 
   // IMPORTANT: animated wrapper must at least fill the screen so translateY moves everything
-  animatedWrap: { flex: 1, minHeight: height },
+  animatedWrap: { 
+    flex: 1, 
+    minHeight: height 
+  },
 
-  headerWrapper: { width: "100%", height: height * 0.22, position: "relative" },
-  headerImage: { width: "100%", height: "100%" },
+  headerWrapper: { 
+    width: "100%", 
+    height: height * 0.22, 
+    position: "relative" 
+  },
+  headerImage: { 
+    width: "100%", 
+    height: "100%" 
+  },
   backButton: {
     position: "absolute",
     top: height * 0.04,
@@ -284,8 +288,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  inputPassword: { flex: 1, fontSize: 16, color: "#000" },
-  eyeIcon: { marginLeft: 10 },
+  inputPassword: { 
+    flex: 1, 
+    fontSize: 16, 
+    color: "#000" 
+  },
+  eyeIcon: { 
+    marginLeft: 10 
+  },
 
   row: {
     flexDirection: "row",
@@ -295,7 +305,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  checkboxContainer: { flexDirection: "row", alignItems: "center" },
+  checkboxContainer: { 
+    flexDirection: "row", 
+    alignItems: "center" 
+  },
   checkbox: {
     width: 18,
     height: 18,
@@ -305,12 +318,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: { backgroundColor: "black" },
-  checkboxText: { fontSize: width * 0.035, color: "#000" },
+  checkboxChecked: { 
+    backgroundColor: "black" 
+  },
+  checkboxText: { 
+    fontSize: width * 0.035, 
+    color: "#000" 
+  },
 
-  checkmark: { color: "#fff", fontSize: 12, textAlign: "center", lineHeight: 12 },
+  checkmark: { 
+    color: "#fff", 
+    fontSize: 12, 
+    textAlign: "center", 
+    lineHeight: 12 
+  },
 
-  forgotText: { fontSize: width * 0.035, color: "black" },
+  forgotText: { 
+    fontSize: width * 0.035, 
+    color: "black" 
+  },
 
   button: {
     width: "60%",
@@ -320,8 +346,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  buttonText: { color: "#fff", fontSize: width * 0.045, fontWeight: "600" },
-  buttonPressed: { opacity: 0.85 },
+  buttonText: { 
+    color: "#fff", 
+    fontSize: width * 0.045, 
+    fontWeight: "600" 
+  },
+  buttonPressed: { 
+    opacity: 0.85 
+  },
 
   signupRow: { 
     flexDirection: "row", 
@@ -336,20 +368,6 @@ const styles = StyleSheet.create({
     fontSize: width * 0.035, 
     color: "#000", 
     fontWeight: "700",
-  },
-    termsRow: { 
-    flexDirection: "row", 
-    justifyContent: "center", 
-    marginTop: 24 
-  },
-  termsText: { 
-    fontSize: width * 0.035, 
-    color: "#000" 
-  },
-  termsLink: { 
-    fontSize: width * 0.035, 
-    color: "#000", 
-    fontWeight: "700" 
   },
 });
 

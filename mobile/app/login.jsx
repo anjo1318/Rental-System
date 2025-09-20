@@ -130,7 +130,7 @@ export default function Login() {
                 accessible
                 accessibilityLabel="Top banner"
               />
-              <Pressable style={styles.backButton} onPress={() => router.back()}>
+              <Pressable style={styles.backButton} onPress={() => router.push("/")}>
                 <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
               </Pressable>
               <Text style={styles.loginText}>Login</Text>

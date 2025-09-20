@@ -23,10 +23,10 @@ export default function ownerHome() {
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
   const navigationItems = [
-    { name: "Dashboard", icon: "dashboard", route: "ownerDashboard" },
-    { name: "My Items", icon: "inventory", route: "ownerItems" },
-    { name: "Bookings", icon: "event-note", route: "ownerBookings" },
-    { name: "Settings", icon: "settings", route: "ownerSettings" },
+    { name: "Dashboard", icon: "home", route: "ownerDashboard", isImage: false },
+    { name: "Listing", icon: "list-alt", route: "ownerListing", isImage: false },
+    { name: "Request", icon: require("../../assets/images/request.png"), route: "ownerRequest", isImage: true },
+    { name: "Time", icon: "schedule", route: "ownerTime", isImage: false },
   ];
 
   // Mock data for demo
@@ -78,9 +78,14 @@ export default function ownerHome() {
 
         {/* Status Badge */}
         <View style={styles.statusRow}>
-          <View style={[styles.statusBadge, { backgroundColor: item.isAvailable ? '#4CAF50' : '#FF5722' }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: item.isAvailable ? "#4CAF50" : "#FF5722" },
+            ]}
+          >
             <Text style={styles.statusText}>
-              {item.isAvailable ? 'Available' : 'Rented'}
+              {item.isAvailable ? "Available" : "Rented"}
             </Text>
           </View>
         </View>
@@ -100,11 +105,14 @@ export default function ownerHome() {
         {/* Header with Back Button and Title */}
         <View style={styles.headerWrapper}>
           <View style={styles.profileContainer}>
-            <Pressable onPress={() => router.push("/home")}>
+            <Pressable onPress={() => router.back()}
+              hitSlop={10}
+              style={{ zIndex: 10 }} 
+              >
               <Icon name="arrow-back" size={24} color="#FFF" />
             </Pressable>
             <Text style={styles.pageName}>Owner Dashboard</Text>
-            
+
             {/* Notification Icon with Badge */}
             <View style={styles.notificationWrapper}>
               <Icon name="notifications-none" size={24} color="#FFF" />
@@ -137,7 +145,12 @@ export default function ownerHome() {
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
-          <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+          <Icon
+            name="search"
+            size={20}
+            color="#cccccc"
+            style={styles.leftIcon}
+          />
           <TextInput
             placeholder="Search your items.."
             value={search}
@@ -147,7 +160,7 @@ export default function ownerHome() {
           />
           <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
         </View>
-        
+
         {/* Featured Items */}
         <View style={styles.featuredSection}>
           <Text style={styles.sectionTitle}>Your Featured Items</Text>
@@ -207,7 +220,10 @@ export default function ownerHome() {
 
         {/* Add Item Button */}
         <View style={styles.addButtonContainer}>
-          <Pressable style={styles.addButton} onPress={() => router.push('/addItem')}>
+          <Pressable
+            style={styles.addButton}
+            onPress={() => router.push("/addItem")}
+          >
             <Icon name="add" size={24} color="#FFF" />
             <Text style={styles.addButtonText}>Add New Item</Text>
           </Pressable>
@@ -222,7 +238,15 @@ export default function ownerHome() {
             style={styles.navButton}
             onPress={() => handleNavigation(navItem.route)}
           >
-            <Icon name={navItem.icon} size={24} color="#fff" />
+            {navItem.isImage ? (
+              <Image
+                source={navItem.icon}
+                style={{ width: 24, height: 24, tintColor: "#fff" }}
+                resizeMode="contain"
+              />
+            ) : (
+              <Icon name={navItem.icon} size={24} color="#fff" />
+            )}
             <Text style={styles.navText}>{navItem.name}</Text>
           </Pressable>
         ))}
@@ -239,7 +263,7 @@ const styles = StyleSheet.create({
   headerWrapper: {
     width: "100%",
     backgroundColor: "#057474",
-    paddingTop: 40,
+    paddingTop: 60,
     paddingBottom: 16,
     borderBottomWidth: 2,
     borderBottomColor: "#ccc",
