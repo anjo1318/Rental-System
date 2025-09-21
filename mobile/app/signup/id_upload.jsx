@@ -1,10 +1,11 @@
 import React, { useState } from "react";
-import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,ScrollView,} from "react-native";
+import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,KeyboardAvoidingView,Platform,} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import axios from "axios";   // 👈 make sure axios is imported
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
 import * as ImagePicker from "expo-image-picker";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
 const { width, height } = Dimensions.get("window");
 
@@ -114,7 +115,16 @@ export default function PersonalInfo() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
-      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}>
+      <KeyboardAvoidingView
+              style={{ flex: 1 }}
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              >
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+          enableOnAndroid={true}
+          keyboardShouldPersistTaps="handled"
+          enableAutomaticScroll={true} // scrolls input into view automatically
+        >
         <View style={styles.headerWrapper}>
           <Image
             source={require("../../assets/images/header.png")}
@@ -314,7 +324,8 @@ export default function PersonalInfo() {
             <Text style={styles.previousText}>Previous</Text>
           </Pressable>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+    </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -177,7 +177,7 @@ const sections = [
     <View style={styles.headerWrapper}>
       <View style={styles.profileContainer}>
         {/* left: back button */}
-        <Pressable onPress={() => router.push("/login")}>
+        <Pressable onPress={() => router.back()}>
           <Icon name="arrow-back" size={22} color="#000" style={{ marginTop: 25 }} />
         </Pressable>
 
