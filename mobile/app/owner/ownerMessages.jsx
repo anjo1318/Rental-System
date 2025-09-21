@@ -1,180 +1,71 @@
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import {
   View,
   Text,
-  FlatList,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
+  ScrollView,
   StyleSheet,
-  ActivityIndicator,
+  Dimensions,
+  Pressable,
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function OwnerMessages() {
+const { width, height } = Dimensions.get("window");
+
+// ✅ Responsive constants derived from screen size
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.12)); // at least 64px
+const ICON_BOX = Math.round(width * 0.10); // 12% of width for icon slots
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06)); // icons scale with width
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // title font adapts to width
+const PADDING_H = Math.round(width * 0.04); // horizontal padding scales
+const MARGIN_TOP = Math.round(height * 0.045); // top margin scales
+
+export default function ProfileHeader() {
   const router = useRouter();
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [ownerId, setOwnerId] = useState(null);
-  const flatListRef = useRef();
-
-  // Load owner ID from AsyncStorage
-  const loadOwner = async () => {
-    try {
-      const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        setOwnerId(user.id);
-      } else {
-        router.replace("/ownerLogin");
-      }
-    } catch (err) {
-      console.error("Error loading owner:", err);
-      router.replace("/ownerLogin");
-    }
-  };
-
-  // Fetch messages from API
-  const fetchMessages = async () => {
-    if (!ownerId) return;
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem("token");
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/messages?ownerId=${ownerId}`,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setMessages(data.data);
-      } else {
-        console.error("Fetch messages error:", data.error);
-      }
-    } catch (err) {
-      console.error("Fetch messages failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadOwner();
-  }, []);
-
-  useEffect(() => {
-    if (ownerId) fetchMessages();
-  }, [ownerId]);
-
-  // Send new message to API
-  const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
-    try {
-      const token = await AsyncStorage.getItem("token");
-      const response = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/messages/send`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            ownerId,
-            text: newMessage,
-          }),
-        }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setMessages((prev) => [...prev, data.message]);
-        setNewMessage("");
-        flatListRef.current.scrollToEnd({ animated: true });
-      } else {
-        console.error("Send message error:", data.error);
-      }
-    } catch (err) {
-      console.error("Send message failed:", err);
-    }
-  };
-
-  const renderMessage = ({ item }) => {
-    const isOwner = item.sender === "owner"; 
-    return (
-      <View
-        style={[
-          styles.messageBubble,
-          isOwner ? styles.ownerMessage : styles.userMessage,
-        ]}
-      >
-        <Text style={[styles.messageText, isOwner && { color: "#FFF" }]}>
-          {item.text}
-        </Text>
-        <Text style={styles.timestamp}>
-          {new Date(item.timestamp).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
-      </View>
-    );
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#057474" />
-        <Text style={{ marginTop: 10 }}>Loading messages...</Text>
-      </View>
-    );
-  }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={90}
-    >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Pressable onPress={() => router.replace("owner/ownerHome")} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FFF" />
-        </Pressable>
-        <Text style={styles.headerTitle}>Messages</Text>
-      </View>
-
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        renderItem={renderMessage}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={{ padding: 16 }}
-        onContentSizeChange={() =>
-          flatListRef.current.scrollToEnd({ animated: true })
-        }
+    <View style={styles.container}>
+      {/* Status bar */}
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#057474"
+        translucent={false}
       />
 
-      {/* Input Box */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Type a message..."
-          value={newMessage}
-          onChangeText={setNewMessage}
-        />
-        <Pressable style={styles.sendButton} onPress={handleSendMessage}>
-          <Icon name="send" size={24} color="#FFF" />
-        </Pressable>
+      {/* Header */}
+      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
+        <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }]}>
+          {/* Left: back button */}
+          <View style={[styles.iconBox, { width: ICON_BOX }]}>
+            <Pressable
+              onPress={() => router.back()}
+              hitSlop={10}
+              style={styles.iconPress}
+            >
+              <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
+            </Pressable>
+          </View>
+
+          {/* Center: page title */}
+          <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            style={[styles.pageName, { fontSize: TITLE_FONT }]}
+          >
+            Messages
+          </Text>
+
+          {/* Right: placeholder (keeps title centered) */}
+          <View style={[styles.iconBox, { width: ICON_BOX }]} />
+        </View>
       </View>
-    </KeyboardAvoidingView>
+
+      {/* Body */}
+      <View style={styles.bodyWrapper}>
+        <ScrollView contentContainerStyle={styles.scrollContent}></ScrollView>
+      </View>
+    </View>
   );
 }
 
@@ -183,74 +74,47 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#E6E1D6",
   },
-  loader: {
-    flex: 1,
+
+  headerWrapper: {
+    width: "100%",
+    backgroundColor: "#057474",
+    borderBottomWidth: 2,
+    borderBottomColor: "#ccc",
     justifyContent: "center",
-    alignItems: "center",
   },
-  header: {
+
+  profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
+    justifyContent: "space-between",
   },
-  backButton: {
-    marginRight: 16,
+
+  iconBox: {
+    alignItems: "center",
+    justifyContent: "center",
   },
-  headerTitle: {
-    fontSize: 18,
+
+  iconPress: {
+    padding: width * 0.02, // tap area scales with width
+    borderRadius: 6,
+  },
+
+  pageName: {
     color: "#FFF",
+    textAlign: "center",
+    flex: 1,
+    paddingHorizontal: width * 0.015, // keeps spacing consistent
     fontWeight: "600",
   },
-  messageBubble: {
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 10,
-    maxWidth: "80%",
-  },
-  ownerMessage: {
-    backgroundColor: "#057474",
-    alignSelf: "flex-end",
-  },
-  userMessage: {
-    backgroundColor: "#FFF",
-    alignSelf: "flex-start",
-  },
-  messageText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  timestamp: {
-    fontSize: 10,
-    color: "#999",
-    marginTop: 4,
-    textAlign: "right",
-  },
-  inputContainer: {
-    flexDirection: "row",
-    padding: 8,
-    backgroundColor: "#FFF",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#ccc",
-  },
-  input: {
+
+  bodyWrapper: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginRight: 8,
-    fontSize: 14,
-    backgroundColor: "#F5F5F5",
+    paddingHorizontal: width * 0.04, // responsive padding
+    paddingBottom: height * 0.04, // scales bottom padding
+    justifyContent: "space-between",
   },
-  sendButton: {
-    backgroundColor: "#057474",
-    padding: 10,
-    borderRadius: 50,
-    justifyContent: "center",
-    alignItems: "center",
+
+  scrollContent: {
+    flexGrow: 1,
   },
 });
