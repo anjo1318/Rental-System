@@ -41,6 +41,9 @@ export default function ownerLogin() {
   });
 
   useEffect(() => {
+    // Check if user is already logged in
+    checkExistingLogin();
+
     // events differ on iOS vs Android for smoother animation
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
@@ -77,6 +80,41 @@ export default function ownerLogin() {
     };
   }, [translateY]);
 
+  // Check if user is already logged in
+  const checkExistingLogin = async () => {
+    try {
+      const [token, userData] = await AsyncStorage.multiGet(['token', 'user']);
+      
+      if (token[1] && userData[1]) {
+        console.log('✅ Found existing login, redirecting to dashboard');
+        router.replace('/owner/ownerHome');
+      }
+    } catch (error) {
+      console.error('Error checking existing login:', error);
+    }
+  };
+
+  // Load saved credentials if Remember Me was checked
+  const loadSavedCredentials = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem('savedEmail');
+      const savedPassword = await AsyncStorage.getItem('savedPassword');
+      const savedRememberMe = await AsyncStorage.getItem('rememberMe');
+      
+      if (savedRememberMe === 'true' && savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch (error) {
+      console.error('Error loading saved credentials:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password.");
@@ -90,17 +128,64 @@ export default function ownerLogin() {
         { email, password }
       );
 
+      console.log('🔍 Login response:', response.data);
+
       if (response.data.success) {
         const { token, user } = response.data;
-        await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem("user", JSON.stringify(user));
-        router.push("/owner/ownerHome");
+        
+        // Store user session data with all available fields
+        const userDataToStore = {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
+          profileImage: user.profileImage || null,
+          bio: user.bio || null,
+          isVerified: user.isVerified || false,
+          role: user.role,
+          loginTime: new Date().toISOString(),
+        };
+
+        console.log('💾 Storing user data:', userDataToStore);
+
+        // Store essential login data
+        await AsyncStorage.multiSet([
+          ['token', token],
+          ['user', JSON.stringify(userDataToStore)],
+          ['isLoggedIn', 'true'],
+        ]);
+
+        // Handle Remember Me functionality
+        if (rememberMe) {
+          await AsyncStorage.multiSet([
+            ['savedEmail', email],
+            ['savedPassword', password],
+            ['rememberMe', 'true'],
+          ]);
+        } else {
+          // Clear saved credentials if Remember Me is not checked
+          await AsyncStorage.multiRemove(['savedEmail', 'savedPassword', 'rememberMe']);
+        }
+
+        console.log('✅ User logged in and data stored successfully');
+        
+        // Navigate to owner dashboard
+        router.replace('/owner/ownerHome');
+        
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
+      if (error.response?.status === 404) {
+        Alert.alert("Error", "Account not found. Please check your email or sign up.");
+      } else if (error.response?.status === 401) {
+        Alert.alert("Error", "Incorrect password. Please try again.");
+      } else {
+        Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
+      }
     } finally {
       setLoading(false);
     }
@@ -370,4 +455,3 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
-

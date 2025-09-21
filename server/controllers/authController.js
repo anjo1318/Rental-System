@@ -95,7 +95,7 @@ const mobileUserLogin = async (req, res) => {
   }
 };
 
-const mobileOnwerLogin = async (req, res) => {
+const mobileOwnerLogin = async (req, res) => {
   console.log("Trying to login using mobileOwnerLogin");
   try {
     const { email, password } = req.body;
@@ -108,13 +108,13 @@ const mobileOnwerLogin = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Owner not found' });
     }
 
-    // 🔹 Compare passwords correctly
+    // Compare passwords correctly
     const isMatch = await bcrypt.compare(password, owner.passwordHash);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Wrong password' });
     }
 
-    // 🔹 Generate JWT with role = owner
+    // Generate JWT with role = owner
     const token = jwt.sign(
       { id: owner.id, role: 'owner' },
       process.env.JWT_KEY,
@@ -123,14 +123,21 @@ const mobileOnwerLogin = async (req, res) => {
 
     console.log(`${owner.email}, successfully logged in`);
 
-    // 🔹 Send response (build full name)
+    // Send complete user data that matches frontend expectations
     res.status(200).json({
       success: true,
       token,
       user: { 
         id: owner.id, 
-        name: `${owner.firstName} ${owner.lastName}`, 
-        role: 'owner' 
+        firstName: owner.firstName,
+        lastName: owner.lastName,
+        email: owner.email,
+        phone: owner.phone || null,
+        address: owner.address || null,
+        profileImage: owner.profileImage || null,
+        bio: owner.bio || null,
+        isVerified: owner.isVerified || false,
+        role: 'owner'
       },
     });
 
@@ -141,4 +148,4 @@ const mobileOnwerLogin = async (req, res) => {
 };
 
 
-export { login, verify, mobileUserLogin, mobileOnwerLogin};
+export { login, verify, mobileUserLogin, mobileOwnerLogin};
