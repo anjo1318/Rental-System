@@ -208,7 +208,7 @@ export default function Login() {
               </View>
               
               <View style={styles.termsRow}>
-                <Pressable onPress={() => router.push("/terms")}>
+                <Pressable onPress={() => router.push("customer/profile")}>
                   <Text style={styles.termsLink}>Terms</Text>
                 </Pressable>
               </View>

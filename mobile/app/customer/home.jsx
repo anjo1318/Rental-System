@@ -84,10 +84,12 @@ export default function Home() {
         <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
+           <Pressable onPress={() => router.push("profile")}>
             <Image
               source={{ uri: "https://i.pravatar.cc/150?img=3" }}
               style={styles.avatar}
             />
+          </Pressable>
             <Text style={styles.username}>Marco Polo</Text>
             <View style={styles.notificationWrapper}>
               <Icon name="notifications-none" size={24} color="#057474" />
