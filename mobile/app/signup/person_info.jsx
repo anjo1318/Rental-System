@@ -11,11 +11,15 @@ import {
   StatusBar,
   ScrollView,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import axios from "axios";
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -30,8 +34,7 @@ export default function PersonalInfo() {
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
   const [hidden, setHidden] = useState(true);
-  const [date, setDate] = useState(new Date()); // default = today
-  //const [date, setDate] = useState(null);
+  const [date, setDate] = useState(null); 
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -96,8 +99,15 @@ export default function PersonalInfo() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+        enableOnAndroid={true}
+        keyboardShouldPersistTaps="handled"
+        enableAutomaticScroll={true} // scrolls input into view automatically
       >
         <View style={styles.headerWrapper}>
           <Image
@@ -213,7 +223,10 @@ export default function PersonalInfo() {
 
           {/* Birthday picker (Pressable) */}
           <Pressable
-            style={[styles.input /* container style */]}
+            style={[
+              styles.input,
+              { justifyContent: date ? "center" : "flex-start" } // 👈 changes alignment
+            ]}
             onPress={() => {
               setShow(true);
               setFocusField("birthday");
@@ -222,14 +235,14 @@ export default function PersonalInfo() {
             <Text
               style={{
                 color: date ? "#000" : "#888",
-                fontSize: isTextMode("birthday", date) ? inputFontSize : inputFontSize * 0.8,
-                textAlignVertical: isTextMode("birthday", date) ? "center" : "top",
-                transform: [{ translateY: isTextMode("birthday", date) ? 0 : 7 }],
+                fontSize: date ? inputFontSize : inputFontSize * 0.8, // smaller when placeholder
+                marginTop: date ? 0 : 8, // push placeholder down a little from the top
               }}
             >
               {date ? formattedDate : "Birthday *"}
             </Text>
           </Pressable>
+         
 
           {show && (
             <DateTimePicker
@@ -296,7 +309,8 @@ export default function PersonalInfo() {
                 </Text>
         </Pressable>
         </View>
-      </ScrollView>
+      </KeyboardAwareScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -424,7 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.018,
     borderRadius: 30,
     alignItems: "center",
-    marginTop: 11,
+ 
   },
   buttonText: {
     color: "#fff",

@@ -16,7 +16,6 @@ import {
   Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -25,10 +24,7 @@ const { width, height } = Dimensions.get("window");
 export default function Login() {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [hidden, setHidden] = useState(true);
 
   // animated value for moving the whole screen up/down
   const translateY = useRef(new Animated.Value(0)).current;
@@ -94,7 +90,7 @@ export default function Login() {
         const { token, user } = response.data;
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(user));
-        router.push("customer/home");
+        router.push("/home");
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
@@ -130,24 +126,13 @@ export default function Login() {
                 accessible
                 accessibilityLabel="Top banner"
               />
-              <Pressable style={styles.backButton} onPress={() => router.push("/")}>
-                <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
-              </Pressable>
-              <Text style={styles.loginText}>Login</Text>
             </View>
 
-            {/* Logo (Animated scale) */}
-            <View style={styles.middle}>
-              <Animated.Image
-                source={require("../assets/images/logo2.png")}
-                style={[
-                  styles.logo,
-                  { transform: [{ scale: logoScale }] }, // scale down while moving up
-                ]}
-                resizeMode="contain"
-                accessible
-                accessibilityLabel="App logo"
-              />
+             <View>
+               <Text style={styles.sectionTitle}>Reset your Password</Text>
+                <Text style={styles.subText}>
+                  Enter your email address to reset your password. We'll send you a link to reset your password. Just enter your email below.
+                </Text>
             </View>
 
             {/* Form container */}
@@ -163,56 +148,19 @@ export default function Login() {
                 returnKeyType="next"
               />
 
-              <View style={styles.passwordWrapper}>
-                <TextInput
-                  style={styles.inputPassword}
-                  placeholder="Password"
-                  placeholderTextColor="#888"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={hidden}
-                  autoCapitalize="none"
-                  returnKeyType="done"
-                />
-                <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
-                  <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
-                </Pressable>
-              </View>
-
-              <View style={styles.row}>
-                <Pressable style={styles.checkboxContainer} onPress={() => setRememberMe(!rememberMe)}>
-                  <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                    {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                  <Text style={styles.checkboxText}>Remember Me</Text>
-                </Pressable>
-
-                <Pressable onPress={() => router.push("/reset_pass")}>
-                  <Text style={styles.forgotText}>Forgot Password?</Text>
-                </Pressable>
-              </View>
-
               <Pressable
                 style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
                 onPress={handleLogin}
                 disabled={loading}
               >
-                <Text style={styles.buttonText}>{loading ? "Logging in..." : "Login"}</Text>
+                <Text style={styles.buttonText}>{loading ? "Logging in..." : "Continue"}</Text>
               </Pressable>
 
-              <View style={styles.signupRow}>
-                <Text style={styles.signupText}>Don't have an account? </Text>
-                <Pressable onPress={() => router.push("/signup/person_info")}>
-                  <Text style={styles.signupLink}>Sign Up</Text>
+              <View style={styles.returnLoginRow}>
+                <Pressable onPress={() => router.push("/login")}>
+                  <Text style={styles.returnLink}>Return to Login</Text>
                 </Pressable>
               </View>
-              
-              <View style={styles.termsRow}>
-                <Pressable onPress={() => router.push("/terms")}>
-                  <Text style={styles.termsLink}>Terms</Text>
-                </Pressable>
-              </View>
-              
             </View>
           </Animated.View>
         </ScrollView>
@@ -222,41 +170,44 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#fff" },
+  safe: { 
+    flex: 1, 
+    backgroundColor: "#fff" 
+  },
 
   // IMPORTANT: animated wrapper must at least fill the screen so translateY moves everything
   animatedWrap: { flex: 1, minHeight: height },
 
-  headerWrapper: { width: "100%", height: height * 0.22, position: "relative" },
-  headerImage: { width: "100%", height: "100%" },
-  backButton: {
-    position: "absolute",
-    top: height * 0.04,
-    left: width * 0.04,
-    zIndex: 10,
+  headerWrapper: { 
+    width: "100%", 
+    height: height * 0.22, 
+    position: "relative" 
   },
-  loginText: {
-    position: "absolute",
-    top: height * 0.11,
-    left: width * 0.12,
-    fontSize: width * 0.07,
-    fontWeight: "700",
-    color: "#fff",
+  headerImage: { 
+    width: "100%", 
+    height: "100%" 
   },
-
-  middle: { alignItems: "center", marginTop: height * 0.02 },
-  logo: {
-    width: width * 0.35,
-    height: width * 0.35,
-    marginBottom: height * 0.04,
+   sectionTitle: {
+    textAlign: "center",
+    fontWeight: "800",
+    fontSize: 22,
+    marginTop: 100,
   },
-
+  subText: {
+    width: "80%",
+    textAlign: "center",
+    marginBottom: 10,
+    fontSize: 12,
+    marginLeft: 30,
+    paddingVertical: 7,
+  },
   container: {
     flex: 1,
     justifyContent: "flex-start", // keep inputs nearer to top by default
     alignItems: "center",
     paddingHorizontal: width * 0.08,
     paddingBottom: height * 0.06, // space for bottom row
+    marginTop: height * 0.03  , 
   },
 
   input: {
@@ -272,47 +223,6 @@ const styles = StyleSheet.create({
     color: "#000",
   },
 
-  passwordWrapper: {
-    width: "100%",
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#057474",
-    borderRadius: 12,
-    backgroundColor: "#FFF6F6",
-    paddingHorizontal: 14,
-    height: 50,
-    marginBottom: 15,
-  },
-
-  inputPassword: { flex: 1, fontSize: 16, color: "#000" },
-  eyeIcon: { marginLeft: 10 },
-
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-
-  checkboxContainer: { flexDirection: "row", alignItems: "center" },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderWidth: 1,
-    borderColor: "black",
-    marginRight: 8,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  checkboxChecked: { backgroundColor: "black" },
-  checkboxText: { fontSize: width * 0.035, color: "#000" },
-
-  checkmark: { color: "#fff", fontSize: 12, textAlign: "center", lineHeight: 12 },
-
-  forgotText: { fontSize: width * 0.035, color: "black" },
-
   button: {
     width: "60%",
     backgroundColor: "#057474",
@@ -321,36 +231,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  buttonText: { color: "#fff", fontSize: width * 0.045, fontWeight: "600" },
-  buttonPressed: { opacity: 0.85 },
+  buttonText: { 
+    color: "#fff", 
+    fontSize: width * 0.040, 
+    fontWeight: "600" 
+  },
+  buttonPressed: { 
+    opacity: 0.85 
+  },
 
-  signupRow: { 
+  returnLoginRow: { 
     flexDirection: "row", 
     justifyContent: "center", 
-    marginTop: 24 
+    marginTop: 15,
   },
-  signupText: { 
+  returnLink: { 
     fontSize: width * 0.035, 
-    color: "#000" 
-  },
-  signupLink: { 
-    fontSize: width * 0.035, 
-    color: "#000", 
-    fontWeight: "700",
-  },
-    termsRow: { 
-    flexDirection: "row", 
-    justifyContent: "center", 
-    marginTop: 24 
-  },
-  termsText: { 
-    fontSize: width * 0.035, 
-    color: "#000" 
-  },
-  termsLink: { 
-    fontSize: width * 0.035, 
-    color: "#000", 
-    fontWeight: "700" 
+    color: "#7B7878",
+    
   },
 });
 

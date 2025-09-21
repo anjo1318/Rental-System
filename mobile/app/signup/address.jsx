@@ -9,11 +9,12 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import axios from "axios"; 
 import { Alert } from "react-native";
 
@@ -84,11 +85,18 @@ export default function AddressInfo() {
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}
-      >
-        <View style={styles.headerWrapper}>
-          <Image
+      <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          >
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+          enableOnAndroid={true}
+          keyboardShouldPersistTaps="handled"
+          enableAutomaticScroll={true} // scrolls input into view automatically
+        >
+          <View style={styles.headerWrapper}>
+            <Image
             source={require("../../assets/images/header.png")}
             style={styles.headerImage}
             resizeMode="cover"
@@ -244,8 +252,9 @@ export default function AddressInfo() {
           >
             <Text style={styles.previousText}>Previous</Text>
           </Pressable>
-        </View>
-      </ScrollView>
+          </View>
+        </KeyboardAwareScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

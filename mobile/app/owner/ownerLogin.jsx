@@ -22,7 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
-export default function Login() {
+export default function ownerLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,6 +41,9 @@ export default function Login() {
   });
 
   useEffect(() => {
+    // Check if user is already logged in
+    checkExistingLogin();
+
     // events differ on iOS vs Android for smoother animation
     const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
     const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
@@ -77,6 +80,41 @@ export default function Login() {
     };
   }, [translateY]);
 
+  // Check if user is already logged in
+  const checkExistingLogin = async () => {
+    try {
+      const [token, userData] = await AsyncStorage.multiGet(['token', 'user']);
+      
+      if (token[1] && userData[1]) {
+        console.log('✅ Found existing login, redirecting to dashboard');
+        router.replace('/owner/ownerHome');
+      }
+    } catch (error) {
+      console.error('Error checking existing login:', error);
+    }
+  };
+
+  // Load saved credentials if Remember Me was checked
+  const loadSavedCredentials = async () => {
+    try {
+      const savedEmail = await AsyncStorage.getItem('savedEmail');
+      const savedPassword = await AsyncStorage.getItem('savedPassword');
+      const savedRememberMe = await AsyncStorage.getItem('rememberMe');
+      
+      if (savedRememberMe === 'true' && savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch (error) {
+      console.error('Error loading saved credentials:', error);
+    }
+  };
+
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
   const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter both email and password.");
@@ -86,21 +124,68 @@ export default function Login() {
     try {
       setLoading(true);
       const response = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/user-login`,
+        `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/owner-login`,   
         { email, password }
       );
 
+      console.log('🔍 Login response:', response.data);
+
       if (response.data.success) {
         const { token, user } = response.data;
-        await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem("user", JSON.stringify(user));
-        router.push("customer/home");
+        
+        // Store user session data with all available fields
+        const userDataToStore = {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          phone: user.phone || null,
+          address: user.address || null,
+          profileImage: user.profileImage || null,
+          bio: user.bio || null,
+          isVerified: user.isVerified || false,
+          role: user.role,
+          loginTime: new Date().toISOString(),
+        };
+
+        console.log('💾 Storing user data:', userDataToStore);
+
+        // Store essential login data
+        await AsyncStorage.multiSet([
+          ['token', token],
+          ['user', JSON.stringify(userDataToStore)],
+          ['isLoggedIn', 'true'],
+        ]);
+
+        // Handle Remember Me functionality
+        if (rememberMe) {
+          await AsyncStorage.multiSet([
+            ['savedEmail', email],
+            ['savedPassword', password],
+            ['rememberMe', 'true'],
+          ]);
+        } else {
+          // Clear saved credentials if Remember Me is not checked
+          await AsyncStorage.multiRemove(['savedEmail', 'savedPassword', 'rememberMe']);
+        }
+
+        console.log('✅ User logged in and data stored successfully');
+        
+        // Navigate to owner dashboard
+        router.replace('/owner/ownerHome');
+        
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
+      if (error.response?.status === 404) {
+        Alert.alert("Error", "Account not found. Please check your email or sign up.");
+      } else if (error.response?.status === 401) {
+        Alert.alert("Error", "Incorrect password. Please try again.");
+      } else {
+        Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
+      }
     } finally {
       setLoading(false);
     }
@@ -124,13 +209,13 @@ export default function Login() {
             <View style={styles.headerWrapper}>
               <Animated.Image
                 // header graphic (keeps in place relative to the wrapper)
-                source={require("../assets/images/header.png")}
+                source={require("../../assets/images/header.png")}
                 style={styles.headerImage}
                 resizeMode="cover"
                 accessible
                 accessibilityLabel="Top banner"
               />
-              <Pressable style={styles.backButton} onPress={() => router.push("/")}>
+              <Pressable style={styles.backButton} onPress={() => router.back()}>
                 <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
               </Pressable>
               <Text style={styles.loginText}>Login</Text>
@@ -139,7 +224,7 @@ export default function Login() {
             {/* Logo (Animated scale) */}
             <View style={styles.middle}>
               <Animated.Image
-                source={require("../assets/images/logo2.png")}
+                source={require("../../assets/images/logo2.png")}
                 style={[
                   styles.logo,
                   { transform: [{ scale: logoScale }] }, // scale down while moving up
@@ -187,7 +272,7 @@ export default function Login() {
                   <Text style={styles.checkboxText}>Remember Me</Text>
                 </Pressable>
 
-                <Pressable onPress={() => router.push("/reset_pass")}>
+                <Pressable onPress={() => router.push("/forgot-password")}>
                   <Text style={styles.forgotText}>Forgot Password?</Text>
                 </Pressable>
               </View>
@@ -206,13 +291,6 @@ export default function Login() {
                   <Text style={styles.signupLink}>Sign Up</Text>
                 </Pressable>
               </View>
-              
-              <View style={styles.termsRow}>
-                <Pressable onPress={() => router.push("/terms")}>
-                  <Text style={styles.termsLink}>Terms</Text>
-                </Pressable>
-              </View>
-              
             </View>
           </Animated.View>
         </ScrollView>
@@ -225,10 +303,20 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
 
   // IMPORTANT: animated wrapper must at least fill the screen so translateY moves everything
-  animatedWrap: { flex: 1, minHeight: height },
+  animatedWrap: { 
+    flex: 1, 
+    minHeight: height 
+  },
 
-  headerWrapper: { width: "100%", height: height * 0.22, position: "relative" },
-  headerImage: { width: "100%", height: "100%" },
+  headerWrapper: { 
+    width: "100%", 
+    height: height * 0.22, 
+    position: "relative" 
+  },
+  headerImage: { 
+    width: "100%", 
+    height: "100%" 
+  },
   backButton: {
     position: "absolute",
     top: height * 0.04,
@@ -285,8 +373,14 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
 
-  inputPassword: { flex: 1, fontSize: 16, color: "#000" },
-  eyeIcon: { marginLeft: 10 },
+  inputPassword: { 
+    flex: 1, 
+    fontSize: 16, 
+    color: "#000" 
+  },
+  eyeIcon: { 
+    marginLeft: 10 
+  },
 
   row: {
     flexDirection: "row",
@@ -296,7 +390,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  checkboxContainer: { flexDirection: "row", alignItems: "center" },
+  checkboxContainer: { 
+    flexDirection: "row", 
+    alignItems: "center" 
+  },
   checkbox: {
     width: 18,
     height: 18,
@@ -306,12 +403,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxChecked: { backgroundColor: "black" },
-  checkboxText: { fontSize: width * 0.035, color: "#000" },
+  checkboxChecked: { 
+    backgroundColor: "black" 
+  },
+  checkboxText: { 
+    fontSize: width * 0.035, 
+    color: "#000" 
+  },
 
-  checkmark: { color: "#fff", fontSize: 12, textAlign: "center", lineHeight: 12 },
+  checkmark: { 
+    color: "#fff", 
+    fontSize: 12, 
+    textAlign: "center", 
+    lineHeight: 12 
+  },
 
-  forgotText: { fontSize: width * 0.035, color: "black" },
+  forgotText: { 
+    fontSize: width * 0.035, 
+    color: "black" 
+  },
 
   button: {
     width: "60%",
@@ -321,8 +431,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 20,
   },
-  buttonText: { color: "#fff", fontSize: width * 0.045, fontWeight: "600" },
-  buttonPressed: { opacity: 0.85 },
+  buttonText: { 
+    color: "#fff", 
+    fontSize: width * 0.045, 
+    fontWeight: "600" 
+  },
+  buttonPressed: { 
+    opacity: 0.85 
+  },
 
   signupRow: { 
     flexDirection: "row", 
@@ -338,19 +454,4 @@ const styles = StyleSheet.create({
     color: "#000", 
     fontWeight: "700",
   },
-    termsRow: { 
-    flexDirection: "row", 
-    justifyContent: "center", 
-    marginTop: 24 
-  },
-  termsText: { 
-    fontSize: width * 0.035, 
-    color: "#000" 
-  },
-  termsLink: { 
-    fontSize: width * 0.035, 
-    color: "#000", 
-    fontWeight: "700" 
-  },
 });
-

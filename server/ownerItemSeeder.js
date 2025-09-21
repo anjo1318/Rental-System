@@ -11,8 +11,7 @@ const ownerItemSeeder = async () => {
         email: "marcopolo03@gmail.com",
         phone: "09354346468",
         passwordHash: await bcrypt.hash("marco123", 10),
-        bio: "Team Manager and avid collector of gadgets.",
-        address: "Batangas City, Philippines",
+        bio: "Team Manager and avid collector of gadgets.",        address: "Batangas City, Philippines",
         isVerified: true,
         items: [
           {

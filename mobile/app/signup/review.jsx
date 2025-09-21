@@ -210,18 +210,32 @@ export default function PersonalInfo() {
         </View>
 
         {/* Terms Checkbox */}
-        <View style={styles.checkboxContainer}>
-          <Pressable
-            style={[styles.checkbox, isChecked && styles.checkboxChecked]}
-            onPress={() => setIsChecked(!isChecked)}
-            hitSlop={10} 
-          >
-            {isChecked && <Ionicons name="checkmark" size={width * 0.04} color="#fff" />}
-          </Pressable>
-          <Text style={styles.checkboxText}>
-            I confirm that I have read, understood, and agree to be bound by the Terms and Conditions.
-          </Text>
-        </View>
+          <View style={styles.checkboxContainer}>
+            <Pressable
+              style={[styles.checkbox, isChecked && styles.checkboxChecked]}
+              onPress={() => setIsChecked(!isChecked)}
+              hitSlop={10}
+            >
+              {isChecked && (
+                <Ionicons name="checkmark" size={width * 0.04} color="#fff" />
+              )}
+            </Pressable>
+
+            {/* Inline text with nested Text link so it stays on the same line */}
+            <View style={styles.checkboxRow}>
+              <Text style={styles.checkboxText}>
+                I confirm that I have read, understood, and agree to be bound by{" "}
+                <Text
+                  style={styles.checkboxLink}
+                  onPress={() => router.push("/terms")}
+                >
+                  Terms and Conditions.
+                </Text>
+              </Text>
+            </View>
+          </View>
+
+        
 
         {/* Buttons */}
         <View style={styles.buttonContainer}>
@@ -254,7 +268,6 @@ export default function PersonalInfo() {
   );
 }
 
-// ✅ ADDED NEW STYLES FOR IMAGES AND STATES
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
@@ -371,7 +384,7 @@ const styles = StyleSheet.create({
     marginTop: height * 0.015,
     borderColor: "#057474",
   },
-  // ✅ NEW STYLES FOR IMAGES
+
   uploadedImage: {
     width: width * 0.6,
     height: height * 0.25,
@@ -390,13 +403,14 @@ const styles = StyleSheet.create({
     fontSize: width * 0.035,
     fontStyle: "italic",
     color: "#999",
-    marginTop: 5,
+    paddingVertical: 40,
   },
   checkboxContainer: {
     flexDirection: "row",
-    alignItems: "center",
-    marginTop: height * 0.25,
-    paddingHorizontal: width * 0.08,
+    alignItems: "flex-start", // top-align so checkbox sits next to first line of multi-line text
+    marginTop: height * 0.2,  // adjust as needed
+    paddingHorizontal: width * 0.04,
+
   },
   checkbox: {
     width: width * 0.045,
@@ -408,14 +422,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: width * 0.03,
     backgroundColor: "#FFF",
+    marginTop: 5,
   },
   checkboxChecked: {
     backgroundColor: "#057474",
   },
+  checkboxRow: {
+    flex: 1,             // use remaining width
+    flexDirection: "row",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+    marginTop: 0,        // optional: remove extra gap
+  },
+
   checkboxText: {
-    flex: 1,
     fontSize: width * 0.030,
     color: "#333",
+    flexShrink: 1,
+  },
+
+  checkboxLink: {
+    fontSize: width * 0.030,
+    color: "#000",
+    fontWeight: "700",
   },
   button: {
     width: "85%",

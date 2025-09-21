@@ -14,7 +14,7 @@ export default function Index() {
       {/* Status bar settings */}
       <StatusBar
         barStyle="light-content"        // White icons/text
-        backgroundColor="#2007F7F"       // Android status bar color
+        backgroundColor="#007F7F"       // Android status bar color
         translucent={false}             // Keep layout unaffected
       />
 
@@ -65,7 +65,7 @@ export default function Index() {
               styles.buttonTop,
               pressed && styles.buttonPressed,
             ]}
-            onPress={() => router.push("/owner")}
+            onPress={() => router.push("/owner/ownerLogin")}
             android_ripple={{ color: "#ddd" }}
           >
             <Text style={styles.buttonText}>Owner</Text>

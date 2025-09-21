@@ -15,7 +15,11 @@ function App() {
     <div className="flex">
       <Routes>
         {/* Login has no sidebar/layout */}
+<<<<<<< HEAD
         <Route path="/"login element={<Login />} />
+=======
+        <Route path="/" element={<Login />} />
+>>>>>>> 7754a0cddd92d0efee09f89c4eb4617ed785746c
 
         {/* All other pages inside Layout */}
         <Route element={<Layout />}>

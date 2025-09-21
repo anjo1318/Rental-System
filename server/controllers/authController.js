@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import Admin from '../models/Admin.js';
 import Customer from '../models/Customer.js';
+import Owner from '../models/Owner.js';
 import bcrypt from 'bcryptjs';
 
 const login = async (req, res) => {
@@ -48,8 +49,8 @@ const verify = (req, res) => {
 
 
 
-const mobileLogin = async (req, res) => {
-  console.log("Trying to login using mobileLogin");
+const mobileUserLogin = async (req, res) => {
+  console.log("Trying to login using mobileUserLogin");
   try {
     const { email, password } = req.body;
 
@@ -94,10 +95,57 @@ const mobileLogin = async (req, res) => {
   }
 };
 
+const mobileOwnerLogin = async (req, res) => {
+  console.log("Trying to login using mobileOwnerLogin");
+  try {
+    const { email, password } = req.body;
+
+    console.log("Login attempt:", req.body);
+
+    const owner = await Owner.findOne({ where: { email } });
+
+    if (!owner) {
+      return res.status(404).json({ success: false, error: 'Owner not found' });
+    }
+
+    // Compare passwords correctly
+    const isMatch = await bcrypt.compare(password, owner.passwordHash);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, error: 'Wrong password' });
+    }
+
+    // Generate JWT with role = owner
+    const token = jwt.sign(
+      { id: owner.id, role: 'owner' },
+      process.env.JWT_KEY,
+      { expiresIn: '10d' }
+    );
+
+    console.log(`${owner.email}, successfully logged in`);
+
+    // Send complete user data that matches frontend expectations
+    res.status(200).json({
+      success: true,
+      token,
+      user: { 
+        id: owner.id, 
+        firstName: owner.firstName,
+        lastName: owner.lastName,
+        email: owner.email,
+        phone: owner.phone || null,
+        address: owner.address || null,
+        profileImage: owner.profileImage || null,
+        bio: owner.bio || null,
+        isVerified: owner.isVerified || false,
+        role: 'owner'
+      },
+    });
+
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
 
 
-
-
-
-
-export { login, verify, mobileLogin};
+export { login, verify, mobileUserLogin, mobileOwnerLogin};

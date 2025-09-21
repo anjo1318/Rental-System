@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, verify, mobileLogin } from '../controllers/authController.js'; 
+import { login, mobileOwnerLogin, mobileUserLogin, verify  } from '../controllers/authController.js'; 
 import verifyAdmin from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -8,6 +8,9 @@ const router = express.Router();
 router.post('/login', login);
 router.get('/verify', verifyAdmin, verify);
 
-//mobile app
-router.post('/mobile/login', mobileLogin);
+//mobile app User
+router.post('/mobile/user-login', mobileUserLogin);
+
+//mobiel app Owner
+router.post('/mobile/owner-login', mobileOwnerLogin);
 export default router;
