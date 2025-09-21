@@ -158,20 +158,22 @@ export default function Home() {
             data={filteredItems}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <View style={styles.card}>
-                <View style={styles.upperHalf}>
-                  <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
-                </View>
-                <View style={styles.lowerHalf}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  <View style={styles.ratingRow}>
-                    <Text style={styles.ratingValue}>5.0</Text>
-                    <Text style={styles.starIcon}>⭐</Text>
+              <Pressable onPress={() => router.push({ pathname: '/customer/itemDetail', params: { id: item.id } })}>
+                <View style={styles.card}>
+                  <View style={styles.upperHalf}>
+                    <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
                   </View>
-                  <Text style={styles.location}>{item.location}</Text>
-                  <Text style={styles.price}>₱{item.pricePerDay}</Text>
+                  <View style={styles.lowerHalf}>
+                    <Text style={styles.title}>{item.title}</Text>
+                    <View style={styles.ratingRow}>
+                      <Text style={styles.ratingValue}>5.0</Text>
+                      <Text style={styles.starIcon}>⭐</Text>
+                    </View>
+                    <Text style={styles.location}>{item.location}</Text>
+                    <Text style={styles.price}>₱{item.pricePerDay}</Text>
+                  </View>
                 </View>
-              </View>
+              </Pressable>
             )}
             numColumns={2}
             columnWrapperStyle={{
@@ -181,6 +183,7 @@ export default function Home() {
             scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
+
         </ScrollView>
 
         {/* 🔹 Bottom Nav */}

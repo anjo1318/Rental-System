@@ -7,6 +7,7 @@ import ownerRouter from './routes/owner.js';
 import authRouter from './routes/auth.js';
 import customerRouter from './routes/customer.js';
 import itemRouter from './routes/item.js';
+import chatRouter from './routes/chat.js'
 import cors from 'cors';
 import fs from 'fs';
 
@@ -26,6 +27,8 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir);
 }
 
+
+
 // ✅ IMPORTANT: Serve uploaded files statically
 app.use("/uploads", express.static("uploads"));
 
@@ -38,6 +41,7 @@ app.use('/api/owner', ownerRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/customer', customerRouter); // This handles the file upload now
 app.use('/api/item', itemRouter);
+app.use('/api/chat', chatRouter);
 
 // ✅ ADD: Basic health check route
 app.get('/', (req, res) => {
