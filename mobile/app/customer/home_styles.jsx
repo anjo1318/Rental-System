@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between", // avatar left, bell right
     padding: 16,
-    marginTop: 40,
+    marginTop: 30,
   },
 
   avatar: { 
@@ -68,13 +68,17 @@ const styles = StyleSheet.create({
     height: 45,
     backgroundColor: "#fff",
   },
-  leftIcon: { marginRight: 8 },
+  leftIcon: { 
+    marginRight: 8 
+  },
   searchInput: {
     flex: 1,
     fontSize: 14,
     color: "#000",
   },
-  rightIcon: { marginLeft: 8 },
+  rightIcon: { 
+    marginLeft: 8 
+  },
 
   sectionTitle: {
     fontWeight: "bold",
@@ -179,7 +183,10 @@ const styles = StyleSheet.create({
   },
   navButton: { 
     alignItems: "center", 
-    flex: 1 },
+    flex: 1,
+    zIndex: 10, 
+  },
+    
   navText: {
     color: "#fff",
     fontWeight: "bold",
