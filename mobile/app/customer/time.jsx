@@ -6,13 +6,15 @@ import { RFValue } from "react-native-responsive-fontsize";
 
 const { width, height } = Dimensions.get("window");
 
-// 📏 Responsive constants
-const ICON_BOX = Math.round(width * 0.10);   // 12% of screen width
-const ICON_SIZE = Math.round(width * 0.06);  // 6% of screen width
-const PADDING_H = Math.round(width * 0.04);  // horizontal padding scales
-const MARGIN_TOP = Math.round(height * 0.06); // top margin scales
-const HEADER_HEIGHT = Math.max(60, Math.round(height * 0.12)); // adaptive header height
-const PADDING_V = Math.round(height * 0.015); // vertical padding scales
+// 📏 Responsive constants (bounded so large screens don't get huge gaps)
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.08)); // at least 64px
+const ICON_BOX = Math.round(width * 0.10); // 12% of width for icon slots
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06)); // icons scale with width
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // title font adapts to width
+const PADDING_H = Math.round(width * 0.02); // horizontal padding scales
+const MARGIN_TOP = Math.round(height * 0.025); // top margin scales
+const PADDING_V = Math.min(Math.round(height * 0.0), 8); // vertical padding with cap
+
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -27,10 +29,10 @@ export default function ProfileHeader() {
       />
 
       {/* Header */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.profileContainer}>
+      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, paddingHorizontal: PADDING_H, paddingVertical: PADDING_V }]}>
+        <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
           {/* left: back button */}
-          <View style={styles.iconBox}>
+          <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
               <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
             </Pressable>
@@ -40,13 +42,13 @@ export default function ProfileHeader() {
           <Text
             numberOfLines={1}
             ellipsizeMode="tail"
-            style={styles.pageName}
+            style={[styles.pageName, { fontSize: TITLE_FONT }]}
           >
             Time Duration
           </Text>
 
           {/* right: placeholder to keep title centered */}
-          <View style={styles.iconBox} />
+          <View style={[styles.iconBox, { width: ICON_BOX }]} />
         </View>
       </View>
     </View>
@@ -64,26 +66,23 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderBottomWidth: 2,
     borderBottomColor: "#ccc",
-    paddingVertical: PADDING_V,
-    height: HEADER_HEIGHT,
     justifyContent: "center",
-    paddingTop: MARGIN_TOP,
-    paddingHorizontal: PADDING_H,
+    // paddingHorizontal & paddingVertical are applied inline above using constants
   },
 
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between", // ensures title stays centered between icon boxes
   },
 
   iconBox: {
-    width: ICON_BOX,
     alignItems: "center",
     justifyContent: "center",
   },
 
   iconPress: {
-    padding: width * 0.015, // scales with screen width
+    padding: width * 0.015, // scales with screen width (tap area)
     borderRadius: 6,
   },
 
@@ -92,7 +91,6 @@ const styles = StyleSheet.create({
     color: "#000",
     textAlign: "center",
     flex: 1,
-    fontSize: RFValue(16, 680), // responsive font size
     paddingHorizontal: 6,
   },
 });

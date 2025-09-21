@@ -5,12 +5,14 @@ import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
-// ✅ Responsive constants
-const HEADER_HEIGHT = Math.max(60, height * 0.12);
-const ICON_BOX = width * 0.10;
-const ICON_SIZE = width * 0.06;
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const BADGE_SIZE = Math.round(width * 0.045); // badge scales with width
+// ✅ Responsive constants (bounded so they don’t blow up on tablets or collapse on small screens)
+const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110); // min 60, max 110
+const ICON_BOX = Math.max(40, width * 0.00); // min 40px
+const ICON_SIZE = Math.max(20, width * 0.07); // min 20px
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // adaptive title font
+const BADGE_SIZE = Math.max(12, Math.round(width * 0.045)); // badge scales with width
+const PADDING_H = Math.min(Math.max(7, width * 0.02), 20); // horizontal padding (min 12, max 28)
+const MARGIN_TOP = Math.min(Math.round(height * 0.1), 20); // small top margin
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -21,8 +23,8 @@ export default function ProfileHeader() {
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" translucent={false} />
 
       {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        <View style={styles.profileContainer}>
+      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, paddingTop: MARGIN_TOP }]}>
+        <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
           {/* Left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
@@ -44,14 +46,24 @@ export default function ProfileHeader() {
             <View
               style={[
                 styles.notificationWrapper,
-                { width: ICON_BOX * 0.8, height: ICON_BOX * 0.8, borderRadius: ICON_BOX * 0.4 },
+                {
+                  width: ICON_BOX * 0.8,
+                  height: ICON_BOX * 0.8,
+                  borderRadius: (ICON_BOX * 0.8) / 2,
+                },
               ]}
             >
               <Icon name="notifications-none" size={Math.round(ICON_SIZE * 0.9)} color="#057474" />
               <View
                 style={[
                   styles.badge,
-                  { width: BADGE_SIZE, height: BADGE_SIZE, borderRadius: BADGE_SIZE / 2, right: -BADGE_SIZE * 0.2, top: -BADGE_SIZE * 0.2 },
+                  {
+                    width: BADGE_SIZE,
+                    height: BADGE_SIZE,
+                    borderRadius: BADGE_SIZE / 2,
+                    right: -BADGE_SIZE * 0.25,
+                    top: -BADGE_SIZE * 0.25,
+                  },
                 ]}
               >
                 <Text style={[styles.badgeText, { fontSize: BADGE_SIZE * 0.45 }]}>2</Text>
@@ -92,14 +104,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "#ccc",
     justifyContent: "center",
-    paddingTop: height * 0.040,
   },
 
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
+    justifyContent: "space-between", // keeps title centered
     height: "100%",
   },
 

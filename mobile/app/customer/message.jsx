@@ -14,12 +14,12 @@ import { useRouter } from "expo-router";
 const { width, height } = Dimensions.get("window");
 
 // ✅ Responsive constants derived from screen size
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.12)); // at least 64px
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09)); // at least 64px
 const ICON_BOX = Math.round(width * 0.10); // 12% of width for icon slots
 const ICON_SIZE = Math.max(20, Math.round(width * 0.06)); // icons scale with width
 const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // title font adapts to width
-const PADDING_H = Math.round(width * 0.04); // horizontal padding scales
-const MARGIN_TOP = Math.round(height * 0.045); // top margin scales
+const PADDING_H = Math.round(width * 0.02); // horizontal padding scales
+const MARGIN_TOP = Math.round(height * 0.02); // top margin scales
 
 export default function ProfileHeader() {
   const router = useRouter();
