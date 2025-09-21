@@ -8,11 +8,11 @@ const Owners = () => {
   useEffect(() => {
     fetchOwners();
   }, []);
-
+//hello hello 
   const fetchOwners = async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_APP_URL}/api/owner`
+        `${import.meta.env.VITE_APP_URL}/api/owner/all`
       );
 
       if (response.data.success && Array.isArray(response.data.message)) {
