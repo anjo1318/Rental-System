@@ -14,7 +14,7 @@ export default function Index() {
       {/* Status bar settings */}
       <StatusBar
         barStyle="light-content"        // White icons/text
-        backgroundColor="#2007F7F"       // Android status bar color
+        backgroundColor="#007F7F"       // Android status bar color
         translucent={false}             // Keep layout unaffected
       />
 
