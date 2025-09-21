@@ -60,10 +60,10 @@ export default function ownerHome() {
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
   const navigationItems = [
-    { name: "Dashboard", icon: "home", route: "ownerDashboard", isImage: false },
-    { name: "Listing", icon: "list-alt", route: "ownerListing", isImage: false },
-    { name: "Request", icon: require("../../assets/images/request.png"), route: "ownerRequest", isImage: true },
-    { name: "Time", icon: "schedule", route: "ownerTime", isImage: false },
+    { name: "Dashboard", icon: "home", route: "owner/ownerDashboard", isImage: false },
+    { name: "Listing", icon: "list-alt", route: "owner/ownerListing", isImage: false },
+    { name: "Request", icon: require("../../assets/images/request.png"), route: "owner/ownerRequest", isImage: true },
+    { name: "Time", icon: "schedule", route: "owner/ownerTime", isImage: false },
   ];
 
   // Fetch owner's items from API
@@ -348,6 +348,7 @@ const performLogout = async () => {
               <Pressable
                 onPress={() => {
                   console.log('🔔 Notification pressed');
+                  router.replace('owner/ownerMessages');
                   // Add your notification handler here
                 }}
                 style={{ position: 'relative' }}
