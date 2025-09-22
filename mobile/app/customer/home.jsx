@@ -84,7 +84,7 @@ export default function Home() {
         <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
-           <Pressable onPress={() => router.push("profile")}>
+           <Pressable onPress={() => router.push("customer/profile")}>
             <Image
               source={{ uri: "https://i.pravatar.cc/150?img=3" }}
               style={styles.avatar}
