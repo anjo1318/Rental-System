@@ -65,6 +65,25 @@ export default function ProfileHeader() {
       <View style={styles.bodyWrapper}>
         <ScrollView contentContainerStyle={styles.scrollContent}></ScrollView>
       </View>
+      {/* 🔹 Bottom Nav */}
+      <View style={styles.bottomNav}>
+        {[
+          { name: "Home", icon: "home", route: "customer/home" },
+          { name: "Book", icon: "shopping-cart", route: "customer/book" },
+          { name: "Message", icon: "mail", route: "customer/message" },
+          { name: "Time", icon: "schedule", route: "customer/time" },
+        ].map((navItem, index) => (
+          <Pressable
+            key={index}
+            style={styles.navButton}
+            hitSlop={10}
+            onPress={() => handleNavigation(navItem.route)}
+          >
+            <Icon name={navItem.icon} size={24} color="#fff" />
+            <Text style={styles.navText}>{navItem.name}</Text>
+          </Pressable>
+        ))}
+      </View>
     </View>
   );
 }
@@ -116,5 +135,33 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
+  },
+  bottomNav: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    paddingVertical: height * 0.015,
+    backgroundColor: "#057474",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  navButton: { 
+    alignItems: "center", 
+    flex: 1,
+    zIndex: 10, 
+  },
+    
+  navText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: width * 0.03,
+    marginTop: height * 0.005,
+  },
+
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center" 
   },
 });
