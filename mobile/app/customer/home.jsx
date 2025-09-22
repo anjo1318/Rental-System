@@ -34,8 +34,9 @@ export default function Home() {
           `${process.env.EXPO_PUBLIC_API_URL}/api/item`
         );
         if (response.data.success) {
-          setItems(response.data.message);
-        } else {
+          setItems(Array.isArray(response.data.data) ? response.data.data : []);
+        }
+        else {
           setError("Failed to fetch items");
         }
       } catch (err) {
