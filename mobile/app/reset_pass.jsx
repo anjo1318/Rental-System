@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     width: "100%", 
     height: "100%" 
   },
-   sectionTitle: {
+  sectionTitle: {
     textAlign: "center",
     fontWeight: "800",
     fontSize: 22,

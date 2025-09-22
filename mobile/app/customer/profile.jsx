@@ -286,8 +286,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: (width * 0.15) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
+    borderColor: "transparent",
   },
 
 cameraButton: {
@@ -556,7 +555,7 @@ cameraImage: {
     marginTop: 200
   },
 
-   outPhotoWrapper: {
+  outPhotoWrapper: {
     position: "relative", // ensures overlay can position inside
     width: width * 0.09,
     height: width * 0.09,
@@ -584,14 +583,14 @@ cameraImage: {
     marginLeft: 10,
     fontSize: width * 0.037,
     color: "#313131",
-    marginTop: 10,
+    marginTop: 1,
     fontWeight: "600",
   },
   outArrowIcon: {
     fontSize: 15, // 👈 or use width * 0.03 for responsive
     color: "#7e7e7e",
     marginLeft: 208, // space from the text
-    marginTop: 10,
+    marginTop: 1,
   },
 
 
