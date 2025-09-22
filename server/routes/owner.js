@@ -1,18 +1,27 @@
 import express from 'express';
-import { authenticateToken, fetchOwnerItems, fetchOwners, getOwnerItems } from '../controllers/ownerController.js';
+import { 
+  authenticateToken, 
+  fetchOwnerItems, 
+  fetchOwners, 
+  getOwnerItems,
+  createOwnerItem,
+  updateOwnerItem,
+  deleteOwnerItem
+} from '../controllers/ownerController.js';
 
 const router = express.Router();
 
-// Get all owners
-router.get('/all', fetchOwners);
+// Public routes
+router.get('/all', fetchOwners); // Get all owners
+router.get('/items', fetchOwnerItems); // Get items for specific owner (query param)
 
-// Get items for a specific owner
-// Option 1: Using query params - /owner/items?ownerId=123
-router.get('/items', fetchOwnerItems);
-router.get('/owner/items', authenticateToken, getOwnerItems);
+// Protected routes (require authentication)
+router.get('/owner/items', authenticateToken, getOwnerItems); // Get authenticated owner's items
+router.post('/items', authenticateToken, createOwnerItem); // Create new item
+router.put('/items/:id', authenticateToken, updateOwnerItem); // Update item
+router.delete('/items/:id', authenticateToken, deleteOwnerItem); // Delete item
 
-
-// Option 2: Using route params - /owner/items/123
-// router.get('/items/:ownerId', fetchOwnerItems);
+// Alternative route structure if you prefer
+// router.get('/items/:ownerId', fetchOwnerItems); // Using route params
 
 export default router;

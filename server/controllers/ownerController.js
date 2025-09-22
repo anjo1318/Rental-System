@@ -1,20 +1,30 @@
 import Owner from "../models/Owner.js";
 import Item from "../models/Item.js";
+import jwt from 'jsonwebtoken';
 
+// GET - Fetch all owners
 const fetchOwners = async (req, res) => {
   try {
-    const response = await Owner.findAll();
-    return res.status(200).json({ success: true, message: response });
+    const response = await Owner.findAll({
+      attributes: { exclude: ['password'] } // Don't send passwords
+    });
+    return res.status(200).json({ 
+      success: true, 
+      data: response,
+      message: "Owners fetched successfully" 
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 };
 
+// GET - Fetch items for specific owner (public route)
 const fetchOwnerItems = async (req, res) => {
   try {
-    // Get owner ID from query params or route params
-    const { ownerId } = req.query; // For GET request with query params
-    // OR const { ownerId } = req.params; // For route params like /owner/:ownerId
+    const { ownerId } = req.query;
     
     console.log('🔍 Received request for owner items');
     console.log('🔍 Query params:', req.query);
@@ -24,18 +34,32 @@ const fetchOwnerItems = async (req, res) => {
       console.log('❌ Owner ID is missing');
       return res.status(400).json({ 
         success: false, 
-        message: "Owner ID is required" 
+        error: "Owner ID is required" 
       });
     }
 
-    // Simple query without including Owner data for now
+    // Check if owner exists
+    const owner = await Owner.findByPk(ownerId);
+    if (!owner) {
+      return res.status(404).json({
+        success: false,
+        error: "Owner not found"
+      });
+    }
+
     console.log('🔍 Searching for items with ownerId:', ownerId);
     const items = await Item.findAll({
-      where: { ownerId: ownerId }
+      where: { ownerId: ownerId },
+      include: [
+        {
+          model: Owner,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
     });
 
     console.log('🔍 Found items:', items?.length || 0);
-    console.log('🔍 Items data:', JSON.stringify(items, null, 2));
 
     return res.status(200).json({
       success: true, 
@@ -48,24 +72,19 @@ const fetchOwnerItems = async (req, res) => {
     console.error("❌ Error fetching owner items:", error);
     return res.status(500).json({
       success: false, 
-      message: "Error fetching items for specific owner",
-      error: error.message
+      error: "Error fetching items for specific owner"
     });
   }
 };
 
-// Add this controller function
+// GET - Fetch authenticated owner's items
 const getOwnerItems = async (req, res) => {
   try {
     const { ownerId } = req.query;
-    
-    // Verify that the requesting user is the owner or use token user ID
-    const requestingUserId = req.user.id; // From JWT token
-    
-    // Use the token user ID if no ownerId provided, or verify ownership
+    const requestingUserId = req.user.id;
     const targetOwnerId = ownerId || requestingUserId;
     
-    // Optional: Add security check to ensure users can only see their own items
+    // Security check: owners can only see their own items
     if (req.user.role === 'owner' && targetOwnerId != requestingUserId) {
       return res.status(403).json({ 
         success: false, 
@@ -73,19 +92,15 @@ const getOwnerItems = async (req, res) => {
       });
     }
 
-    // Fetch items for the owner
     const items = await Item.findAll({
-      where: { 
-        ownerId: targetOwnerId 
-      },
+      where: { ownerId: targetOwnerId },
       include: [
         {
           model: Owner,
-          as: 'owner', // Make sure this alias matches your model association
-          attributes: ['firstName', 'lastName', 'email']
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
         }
       ],
-      order: [['createdAt', 'DESC']] // Most recent items first
+      order: [['createdAt', 'DESC']]
     });
 
     console.log(`Found ${items.length} items for owner ${targetOwnerId}`);
@@ -93,7 +108,8 @@ const getOwnerItems = async (req, res) => {
     res.status(200).json({
       success: true,
       data: items,
-      count: items.length
+      count: items.length,
+      message: "Items fetched successfully"
     });
 
   } catch (error) {
@@ -105,22 +121,231 @@ const getOwnerItems = async (req, res) => {
   }
 };
 
-// Authentication middleware (if not already implemented)
-const authenticateToken = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+// CREATE - Add new item for owner
+const createOwnerItem = async (req, res) => {
+  try {
+    const { 
+      title, 
+      description, 
+      pricePerDay, 
+      category, 
+      availability = true, 
+      itemImage 
+    } = req.body;
 
-  if (!token) {
-    return res.status(401).json({ success: false, error: 'Access token required' });
-  }
+    const ownerId = req.user.id; // Get from authenticated user
 
-  jwt.verify(token, process.env.JWT_KEY, (err, user) => {
-    if (err) {
-      return res.status(403).json({ success: false, error: 'Invalid or expired token' });
+    // Validation
+    if (!title || !pricePerDay) {
+      return res.status(400).json({
+        success: false,
+        error: "Title and price per day are required"
+      });
     }
-    req.user = user;
-    next();
-  });
+
+    if (isNaN(pricePerDay) || parseFloat(pricePerDay) <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Price per day must be a positive number"
+      });
+    }
+
+    // Verify owner exists
+    const owner = await Owner.findByPk(ownerId);
+    if (!owner) {
+      return res.status(404).json({
+        success: false,
+        error: "Owner not found"
+      });
+    }
+
+    const newItem = await Item.create({
+      title: title.trim(),
+      description: description?.trim() || null,
+      pricePerDay: parseFloat(pricePerDay),
+      category: category?.trim() || null,
+      availability: Boolean(availability),
+      itemImage: itemImage || "https://via.placeholder.com/150",
+      ownerId: parseInt(ownerId)
+    });
+
+    // Fetch the created item with owner details
+    const createdItem = await Item.findOne({
+      where: { id: newItem.id },
+      include: [
+        {
+          model: Owner,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
+        }
+      ]
+    });
+
+    console.log(`✅ Item created successfully by owner ${ownerId}`);
+
+    return res.status(201).json({
+      success: true,
+      data: createdItem,
+      message: "Item created successfully"
+    });
+
+  } catch (error) {
+    console.error('❌ Error creating item:', error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to create item"
+    });
+  }
 };
 
-export { fetchOwners, fetchOwnerItems, authenticateToken, getOwnerItems};
+// UPDATE - Update owner's existing item
+const updateOwnerItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { 
+      title, 
+      description, 
+      pricePerDay, 
+      category, 
+      availability, 
+      itemImage 
+    } = req.body;
+
+    const ownerId = req.user.id;
+
+    // Check if item exists and belongs to the authenticated owner
+    const item = await Item.findOne({
+      where: { id, ownerId } // Must belong to the authenticated owner
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        error: "Item not found or you don't have permission to update it"
+      });
+    }
+
+    // Prepare update data (only update provided fields)
+    const updateData = {};
+    if (title !== undefined) updateData.title = title.trim();
+    if (description !== undefined) updateData.description = description?.trim();
+    if (pricePerDay !== undefined) {
+      if (isNaN(pricePerDay) || parseFloat(pricePerDay) <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Price per day must be a positive number"
+        });
+      }
+      updateData.pricePerDay = parseFloat(pricePerDay);
+    }
+    if (category !== undefined) updateData.category = category?.trim();
+    if (availability !== undefined) updateData.availability = Boolean(availability);
+    if (itemImage !== undefined) updateData.itemImage = itemImage;
+
+    // Update the item
+    await Item.update(updateData, {
+      where: { id, ownerId }
+    });
+
+    // Fetch updated item with owner details
+    const updatedItem = await Item.findOne({
+      where: { id },
+      include: [
+        {
+          model: Owner,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
+        }
+      ]
+    });
+
+    console.log(`✅ Item ${id} updated successfully by owner ${ownerId}`);
+
+    return res.status(200).json({
+      success: true,
+      data: updatedItem,
+      message: "Item updated successfully"
+    });
+
+  } catch (error) {
+    console.error('❌ Error updating item:', error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to update item"
+    });
+  }
+};
+
+// DELETE - Delete owner's item
+const deleteOwnerItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ownerId = req.user.id;
+
+    console.log(`🗑️ Attempting to delete item ${id} by owner ${ownerId}`);
+
+    // Check if item exists and belongs to the authenticated owner
+    const item = await Item.findOne({
+      where: { id, ownerId }
+    });
+
+    if (!item) {
+      return res.status(404).json({
+        success: false,
+        error: "Item not found or you don't have permission to delete it"
+      });
+    }
+
+    // Delete the item
+    await Item.destroy({
+      where: { id, ownerId }
+    });
+
+    console.log(`✅ Item ${id} deleted successfully by owner ${ownerId}`);
+
+    return res.status(200).json({
+      success: true,
+      message: "Item deleted successfully"
+    });
+
+  } catch (error) {
+    console.error('❌ Error deleting item:', error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to delete item"
+    });
+  }
+};
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(401).json({ 
+      success: false, 
+      error: 'Access token required' 
+    });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.JWT_KEY);
+    req.user = decoded;
+    console.log(`🔐 Authenticated user:`, decoded.id);
+    next();
+  } catch (error) {
+    return res.status(403).json({ 
+      success: false, 
+      error: 'Invalid or expired token' 
+    });
+  }
+};
+
+export { 
+  fetchOwners, 
+  fetchOwnerItems, 
+  getOwnerItems,
+  createOwnerItem,
+  updateOwnerItem,
+  deleteOwnerItem,
+  authenticateToken 
+};

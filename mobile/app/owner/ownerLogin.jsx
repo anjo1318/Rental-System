@@ -83,16 +83,31 @@ export default function ownerLogin() {
   // Check if user is already logged in
   const checkExistingLogin = async () => {
     try {
-      const [token, userData] = await AsyncStorage.multiGet(['token', 'user']);
-      
+      const [token, userData] = await AsyncStorage.multiGet(["token", "user"]);
+
       if (token[1] && userData[1]) {
-        console.log('✅ Found existing login, redirecting to dashboard');
-        router.replace('/owner/ownerHome');
+        let parsedUser;
+        try {
+          parsedUser = JSON.parse(userData[1]);
+        } catch (err) {
+          console.error("❌ Corrupted user data, clearing storage");
+          await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
+          return; // don't redirect
+        }
+
+        if (parsedUser && parsedUser.firstName) {
+          console.log("✅ Found valid login, redirecting to dashboard");
+          router.replace("/owner/ownerHome");
+        } else {
+          console.log("⚠️ User data invalid, clearing storage");
+          await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
+        }
       }
     } catch (error) {
-      console.error('Error checking existing login:', error);
+      console.error("Error checking existing login:", error);
     }
   };
+
 
   // Load saved credentials if Remember Me was checked
   const loadSavedCredentials = async () => {

@@ -11,7 +11,8 @@ const ownerItemSeeder = async () => {
         email: "marcopolo03@gmail.com",
         phone: "09354346468",
         passwordHash: await bcrypt.hash("marco123", 10),
-        bio: "Team Manager and avid collector of gadgets.",        address: "Batangas City, Philippines",
+        bio: "Team Manager and avid collector of gadgets.",        
+        address: "Batangas City, Philippines",
         isVerified: true,
         items: [
           {
@@ -19,24 +20,28 @@ const ownerItemSeeder = async () => {
             description: "High-quality DSLR camera, perfect for photography.",
             pricePerDay: 500,
             category: "Electronics",
+            location: "Pili, Pinamalayan, Oriental Mindoro "
           },
           {
             title: "MacBook Pro 2021",
             description: "Apple M1 Pro, great for work and editing.",
             pricePerDay: 800,
             category: "Laptops",
+            location: "Bayan, Pinamalayan, Oriental Mindoro "
           },
           {
             title: "Kouri Monitor",
             description: "High-quality Monitor, perfect for gaming.",
             pricePerDay: 500,
             category: "Electronics",
+            location: "Mabini, Pinamalayan, Oriental Mindoro "
           },
           {
             title: "Iphone 16 Pro Max",
             description: "Strong processor and greate features",
             pricePerDay: 800,
             category: "Smart phone",
+            location: "Joseph Street, Pinamalayan, Oriental Mindoro "
           },
         ],
       },
@@ -55,24 +60,28 @@ const ownerItemSeeder = async () => {
             description: "Reliable and fuel-efficient sedan.",
             pricePerDay: 1200,
             category: "Vehicles",
+            location: "Cacawan, Pinamalayan, Oriental Mindoro "
           },
           {
             title: "Romoss Powerbank",
             description: "Long lasting powerbank",
             pricePerDay: 1200,
             category: "Electronics",
+            location: "Wawa, Pinamalayan, Oriental Mindoro "
           },
           {
             title: "A3 Light Pad",
             description: "Perfect for drafting",
             pricePerDay: 1200,
             category: "Arts",
+            location: "Buli, Pinamalayan, Oriental Mindoro "
           },
           {
             title: "K500 Pro",
             description: "High quality mechanical keyboard",
             pricePerDay: 1200,
             category: "Electronics",
+            location: "Sto Nino, Pinamalayan, Oriental Mindoro "
           },
         ],
       },
@@ -91,12 +100,14 @@ const ownerItemSeeder = async () => {
             description: "Light weight table perfect for camping",
             pricePerDay: 1200,
             category: "Utilities",
+            location: "Sto Nino, Victoria, Oriental Mindoro "
           },
           {
             title: "Drill",
             description: "Powerfull drill",
             pricePerDay: 1200,
             category: "Electronics",
+            location: "Isidro, Gloria, Oriental Mindoro "
           },
         ],
       },

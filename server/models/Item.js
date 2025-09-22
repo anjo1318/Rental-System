@@ -30,6 +30,11 @@ const Item = sequelize.define("Item", {
     allowNull: true,
   },
 
+  location: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
   availability: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
