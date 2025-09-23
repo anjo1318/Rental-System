@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  StatusBar,
-  Alert,
+import {View,Text,StyleSheet,Dimensions,TouchableOpacity,StatusBar,Alert,
   Image,
   TextInput,
   KeyboardAvoidingView,
@@ -466,26 +459,29 @@ export default function RentingDetails() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#FFF",
   },
   headerWrapper: {
     backgroundColor: "#FFF",
-    paddingVertical: 16,
     paddingHorizontal: 16,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
+    borderBottomWidth: 2,
+    borderBottomColor: "#ccc",
   },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingVertical: 5,
   },
   backButton: {
     padding: 8,
     borderRadius: 8,
+    marginTop: 25,
   },
   pageName: {
     fontWeight: "600",
@@ -493,6 +489,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     flex: 1,
     textAlign: "center",
+    marginTop: 25,
   },
   headerSpacer: {
     width: 40,
@@ -515,7 +512,7 @@ const styles = StyleSheet.create({
   stepCircle: {
     width: 30,
     height: 30,
-    borderRadius: 15,
+    borderRadius: 30,
     backgroundColor: "#E0E0E0",
     alignItems: "center",
     justifyContent: "center",
@@ -547,7 +544,7 @@ const styles = StyleSheet.create({
   progressLine: {
     width: 40,
     height: 2,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "#ccc",
     marginHorizontal: 8,
     marginBottom: 20,
   },
@@ -558,10 +555,12 @@ const styles = StyleSheet.create({
   // Content
   scrollContent: {
     paddingBottom: 20,
+   
   },
   inputContainer: {
     paddingHorizontal: 20,
     paddingTop: 20,
+    borderColor: "#057474",
   },
   inputGroup: {
     flexDirection: "row",
@@ -576,6 +575,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
+        
   },
   inputIcon: {
     marginRight: 12,
@@ -699,4 +699,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 16,
   },
+  
 });
+

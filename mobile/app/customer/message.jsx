@@ -21,7 +21,7 @@ const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // title font adapts
 const PADDING_H = Math.round(width * 0.02); // horizontal padding scales
 const MARGIN_TOP = Math.round(height * 0.02); // top margin scales
 
-export default function ProfileHeader() {
+export default function Messages() {
   const router = useRouter();
 
   return (

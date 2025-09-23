@@ -6,7 +6,7 @@ import AutoHeightWebView from "react-native-autoheight-webview";
 
 const { width } = Dimensions.get("window");
 
-export default function ProfileHeader() {
+export default function TermsandCondition() {
   const router = useRouter();
 
   const buildHtml = (content) => `
