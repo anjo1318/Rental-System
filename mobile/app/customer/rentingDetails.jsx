@@ -32,6 +32,7 @@ export default function RentingDetails() {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState(null);
   const steps = ["Renting Details", "Payment Details", "Confirmed"];
+  const [userId, setUserId] = useState("");
 
   
   // Form states
@@ -82,6 +83,7 @@ export default function RentingDetails() {
       if (userData) {
         const user = JSON.parse(userData);
         console.log("From local storgae", userData);
+        setUserId(user.id || "");
         setFullName(user.name || "");
         setEmailAddress(user.email || "");
         setPhoneNumber(user.phone|| "");
@@ -149,6 +151,7 @@ export default function RentingDetails() {
         pricePerDay: item.pricePerDay,
         },
         customerDetails: {
+        customerId: userId,
         fullName,
         email: emailAddress,
         phone: phoneNumber,

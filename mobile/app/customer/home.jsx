@@ -90,13 +90,17 @@ export default function Home() {
               source={{ uri: "https://i.pravatar.cc/150?img=3" }}
               style={styles.avatar}
             />
-          </Pressable>
+          </Pressable >
             <Text style={styles.username}>Marco Polo</Text>
             <View style={styles.notificationWrapper}>
+            <Pressable onPress={() => router.push("customer/notifications")}>
               <Icon name="notifications-none" size={24} color="#057474" />
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>2</Text>
               </View>
+            </Pressable>
+
+
             </View>
           </View>
 
