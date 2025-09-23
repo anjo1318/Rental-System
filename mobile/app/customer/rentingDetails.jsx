@@ -24,12 +24,8 @@ export default function RentingDetails() {
   // Step progress
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState(null);
-<<<<<<< HEAD
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
-=======
-  const steps = ["Renting Details", "Payment Details", "Confirmed"];
   const [userId, setUserId] = useState("");
->>>>>>> 9246c0f41704e209de71375ead49ac3e9c1bce46
 
   
   // Form states
@@ -519,6 +515,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingVertical: 20,
     paddingHorizontal: 16,
+    marginRight: 15,
   },
   progressSteps: {
     flexDirection: "row",
@@ -541,7 +538,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#057474",
   },
   completedStepCircle: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#057474",
   },
   stepNumber: {
     fontSize: 14,
@@ -560,7 +557,7 @@ const styles = StyleSheet.create({
     color: "#057474",
     fontWeight: "600",
   },
-    progressLine: {
+  progressLine: {
     height: 2,
     backgroundColor: "#ccc",
     width: 94,            

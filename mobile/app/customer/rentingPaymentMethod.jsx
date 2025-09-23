@@ -4,7 +4,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 
 export default function RentingPaymentMethod({ bookingData, onBack, onContinue }) {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(2);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const router = useRouter();
 
@@ -54,7 +54,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
 
       {/* Progress Steps */}
       <View style={styles.progressContainer}>
-      <View style={styles.progressSteps}>
+        <View style={styles.progressSteps}>
           {steps.map((stepName, index) => (
           <React.Fragment key={index}>
               {renderProgressStep(
@@ -65,7 +65,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
               )}
               {index < steps.length - 1 && (     
               <View style={styles.lineWrapper}>
-              <View 
+              <View
                   style={[
                   styles.progressLine,
                   currentStep > index + 1 && styles.completedProgressLine,
@@ -75,10 +75,10 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
               )}
           </React.Fragment>
           ))}
-      </View>
+        </View>
       </View>
 
-      <View style={{ flex: 1, padding: 20 }}>
+      <View style={styles.contentWrapper}>
       <Text style={styles.sectionTitle}>Payment Method</Text>
 
       
@@ -86,16 +86,28 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
       {["Cash on Delivery", "Gcash"].map((method) => (
         <TouchableOpacity
           key={method}
-          style={[styles.option, selectedMethod === method && styles.optionSelected]}
+          style={[
+            styles.option,
+            selectedMethod === method && styles.optionSelected
+          ]}
           onPress={() => setSelectedMethod(method)}
         >
-          <Text>{method}</Text>
+          <Text style={styles.optionText}>{method}</Text>
+
+          {/* Circle indicator on the right */}
+          <View style={[
+            styles.circle,
+            selectedMethod === method && styles.circleSelected
+          ]} />
         </TouchableOpacity>
       ))}
+      </View>
+  
+      <View style={styles.horizontalLine} />
 
       <View style={styles.actions}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Text>Previous</Text>
+          <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
         </TouchableOpacity>
         <TouchableOpacity
         onPress={() => {
@@ -104,10 +116,10 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         }}
         style={styles.continueBtn}
         >
-        <Text style={{ color: "#FFF" }}>Continue</Text>
+        <Text style={{ color: "#FFF", fontWeight: "700"}}>Continue</Text>
         </TouchableOpacity>
 
-      </View>
+      
     </View>
    </SafeAreaView>
   );
@@ -116,7 +128,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: "#f6f6f6",
   },
   headerWrapper: {
     backgroundColor: "#FFF",
@@ -152,10 +164,11 @@ const styles = StyleSheet.create({
     width: 40,
   },
 
-    progressContainer: {
-    backgroundColor: "#FFF",
+  progressContainer: {
+    backgroundColor: "#f6f6f6",
     paddingVertical: 20,
     paddingHorizontal: 16,
+    marginRight: 15,
   },
   progressSteps: {
     flexDirection: "row",
@@ -178,7 +191,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#057474",
   },
   completedStepCircle: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: "#057474",
   },
   stepNumber: {
     fontSize: 14,
@@ -217,30 +230,81 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     fontWeight: "600", 
     marginBottom: 16 },
-  option: {
-    padding: 16,
-    borderWidth: 1,
-    borderRadius: 8,
-    marginBottom: 12,
-    borderColor: "#ccc",
+
+  contentWrapper: {
+    width: "90%",               // or a fixed width like 320
+    alignSelf: "center",        // centers the container horizontally
+    padding: 20,
+    borderWidth: 5,
+    borderColor: "transparent",
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    marginVertical: 16,         // spacing from other sections
   },
+
+  option: {
+    flexDirection: "row",      // put text and circle in one row
+    alignItems: "center",
+    justifyContent: "space-between", // push circle to the right
+    padding: 5,
+    borderWidth: 1,
+    borderRadius: 1,
+    marginBottom: 12,
+    borderColor: "transparent",
+  },
+
   optionSelected: {
-    borderColor: "#057474",
+    borderColor: "transparent",
     backgroundColor: "#E0F7F7",
   },
+
+  optionText: {
+    fontSize: 13,
+    color: "#000",
+  },
+  circle: {
+    width: 13,
+    height: 13,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#057474",
+    backgroundColor: "#FFF",
+  },
+
+  circleSelected: {
+    backgroundColor: "#057474", 
+  },
+
+  horizontalLine: {
+    height: 1.5,
+    backgroundColor: "#05747480",
+    width: "74%",
+    position: "absolute",       // absolute positioning
+    top: 286,                    // distance from the top of the container
+    left: "13%",                // center horizontally (adjust as needed)
+    zIndex: 1,        
+  },
+
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 30,
+    marginTop: 320,
   },
+
   backBtn: {
     padding: 14,
-    backgroundColor: "#ddd",
-    borderRadius: 8,
+    paddingHorizontal: 50,
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    marginLeft: 15,
+    boderColor: "#057474",
+    color: "#057474",
   },
   continueBtn: {
     padding: 14,
     backgroundColor: "#057474",
-    borderRadius: 8,
+    borderRadius: 20,
+    paddingHorizontal: 50,
+    marginRight: 20,
   },
 });
