@@ -9,7 +9,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 
 const { width, height } = Dimensions.get("window");
 
-export default function PersonalInfo() {
+export default function IdUpload() {
   const router = useRouter();
   const { customerId } = useLocalSearchParams(); // 👈 get from Step 2
 

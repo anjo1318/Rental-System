@@ -20,7 +20,7 @@ const { width, height } = Dimensions.get("window");
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export default function PersonalInfo() {
+export default function Review() {
   const router = useRouter();
   const [isChecked, setIsChecked] = useState(false);
   const [customer, setCustomer] = useState(null);

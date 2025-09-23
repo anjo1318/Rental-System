@@ -14,7 +14,7 @@ const BADGE_SIZE = Math.max(12, Math.round(width * 0.045)); // badge scales with
 const PADDING_H = Math.min(Math.max(7, width * 0.02), 20); // horizontal padding (min 12, max 28)
 const MARGIN_TOP = Math.min(Math.round(height * 0.1), 20); // small top margin
 
-export default function ProfileHeader() {
+export default function BookedItem() {
   const router = useRouter();
   const [bookRequest, setBookRequest] = useState([]);
 

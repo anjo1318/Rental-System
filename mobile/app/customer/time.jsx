@@ -16,7 +16,7 @@ const MARGIN_TOP = Math.round(height * 0.025); // top margin scales
 const PADDING_V = Math.min(Math.round(height * 0.0), 8); // vertical padding with cap
 
 
-export default function ProfileHeader() {
+export default function TimeDuration() {
   const router = useRouter();
 
   return (
