@@ -4,7 +4,7 @@ import {
   Text,
   Image,
   ScrollView,
-  Pressable,
+  TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
   Alert,
@@ -15,27 +15,29 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 
-
 export default function ItemDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // get item id from params
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
   useEffect(() => {
     const fetchItem = async () => {
       try {
-        const res = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/item/${id}`
-        );
+        console.log("Fetching item with ID:", id);
+        const res = await axios.get(`${API_URL}/api/item/${id}`);
+        
         if (res.data.success && res.data.data) {
           setItem(res.data.data);
+          console.log("Item fetched successfully:", res.data.data.title);
         } else {
           Alert.alert("Error", "Item not found");
           router.back();
         }
       } catch (err) {
-        console.error(err);
+        console.error("❌ Error fetching item:", err.response?.data || err.message);
         Alert.alert("Error", "Failed to fetch item");
         router.back();
       } finally {
@@ -43,15 +45,29 @@ export default function ItemDetail() {
       }
     };
 
-    fetchItem();
+    if (id) {
+      fetchItem();
+    } else {
+      console.error("No item ID provided");
+      Alert.alert("Error", "No item ID provided");
+      router.back();
+    }
   }, [id]);
 
   const handleBooking = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
+      
+      if (!token) {
+        Alert.alert("Authentication Required", "Please login to book items", [
+          { text: "OK", onPress: () => router.push("/auth/login") }
+        ]);
+        return;
+      }
+
       const res = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book`,
-        { itemId: item.id },
+        `${API_URL}/api/book/book-item`,
+        { itemId: parseInt(item.id) },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -62,8 +78,15 @@ export default function ItemDetail() {
         Alert.alert("Error", res.data.error || "Booking failed");
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Failed to book item");
+      console.error("❌ Booking error:", err.response?.data || err.message);
+      
+      if (err.response?.status === 401) {
+        Alert.alert("Session Expired", "Please login again", [
+          { text: "OK", onPress: () => router.push("/auth/login") }
+        ]);
+      } else {
+        Alert.alert("Error", "Failed to book item");
+      }
     }
   };
 
@@ -72,6 +95,7 @@ export default function ItemDetail() {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#057474" />
+        <Text style={styles.loadingText}>Loading item details...</Text>
       </View>
     );
   }
@@ -80,48 +104,104 @@ export default function ItemDetail() {
   if (!item) {
     return (
       <View style={styles.center}>
-        <Text>Item not found.</Text>
-        <Pressable onPress={() => router.back()} style={{ marginTop: 20 }}>
-          <Text style={{ color: "#057474", fontWeight: "600" }}>Go Back</Text>
-        </Pressable>
+        <Icon name="error-outline" size={64} color="#ccc" />
+        <Text style={styles.errorText}>Item not found</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.goBackButton}>
+          <Text style={styles.goBackText}>Go Back</Text>
+        </TouchableOpacity>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Back Button */}
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <Icon name="arrow-back" size={28} color="#057474" />
-      </Pressable>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Item Details</Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
       {/* Item Image */}
-      <Image source={{ uri: item.itemImage }} style={styles.image} />
+      <View style={styles.imageContainer}>
+        <Image source={{ uri: item.itemImage }} style={styles.image} />
+        {item.availability !== undefined && (
+          <View style={[
+            styles.availabilityBadge,
+            { backgroundColor: item.availability ? '#4CAF50' : '#FF5722' }
+          ]}>
+            <Text style={styles.availabilityText}>
+              {item.availability ? 'Available' : 'Not Available'}
+            </Text>
+          </View>
+        )}
+      </View>
 
       {/* Item Info */}
       <View style={styles.infoContainer}>
         <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.category}>{item.category}</Text>
-        <Text style={styles.price}>₱{item.pricePerDay} / day</Text>
+        
+        <View style={styles.categoryRow}>
+          <Icon name="category" size={16} color="#666" />
+          <Text style={styles.category}>{item.category}</Text>
+        </View>
+        
+        <View style={styles.priceRow}>
+          <Text style={styles.price}>₱{item.pricePerDay}</Text>
+          <Text style={styles.priceUnit}>/ day</Text>
+        </View>
+        
         <Text style={styles.description}>{item.description}</Text>
       </View>
 
-      {/* Book Button */}
-      <Pressable style={styles.bookButton} onPress={handleBooking}>
-        <Text style={styles.bookButtonText}>Book Now</Text>
-      </Pressable>
+      {/* Action Buttons */}
+      <View style={styles.actionContainer}>
+        {/* Book Now Button - Fixed route */}
+        <TouchableOpacity 
+          style={[styles.bookButton, !item.availability && styles.disabledButton]} 
+          onPress={() => {
+            if (!item.availability) {
+              Alert.alert("Not Available", "This item is currently not available for booking");
+              return;
+            }
+            
+            console.log("Navigating to rentingDetails with:", {
+              id: item.id,
+              itemId: item.id,
+              title: item.title
+            });
+            
+            // Fixed: Match the actual file name 'rentingDetails.jsx'
+            router.push(`/customer/rentingDetails?id=${item.id}&itemId=${item.id}`);
+          }}
+          disabled={!item.availability}
+          activeOpacity={0.8}
+        >
+          <Icon name="book" size={20} color="#FFF" />
+          <Text style={styles.bookButtonText}>Book Now</Text>
+        </TouchableOpacity>
 
-      {/* Chat Button */}
-        <Pressable
-          style={[styles.bookButton, { backgroundColor: "#FF6B6B" }]}
+        {/* Chat Button */}
+        <TouchableOpacity
+          style={[styles.bookButton, styles.chatButton]}
           onPress={async () => {
             try {
-              // 1. Check if chat already exists for this item and user
               const token = await AsyncStorage.getItem("token");
+              
+              if (!token) {
+                Alert.alert("Authentication Required", "Please login to chat", [
+                  { text: "OK", onPress: () => router.push("/auth/login") }
+                ]);
+                return;
+              }
+
               let existingChatId = null;
 
+              // Check if chat already exists for this item and user
               const res = await axios.get(
-                `${process.env.EXPO_PUBLIC_API_URL}/api/chat/check/${item.id}`,
+                `${API_URL}/api/chat/check/${item.id}`,
                 { headers: { Authorization: `Bearer ${token}` } }
               );
 
@@ -129,40 +209,210 @@ export default function ItemDetail() {
                 existingChatId = res.data.chatId;
               }
 
-              // 2. Generate chatId if none exists
+              // Generate chatId if none exists
               const chatId = existingChatId || uuidv4();
 
-              // 3. Navigate to ChatScreen with chatId
+              console.log("Navigating to chat with:", {
+                chatId,
+                itemId: item.id,
+                ownerId: item.ownerId
+              });
+
+              // Navigate to ChatScreen with chatId
               router.push(`/customer/chat?id=${chatId}&itemId=${item.id}`);
             } catch (err) {
-              console.error(err);
+              console.error("❌ Chat error:", err.response?.data || err.message);
               Alert.alert("Error", "Failed to start chat");
             }
           }}
+          activeOpacity={0.8}
         >
-          <Text style={styles.bookButtonText}>Chat</Text>
-        </Pressable>
-
+          <Icon name="chat" size={20} color="#FFF" />
+          <Text style={styles.bookButtonText}>Chat with Owner</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#E6E1D6" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  backButton: { margin: 16 },
-  image: { width: "90%", height: 250, alignSelf: "center", borderRadius: 12 },
-  infoContainer: { padding: 16 },
-  title: { fontSize: 20, fontWeight: "600", marginBottom: 8 },
-  category: { fontSize: 14, color: "#666", marginBottom: 4 },
-  price: { fontSize: 18, fontWeight: "bold", color: "#057474", marginBottom: 12 },
-  description: { fontSize: 14, color: "#333" },
-  bookButton: {
+  container: { 
+    flex: 1, 
+    backgroundColor: "#E6E1D6" 
+  },
+  center: { 
+    flex: 1, 
+    justifyContent: "center", 
+    alignItems: "center",
+    backgroundColor: "#E6E1D6",
+    padding: 20
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#057474",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    minWidth: 40,
+    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  headerTitle: {
+    fontSize: 18,
+    color: "#FFF",
+    fontWeight: "600",
+    flex: 1,
+    textAlign: 'center'
+  },
+  headerSpacer: {
+    width: 40
+  },
+  imageContainer: {
+    position: 'relative',
     margin: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  image: { 
+    width: "100%", 
+    height: 280, 
+    resizeMode: 'cover'
+  },
+  availabilityBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  availabilityText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  infoContainer: { 
+    backgroundColor: '#FFF',
+    margin: 16,
+    marginTop: 0,
+    padding: 20,
+    borderRadius: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: "700", 
+    color: "#333",
+    marginBottom: 12
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  category: { 
+    fontSize: 14, 
+    color: "#666",
+    marginLeft: 6,
+    textTransform: 'capitalize'
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 16
+  },
+  price: { 
+    fontSize: 28, 
+    fontWeight: "800", 
+    color: "#057474"
+  },
+  priceUnit: {
+    fontSize: 16,
+    color: "#666",
+    marginLeft: 4,
+    fontWeight: '500'
+  },
+  description: { 
+    fontSize: 16, 
+    color: "#333",
+    lineHeight: 24
+  },
+  actionContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+    gap: 12
+  },
+  bookButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 16,
     borderRadius: 25,
     backgroundColor: "#057474",
-    alignItems: "center",
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    minHeight: 52
   },
-  bookButtonText: { color: "#FFF", fontSize: 16, fontWeight: "600" },
+  chatButton: {
+    backgroundColor: "#FF6B6B"
+  },
+  disabledButton: {
+    backgroundColor: "#ccc",
+    opacity: 0.6
+  },
+  bookButtonText: { 
+    color: "#FFF", 
+    fontSize: 16, 
+    fontWeight: "600",
+    marginLeft: 8
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500'
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 20,
+    textAlign: 'center'
+  },
+  goBackButton: {
+    backgroundColor: '#057474',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 20
+  },
+  goBackText: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600'
+  }
 });

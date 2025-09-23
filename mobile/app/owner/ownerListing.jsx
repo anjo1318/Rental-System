@@ -207,7 +207,7 @@ export default function OwnerListing() {
   // Edit item
   const editItem = (id) => {
     console.log("Navigating to edit item:", id);
-    router.push(`/editItem?id=${id}`);
+    router.push(`owner/ownerEditItem?id=${id}`);
   };
 
   // Toggle item availability using correct endpoint

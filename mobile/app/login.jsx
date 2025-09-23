@@ -92,10 +92,34 @@ export default function Login() {
 
       if (response.data.success) {
         const { token, user } = response.data;
+
+        // Build a complete user object (include only what you need)
+        const userData = {
+          id: user.id,
+          name: user.name,
+          email: user.emailAddress,
+          phone: user.phoneNumber,
+          gender: user.gender,
+          houseNumber: user.houseNumber,
+          street: user.street,
+          barangay: user.barangay, 
+          town: user.town, 
+          province: user.province,
+          country: user.country,
+          zipCode: user.zipCode,
+          role: user.role,
+          town: user.town,
+        };
+
+        console.log("after login", userData);
+
+        // Save token & user info
         await AsyncStorage.setItem("token", token);
-        await AsyncStorage.setItem("user", JSON.stringify(user));
+        await AsyncStorage.setItem("user", JSON.stringify(userData));
+
         router.push("customer/home");
-      } else {
+      } 
+      else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
     } catch (error) {

@@ -83,11 +83,22 @@ const mobileUserLogin = async (req, res) => {
       success: true,
       token,
       user: { 
-        id: customer.id, 
-        name: `${customer.firstName} ${customer.lastName}`, 
-        role: 'customer' 
+        id: customer.id,
+        name: `${customer.firstName} ${customer.lastName}`,
+        emailAddress: customer.emailAddress,
+        phoneNumber: customer.phoneNumber,
+        gender: customer.gender,
+        houseNumber: customer.houseNumber,
+        street:customer.street,
+        barangay:customer.barangay,
+        town: customer.town,
+        province: customer.province,
+        country: customer.country,
+        zipCode: customer.zipCode,
+        role: 'customer'
       },
     });
+
 
   } catch (error) {
     console.error('Login Error:', error);

@@ -7,7 +7,8 @@ import ownerRouter from './routes/owner.js';
 import authRouter from './routes/auth.js';
 import customerRouter from './routes/customer.js';
 import itemRouter from './routes/item.js';
-import chatRouter from './routes/chat.js'
+import chatRouter from './routes/chat.js';
+import bookRouter from './routes/book.js';
 import cors from 'cors';
 import fs from 'fs';
 
@@ -48,25 +49,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/customer', customerRouter); // This handles the file upload now
 app.use('/api/item', itemRouter);
 app.use('/api/chat', chatRouter);
-
-// ✅ ADD: Basic health check route
-app.get('/', (req, res) => {
-  res.json({ 
-    success: true, 
-    message: 'Server is running!',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// ✅ ADD: Global error handler
-app.use((err, req, res, next) => {
-  console.error('❌ Global error:', err);
-  res.status(500).json({
-    success: false,
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
+app.use('/api/book', bookRouter);
 
 // Database + Server Start
 connectToDatabase();
