@@ -1,20 +1,13 @@
 import sequelize from "../database/database.js";
 import { DataTypes } from "sequelize";
 
-const Book = sequelize.define("Book", {
-  id: {
-    type: DataTypes.STRING, 
+const Books = sequelize.define("Books", {
+    id: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-  },
+    },
   itemId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  customerId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  ownerId: {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
@@ -77,4 +70,4 @@ const Book = sequelize.define("Book", {
 
 });
 
-export default Book;
+export default Books;

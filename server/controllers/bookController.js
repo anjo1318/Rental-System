@@ -1,4 +1,4 @@
-import Book from "../models/Book.js";
+import Books from "../models/Book.js";
 import Item from "../models/Item.js";
 
 const bookItem = async (req, res) => {
@@ -15,30 +15,31 @@ const bookItem = async (req, res) => {
 
     console.log("Incoming booking data:", req.body);
 
-    const response = await Book.create({
-      itemId,
-      customerId,
-      ownerId,
-      product: itemDetails.title,
-      category: itemDetails.category,
-      location: itemDetails.location,
-      pricePerDay: itemDetails.pricePerDay,
-      name: customerDetails.fullName,
-      email: customerDetails.email,
-      phone: customerDetails.phone,
-      address: customerDetails.location,
-      gender: customerDetails.gender,
-      rentalPeriod: rentalDetails.period,
-      pickUpDate: rentalDetails.pickupDate,
-      returnDate: rentalDetails.returnDate,
-      status: "pending",
-      // ⚠️ paymentMethod is not in model yet, see note below
+    const response = await Books.create({
+    itemId,
+    customerId,
+    ownerId,
+    product: itemDetails.title,
+    category: itemDetails.category,
+    location: itemDetails.location,
+    pricePerDay: itemDetails.pricePerDay,
+    name: customerDetails.fullName,
+    email: customerDetails.email,
+    phone: customerDetails.phone,
+    address: customerDetails.location,
+    gender: customerDetails.gender,
+    rentalPeriod: rentalDetails.period,
+    pickUpDate: rentalDetails.pickupDate,
+    returnDate: rentalDetails.returnDate,
+    status: "pending",
+    paymentMethod, // ✅ include this
     });
+
+    console.log("Success in adding request for booking");
 
     return res.status(200).json({
       success: true,
-      message: "Booking saved successfully",
-      response,
+      message:"Success in sending rent request"
     });
   } catch (error) {
     console.error("Booking error:", error);

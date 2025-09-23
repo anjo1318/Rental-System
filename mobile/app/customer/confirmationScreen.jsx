@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,25 +7,39 @@ import {
   Dimensions,
   Image,
   ScrollView,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
-import axios from 'axios';
+import axios from "axios";
 
 const { width } = Dimensions.get("window");
 
 export default function ConfirmationScreen({ bookingData }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
 
-  const confirmRent = async() => {
-    try{
-        console.log("Payload data", bookingData);
-        response = await axios.post(`${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item`,bookingData);
+  const confirmRent = async () => {
+    if (loading) return; // prevent double click
+    setLoading(true);
 
-    }catch (error) {
-        console.log(error);
+    try {
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item`,
+        bookingData
+      );
+
+      console.log(response.data);
+
+      // ✅ show modal when success
+      setModalVisible(true);
+    } catch (error) {
+      console.error(error);
+      setLoading(false); // re-enable if failed
     }
-  }
+  };
 
   return (
     <View style={styles.container}>
@@ -112,12 +126,16 @@ export default function ConfirmationScreen({ bookingData }) {
 
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Pickup Date: </Text>
-            {new Date(bookingData?.rentalDetails?.pickupDate).toLocaleDateString()}
+            {new Date(
+              bookingData?.rentalDetails?.pickupDate
+            ).toLocaleDateString()}
           </Text>
 
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Return Date: </Text>
-            {new Date(bookingData?.rentalDetails?.returnDate).toLocaleDateString()}
+            {new Date(
+              bookingData?.rentalDetails?.returnDate
+            ).toLocaleDateString()}
           </Text>
         </View>
 
@@ -131,19 +149,52 @@ export default function ConfirmationScreen({ bookingData }) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, { marginTop: 10 }]}
-          onPress={() => 
-            confirmRent()
-          }
+          style={[
+            styles.button,
+            { marginTop: 10, opacity: loading ? 0.6 : 1 },
+          ]}
+          onPress={confirmRent}
+          disabled={loading}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>Rent Now</Text>
+          {loading ? (
+            <ActivityIndicator color="#FFF" />
+          ) : (
+            <Text style={styles.buttonText}>Rent Now</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
+
+      {/* ✅ Success Modal */}
+      <Modal
+        animationType="fade"
+        transparent
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Icon name="check-circle" size={60} color="#4CAF50" />
+            <Text style={styles.modalText}>
+              Request sent, please wait for the reply.
+            </Text>
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => {
+                setModalVisible(false);
+                setLoading(false);
+                router.replace("customer/home");
+              }}
+            >
+              <Text style={styles.modalButtonText}>Go to Home</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -204,5 +255,37 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "700",
     fontSize: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    width: width * 0.8,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+    elevation: 5,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginVertical: 15,
+    color: "#333",
+  },
+  modalButton: {
+    backgroundColor: "#057474",
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+    marginTop: 10,
+  },
+  modalButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
