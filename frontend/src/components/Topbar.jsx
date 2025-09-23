@@ -1,6 +1,7 @@
 import React from "react";
 import { Bell, Mail, User, Search, SlidersHorizontal } from "lucide-react";
 
+
 const Topbar = () => {
   return (
     <header className="flex items-center justify-between px-6 py-3 bg-white shadow-sm">
@@ -18,6 +19,7 @@ const Topbar = () => {
         </button>
       </div>
 
+
       {/* Right: Icons */}
       <div className="flex items-center gap-6">
         {/* Messages */}
@@ -28,6 +30,7 @@ const Topbar = () => {
           </span>
         </button>
 
+
         {/* Notifications */}
         <button className="relative">
           <Bell size={20} />
@@ -35,6 +38,7 @@ const Topbar = () => {
             20
           </span>
         </button>
+
 
         {/* User Avatar */}
         <div className="flex items-center gap-2">
@@ -50,4 +54,6 @@ const Topbar = () => {
   );
 };
 
+
 export default Topbar;
+
