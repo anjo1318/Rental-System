@@ -1,5 +1,4 @@
 import Books from "../models/Book.js";
-import Item from "../models/Item.js";
 
 const bookItem = async (req, res) => {
   try {
@@ -17,7 +16,7 @@ const bookItem = async (req, res) => {
 
     const response = await Books.create({
     itemId,
-    customerId,
+    customerId:customerDetails.customerId,
     ownerId,
     product: itemDetails.title,
     category: itemDetails.category,
@@ -28,6 +27,7 @@ const bookItem = async (req, res) => {
     phone: customerDetails.phone,
     address: customerDetails.location,
     gender: customerDetails.gender,
+    itemImage: itemDetails.itemImage,
     rentalPeriod: rentalDetails.period,
     pickUpDate: rentalDetails.pickupDate,
     returnDate: rentalDetails.returnDate,
@@ -47,4 +47,22 @@ const bookItem = async (req, res) => {
   }
 };
 
-export { bookItem };
+const bookNotification = async (req, res) => {
+  const { id } = req.params; // this will be the customerId coming from the mobile app
+
+  try {
+    const response = await Books.findAll({
+      where: { customerId: id }, // ✅ find all bookings for this customer
+      order: [["createdAt", "DESC"]], // optional: latest first
+    });
+
+    return res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error("Notification fetch error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+export { bookItem, bookNotification };

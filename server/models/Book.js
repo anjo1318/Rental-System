@@ -11,6 +11,10 @@ const Books = sequelize.define("Books", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  customerId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   product: {
     type: DataTypes.STRING,
     allowNull:false 
@@ -44,6 +48,10 @@ const Books = sequelize.define("Books", {
     allowNull:false 
   },
   gender: {
+    type: DataTypes.STRING,
+    allowNull:false 
+  },
+  itemImage: {
     type: DataTypes.STRING,
     allowNull:false 
   },

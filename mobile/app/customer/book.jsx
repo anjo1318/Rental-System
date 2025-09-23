@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -16,6 +16,11 @@ const MARGIN_TOP = Math.min(Math.round(height * 0.1), 20); // small top margin
 
 export default function BookedItem() {
   const router = useRouter();
+  const [bookRequest, setBookRequest] = useState([]);
+
+  useEffect(()=>{
+
+  }, []);
 
   return (
     <View style={styles.container}>

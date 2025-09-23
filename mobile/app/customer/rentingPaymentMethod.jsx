@@ -51,6 +51,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
     </View>
     </View>
     
+
       {/* Progress Steps */}
       <View style={styles.progressContainer}>
       <View style={styles.progressSteps}>
