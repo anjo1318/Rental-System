@@ -297,8 +297,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 20,
     marginLeft: 15,
-    boderColor: "#057474",
-    color: "#057474",
+    borderColor: "#057474",
+    borderWidth: 1,
   },
   continueBtn: {
     padding: 14,

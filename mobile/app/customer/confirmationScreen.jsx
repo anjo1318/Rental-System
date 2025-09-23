@@ -215,7 +215,7 @@ return (
       }}
       style={styles.continueBtn}
       >
-      <Text style={{ color: "#FFF", fontWeight: "700"}}>Continue</Text>
+      <Text style={{ color: "#FFF", fontWeight: "700"}}>Rent Now</Text>
       </TouchableOpacity>
     </View>
     
@@ -431,6 +431,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 20,
+     gap: 12,
   },
 
   backBtn: {
@@ -439,8 +440,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 20,
     marginLeft: 15,
-    boderColor: "#057474",
-    color: "#057474",
+    borderColor: "#057474",
+    borderWidth: 1,
+
   },
   continueBtn: {
     padding: 14,
@@ -448,5 +450,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 50,
     marginRight: 20,
+   
   },
 });
