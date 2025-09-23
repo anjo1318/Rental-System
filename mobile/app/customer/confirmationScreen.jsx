@@ -19,7 +19,7 @@ import axios from "axios";
 const { width } = Dimensions.get("window");
 
 export default function RentingPaymentMethod({ bookingData, onBack, onContinue }) {
-  const [currentStep, setCurrentStep] = useState(2);
+  const [currentStep, setCurrentStep] = useState(3);
   const [selectedMethod, setSelectedMethod] = useState(null);
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
   const router = useRouter();
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f6f6f6",
     paddingVertical: 20,
     paddingHorizontal: 16,
-    marginRight: 15,
+    marginRight: 20,
   },
   progressSteps: {
     flexDirection: "row",

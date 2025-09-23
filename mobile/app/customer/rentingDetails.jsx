@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingVertical: 20,
     paddingHorizontal: 16,
-    marginRight: 15,
+    marginRight: 20,
   },
   progressSteps: {
     flexDirection: "row",
