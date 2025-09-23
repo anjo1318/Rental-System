@@ -24,7 +24,7 @@ export default function RentingDetails() {
   // Step progress
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState(null);
-  const steps = ["Renting Details", "Payment Details", "Confirmed"];
+  const steps = ["Booking Details", "Payment Details", "Confirmed"];
 
   
   // Form states
@@ -281,18 +281,21 @@ export default function RentingDetails() {
                     currentStep === index + 1,
                     currentStep > index + 1
                     )}
-                    {index < steps.length - 1 && (
-                    <View
+                    {index < steps.length - 1 && (     
+                    <View style={styles.lineWrapper}>
+                    <View 
                         style={[
                         styles.progressLine,
                         currentStep > index + 1 && styles.completedProgressLine,
                         ]}
                     />
+                    </View>
                     )}
                 </React.Fragment>
                 ))}
             </View>
             </View>
+          
 
             {/* Renting form (Step 1 content) */}
             <KeyboardAvoidingView
@@ -361,33 +364,42 @@ export default function RentingDetails() {
 
                 {/* Date Selection */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Pick up Date</Text>
-                    <View style={styles.dateContainer}>
-                    <TouchableOpacity
+                  <View style={styles.dateRow}>
+                    {/* Pickup Date */}
+                    <View style={styles.dateColumn}>
+                      <Text style={styles.sectionTitle}>Pick up Date</Text>
+                      <TouchableOpacity
                         style={styles.dateButton}
                         onPress={() => setShowPickupDatePicker(true)}
                         activeOpacity={0.7}
-                    >
-                        <Icon name="date-range" size={20} color="#666" />
+                      >
+                        <Icon name="date-range" size={18} color="#666" />
                         <Text style={styles.dateText}>{formatDate(pickupDate)}</Text>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
+                    </View>
 
-                    <TouchableOpacity
-                        style={styles.dateButton}
+                    <View style={styles.verticalLine} />
+
+
+                    {/* Return Date */}
+                    <View style={styles.dateColumn}>
+                      <Text style={styles.sectionTitle1}>Return Date</Text>
+                      <TouchableOpacity
+                        style={styles.dateButton1}
                         onPress={() => setShowReturnDatePicker(true)}
                         activeOpacity={0.7}
-                    >
-                        <Icon name="date-range" size={20} color="#666" />
+                      >
+                        <Icon name="date-range" size={18} color="#666" />
                         <Text style={styles.dateText}>{formatDate(returnDate)}</Text>
-                    </TouchableOpacity>
+                      </TouchableOpacity>
                     </View>
+                  </View>
                 </View>
-
                 {/* Location Input */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Location</Text>
+                    <Text style={styles.sectionTitle3}>Location</Text>
                     <View style={styles.locationContainer}>
-                    <Icon name="location-on" size={20} color="#666" />
+                    <Icon name="location-on" size={20} color="#666" style={styles.locationIcon} />
                     <TextInput
                         style={styles.locationInput}
                         placeholder="Wawa Pinamalayan Oriental Mindoro"
@@ -400,7 +412,7 @@ export default function RentingDetails() {
                 </View>
 
                 {/* Proceed Button */}
-                <TouchableOpacity
+                <TouchableOpacity 
                     style={[styles.proceedButton, loading && styles.disabledButton]}
                     onPress={handleProceedToPayment}
                     disabled={loading}
@@ -541,16 +553,22 @@ const styles = StyleSheet.create({
     color: "#057474",
     fontWeight: "600",
   },
-  progressLine: {
-    width: 40,
+    progressLine: {
     height: 2,
     backgroundColor: "#ccc",
-    marginHorizontal: 8,
-    marginBottom: 20,
+    width: 94,            
+    marginBottom: 25,
   },
+
+  lineWrapper: {
+    width: 40,            // same as line width to reserve space
+    alignItems: "center", // center the line
+  },
+
   completedProgressLine: {
     backgroundColor: "#4CAF50",
   },
+
 
   // Content
   scrollContent: {
@@ -558,8 +576,8 @@ const styles = StyleSheet.create({
    
   },
   inputContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 17,
+    paddingTop: 17,
     borderColor: "#057474",
   },
   inputGroup: {
@@ -569,12 +587,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 16,
     paddingHorizontal: 16,
-    paddingVertical: 4,
     elevation: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
+    borderWidth: 1,
+    borderColor: "#057474",
         
   },
   inputIcon: {
@@ -585,39 +604,30 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     paddingVertical: 16,
+    
   },
 
-  // Sections
   section: {
     marginBottom: 24,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 12,
-  },
   optionsContainer: {
     flexDirection: "row",
-    gap: 12,
+    gap: 20,
+    marginTop: 10,
   },
   optionButton: {
     flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 6,
+    paddingHorizontal: 1,
     borderRadius: 25,
     backgroundColor: "#FFF",
     borderWidth: 1,
     borderColor: "#E0E0E0",
     alignItems: "center",
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    borderColor: "#05747480",
   },
   selectedOptionButton: {
-    backgroundColor: "#057474",
+    backgroundColor: "#057474E5",
     borderColor: "#057474",
   },
   optionText: {
@@ -631,28 +641,70 @@ const styles = StyleSheet.create({
   },
 
   // Date Selection
-  dateContainer: {
+   sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 10,
+    marginLeft: 12,
+  },
+   sectionTitle1: {
     flexDirection: "row",
-    gap: 12,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginLeft: 66,
+    marginTop: 11,
+  },
+  dateRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    borderWidth: 1,
+    borderColor: "#05747480", 
+    borderRadius: 20,
+    overflow: "hidden", // ✅ clip children edges
+},
+
+  dateColumn: {
+    flex: 1,
+    flexDirection: "column",
   },
   dateButton: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: "row", // ensures icon and text are in a row
+    alignItems: "center", // vertically centers icon and text
     backgroundColor: "#FFF",
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    borderRadius: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    height: 45,
+    marginLeft: 13,
+  
+  },
+  dateButton1: {
+    flex: 1,
+    flexDirection: "row", // ensures icon and text are in a row
+    alignItems: "center", // vertically centers icon and text
+    backgroundColor: "#FFF",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    height: 45,
+    marginLeft: 3,
+  
   },
   dateText: {
+    marginLeft: 5, // space between icon and text
     fontSize: 14,
     color: "#333",
-    marginLeft: 8,
+  },
+
+  verticalLine: {
+    width: 1.5,              
+    height: 50,           
+    backgroundColor: "#05747480", 
+    marginHorizontal: 10,  
+    marginTop: 13,
+    
   },
 
   // Location
@@ -660,14 +712,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     backgroundColor: "#FFF",
-    borderRadius: 12,
+    borderRadius: 20,
     paddingHorizontal: 16,
-    paddingVertical: 16,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    borderColor: "#05747480",
+    borderWidth: 1,
   },
   locationInput: {
     flex: 1,
@@ -678,21 +726,35 @@ const styles = StyleSheet.create({
     minHeight: 40,
   },
 
+  locationIcon: {
+    marginTop: 17, // adjust as needed
+  },
+  sectionTitle3: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    paddingVertical: 10,
+    marginLeft: 12,
+  },
+
   // Proceed Button
   proceedButton: {
+    width: "70%",
     backgroundColor: "#057474",
     paddingVertical: 16,
-    borderRadius: 25,
+    borderRadius: 20,
     alignItems: "center",
-    marginTop: 40,
+    marginTop: 16,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+    marginLeft: 50,
   },
   disabledButton: {
     opacity: 0.6,
+
   },
   proceedText: {
     color: "#FFF",
