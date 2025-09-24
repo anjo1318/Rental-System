@@ -11,6 +11,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -133,7 +134,6 @@ export default function ownerHome() {
           total: totalItems,
           available: availableItems,
           rented: rentedItems,
-          monthlyEarnings: 2450 // Calculate this from actual rental data
         });
       } else {
         Alert.alert("Error", data.error || "Failed to fetch items");
@@ -159,106 +159,11 @@ export default function ownerHome() {
     initializeApp();
   }, []);
 
-  const handleLogout = async () => {
-    console.log('🚪 Logout button pressed');
-    
-    try {
-      // First, try to show the alert
-      console.log('📱 Attempting to show logout alert...');
-      
-      Alert.alert(
-        "Logout",
-        "Are you sure you want to logout?",
-        [
-          {
-            text: "Cancel",
-            style: "cancel",
-            onPress: () => {
-              console.log('❌ Logout cancelled');
-            },
-          },
-          {
-            text: "Logout",
-            style: "destructive", 
-            onPress: () => {
-              console.log('✅ User confirmed logout, executing...');
-              performLogout();
-            },
-          },
-        ],
-        { 
-          cancelable: true,
-          onDismiss: () => console.log('📱 Alert dismissed')
-        }
-      );
-      
-      console.log('📱 Alert.alert called successfully');
-      
-    } catch (alertError) {
-      console.error('❌ Alert error:', alertError);
-      // If Alert fails, perform logout directly
-      console.log('🔄 Alert failed, performing direct logout...');
-      performLogout();
-    }
-  };
-
-const performLogout = async () => {
-  try {
-    console.log('🔄 Starting logout process...');
-    
-    // Clear all stored data
-    const keysToRemove = [
-      'token', 
-      'user', 
-      'isLoggedIn',
-      'savedEmail',
-      'savedPassword', 
-      'rememberMe'
-    ];
-    
-    console.log('🗑️ Clearing storage keys:', keysToRemove);
-    await AsyncStorage.multiRemove(keysToRemove);
-    console.log('🗑️ All storage data cleared');
-    
-    // Verify data was cleared (for debugging)
-    const remainingData = await AsyncStorage.multiGet(keysToRemove);
-    console.log('🔍 Remaining data after clear:', remainingData);
-    
-    // Navigate to login screen
-    console.log('🔄 Navigating to login...');
-    router.replace('owner/ownerLogin');
-    
-    console.log('✅ Logout completed successfully');
-    
-  } catch (error) {
-    console.error('❌ Logout error:', error);
-    // Try alternative navigation methods
-    try {
-      console.log('🔄 Trying alternative navigation...');
-      router.push('owner/ownerLogin');
-    } catch (navError) {
-      console.error('❌ Navigation error:', navError);
-    }
-  }
-};
 
   const handleNavigation = (route) => {
     router.push(`/${route}`);
   };
 
-  // Filter items based on search and category
-  const filteredItems = items.filter((item) => {
-    const matchCategory =
-      activeCategory === "All" || item.category === activeCategory;
-    const matchSearch =
-      item.title.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchSearch;
-  });
-
-  console.log('🔍 Items state:', items);
-  console.log('🔍 Filtered items:', filteredItems);
-  console.log('🔍 Active category:', activeCategory);
-  console.log('🔍 Search term:', search);
 
   const renderItem = ({ item }) => {
     console.log('🔍 Rendering item:', item);
@@ -308,80 +213,69 @@ const performLogout = async () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-      {/* Header with Back Button and Title */}
-        <View style={styles.headerWrapper}>
-          <View style={styles.profileContainer}>
-            <Pressable 
-              onPress={() => {
-                console.log('⬅️ Back button pressed');
-                router.back();
-              }}
-              hitSlop={10}
-              style={{ zIndex: 10 }} 
-            >
-              <Icon name="arrow-back" size={24} color="#FFF" />
-            </Pressable>
-            
-            <Text style={styles.pageName}>
-              {currentUser ? `${currentUser.firstName}'s Dashboard` : 'Owner Dashboard'}
-            </Text>
+    <>
+      {/* ✅ StatusBar must be OUTSIDE the main View */}
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#f2f2f2"
+        translucent={false}
+      />
 
-            {/* Notification and Logout Icons */}
+      <View style={styles.container}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* 🔹 Profile Section */}
+          <View style={styles.profileContainer}>
+           <Pressable onPress={() => router.push("customer/profile")}>
+            <Image
+              source={{ uri: "https://i.pravatar.cc/150?img=3" }}
+              style={styles.avatar}
+            />
+          </Pressable >
+            <Text style={styles.username}>Marco Polo</Text>
             <View style={styles.notificationWrapper}>
-              <Pressable 
-                onPress={() => {
-                  console.log('🚪 Logout icon pressed');
-                  performLogout(); // vince
-                }} 
-                style={{ 
-                  marginRight: 15,
-                  padding: 4, // Add padding for better touch area
-                  borderRadius: 4,
-                }}
-                hitSlop={8} // Increase touch area
-              >
-                <Icon name="logout" size={24} color="#FFF" />
-              </Pressable>
-              
-              <Pressable
-                onPress={() => {
-                  console.log('🔔 Notification pressed');
-                  router.replace('owner/ownerMessages');
-                  // Add your notification handler here
-                }}
-                style={{ position: 'relative' }}
-                hitSlop={8}
-              >
-                <Icon name="notifications-none" size={24} color="#FFF" />
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>3</Text>
-                </View>
-              </Pressable>
+            <Pressable onPress={() => router.push("customer/notifications")}>
+              <Image
+                source={require("../../assets/images/message_chat.png")}
+                style={{ width: 24, height: 24, tintColor: "#057474" }}
+                resizeMode="contain"
+              />
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
+              </View>
+            </Pressable>
+        </View>
+        </View> 
+        {/* Quick Stats Section */}
+        <View style={styles.statsContainer}>
+          <View style={[styles.statCard, styles.withBorder, { borderWidth: 1, borderColor: "#3D7BFF"}]}>
+            <Text style={[styles.statLabel, { color: "#3D7BFF" }]}>Total Unit</Text>
+            <View style={styles.numberContainer}>
+              <Text style={[styles.statNumber, { color: "#3D7BFF" }]}>{stats.total}</Text>
+              <Image source={require("../../assets/images/total.png")} style={styles.lowerLeftIcon} />
+            </View>
+          </View>
+
+          <View style={[styles.statCard, { borderWidth: 1, borderColor: "#007F7F"}]}>
+            <Text style={[styles.statLabel, styles.withBorder, { color: "#007F7F" }]}>Occupied Unit</Text>
+            <View style={styles.numberContainer}>
+              <Text style={[styles.statNumber, { color: "#007F7F" }]}>{stats.available}</Text>
+              <Image source={require("../../assets/images/occupied.png")} style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}/>
+            </View>
+          </View>
+
+          <View style={[styles.statCard, { borderWidth: 1, borderColor: "#FF521D"}]}>
+            <Text style={[styles.statLabel, { color: "#FF521D" }]}>Vacant Unit</Text>
+            <View style={styles.numberContainer}>
+              <Text style={[styles.statNumber, { color: "#FF521D" }]}>{stats.rented}</Text>
+              <Image source={require("../../assets/images/vacant.png")} style={styles.lowerLeftIcon} />
             </View>
           </View>
         </View>
 
-        {/* Quick Stats Section */}
-        <View style={styles.statsContainer}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.total}</Text>
-            <Text style={styles.statLabel}>Total Items</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.available}</Text>
-            <Text style={styles.statLabel}>Available</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.rented}</Text>
-            <Text style={styles.statLabel}>Rented</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>₱{stats.monthlyEarnings.toLocaleString()}</Text>
-            <Text style={styles.statLabel}>This Month</Text>
-          </View>
-        </View>
+
+
+
+
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -400,21 +294,6 @@ const performLogout = async () => {
           />
           <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
         </View>
-
-        {/* Featured Items */}
-        <View style={styles.featuredSection}>
-          <Text style={styles.sectionTitle}>Your Featured Items</Text>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {items.slice(0, 5).map((item) => (
-            <View key={item.id} style={styles.featuredCard}>
-              <Image
-                source={{ uri: item.itemImage }}
-                style={styles.featuredImage}
-              />
-            </View>
-          ))}
-        </ScrollView>
 
         {/* Item Categories */}
         <Text style={styles.sectionTitle}>Manage Your Items</Text>
@@ -443,16 +322,6 @@ const performLogout = async () => {
             </Pressable>
           ))}
         </ScrollView>
-
-        {/* DEBUG INFO - Remove this after fixing */}
-        <View style={{ padding: 16, backgroundColor: '#f0f0f0', margin: 16 }}>
-          <Text>🔍 Debug Info:</Text>
-          <Text>Items loaded: {items.length}</Text>
-          <Text>Filtered items: {filteredItems.length}</Text>
-          <Text>Loading: {loading.toString()}</Text>
-          <Text>Active category: {activeCategory}</Text>
-          <Text>Search: '{search}'</Text>
-        </View>
 
         {/* Item List */}
         {items.length > 0 ? (
@@ -522,85 +391,108 @@ const performLogout = async () => {
 
       </View>
     </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#E6E1D6",
-  },
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#057474",
-    paddingTop: 60,
-    paddingBottom: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
-  },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
+    justifyContent: "space-between", // avatar left, bell right
+    padding: 16,
+    marginTop: 16,
   },
-  pageName: {
-    fontSize: width * 0.045,
-    color: "#FFF",
-    fontWeight: "600",
-    flex: 1,
-    textAlign: "center",
-    marginLeft: -24,
+
+  avatar: { 
+    width: width * 0.1, 
+    height: width * 0.1, 
+    borderRadius: width * 0.05 
   },
+  
+  username: { 
+    marginLeft: width * 0.03, 
+    fontWeight: "bold", 
+    fontSize: width * 0.04 
+  },
+
   notificationWrapper: {
+    marginLeft: "auto", 
+    marginRight: 16,
     position: "relative",
+    width: width * 0.10,
+    height: width * 0.10,
+    borderRadius: (width * 0.12) / 2,
+    justifyContent: "center",
+    alignItems: "center",
   },
   badge: {
     position: "absolute",
-    top: -5,
-    right: -5,
-    backgroundColor: "#FF5722",
+    right: -8,
+    top: -3,
+    backgroundColor: "#057474",
     borderRadius: 10,
-    minWidth: 18,
-    height: 18,
+    width: 15,
+    height: 15,
     justifyContent: "center",
     alignItems: "center",
   },
   badgeText: {
-    color: "#FFF",
-    fontSize: 10,
+    color: "white",
+    fontSize: 8,
     fontWeight: "bold",
   },
-  statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 20,
-    backgroundColor: "#FFF",
-    marginHorizontal: 16,
-    marginTop: 20,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statCard: {
-    alignItems: "center",
-    flex: 1,
-  },
-  statNumber: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#057474",
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: "#666",
-    textAlign: "center",
-  },
+  
+statsContainer: {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  marginHorizontal: 16,
+  marginTop: 20,
+},
+
+statCard: {
+  flex: 1,
+  alignItems: "center",
+  paddingVertical: 40,
+  marginHorizontal: 4,           // spacing between boxes
+  backgroundColor: "#FFF",       // each has white background
+  borderRadius: 4,
+},
+
+statNumber: {
+  fontSize: 30,
+  fontWeight: "bold",
+  color: "#057474",
+  marginBottom: 4,
+},
+
+statLabel: {
+  fontSize: 12,
+  color: "#666",
+  textAlign: "center",
+},
+numberRow: {
+  position: "relative",
+  alignItems: "flex-start",
+},
+statIcon: {
+  width: 20,
+  height: 20,
+  marginLeft: 4,
+},
+numberContainer: {
+  position: "relative",
+  alignItems: "flex-start",
+},
+
+lowerLeftIcon: {
+  position: "absolute",
+  bottom: 5, // pushes icon slightly below the number
+  left: -25,   // moves icon slightly to the left
+  width: 20,
+  height: 17,
+},
+
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -627,10 +519,6 @@ const styles = StyleSheet.create({
   rightIcon: {
     marginLeft: 10,
   },
-  featuredSection: {
-    paddingHorizontal: 16,
-    marginBottom: 10,
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
@@ -638,25 +526,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingHorizontal: 16,
   },
-  featuredCard: {
-    width: 120,
-    height: 80,
-    marginRight: 12,
-    marginLeft: 16,
-    borderRadius: 12,
-    overflow: "hidden",
-    backgroundColor: "#FFF",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  featuredImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
+  
   categoryButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
