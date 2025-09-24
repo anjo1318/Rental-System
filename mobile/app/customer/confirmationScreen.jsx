@@ -67,6 +67,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
           location: bookingData?.itemDetails?.location,
           pricePerDay: bookingData?.itemDetails?.pricePerDay,
           itemImage: bookingData?.itemDetails?.itemImage,
+          ownerId: bookingData?.itemDetails?.ownerId
         },
         customerDetails: {
           customerId: bookingData?.customerDetails?.customerId,

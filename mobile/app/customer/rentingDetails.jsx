@@ -126,45 +126,44 @@ export default function RentingDetails() {
     return true;
   };
 
-    const handleProceedToPayment = () => {
+  const handleProceedToPayment = () => {
     if (!validateForm()) return;
 
     if (!item) {
-        Alert.alert("Error", "Item details not loaded yet.");
-        return;
+      Alert.alert("Error", "Item details not loaded yet.");
+      return;
     }
 
     const data = {
-        itemId: parseInt(itemId),
-        itemDetails: {
+      itemId: parseInt(itemId),
+      ownerId: item.Owner.id,   // ✅ make ownerId available at root
+      itemDetails: {
+        ownerId: item.Owner.id, // ✅ also keep it here for item context
         title: item.title ?? "Unknown Product",
         category: item.category,
         location: item.location,
         itemImage: item.itemImage,
         pricePerDay: item.pricePerDay,
-        },
-        customerDetails: {
+      },
+      customerDetails: {
         customerId: userId,
         fullName,
         email: emailAddress,
         phone: phoneNumber,
         location,
         gender,
-        },
-        rentalDetails: {
+      },
+      rentalDetails: {
         period: rentalPeriod,
         pickupDate,
         returnDate,
-        },
+      },
     };
 
     setBookingData(data);
-    console.log("booking data", data);
+    console.log("Booking Data Prepared:", data);  // ✅ should show ownerId correctly now
     setCurrentStep(2);
-    };
-
-
-
+  };
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {

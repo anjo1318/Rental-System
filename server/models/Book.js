@@ -15,6 +15,10 @@ const Books = sequelize.define("Books", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
+  ownerId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   product: {
     type: DataTypes.STRING,
     allowNull:false 
