@@ -30,6 +30,7 @@ export default function BookedItem() {
   useEffect(() => {
     if (userId) {
       fetchBookedItems();
+      console.log("ownerRequest.jsx to");
     }
   }, [userId]);
 

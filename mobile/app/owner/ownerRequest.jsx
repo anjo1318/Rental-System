@@ -24,7 +24,7 @@ export default function ownerItem() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadUserData(); // run only once on mount
+    loadOwnerData(); // run only once on mount
   }, []);
 
   useEffect(() => {
@@ -33,25 +33,25 @@ export default function ownerItem() {
     }
   }, [userId]);
 
-  const loadUserData = async () => {
+  const loadOwnerData = async () => {
     try {
-      const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        console.log("From local storage", userData);
+      const ownerData = await AsyncStorage.getItem("user");
+      if (ownerData) {
+        const user = JSON.parse(ownerData);
+        console.log("Owner data From local storage", ownerData);
         
         // Ensure we have a valid user ID
-        const userIdValue = user.id || user.userId || user._id || "";
+        const ownerIdValue = user.id || user.userId || user._id || "";
         
-        if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
-          setUserId(userIdValue);
+        if (ownerIdValue && ownerIdValue !== "N/A" && ownerIdValue !== "null" && ownerIdValue !== "undefined") {
+          setUserId(ownerIdValue);
         } else {
-          console.error("Invalid user ID found:", userIdValue);
+          console.error("Invalid user ID found:", ownerIdValue);
           // You might want to redirect to login screen here
           // router.replace('/login');
         }
       } else {
-        console.error("No user data found in AsyncStorage");
+        console.error("No owner data found in AsyncStorage");
         // You might want to redirect to login screen here
         // router.replace('/login');
       }
@@ -69,9 +69,9 @@ export default function ownerItem() {
 
     try {
       setLoading(true);
-      console.log("Fetching booked items for user ID:", userId);
+      console.log("Fetching booked items for owner ID:", userId);
       
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/book-request/${userId}`);
 
       if (response.data.success) {
         console.log("Booked items response:", response.data.data);
@@ -93,7 +93,7 @@ export default function ownerItem() {
     try {
       // Option 1: If using simple file-based routing
       router.push({
-        pathname: "customer/bookedProductDetail",
+        pathname: "owner/ownerRequestDetail",
         params: {
           id: item.id,
           product: item.product || "",
@@ -133,24 +133,8 @@ export default function ownerItem() {
     }
   };
 
-  // Handle delete button press
-  const handleDelete = () => {
-    // Add your delete logic here
-    console.log("Delete button pressed");
-    // You might want to show a confirmation dialog first
-    // Then call an API to delete selected items
-  };
 
-  // Handle proceed button press
-  const handleProceed = () => {
-    // Add your proceed to renting logic here
-    console.log("Proceed button pressed");
-    // Navigate to the renting flow or payment screen
-    // router.push('/renting-flow');
-  };
-
-  console.log("Fetching booked items from:", `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
-  console.log("bookedItem useState values", bookedItem);
+  console.log("Fetching booked items from:", `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-request/${userId}`);
 
   return (
     <View style={styles.container}>
@@ -291,24 +275,6 @@ export default function ownerItem() {
           )}
         </ScrollView>
 
-        {/* Bottom buttons - only show if there are items */}
-        {bookedItem.length > 0 && (
-          <View style={styles.bottomContainer}>
-            <Pressable 
-              style={[styles.button, styles.deleteButton, { flex: 0, width: "30%" }]}
-              onPress={handleDelete}
-            >
-              <Text style={styles.deleteText}>Delete</Text>
-            </Pressable>
-
-            <Pressable 
-              style={[styles.button, styles.proceedButton, { flex: 0, width: "60%" }]}
-              onPress={handleProceed}
-            >
-              <Text style={styles.proceedText}>Proceed to Renting</Text>
-            </Pressable>
-          </View>
-        )}
       </View>
     </View>
   );

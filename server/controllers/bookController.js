@@ -104,5 +104,24 @@ const cancelBooking = async (req, res) => {
   }
 };
 
+const fetchBookRequest = async (req, res) => {
+  console.log("Using fetchBookRequest");
 
-export { bookItem, bookNotification, bookedItems, cancelBooking };
+  try {
+    const { id } = req.params;
+    console.log("Id of the incoming request:", id);
+
+    const response = await Books.findAll({
+      where: { ownerId: id },
+      order: [["created_at", "DESC"]], // ✅ use the alias you defined in the model
+    });
+
+    return res.status(200).json({ success: true, data: response });
+
+  } catch (error) {
+    console.error("Error in fetchBookRequest:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export { bookItem, bookNotification, bookedItems, cancelBooking, fetchBookRequest};

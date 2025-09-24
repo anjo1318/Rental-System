@@ -233,7 +233,7 @@ export default function ownerHome() {
           </Pressable >
             <Text style={styles.username}>Marco Polo</Text>
             <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("customer/notifications")}>
+            <Pressable onPress={() => router.push("owner/ownerRequest")}>
               <Image
                 source={require("../../assets/images/message_chat.png")}
                 style={{ width: 24, height: 24, tintColor: "#057474" }}
