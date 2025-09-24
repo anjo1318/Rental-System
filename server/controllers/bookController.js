@@ -1,3 +1,4 @@
+import { response } from "express";
 import Books from "../models/Book.js";
 
 const bookItem = async (req, res) => {
@@ -53,7 +54,7 @@ const bookNotification = async (req, res) => {
   try {
     const response = await Books.findAll({
       where: { customerId: id }, // ✅ find all bookings for this customer
-      order: [["createdAt", "DESC"]], // optional: latest first
+      order: [["created_at", "DESC"]]
     });
 
     return res.status(200).json({ success: true, data: response });
@@ -63,6 +64,48 @@ const bookNotification = async (req, res) => {
   }
 };
 
+const bookedItems = async (req, res) => {
+  const { id } = req.params; // this will be the customerId coming from the mobile 
+  
+  console.log("Incoming data",req.params);
+
+  try {
+    const response = await Books.findAll({
+      where: { customerId: id }, // ✅ find all bookings for this customer
+      order: [["created_at", "DESC"]]
+    });
+
+    return res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error("Notification fetch error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const cancelBooking = async (req, res) => {
+  console.log("cancelBooking");
+  try {
+    const { id } = req.params; 
+    console.log("Incoming data", req.params);
+
+    const booking = await Books.findByPk(id);
+
+    if (!booking) {
+      return res.status(404).json({ success: false, message: "Booking not found" });
+    }
+
+    booking.status = "cancelled";
+    await booking.save();
+
+    return res.json({ success: true, message: "Booking cancelled successfully", booking });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 
-export { bookItem, bookNotification };
+
+
+
+
+export { bookItem, bookNotification, bookedItems, cancelBooking };

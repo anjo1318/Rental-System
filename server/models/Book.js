@@ -72,10 +72,16 @@ const Books = sequelize.define("Books", {
     allowNull:false 
   },
  status: {
-    type: DataTypes.ENUM('approved', 'pending', 'rejected'),
+    type: DataTypes.ENUM('approved', 'pending', 'rejected', 'ongoing', 'terminated', 'cancelled'),
     allowNull: false
   },
 
+}, {
+  timestamps: true,
+  createdAt: 'created_at',  // if your column is named 'created_at'
+  updatedAt: 'updated_at'   // if your column is named 'updated_at'
+  // OR if your columns are named 'createdAt' and 'updatedAt', just use:
+  // timestamps: true
 });
 
 export default Books;

@@ -20,7 +20,7 @@ const { width } = Dimensions.get("window");
 
 export default function RentingPaymentMethod({ bookingData, onBack, onContinue }) {
   const [currentStep, setCurrentStep] = useState(3);
-  const [selectedMethod, setSelectedMethod] = useState(null);
+  const [selectedMethod, setSelectedMethod] = useState("Cash on Delivery"); // Set default payment method
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -58,9 +58,37 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
     setLoading(true);
 
     try {
+      // Format the data to match your backend controller expectations
+      const formattedBookingData = {
+        itemId: bookingData?.itemId,
+        itemDetails: {
+          title: bookingData?.itemDetails?.title,
+          category: bookingData?.itemDetails?.category,
+          location: bookingData?.itemDetails?.location,
+          pricePerDay: bookingData?.itemDetails?.pricePerDay,
+          itemImage: bookingData?.itemDetails?.itemImage,
+        },
+        customerDetails: {
+          customerId: bookingData?.customerDetails?.customerId,
+          fullName: bookingData?.customerDetails?.fullName,
+          email: bookingData?.customerDetails?.email,
+          phone: bookingData?.customerDetails?.phone,
+          location: bookingData?.customerDetails?.location,
+          gender: bookingData?.customerDetails?.gender,
+        },
+        rentalDetails: {
+          period: bookingData?.rentalDetails?.period,
+          pickupDate: bookingData?.rentalDetails?.pickupDate,
+          returnDate: bookingData?.rentalDetails?.returnDate,
+        },
+        paymentMethod: selectedMethod
+      };
+
+      console.log('Sending formatted booking data:', formattedBookingData);
+
       const response = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item`,
-        bookingData
+        formattedBookingData
       );
 
       console.log(response.data);
@@ -68,7 +96,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
       // ✅ show modal when success
       setModalVisible(true);
     } catch (error) {
-      console.error(error);
+      console.error('Booking error:', error.response?.data || error.message);
       setLoading(false); // re-enable if failed
     }
   };
@@ -156,7 +184,7 @@ return (
 
       <Text style={styles.detailItem}>
         <Text style={styles.label}>Payment Method: </Text>
-        {bookingData?.paymentMethod || "Not selected"}
+        {selectedMethod || "Not selected"}
       </Text>
 
       <Text style={styles.detailItem}>
@@ -209,13 +237,18 @@ return (
         <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
       </TouchableOpacity>
       <TouchableOpacity
-      onPress={() => {
-          if (!selectedMethod) return;
+        onPress={() => {
           onContinue({ ...bookingData, paymentMethod: selectedMethod });
-      }}
-      style={styles.continueBtn}
+          confirmRent();
+        }}
+        style={styles.continueBtn}
+        disabled={loading}
       >
-      <Text style={{ color: "#FFF", fontWeight: "700"}}>Rent Now</Text>
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFF" />
+        ) : (
+          <Text style={{ color: "#FFF", fontWeight: "700"}}>Rent Now</Text>
+        )}
       </TouchableOpacity>
     </View>
     

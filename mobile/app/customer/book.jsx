@@ -1,26 +1,156 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import axios from "axios";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get("window");
 
-// ✅ Responsive constants (bounded so they don’t blow up on tablets or collapse on small screens)
+// ✅ Responsive constants (bounded so they don't blow up on tablets or collapse on small screens)
 const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110); // min 60, max 110
-const ICON_BOX = Math.max(40, width * 0.00); // min 40px
+const ICON_BOX = Math.max(40, width * 0.1); // Fixed: was width * 0.00, now width * 0.1
 const ICON_SIZE = Math.max(20, width * 0.07); // min 20px
 const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // adaptive title font
 const BADGE_SIZE = Math.max(12, Math.round(width * 0.045)); // badge scales with width
-const PADDING_H = Math.min(Math.max(7, width * 0.02), 20); // horizontal padding (min 12, max 28)
-const MARGIN_TOP = Math.min(Math.round(height * 0.1), 20); // small top margin
+const PADDING_H = Math.min(Math.max(12, width * 0.02), 28); // Fixed: was min 7, now min 12
+const MARGIN_TOP = Math.min(Math.round(height * 0.02), 20); // Fixed: was height * 0.1, now height * 0.02
 
 export default function BookedItem() {
   const router = useRouter();
   const [bookRequest, setBookRequest] = useState([]);
+  const [bookedItem, setBookedItem] = useState([]);
+  const [userId, setUserId] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(()=>{
-
+  useEffect(() => {
+    loadUserData(); // run only once on mount
   }, []);
+
+  useEffect(() => {
+    if (userId) {
+      fetchBookedItems();
+    }
+  }, [userId]);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log("From local storage", userData);
+        
+        // Ensure we have a valid user ID
+        const userIdValue = user.id || user.userId || user._id || "";
+        
+        if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
+          setUserId(userIdValue);
+        } else {
+          console.error("Invalid user ID found:", userIdValue);
+          // You might want to redirect to login screen here
+          // router.replace('/login');
+        }
+      } else {
+        console.error("No user data found in AsyncStorage");
+        // You might want to redirect to login screen here
+        // router.replace('/login');
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const fetchBookedItems = async () => {
+    // Don't make API call if userId is invalid
+    if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
+      console.error("Cannot fetch booked items: Invalid user ID:", userId);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("Fetching booked items for user ID:", userId);
+      
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
+
+      if (response.data.success) {
+        console.log("Booked items response:", response.data.data);
+        setBookedItem(response.data.data || []);
+      } else {
+        console.log("API returned success: false", response.data);
+        setBookedItem([]);
+      }
+    } catch (error) {
+      console.error("Error fetching booked items:", error);
+      setBookedItem([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to handle item press and navigate to detail screen
+  const handleItemPress = (item) => {
+    try {
+      // Option 1: If using simple file-based routing
+      router.push({
+        pathname: "customer/bookedProductDetail",
+        params: {
+          id: item.id,
+          product: item.product || "",
+          category: item.category || "",
+          status: item.status || "",
+          pricePerDay: item.pricePerDay || "",
+          rentalPeriod: item.rentalPeriod || "",
+          paymentMethod: item.paymentMethod || "",
+          pickUpDate: item.pickUpDate || "",
+          returnDate: item.returnDate || "",
+          itemImage: item.itemImage || "",
+          // Customer information - adjust these field names based on your API response
+          name: item.customerName || item.name || "",
+          email: item.customerEmail || item.email || "",
+          phone: item.customerPhone || item.phone || "",
+          address: item.customerAddress || item.address || "",
+          gender: item.customerGender || item.gender || "",
+        }
+      });
+
+      // Option 2: If using dynamic routing, use this instead:
+      // router.push(`/booked-product-detail/${item.id}`);
+      
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      return dateString; // Return original string if parsing fails
+    }
+  };
+
+  // Handle delete button press
+  const handleDelete = () => {
+    // Add your delete logic here
+    console.log("Delete button pressed");
+    // You might want to show a confirmation dialog first
+    // Then call an API to delete selected items
+  };
+
+  // Handle proceed button press
+  const handleProceed = () => {
+    // Add your proceed to renting logic here
+    console.log("Proceed button pressed");
+    // Navigate to the renting flow or payment screen
+    // router.push('/renting-flow');
+  };
+
+  console.log("Fetching booked items from:", `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
+  console.log("bookedItem useState values", bookedItem);
 
   return (
     <View style={styles.container}>
@@ -35,6 +165,19 @@ export default function BookedItem() {
             <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
               <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
             </Pressable>
+
+            <Pressable
+                onPress={() => {
+                  if (router.canGoBack()) {
+                    router.back();
+                      } else {
+                    router.replace("/customer/home"); // fallback screen
+                      }}}
+                      hitSlop={10}
+                      style={styles.iconPress}
+                      >
+                <Icon name="arrow-back" size={24} color="#FFF" />
+              </Pressable>
           </View>
 
           {/* Center: page title */}
@@ -80,18 +223,92 @@ export default function BookedItem() {
 
       {/* Body */}
       <View style={styles.bodyWrapper}>
-        <ScrollView contentContainerStyle={styles.scrollContent}></ScrollView>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>Loading...</Text>
+            </View>
+          ) : bookedItem.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                {userId ? "No booked items found" : "Please log in to view booked items"}
+              </Text>
+            </View>
+          ) : (
+            bookedItem.map((item) => (
+              <Pressable 
+                key={item.id} 
+                style={({ pressed }) => [
+                  styles.notificationCard,
+                  pressed && styles.pressedCard
+                ]}
+                onPress={() => handleItemPress(item)}
+              >
+                {/* Left: item image */}
+                <View style={styles.imageWrapper}>
+                  <Image
+                    source={{ 
+                      uri: item.itemImage || 'https://via.placeholder.com/50x50?text=No+Image'
+                    }}
+                    style={styles.itemImage}
+                    defaultSource={{ uri: 'https://via.placeholder.com/50x50?text=No+Image' }}
+                  />
+                </View>
 
-        {/* Bottom buttons */}
-        <View style={styles.bottomContainer}>
-          <Pressable style={[styles.button, styles.deleteButton, { flex: 0, width: "30%" }]}>
-            <Text style={styles.deleteText}>Delete</Text>
-          </Pressable>
+                {/* Center: details */}
+                <View style={styles.detailsWrapper}>
+                  <Text style={styles.productName} numberOfLines={1}>
+                    {item.product || 'Unknown Product'}
+                  </Text>
+                  
+                  <Text>
+                    • Pickup: {formatDate(item.pickUpDate)}
+                  </Text>
 
-          <Pressable style={[styles.button, styles.proceedButton, { flex: 0, width: "60%" }]}>
-            <Text style={styles.proceedText}>Proceed to Renting</Text>
-          </Pressable>
-        </View>
+                  <Text 
+                    style={[
+                      styles.statusText,
+                      item.status?.toLowerCase() === "pending" && { color: "#D4A017" },   // Yellow
+                      (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" }, // Green
+                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated") && { color: "#D40004" }, // Red
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.status || 'Unknown'} 
+                  </Text>
+
+                </View>
+
+                {/* Right: date and chevron */}
+                <View style={styles.dateWrapper}>
+                  <Text style={styles.dateText}>
+                    {formatDate(item.pickUpDate)}
+                  </Text>
+                  <Icon name="chevron-right" size={20} color="#666" style={styles.chevronIcon} />
+                </View>
+              </Pressable>
+            ))
+          )}
+        </ScrollView>
+
+        {/* Bottom buttons - only show if there are items */}
+        {bookedItem.length > 0 && (
+          <View style={styles.bottomContainer}>
+            <Pressable 
+              style={[styles.button, styles.deleteButton, { flex: 0, width: "30%" }]}
+              onPress={handleDelete}
+            >
+              <Text style={styles.deleteText}>Delete</Text>
+            </Pressable>
+
+            <Pressable 
+              style={[styles.button, styles.proceedButton, { flex: 0, width: "60%" }]}
+              onPress={handleProceed}
+            >
+              <Text style={styles.proceedText}>Proceed to Renting</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -165,6 +382,32 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
+    paddingTop: 16,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 50,
+  },
+
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+  },
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 50,
+  },
+
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
 
   bottomContainer: {
@@ -201,5 +444,70 @@ const styles = StyleSheet.create({
   proceedText: {
     color: "#FFF",
     fontSize: 13,
+  },
+
+  notificationCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#DAD6C7",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+
+  pressedCard: {
+    backgroundColor: "#C5C0B1", // Slightly darker when pressed
+    transform: [{ scale: 0.98 }],
+  },
+
+  imageWrapper: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: "hidden",
+    marginRight: 10,
+  },
+
+  itemImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+
+  detailsWrapper: {
+    flex: 1,
+  },
+
+  productName: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: "#000",
+  },
+
+  statusText: {
+    fontSize: 13,
+    color: "#555",
+    marginTop: 2,
+  },
+
+  dateWrapper: {
+    width: 80, // Made slightly wider to accommodate chevron
+    alignItems: "flex-end",
+  },
+
+  dateText: {
+    fontSize: 12,
+    color: "#333",
+  },
+
+  chevronIcon: {
+    marginTop: 2,
+  },
+
+  detailImage: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 16,
   },
 });
