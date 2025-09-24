@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { 
   View, 
   Text, 
@@ -8,7 +8,8 @@ import {
   Dimensions, 
   StatusBar, 
   Image, 
-  Alert 
+  Alert,
+  Modal
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -19,6 +20,7 @@ const { width, height } = Dimensions.get("window");
 export default function BookedProductDetail() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -30,37 +32,22 @@ export default function BookedProductDetail() {
     });
   };
 
-  const handleCancelBooking = () => {
-    console.log("Sending request to:", `${process.env.EXPO_PUBLIC_API_URL}/api/book/cancel/${params.id}`);
+  const handleCancelBooking = async () => {
+    try {
+      const url = `${process.env.EXPO_PUBLIC_API_URL}/api/book/cancel/${params.id}`;
+      const response = await axios.put(url);
 
-    console.log("handleCancelBooking called"); 
-    Alert.alert(
-      "Cancel Booking",
-      "Are you sure you want to cancel this booking?",
-      [
-        { text: "No", style: "cancel" },
-        {
-          text: "Yes, Cancel",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const response = await axios.put(
-                `${process.env.EXPO_PUBLIC_API_URL}/api/book/cancel/${params.id}`
-              );
-
-              if (response.data.success) {
-                Alert.alert("Booking Cancelled", "Your booking has been successfully cancelled.");
-                router.back();
-              } else {
-                Alert.alert("Error", response.data.message || "Failed to cancel booking.");
-              }
-            } catch (error) {
-              Alert.alert("Error", error.message);
-            }
-          },
-        },
-      ]
-    );
+      if (response.data.success) {
+        Alert.alert("Booking Cancelled", "Your booking has been successfully cancelled.");
+        router.back();
+      } else {
+        Alert.alert("Error", response.data.message || "Failed to cancel booking.");
+      }
+    } catch (error) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setShowModal(false); // close modal after action
+    }
   };
 
   return (
@@ -77,7 +64,7 @@ export default function BookedProductDetail() {
                 if (router.canGoBack()) {
                   router.back();
                 } else {
-                  router.replace("/customer/book"); // fallback screen
+                  router.replace("/customer/book");
                 }
               }}
               hitSlop={10}
@@ -94,7 +81,7 @@ export default function BookedProductDetail() {
       {/* Body */}
       <ScrollView
         style={styles.bodyWrapper}
-        contentContainerStyle={{ paddingBottom: 120 }} // 👈 extra space so footer doesn't overlap
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
         {/* Product Info */}
         <View style={styles.card}>
@@ -116,7 +103,7 @@ export default function BookedProductDetail() {
                 styles.statusText,
                 params.status?.toLowerCase() === "pending" && { color: "#D4A017" },
                 (params.status?.toLowerCase() === "approved" || params.status?.toLowerCase() === "ongoing") && { color: "#057474" },
-                (params.status?.toLowerCase() === "rejected" || params.status?.toLowerCase() === "terminated") && { color: "#D40004" },
+                (params.status?.toLowerCase() === "rejected" || params.status?.toLowerCase() === "terminated" || params.status?.toLowerCase() === "cancelled") && { color: "#D40004" },
               ]}
               numberOfLines={1}
             >
@@ -182,20 +169,40 @@ export default function BookedProductDetail() {
       </ScrollView>
 
       {/* Cancel Button */}
-      {(params.status?.toLowerCase() === "pending" || params.status?.toLowerCase() === "approved") && (
+      {(params.status?.toLowerCase() === "pending" || params.status?.toLowerCase() === "approved" || params.status?.toLowerCase() === "ongoing") && (
         <View style={styles.footer}>
           <Pressable
             style={styles.cancelButton}
-            onPress={() => {
-                console.log("Cancel button pressed"); // ✅ Debug log
-                handleCancelBooking();
-            }}
-            >
+            onPress={() => setShowModal(true)}
+          >
             <Text style={styles.cancelText}>Cancel Booking</Text>
-            </Pressable>
-
+          </Pressable>
         </View>
       )}
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={showModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Cancel Booking</Text>
+            <Text style={styles.modalMessage}>Are you sure you want to cancel this booking?</Text>
+
+            <View style={styles.modalActions}>
+              <Pressable style={[styles.modalButton, styles.cancelAction]} onPress={() => setShowModal(false)}>
+                <Text style={styles.modalButtonText}>No</Text>
+              </Pressable>
+              <Pressable style={[styles.modalButton, styles.confirmAction]} onPress={handleCancelBooking}>
+                <Text style={[styles.modalButtonText, { color: "#fff" }]}>Yes, Cancel</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -243,8 +250,8 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-    zIndex: 10,       // ensures button stays on top
-    elevation: 10,    // Android shadow
+    zIndex: 10,
+    elevation: 10,
   },
   cancelButton: {
     backgroundColor: "#D40004",
@@ -257,4 +264,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalBox: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    width: "90%",
+    maxWidth: 400,
+    elevation: 5,
+  },
+  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10, color: "#D40004" },
+  modalMessage: { fontSize: 14, color: "#333", marginBottom: 20 },
+  modalActions: { flexDirection: "row", justifyContent: "flex-end" },
+  modalButton: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 6, marginLeft: 10 },
+  cancelAction: { backgroundColor: "#eee" },
+  confirmAction: { backgroundColor: "#D40004" },
+  modalButtonText: { fontSize: 14, fontWeight: "600", color: "#333" },
 });

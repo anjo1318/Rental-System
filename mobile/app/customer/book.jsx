@@ -270,7 +270,7 @@ export default function BookedItem() {
                       styles.statusText,
                       item.status?.toLowerCase() === "pending" && { color: "#D4A017" },   // Yellow
                       (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" }, // Green
-                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated") && { color: "#D40004" }, // Red
+                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated" || item.status?.toLowerCase() === "cancelled") && { color: "#D40004" }, // Red
                     ]}
                     numberOfLines={1}
                   >

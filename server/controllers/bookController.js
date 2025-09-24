@@ -88,24 +88,21 @@ const cancelBooking = async (req, res) => {
     const { id } = req.params; 
     console.log("Incoming data", req.params);
 
-    const booking = await Books.findByPk(id);
+    // use "id" since that's your PK
+    const booking = await Books.findOne({ where: { id } });
+    console.log("Found booking:", booking);
 
     if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found" });
     }
 
-    booking.status = "cancelled";
-    await booking.save();
+    await booking.update({ status: "cancelled" });
 
     return res.json({ success: true, message: "Booking cancelled successfully", booking });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
-
-
 
 
 export { bookItem, bookNotification, bookedItems, cancelBooking };
