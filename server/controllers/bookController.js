@@ -26,6 +26,7 @@ transporter.verify((error, success)=>{
   }
 });
 
+
 const bookItem = async (req, res) => {
   try {
     const {
@@ -100,11 +101,21 @@ const bookItem = async (req, res) => {
     const formattedReturnDate = returnDate.toLocaleDateString();
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
-    //owner details
-    const ownerDetails = await Owner.findOne({where: {ownerId:ownerId}});
+    // Get owner details
+    const ownerDetails = await Owner.findOne({where: {id: itemDetails.ownerId}});
     console.log("Ownerdetails", ownerDetails);
 
-    // Prepare email options
+    if (!ownerDetails) {
+      throw new Error("Owner not found");
+    }
+
+    // Owner details
+    const ownerFirstName = ownerDetails.firstName;
+    const ownerLastName = ownerDetails.lastName;
+    const ownerEmail = ownerDetails.email;
+    const ownerFullName = `${ownerFirstName} ${ownerLastName}`;
+
+    // Prepare customer email options
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email.trim(),
@@ -192,6 +203,7 @@ const bookItem = async (req, res) => {
                 </tr>
               </table>
             </div>
+            
             <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin-top: 15px;">
               <p style="margin: 0; font-size: 14px;">
                 <strong>ⓘ Confidentiality Notice:</strong> This email and any attached documents are intended solely for the individual to whom they are addressed. If you are not the intended recipient, please notify us immediately and delete this message. Any unauthorized review, use, disclosure, or distribution is strictly prohibited.
@@ -218,32 +230,33 @@ const bookItem = async (req, res) => {
       `
     };
 
+    // Prepare owner email options
     const ownerMailOptions = {
       from: process.env.EMAIL_USER,
-      to: email.trim(),
-      subject: `Booking Request - ${product}`,
+      to: ownerEmail.trim(),
+      subject: `New Booking Request - ${product}`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+          <div style="background-color: #ffc107; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
             <h1 style="margin: 0; font-size: 24px;">EzRent</h1>
-            <p style="margin: 5px 0 0 0; font-size: 16px;">Booking Confirmation</p>
+            <p style="margin: 5px 0 0 0; font-size: 16px;">New Booking Request</p>
           </div>
           
           <div style="padding: 30px; border: 1px solid #ddd; background-color: #fff;">
-            <h2 style="color: #333; margin-top: 0;">Dear ${name},</h2>
+            <h2 style="color: #333; margin-top: 0;">Dear ${ownerFullName},</h2>
             
             <p style="font-size: 16px; line-height: 1.6;">
-              Your request to rent <strong>${product}</strong> is <strong>PENDING</strong>.
+              You have received a new booking request for <strong>${product}</strong>.
             </p>
             
-            <div style="background-color: #d4edda; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin: 20px 0;">
-              <p style="margin: 0; font-size: 14px; color: #155724;">
-                <strong>Status:</strong> Your booking is <strong>PENDING</strong>. Please wait for the response of the owner.
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin: 20px 0;">
+              <p style="margin: 0; font-size: 14px; color: #856404;">
+                <strong>⏳ Action Required:</strong> Please review this booking request and respond accordingly through your EzRent dashboard.
               </p>
             </div>
             
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #28a745;">Booking Details</h3>
+              <h3 style="margin-top: 0; color: #ffc107;">Booking Details</h3>
               <table style="width: 100%; border-collapse: collapse;">
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; width: 40%;">Booking Number:</td>
@@ -277,9 +290,9 @@ const bookItem = async (req, res) => {
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Price Per Day:</td>
                   <td style="padding: 8px 0; border-top: 1px solid #ddd;">₱${Number(pricePerDay).toLocaleString()}</td>
                 </tr>
-                <tr style="background-color: #d4edda;">
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; border-top: 2px solid #28a745;">Total Amount:</td>
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; color: #28a745; border-top: 2px solid #28a745;">₱${totalAmount.toLocaleString()}</td>
+                <tr style="background-color: #fff3cd;">
+                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; border-top: 2px solid #ffc107;">Total Amount:</td>
+                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; color: #856404; border-top: 2px solid #ffc107;">₱${totalAmount.toLocaleString()}</td>
                 </tr>
               </table>
             </div>
@@ -305,6 +318,7 @@ const bookItem = async (req, res) => {
                 </tr>
               </table>
             </div>
+            
             <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin-top: 15px;">
               <p style="margin: 0; font-size: 14px;">
                 <strong>ⓘ Confidentiality Notice:</strong> This email and any attached documents are intended solely for the individual to whom they are addressed. If you are not the intended recipient, please notify us immediately and delete this message. Any unauthorized review, use, disclosure, or distribution is strictly prohibited.
@@ -312,26 +326,41 @@ const bookItem = async (req, res) => {
             </div>
             
             <p style="margin-top: 25px; font-size: 14px; color: #666;">
-              If you have any questions regarding your booking, please contact us at <a href="mailto:ezrentofficialmail@gmail.com">ezrentofficialmail@gmail.com</a>.
+              If you have any questions regarding this booking request, please contact us at <a href="mailto:ezrentofficialmail@gmail.com">ezrentofficialmail@gmail.com</a>.
             </p>
           </div>
           
-          <div style="background-color: #28a745; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
-            <p style="margin: 0; font-size: 14px; color: white;">
+          <div style="background-color: #ffc107; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0; font-size: 14px; color: #333;">
              EzRent Company<br>Pinamalayan, Oriental Mindoro<br>Email: ezrentofficialmail@gmail.com | Office Hours: Monday–Saturday, 8:00 AM–5:00 PM
             </p>
           </div>
           
           <div style="margin-top: 20px; padding: 15px; background-color: #d1ecf1; border-radius: 6px; border-left: 4px solid #17a2b8;">
             <p style="margin: 0; font-size: 13px; color: #0c5460;">
-              <strong>Important:</strong> This is an automated email—please do not reply. Keep this confirmation for your records.
+              <strong>Important:</strong> This is an automated email—please do not reply. Please use your EzRent dashboard to respond to this booking request.
             </p>
           </div>
         </div>
       `
     };
 
-    await transporter.sendMail(mailOptions, ownerMailOptions);
+    // Send emails separately with proper error handling
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("Customer email sent successfully");
+    } catch (emailError) {
+      console.error("Error sending customer email:", emailError);
+      // Continue execution even if customer email fails
+    }
+
+    try {
+      await transporter.sendMail(ownerMailOptions);
+      console.log("Owner email sent successfully");
+    } catch (emailError) {
+      console.error("Error sending owner email:", emailError);
+      // Continue execution even if owner email fails
+    }
 
     return res.status(200).json({
       success: true,

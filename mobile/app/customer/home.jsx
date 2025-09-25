@@ -17,6 +17,7 @@ import {
 import axios from "axios";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 export default function Home() {
@@ -26,6 +27,8 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [OWNER_ID, setOwnerId] = useState(null);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -47,6 +50,31 @@ export default function Home() {
     };
     fetchItems();
   }, []);
+
+  useEffect(()=>{
+    loadUserData();
+  },[]);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        setCurrentUser(user);
+        setOwnerId(user.id);
+        console.log('✅ User loaded from storage in home.jsx:', user);
+        return user.id;
+      } else {
+        console.log('❌ No user data found, redirecting to login');
+        router.replace('/login'); // Redirect to login if no user data
+        return null;
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      router.replace('/login');
+      return null;
+    }
+  };
 
   const handleNavigation = (route) => {
     // 🚫 Prevent navigating to the same "home"
@@ -91,7 +119,7 @@ export default function Home() {
               style={styles.avatar}
             />
           </Pressable >
-            <Text style={styles.username}>Marco Polo</Text>
+            <Text style={styles.username}>{currentUser.name}</Text>
             <View style={styles.notificationWrapper}>
             <Pressable onPress={() => router.push("customer/notifications")}>
               <Icon name="notifications-none" size={24} color="#057474" />

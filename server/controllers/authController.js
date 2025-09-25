@@ -85,8 +85,12 @@ const mobileUserLogin = async (req, res) => {
       user: { 
         id: customer.id,
         name: `${customer.firstName} ${customer.lastName}`,
+        firstName: customer.firstName,
+        middleName: customer.middleName,
+        lastName: customer.lastName,
         emailAddress: customer.emailAddress,
         phoneNumber: customer.phoneNumber,
+        birthday: customer.birthday,
         gender: customer.gender,
         houseNumber: customer.houseNumber,
         street:customer.street,
