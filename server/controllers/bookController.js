@@ -104,6 +104,26 @@ const cancelBooking = async (req, res) => {
   }
 };
 
+const rejectBooking = async(req, res) => {
+  try {
+
+    const {id} = req.params;
+
+    const booking = await Books.findOne({where:{id}});
+
+    if(!booking){
+      return res.status(404).json({success:false, message: "Booking not found"});
+    }
+
+    await booking.update({status:"rejected"});
+
+    return res.status(200).json({success:true, message: "Successfully rejected the request", booking});
+
+  } catch (error) {
+    return res.status(500).json({success:false, message: error.message});
+  }
+}
+
 const fetchBookRequest = async (req, res) => {
   console.log("Using fetchBookRequest");
 
@@ -124,4 +144,25 @@ const fetchBookRequest = async (req, res) => {
   }
 };
 
-export { bookItem, bookNotification, bookedItems, cancelBooking, fetchBookRequest};
+const approveBooking = async (req, res) =>{
+
+  try{
+
+    const {id} = req.params;
+
+    const booking = await Books.findOne({where:{id}});
+
+    if(!response){
+      return res.status(400).json({success:false, message: "Booking not found"});
+    }
+
+    await booking.update({status: "approved"});
+
+    return res.status(200).json({success:true, message: "Booking approved successfully", booking});
+
+  }catch(error) {
+    return res.status(500).json({success:false, message:error.message});
+  }
+}
+
+export { bookItem, bookNotification, bookedItems, cancelBooking, fetchBookRequest, approveBooking, rejectBooking};

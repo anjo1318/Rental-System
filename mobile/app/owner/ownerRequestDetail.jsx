@@ -21,6 +21,7 @@ export default function ownerRequestDetail() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -31,6 +32,8 @@ export default function ownerRequestDetail() {
       day: "numeric",
     });
   };
+
+  console.log("Ito yung id nung item",params.id);
 
   const handleCancelBooking = async () => {
     try {
@@ -49,6 +52,28 @@ export default function ownerRequestDetail() {
       setShowModal(false); // close modal after action
     }
   };
+
+  const handleApproveBooking = async ()=> {
+    try{
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/approve-booking/${params.id}`)
+        router.push("owner/ownerRequest");
+
+        console.log("Successfully approved the booking",response);
+    } catch(error){
+        console.log(error);
+    }
+  }
+
+  const handleRejectBooking = async () => {
+    try {
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/reject-booking/${params.id}`);
+        router.push("owner/ownerRequest");
+        console.log(response);
+    } catch (error) {
+        console.log(error);
+    }
+  }
+  
 
   return (
     <View style={styles.container}>
@@ -168,27 +193,24 @@ export default function ownerRequestDetail() {
         </View>
       </ScrollView>
 
-      {/* Reject Button */}
-        <View style={styles.footer}>
-          <Pressable
-            style={[styles.cancelButton, styles.button]}
-            onPress={() => setShowModal(true)}
-          >
-            <Text style={styles.rejectText}>Reject</Text>
-          </Pressable>
-        </View>
 
+     <View style={styles.bottomContainer}>
+      {/* Reject Button */}
+        <Pressable 
+            style={[styles.button, styles.rejectButton]}
+            onPress={() => setShowModal(true)}
+        >
+            <Text style={styles.rejectText}>Reject</Text>
+        </Pressable>
 
       {/* Approve Button */}
-        <View style={styles.footer}>
-          <Pressable
-            style={[styles.cancelButton, styles.button]}
-            onPress={() => setShowModal(true)}
-          >
-            <Text style={styles.approveText}>Accept</Text>
-          </Pressable>
-        </View>
-    
+        <Pressable 
+            style={[styles.button, styles.approveButton]}
+            onPress={() => setShowApproveModal()}
+        >
+            <Text style={styles.approveText}>Approve</Text>
+        </Pressable>
+     </View>
 
       {/* Confirmation Modal */}
       <Modal
@@ -199,33 +221,112 @@ export default function ownerRequestDetail() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>Cancel Booking</Text>
-            <Text style={styles.modalMessage}>Are you sure you want to cancel this booking?</Text>
+            <Text style={styles.modalTitle}>Reject Booking</Text>
+            <Text style={styles.modalMessage}>Are you sure you want to reject this booking?</Text>
 
             <View style={styles.modalActions}>
               <Pressable style={[styles.modalButton, styles.cancelAction]} onPress={() => setShowModal(false)}>
                 <Text style={styles.modalButtonText}>No</Text>
               </Pressable>
-              <Pressable style={[styles.modalButton, styles.confirmAction]} onPress={handleCancelBooking}>
-                <Text style={[styles.modalButtonText, { color: "#fff" }]}>Yes, Cancel</Text>
+              <Pressable style={[styles.modalButton, styles.confirmAction]} onPress={()=>handleRejectBooking()}>
+                <Text style={[styles.modalButtonText, { color: "#fff" }]}>Yes, Reject</Text>
               </Pressable>
             </View>
           </View>
         </View>
       </Modal>
+
+      {/* Approve Confirmation Modal */}
+        <Modal
+        visible={showApproveModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowApproveModal(false)}
+        >
+        <View style={styles.modalOverlay}>
+            <View style={styles.modalBox}>
+            <Text style={[styles.modalTitle, { color: "#057474" }]}>Approve Booking</Text>
+            <Text style={styles.modalMessage}>
+                Are you sure you want to approve this booking?
+            </Text>
+
+            <View style={styles.modalActions}>
+                <Pressable 
+                style={[styles.modalButton, styles.cancelAction]} 
+                onPress={() => setShowApproveModal(false)}
+                >
+                <Text style={styles.modalButtonText}>No</Text>
+                </Pressable>
+                <Pressable 
+                style={[styles.modalButton, { backgroundColor: "#32CD32" }]} 
+                onPress={() => {
+                    setShowApproveModal(false);
+                    handleApproveBooking();
+                }}
+                >
+                <Text style={[styles.modalButtonText, { color: "#fff" }]}>
+                    Yes, Approve
+                </Text>
+                </Pressable>
+            </View>
+            </View>
+        </View>
+        </Modal>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
 
-button: {
+   button: {
     flex: 1,
     paddingVertical: 12,
     marginHorizontal: 5,
     borderRadius: 8,
     alignItems: "center",
   },
+
+  rejectButton: {
+    backgroundColor: "#D40004",
+    borderColor: "#D40004",
+    borderWidth: 0.7,
+    borderRadius: 10,
+  },
+
+  approveButton: {
+    backgroundColor: "#32CD32",
+    borderColor: "#32CD32",
+    borderWidth: 0.7,
+    borderRadius: 10,
+  },
+
+  cancelButton: {
+    backgroundColor: "#D40004",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+
+  rejectText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  approveText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+
+    bottomContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+
   container: { flex: 1, backgroundColor: "#E6E1D6" },
   headerWrapper: {
     width: "100%",
@@ -271,25 +372,7 @@ button: {
     zIndex: 10,
     elevation: 10,
   },
-  cancelButton: {
-    backgroundColor: "#D40004",
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-
-  rejectText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
-  approveText: {
-    color: "#057474",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-
+  
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",

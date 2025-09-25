@@ -1,5 +1,5 @@
 import express from 'express'
-import { bookedItems, bookItem, bookNotification, cancelBooking, fetchBookRequest } from '../controllers/bookController.js';
+import { approveBooking, bookedItems, bookItem, bookNotification, cancelBooking, fetchBookRequest, rejectBooking } from '../controllers/bookController.js';
 
 const router = express.Router()
 
@@ -11,5 +11,7 @@ router.put('/cancel/:id', cancelBooking);
 
 //for owners
 router.get("/book-request/:id", fetchBookRequest);
+router.put('/approve-booking/:id', approveBooking);
+router.put('/reject-booking/:id',rejectBooking);
 
 export default router;
