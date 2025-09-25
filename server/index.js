@@ -44,7 +44,7 @@ app.use('/api/admin', adminRouter);
 app.use('/api/user', userRouter);
 app.use('/api/owner', ownerRouter);
 app.use('/api/auth', authRouter);
-app.use('/api/customer', customerRouter); // This handles the file upload now
+app.use('/api/customer', customerRouter);
 app.use('/api/item', itemRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/book', bookRouter);

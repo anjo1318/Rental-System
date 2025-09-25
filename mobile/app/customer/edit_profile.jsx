@@ -17,6 +17,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from 'axios';
 
 const { width, height } = Dimensions.get("window");
 
@@ -54,6 +55,8 @@ export default function EditProfile() {
 
   useEffect(() => {
     loadUserData();
+    handleUpdateCustomerDetails();
+    console.log("This is the url", process.env.EXPO_PUBLIC_API_URL);
   }, []);
 
   const loadUserData = async () => {
@@ -96,49 +99,53 @@ export default function EditProfile() {
     }
   };
 
+  const handleUpdateCustomerDetails = async () => {
+    try {
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/customer/update/${currentUser.id}`,
+        {
+          firstName,
+          middleName,
+          lastName,
+          email,
+          phone: phoneNumber,
+          birthday,
+          gender,
+          houseNumber,
+          street,
+          barangay,
+          town,
+          province,
+          country,
+          zipCode,
+        }
+      );
+
+      console.log("✅ Update success:", response.data);
+
+      const updatedUser = response.data.updatedCustomer;
+
+      // Save the updated user in AsyncStorage
+      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      router.push("/customer/edit_profile");
+
+
+      // Update state immediately so UI refreshes
+      setCurrentUser(updatedUser);
+
+      Alert.alert("Success", "Profile updated successfully!");
+    } catch (error) {
+      console.error("❌ Update failed:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    }
+  };
+
+
   // placeholder image picker
   const pickImage = () => {
     Alert.alert("Image picker", "pickImage not implemented in this snippet.");
   };
 
-  // Save button - properly update and save user data
-  const handleSave = async () => {
-    try {
-      // Validate required fields
-      if (!firstName.trim() || !email.trim()) {
-        Alert.alert("Validation Error", "First name and email are required.");
-        return;
-      }
-
-      // Create updated user object
-      const updatedUser = {
-        ...currentUser,
-        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-        email: email.trim(),
-        phone: phoneNumber.trim(),
-      };
-
-      // Save to AsyncStorage
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-      setCurrentUser(updatedUser);
-
-      Alert.alert(
-        "Profile Updated",
-        "Your profile has been successfully updated!",
-        [
-          {
-            text: "OK",
-            onPress: () => router.back() // Go back to previous screen
-          }
-        ]
-      );
-
-      console.log('✅ Profile updated:', updatedUser);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
-    }
-  };
 
   // Show loading or redirect if no user data
   if (isLoading || !currentUser) {
@@ -207,7 +214,7 @@ export default function EditProfile() {
                 </View>
 
                 <View style={styles.nameContainer}>
-                  <Text style={styles.username}>{currentUser?.name || 'Loading...'}</Text>
+                  <Text style={styles.username}>{currentUser?.firstName || 'Loading...'}</Text>
                 </View>
               </Pressable>
             </View>
@@ -375,7 +382,7 @@ export default function EditProfile() {
               />
 
             {/* Save Button */}
-            <Pressable style={styles.saveButton} onPress={handleSave}>
+            <Pressable style={styles.saveButton} onPress={handleUpdateCustomerDetails}>
               <Text style={styles.saveText}>Save Changes</Text>
             </Pressable>
           </View>

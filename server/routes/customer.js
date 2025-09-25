@@ -9,7 +9,8 @@ import {
   signupGuarantorsAndId,
   finalizeSignup,
   getSignupProgress,
-  fetchCustomers
+  fetchCustomers,
+  updateCustomerDetails
 } from "../controllers/customerController.js";
 
 const router = express.Router();
@@ -69,7 +70,6 @@ const validateAddress = [
   body('zipCode').trim().notEmpty().withMessage('Zip code is required'),
 ];
 
-// ✅ UPDATED VALIDATION - No longer validate URLs since we handle file uploads
 const validateGuarantors = [
   body('customerId').isNumeric().withMessage('Valid customer ID is required'),
   body('guarantor1FullName').trim().notEmpty().withMessage('Guarantor 1 full name is required'),
@@ -91,15 +91,11 @@ const validateProgress = [
   param('customerId').isNumeric().withMessage('Valid customer ID is required'),
 ];
 
-// ✅ ROUTES WITH PROPER FILE UPLOAD HANDLING
 
-// Step 1 - Personal Info
 router.post("/sign-up/personal-info", validatePersonalInfo, signupPersonalInfo);
 
-// Step 2 - Address
 router.post("/sign-up/address", validateAddress, signupAddress);
 
-// ✅ Step 3 - UPDATED: Use multer for file uploads + validation
 router.post(
   "/sign-up/guarantors-id", 
   upload.fields([
@@ -110,16 +106,14 @@ router.post(
   signupGuarantorsAndId
 );
 
-// Step 4 - Finalize
 router.post("/sign-up/finalize", validateFinalize, finalizeSignup);
 
-// Get signup progress
 router.get("/sign-up/progress/:customerId", validateProgress, getSignupProgress);
 
-// Get all customers
 router.get("/", fetchCustomers);
 
-// ✅ ERROR HANDLING MIDDLEWARE for multer
+router.put("/update/:id", updateCustomerDetails);
+
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {

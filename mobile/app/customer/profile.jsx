@@ -169,8 +169,8 @@ export default function Profile() {
             </View>
 
             <View style={styles.nameContainer}>
-              <Text style={styles.username}>{currentUser.name}</Text>
-              <Text style={styles.gmail}>{currentUser.email}</Text>
+              <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
+              <Text style={styles.gmail}>{currentUser.emailAddress}</Text>
             </View>
           </Pressable>
 

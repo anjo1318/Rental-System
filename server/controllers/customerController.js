@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import { validationResult } from 'express-validator';
 import sequelize from "../database/database.js";
 
-// Helper function to handle validation errors
 const handleValidationErrors = (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -16,7 +15,6 @@ const handleValidationErrors = (req, res) => {
   return null;
 };
 
-// STEP 1 - Personal Info (unchanged)
 const signupPersonalInfo = async (req, res) => {
   console.log("🚀 Starting personal info signup");
   
@@ -87,7 +85,6 @@ const signupPersonalInfo = async (req, res) => {
   }
 };
 
-// STEP 2 - Address (unchanged)
 const signupAddress = async (req, res) => {
   console.log("🏠 Starting address signup");
   
@@ -158,7 +155,6 @@ const signupAddress = async (req, res) => {
   }
 };
 
-// ✅ STEP 3 - COMPLETELY REWRITTEN for file uploads
 const signupGuarantorsAndId = async (req, res) => {
   console.log("👥 Starting guarantors and ID signup with file uploads");
   
@@ -257,7 +253,6 @@ const signupGuarantorsAndId = async (req, res) => {
   }
 };
 
-// STEP 4 - Finalize (unchanged)
 const finalizeSignup = async (req, res) => {
   console.log("🎯 Finalizing signup");
   
@@ -315,7 +310,6 @@ const finalizeSignup = async (req, res) => {
   }
 };
 
-// Helper function to get signup progress (unchanged)
 const getSignupProgress = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -391,11 +385,51 @@ const fetchCustomers = async (req, res) => {
   }
 };
 
+const updateCustomerDetails = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const customer = await Customer.findByPk(id);
+
+    if (!customer) {
+      return res.status(404).json({ success: false, message: "Customer not found" });
+    }
+
+    // Update fields with request body
+    await customer.update({
+      firstName: req.body.firstName,
+      middleName: req.body.middleName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phone: req.body.phone,
+      birthday: req.body.birthday,
+      gender: req.body.gender,
+      houseNumber: req.body.houseNumber,
+      street: req.body.street,
+      barangay: req.body.barangay,
+      town: req.body.town,
+      province: req.body.province,
+      country: req.body.country,
+      zipCode: req.body.zipCode,
+    });
+
+    console.log("After the request", customer);
+
+    console.log("Customer detail updated successfully");
+
+    return res.status(200).json({ success: true, message: "Customer details updated", updatedCustomer: customer });
+  } catch (error) {
+    console.error("Update error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+
 export { 
   signupPersonalInfo, 
   signupAddress, 
   signupGuarantorsAndId, 
   finalizeSignup,
   getSignupProgress,
-  fetchCustomers 
+  fetchCustomers,
+  updateCustomerDetails 
 };

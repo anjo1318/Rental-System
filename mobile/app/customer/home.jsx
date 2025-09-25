@@ -15,7 +15,7 @@ import {
   StatusBar,
 } from "react-native";
 import axios from "axios";
-import { useRouter } from "expo-router";
+import {useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -119,7 +119,7 @@ export default function Home() {
               style={styles.avatar}
             />
           </Pressable >
-            <Text style={styles.username}>{currentUser.name}</Text>
+            <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
             <View style={styles.notificationWrapper}>
             <Pressable onPress={() => router.push("customer/notifications")}>
               <Icon name="notifications-none" size={24} color="#057474" />
