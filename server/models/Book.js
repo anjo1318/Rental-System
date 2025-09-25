@@ -75,6 +75,10 @@ const Books = sequelize.define("Books", {
     type: DataTypes.DATE,
     allowNull:false 
   },
+  amount: {
+    type: DataTypes.DECIMAL,
+    allowNull:false 
+  },
  status: {
     type: DataTypes.ENUM('approved', 'pending', 'rejected', 'ongoing', 'terminated', 'cancelled'),
     allowNull: false
