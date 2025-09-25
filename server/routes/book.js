@@ -1,5 +1,5 @@
 import express from 'express'
-import { approveBooking, bookedItems, bookItem, bookNotification, cancelBooking, fetchBookRequest, rejectBooking } from '../controllers/bookController.js';
+import { approveBooking, bookedItems, bookItem, bookNotification, cancelBooking, fetchBookRequest, rejectBooking, startBooking, terminateBooking } from '../controllers/bookController.js';
 
 const router = express.Router()
 
@@ -13,5 +13,7 @@ router.put('/cancel/:id', cancelBooking);
 router.get("/book-request/:id", fetchBookRequest);
 router.put('/approve-booking/:id', approveBooking);
 router.put('/reject-booking/:id',rejectBooking);
+router.put('/start-booking/:id',startBooking);
+router.put('/terminate-booking/:id',terminateBooking);
 
 export default router;

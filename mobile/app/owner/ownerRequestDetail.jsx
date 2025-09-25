@@ -22,6 +22,8 @@ export default function ownerRequestDetail() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
+  const [showStartModal, setShowStartModal] = useState(false);
+  const [showTerminateModal, setShowTerminateModal] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -61,6 +63,8 @@ export default function ownerRequestDetail() {
         console.log("Successfully approved the booking",response);
     } catch(error){
         console.log(error);
+    } finally {
+      setShowApproveModal(false);
     }
   }
 
@@ -71,8 +75,37 @@ export default function ownerRequestDetail() {
         console.log(response);
     } catch (error) {
         console.log(error);
+    } finally {
+      setShowModal(false);
     }
   }
+
+  const handleStartBooking = async () => {
+    try {
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/start-booking/${params.id}`);
+        router.push("owner/ownerRequest");
+        console.log("Successfully started the booking", response);
+    } catch (error) {
+        console.log(error);
+    } finally {
+      setShowStartModal(false);
+    }
+  }
+
+  const handleTerminateBooking = async () => {
+    try {
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/terminate-booking/${params.id}`);
+        router.push("owner/ownerRequest");
+        console.log("Successfully terminated the booking", response);
+    } catch (error) {
+        console.log(error);
+    } finally {
+      setShowTerminateModal(false);
+    }
+  }
+
+  // Check if status is approved to show different buttons
+  const isApproved = params.status?.toLowerCase() === "approved";
   
 
   return (
@@ -193,26 +226,48 @@ export default function ownerRequestDetail() {
         </View>
       </ScrollView>
 
+      {/* Conditional Bottom Buttons */}
+      <View style={styles.bottomContainer}>
+        {isApproved ? (
+          <>
+            {/* Terminate Button (replaces Reject when approved) */}
+            <Pressable 
+              style={[styles.button, styles.rejectButton]}
+              onPress={() => setShowTerminateModal(true)}
+            >
+              <Text style={styles.rejectText}>Terminate</Text>
+            </Pressable>
 
-     <View style={styles.bottomContainer}>
-      {/* Reject Button */}
-        <Pressable 
-            style={[styles.button, styles.rejectButton]}
-            onPress={() => setShowModal(true)}
-        >
-            <Text style={styles.rejectText}>Reject</Text>
-        </Pressable>
+            {/* Start Button (replaces Approve when approved) */}
+            <Pressable 
+              style={[styles.button, styles.approveButton]}
+              onPress={() => setShowStartModal(true)}
+            >
+              <Text style={styles.approveText}>Start</Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            {/* Reject Button (for pending status) */}
+            <Pressable 
+              style={[styles.button, styles.rejectButton]}
+              onPress={() => setShowModal(true)}
+            >
+              <Text style={styles.rejectText}>Reject</Text>
+            </Pressable>
 
-      {/* Approve Button */}
-        <Pressable 
-            style={[styles.button, styles.approveButton]}
-            onPress={() => setShowApproveModal()}
-        >
-            <Text style={styles.approveText}>Approve</Text>
-        </Pressable>
-     </View>
+            {/* Approve Button (for pending status) */}
+            <Pressable 
+              style={[styles.button, styles.approveButton]}
+              onPress={() => setShowApproveModal(true)}
+            >
+              <Text style={styles.approveText}>Approve</Text>
+            </Pressable>
+          </>
+        )}
+      </View>
 
-      {/* Confirmation Modal */}
+      {/* Reject Confirmation Modal */}
       <Modal
         visible={showModal}
         transparent
@@ -228,7 +283,7 @@ export default function ownerRequestDetail() {
               <Pressable style={[styles.modalButton, styles.cancelAction]} onPress={() => setShowModal(false)}>
                 <Text style={styles.modalButtonText}>No</Text>
               </Pressable>
-              <Pressable style={[styles.modalButton, styles.confirmAction]} onPress={()=>handleRejectBooking()}>
+              <Pressable style={[styles.modalButton, styles.confirmAction]} onPress={handleRejectBooking}>
                 <Text style={[styles.modalButtonText, { color: "#fff" }]}>Yes, Reject</Text>
               </Pressable>
             </View>
@@ -237,45 +292,111 @@ export default function ownerRequestDetail() {
       </Modal>
 
       {/* Approve Confirmation Modal */}
-        <Modal
+      <Modal
         visible={showApproveModal}
         transparent
         animationType="fade"
         onRequestClose={() => setShowApproveModal(false)}
-        >
+      >
         <View style={styles.modalOverlay}>
-            <View style={styles.modalBox}>
+          <View style={styles.modalBox}>
             <Text style={[styles.modalTitle, { color: "#057474" }]}>Approve Booking</Text>
             <Text style={styles.modalMessage}>
-                Are you sure you want to approve this booking?
+              Are you sure you want to approve this booking?
             </Text>
 
             <View style={styles.modalActions}>
-                <Pressable 
+              <Pressable 
                 style={[styles.modalButton, styles.cancelAction]} 
                 onPress={() => setShowApproveModal(false)}
-                >
+              >
                 <Text style={styles.modalButtonText}>No</Text>
-                </Pressable>
-                <Pressable 
+              </Pressable>
+              <Pressable 
                 style={[styles.modalButton, { backgroundColor: "#32CD32" }]} 
-                onPress={() => {
-                    setShowApproveModal(false);
-                    handleApproveBooking();
-                }}
-                >
+                onPress={handleApproveBooking}
+              >
                 <Text style={[styles.modalButtonText, { color: "#fff" }]}>
-                    Yes, Approve
+                  Yes, Approve
                 </Text>
-                </Pressable>
+              </Pressable>
             </View>
-            </View>
+          </View>
         </View>
-        </Modal>
+      </Modal>
+
+      {/* Start Confirmation Modal */}
+      <Modal
+        visible={showStartModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowStartModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={[styles.modalTitle, { color: "#057474" }]}>Start Booking</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to start this booking? This will change the status to "ongoing".
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable 
+                style={[styles.modalButton, styles.cancelAction]} 
+                onPress={() => setShowStartModal(false)}
+              >
+                <Text style={styles.modalButtonText}>No</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalButton, { backgroundColor: "#057474" }]} 
+                onPress={handleStartBooking}
+              >
+                <Text style={[styles.modalButtonText, { color: "#fff" }]}>
+                  Yes, Start
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Terminate Confirmation Modal */}
+      <Modal
+        visible={showTerminateModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTerminateModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalBox}>
+            <Text style={[styles.modalTitle, { color: "#D40004" }]}>Terminate Booking</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to terminate this booking? This action cannot be undone.
+            </Text>
+
+            <View style={styles.modalActions}>
+              <Pressable 
+                style={[styles.modalButton, styles.cancelAction]} 
+                onPress={() => setShowTerminateModal(false)}
+              >
+                <Text style={styles.modalButtonText}>No</Text>
+              </Pressable>
+              <Pressable 
+                style={[styles.modalButton, { backgroundColor: "#D40004" }]} 
+                onPress={handleTerminateBooking}
+              >
+                <Text style={[styles.modalButtonText, { color: "#fff" }]}>
+                  Yes, Terminate
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
 
