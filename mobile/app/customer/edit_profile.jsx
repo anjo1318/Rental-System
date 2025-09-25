@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from 'axios';
 
 const { width, height } = Dimensions.get("window");
 
@@ -31,25 +33,130 @@ const PADDING_V = Math.min(Math.round(height * 0.0), 8);
 export default function EditProfile() {
   const router = useRouter();
   const [avatar, setAvatar] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [OWNER_ID, setOwnerId] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Input states
+  // Input states - properly initialized
   const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [birthday, setBirthday] = useState("");
+  const [gender, setGender] = useState("");
+  const [houseNumber, setHouseNumber] = useState("");
+  const [street, setStreet] = useState("");
+  const [barangay, setBarangay] = useState("");
+  const [town, setTown] = useState("");
+  const [province, setProvince] = useState("");
+  const [country, setCountry] = useState("");
+  const [zipCode, setZipCode] = useState("");
+
+  useEffect(() => {
+    loadUserData();
+    handleUpdateCustomerDetails();
+    console.log("This is the url", process.env.EXPO_PUBLIC_API_URL);
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setIsLoading(true);
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        setCurrentUser(user);
+        setOwnerId(user.id);
+        
+        const nameParts = user.name ? user.name.split(' ') : ['', ''];
+        setFirstName(user.firstName|| '');
+        setMiddleName(user.middleName || '');
+        setLastName(user.lastName || '');
+        setEmail(user.email|| '');
+        setPhoneNumber(user.phone || '');
+        setBirthday(user.birthday || '');
+        setGender(user.gender || '');
+        setHouseNumber(user.houseNumber || '');
+        setStreet(user.street || '');
+        setBarangay(user.barangay || '');
+        setTown(user.town || '');
+        setProvince(user.province || '');
+        setCountry(user.country || '');
+        setZipCode(user.zipCode || '');
+        
+        console.log('✅ User loaded from storage in EditProfile:', user);
+        setIsLoading(false);
+        return user.id;
+      } else {
+        console.log('❌ No user data found, redirecting to login');
+        router.replace('/login');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      router.replace('/login');
+      return null;
+    }
+  };
+
+  const handleUpdateCustomerDetails = async () => {
+    try {
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/customer/update/${currentUser.id}`,
+        {
+          firstName,
+          middleName,
+          lastName,
+          email,
+          phone: phoneNumber,
+          birthday,
+          gender,
+          houseNumber,
+          street,
+          barangay,
+          town,
+          province,
+          country,
+          zipCode,
+        }
+      );
+
+      console.log("✅ Update success:", response.data);
+
+      const updatedUser = response.data.updatedCustomer;
+
+      // Save the updated user in AsyncStorage
+      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
+      router.push("/customer/edit_profile");
+
+
+      // Update state immediately so UI refreshes
+      setCurrentUser(updatedUser);
+
+      Alert.alert("Success", "Profile updated successfully!");
+    } catch (error) {
+      console.error("❌ Update failed:", error.response?.data || error.message);
+      Alert.alert("Error", "Failed to update profile. Please try again.");
+    }
+  };
+
 
   // placeholder image picker
   const pickImage = () => {
     Alert.alert("Image picker", "pickImage not implemented in this snippet.");
   };
 
-  // Save button
-  const handleSave = () => {
-    Alert.alert(
-      "Profile Updated",
-      `First Name: ${firstName}\nLast Name: ${lastName}\nEmail: ${email}\nPhone: ${phoneNumber}`
+
+  // Show loading or redirect if no user data
+  if (isLoading || !currentUser) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.loadingContainer}>
+          <Text>Loading...</Text>
+        </View>
+      </SafeAreaView>
     );
-  };
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -107,7 +214,7 @@ export default function EditProfile() {
                 </View>
 
                 <View style={styles.nameContainer}>
-                  <Text style={styles.username}>Marco Polo</Text>
+                  <Text style={styles.username}>{currentUser?.firstName || 'Loading...'}</Text>
                 </View>
               </Pressable>
             </View>
@@ -115,43 +222,167 @@ export default function EditProfile() {
 
           {/* Inputs */}
           <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder="First Name"
-              placeholderTextColor="#888"
-              value={firstName}
-              onChangeText={setFirstName}
-              autoCapitalize="sentences"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Last Name"
-              placeholderTextColor="#888"
-              value={lastName}
-              onChangeText={setLastName}
-              autoCapitalize="sentences"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#888"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              placeholderTextColor="#888"
-              value={phoneNumber}
-              onChangeText={setPhoneNumber}
-              keyboardType="phone-pad"
-              autoCapitalize="none"
-            />
+            <View>
+              <Text style={styles.username}>First Name</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="First Name"
+                placeholderTextColor="#888"
+                value={firstName}
+                onChangeText={setFirstName}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Middle Name</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Middle Name"
+                placeholderTextColor="#888"
+                value={middleName}
+                onChangeText={setMiddleName}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Last Name</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Last Name"
+                placeholderTextColor="#888"
+                value={lastName}
+                onChangeText={setLastName}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Email</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#888"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            <View>
+              <Text style={styles.username}>Phone Number</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Phone Number"
+                placeholderTextColor="#888"
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+              />
+            <View>
+              <Text style={styles.username}>Birthday</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Birthday"
+                placeholderTextColor="#888"
+                value={birthday}
+                onChangeText={setBirthday}
+                keyboardType="phone-pad"
+                autoCapitalize="none"
+              />
+            <View>
+              <Text style={styles.username}>Gender</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Gender"
+                placeholderTextColor="#888"
+                value={gender}
+                onChangeText={setGender}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>House Number</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="House Number"
+                placeholderTextColor="#888"
+                value={houseNumber}
+                onChangeText={setHouseNumber}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Street</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Street"
+                placeholderTextColor="#888"
+                value={street}
+                onChangeText={setStreet}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Barangay</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Barangay"
+                placeholderTextColor="#888"
+                value={barangay}
+                onChangeText={setBarangay}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Town</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Town"
+                placeholderTextColor="#888"
+                value={town}
+                onChangeText={setTown}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Province</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Province"
+                placeholderTextColor="#888"
+                value={province}
+                onChangeText={setProvince}
+                autoCapitalize="words"
+              />
+            <View>
+              <Text style={styles.username}>Country</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Country"
+                placeholderTextColor="#888"
+                value={country}
+                onChangeText={setCountry}
+                autoCapitalize="words"
+              />
+             <View>
+              <Text style={styles.username}>Zip code</Text>
+            </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Zip code"
+                placeholderTextColor="#888"
+                value={zipCode}
+                onChangeText={setZipCode}
+                autoCapitalize="words"
+              />
 
             {/* Save Button */}
-            <Pressable style={styles.saveButton} onPress={handleSave}>
+            <Pressable style={styles.saveButton} onPress={handleUpdateCustomerDetails}>
               <Text style={styles.saveText}>Save Changes</Text>
             </Pressable>
           </View>
@@ -165,6 +396,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#FFF",
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   headerWrapper: {
@@ -277,7 +514,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     marginBottom: 15,
     fontSize: width * 0.04,
-    color: "#D7D7D7",
+    color: "#000", // Changed from #D7D7D7 to #000 for better readability
   },
 
   saveButton: {

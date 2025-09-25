@@ -97,8 +97,12 @@ export default function Login() {
         const userData = {
           id: user.id,
           name: user.name,
+          firstName: user.firstName,
+          middleName: user.middleName,
+          lastName: user.lastName,
           email: user.emailAddress,
           phone: user.phoneNumber,
+          birthday: user.birthday,
           gender: user.gender,
           houseNumber: user.houseNumber,
           street: user.street,
