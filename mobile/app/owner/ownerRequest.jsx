@@ -146,10 +146,6 @@ export default function ownerItem() {
         <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
           {/* Left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-              <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
-            </Pressable>
-
             <Pressable
                 onPress={() => {
                   if (router.canGoBack()) {
@@ -160,7 +156,7 @@ export default function ownerItem() {
                       hitSlop={10}
                       style={styles.iconPress}
                       >
-                <Icon name="arrow-back" size={24} color="#FFF" />
+                <Icon name="arrow-back" size={24} color="#000" />
               </Pressable>
           </View>
 

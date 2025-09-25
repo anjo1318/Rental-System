@@ -42,6 +42,10 @@ export default function RentingDetails() {
   // Rental period
   const [rentalPeriod, setRentalPeriod] = useState("Day");
   const rentalOptions = ["Hour", "Day", "Week"];
+
+  const [showPickupTimePicker, setShowPickupTimePicker] = useState(false);
+  const [showReturnTimePicker, setShowReturnTimePicker] = useState(false);
+
   
   // Date/Time pickers
   const [pickupDate, setPickupDate] = useState(new Date());
@@ -372,11 +376,23 @@ export default function RentingDetails() {
                       <Text style={styles.sectionTitle}>Pick up Date</Text>
                       <TouchableOpacity
                         style={styles.dateButton}
-                        onPress={() => setShowPickupDatePicker(true)}
+                        onPress={() => {
+                          if (rentalPeriod === "Hour") {
+                            setShowPickupTimePicker(true); // ⏰ time picker
+                          } else {
+                            setShowPickupDatePicker(true); // 📅 date picker
+                          }
+                        }}
                         activeOpacity={0.7}
                       >
                         <Icon name="date-range" size={18} color="#666" />
-                        <Text style={styles.dateText}>{formatDate(pickupDate)}</Text>
+                        <Text style={styles.dateText}>
+                          {rentalPeriod === "Hour"
+                            ? pickupDate
+                                .toLocaleTimeString([], { hour: "numeric", hour12: true })
+                                .replace(" ", ":00 ") // ✅ force :00
+                            : formatDate(pickupDate)}
+                        </Text>
                       </TouchableOpacity>
                     </View>
 
@@ -386,13 +402,25 @@ export default function RentingDetails() {
                     {/* Return Date */}
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle1}>Return Date</Text>
-                      <TouchableOpacity
-                        style={styles.dateButton1}
-                        onPress={() => setShowReturnDatePicker(true)}
+                     <TouchableOpacity
+                        style={styles.dateButton}
+                        onPress={() => {
+                          if (rentalPeriod === "Hour") {
+                            setShowReturnTimePicker(true); // ⏰ time picker
+                          } else {
+                            setShowReturnDatePicker(true); // 📅 date picker
+                          }
+                        }}
                         activeOpacity={0.7}
                       >
                         <Icon name="date-range" size={18} color="#666" />
-                        <Text style={styles.dateText}>{formatDate(returnDate)}</Text>
+                        <Text style={styles.dateText}>
+                          {rentalPeriod === "Hour"
+                            ? returnDate
+                                .toLocaleTimeString([], { hour: "numeric", hour12: true })
+                                .replace(" ", ":00 ") // ✅ force :00
+                            : formatDate(returnDate)}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -463,6 +491,37 @@ export default function RentingDetails() {
                 }}
             />
             )}
+            {showPickupTimePicker && (
+            <DateTimePicker
+              value={pickupDate}
+              mode="time"
+              display="spinner"
+              onChange={(event, selectedTime) => {
+                setShowPickupTimePicker(false);
+                if (selectedTime) {
+                  const hourOnly = new Date(selectedTime);
+                  hourOnly.setMinutes(0, 0, 0); // ✅ lock to :00
+                  setPickupDate(hourOnly);
+                }
+              }}
+            />
+          )}
+
+          {showReturnTimePicker && (
+            <DateTimePicker
+              value={returnDate}
+              mode="time"
+              display="spinner"
+              onChange={(event, selectedTime) => {
+                setShowReturnTimePicker(false);
+                if (selectedTime) {
+                  const hourOnly = new Date(selectedTime);
+                  hourOnly.setMinutes(0, 0, 0); // ✅ lock to :00
+                  setReturnDate(hourOnly);
+                }
+              }}
+            />
+          )}
         </>
         )}
     </SafeAreaView>

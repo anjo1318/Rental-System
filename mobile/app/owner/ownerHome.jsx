@@ -435,7 +435,7 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     justifyContent: "center",
-    alignItems: "center",
+    alignItemscd : "center",
   },
   badgeText: {
     color: "white",
@@ -454,8 +454,8 @@ statCard: {
   flex: 1,
   alignItems: "center",
   paddingVertical: 40,
-  marginHorizontal: 4,           // spacing between boxes
-  backgroundColor: "#FFF",       // each has white background
+  marginHorizontal: 4,           
+  backgroundColor: "#FFF",     
   borderRadius: 4,
 },
 

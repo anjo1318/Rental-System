@@ -159,6 +159,8 @@ export default function Notifications() {
                 </Text>
             </View>
 
+             <View style={styles.horizontalLine} />
+
             {/* Date */}
             <Text style={styles.messageDate}>
                 {new Date(notif.createdAt).toLocaleDateString("en-US", {
@@ -240,10 +242,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.04, // responsive padding
     paddingBottom: height * 0.04, // scales bottom padding
     justifyContent: "space-between",
+
   },
 
   scrollContent: {
     flexGrow: 1,
+    marginTop: 5,
   },
   bottomNav: {
     flexDirection: "row",
@@ -307,6 +311,15 @@ messagePreview: {
   color: "#666",
   marginTop: 2,
 },
+horizontalLine: {
+    position: "absolute",
+    height: 1.5,
+    backgroundColor: "#05747480",
+    width: "80%", 
+    left: "18%",
+    top: 80,                    
+    zIndex: 1,       
+  },
 
 messageDate: {
   fontSize: 12,
@@ -326,6 +339,7 @@ avatarImage: {
   borderRadius: 24,
   marginRight: 12,
   backgroundColor: "#ddd",
+  marginTop: 10,
 },
 
 
