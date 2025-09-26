@@ -57,57 +57,7 @@ export default function IdUpload() {
   };
 
   const handleNext = async () => {
-    try {
-      const formData = new FormData();
 
-      formData.append("customerId", customerId);
-      formData.append("guarantor1FullName", fullName);
-      formData.append("guarantor1Address", address);
-      formData.append("guarantor1MobileNumber", mobileNumber);
-      formData.append("guarantor2FullName", fullName1);
-      formData.append("guarantor2Address", address1);
-      formData.append("guarantor2MobileNumber", mobileNumber1);
-      formData.append("idType", idType);
-      formData.append("idNumber", idNumber);
-
-      if (photoId) {
-        formData.append("photoId", {
-          uri: photoId,
-          type: "image/jpeg", // adjust based on mime
-          name: "photoId.jpg",
-        });
-      }
-
-      if (selfie) {
-        formData.append("selfie", {
-          uri: selfie,
-          type: "image/jpeg",
-          name: "selfie.jpg",
-        });
-      }
-
-      const res = await axios.post(
-        `${API_URL}/api/customer/sign-up/guarantors-id`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      if (res.data.success) {
-        router.push({
-          pathname: "/signup/review",
-          params: { customerId },
-        });
-      } else {
-        alert(res.data.message || "Something went wrong.");
-      }
-    } catch (error) {
-      console.error("❌ Error in Step 3 signup:", error);
-      alert("Failed to save guarantors and ID. Please try again.");
-    }
   };
 
 

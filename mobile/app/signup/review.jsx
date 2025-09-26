@@ -57,9 +57,7 @@ export default function Review() {
 
     setFinalizing(true);
     try {
-      const response = await axios.post(`${API_URL}/api/customer/sign-up/finalize`, {
-        customerId: customerId
-      });
+      const response = await axios.post(`${API_URL}/api/customer/sign-up`,signUpData);
 
       if (response.data.success) {
         Alert.alert("Success", "Signup completed successfully!", [

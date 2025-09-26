@@ -17,15 +17,17 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
+import * as ImagePicker from "expo-image-picker";
 import axios from "axios";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-
 
 const { width, height } = Dimensions.get("window");
 
 export default function PersonalInfo() {
   const router = useRouter();
-
+  
+  // Personal Info States
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -36,9 +38,31 @@ export default function PersonalInfo() {
   const [hidden, setHidden] = useState(true);
   const [date, setDate] = useState(null); 
   const [show, setShow] = useState(false);
-  const [loading, setLoading] = useState(false);
   
-
+  // Address Info States
+  const [houseBuilding, setHouseBuilding] = useState("");
+  const [street, setStreet] = useState("");
+  const [barangay, setBarangay] = useState("");
+  const [town, setTown] = useState("");
+  const [province, setProvince] = useState("");
+  const [country, setCountry] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  
+  // ID Upload States
+  const [fullName, setFullName] = useState("");
+  const [address, setAddress] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [fullName1, setFullName1] = useState("");
+  const [address1, setAddress1] = useState("");
+  const [mobileNumber1, setMobileNumber1] = useState("");
+  const [idNumber, setIdNumber] = useState("");
+  const [photoId, setPhotoId] = useState(null);
+  const [selfie, setSelfie] = useState(null);
+  const [idType, setIdType] = useState("");
+  
+  // UI States
+  const [currentStep, setCurrentStep] = useState(1); // 1, 2, or 3
+  const [loading, setLoading] = useState(false);
   const [focusField, setFocusField] = useState("");
 
   const formattedDate = date
@@ -49,52 +73,621 @@ export default function PersonalInfo() {
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-  // helper function (add this before return)
+  // Helper function
   const isTextMode = (field, value) => {
     if (focusField === field) return true;
     return value !== "" && value !== null && value !== undefined;
   };
 
-
-  // 👉 Handle backend call
-  const handleNext = async () => {
-    if (!firstName || !lastName || !email || !phoneNumber || !gender || !password || !date) {
-      Alert.alert("Missing Info", "Please fill in all required fields.");
-      return;
+  // Validation functions
+  const validatePersonalInfo = () => {
+    if (!firstName || !middleName || !lastName || !email || !phoneNumber || !gender || !password || !date) {
+      Alert.alert("Missing Info", "Please fill in all required personal information fields.");
+      return false;
     }
+    return true;
+  };
 
+  const validateAddressInfo = () => {
+    if (!houseBuilding || !street || !barangay || !town || !province || !country || !zipCode) {
+      Alert.alert("Missing Info", "Please fill in all required address fields.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateIdInfo = () => {
+    if (!fullName || !address || !mobileNumber || !fullName1 || !address1 || !mobileNumber1 || !idType || !idNumber || !photoId || !selfie) {
+      Alert.alert("Missing Info", "Please fill in all required ID verification and guarantor fields.");
+      return false;
+    }
+    return true;
+  };
+
+  // Image picker functions
+  const pickIdPhoto = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) return Alert.alert("Permission denied!", "Please allow access to photo library.");
+    
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+    });
+    
+    if (!result.canceled) setPhotoId(result.assets[0].uri);
+  };
+
+  const takeSelfie = async () => {
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) return Alert.alert("Permission denied!", "Please allow camera access.");
+    
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+      allowsEditing: true,
+    });
+    
+    if (!result.canceled) setSelfie(result.assets[0].uri);
+  };
+
+  // Handle moving to next step or submitting
+  const handleNext = async () => {
+    if (currentStep === 1) {
+      if (validatePersonalInfo()) {
+        setCurrentStep(2);
+      }
+    } else if (currentStep === 2) {
+      if (validateAddressInfo()) {
+        setCurrentStep(3);
+      }
+    } else if (currentStep === 3) {
+        setCurrentStep(4);
+    } else {
+        await handleSubmit();
+      }
+    }
+  };
+
+  // Handle API submission with FormData for file uploads
+  const handleSubmit = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
+      // Create FormData for file uploads
+      const formData = new FormData();
+      
+      // Add personal details
+      formData.append('firstName', firstName);
+      formData.append('middleName', middleName);
+      formData.append('lastName', lastName);
+      formData.append('email', email);
+      formData.append('phoneNumber', phoneNumber);
+      formData.append('gender', gender);
+      formData.append('password', password);
+      formData.append('birthDate', date.toISOString());
+      
+      // Add address details
+      formData.append('houseNumber', houseBuilding);
+      formData.append('street', street);
+      formData.append('barangay', barangay);
+      formData.append('town', town);
+      formData.append('province', province);
+      formData.append('country', country);
+      formData.append('zipCode', zipCode);
+      
+      // Add guarantor details
+      formData.append('guarantor1FullName', fullName);
+      formData.append('guarantor1Address', address);
+      formData.append('guarantor1Mobile', mobileNumber);
+      formData.append('guarantor2FullName', fullName1);
+      formData.append('guarantor2Address', address1);
+      formData.append('guarantor2Mobile', mobileNumber1);
+      
+      // Add ID details
+      formData.append('idType', idType);
+      formData.append('idNumber', idNumber);
+      
+      // Add files
+      if (photoId) {
+        formData.append('photoId', {
+          uri: photoId,
+          type: 'image/jpeg',
+          name: 'photo_id.jpg',
+        });
+      }
+      
+      if (selfie) {
+        formData.append('selfie', {
+          uri: selfie,
+          type: 'image/jpeg',
+          name: 'selfie.jpg',
+        });
+      }
 
-      const res = await axios.post(`${API_URL}/api/customer/sign-up/personal-info`, {
-        firstName,
-        middleName,
-        lastName,
-        emailAddress: email, // must match backend field name
-        phoneNumber,
-        birthday: date ? date.toISOString().split("T")[0] : "2000-01-01",
-        gender,
-        password,
+      const res = await axios.post(`${API_URL}/api/customer/sign-up-complete`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (res.data.success) {
-        Alert.alert("Success", "Step 1 completed!");
-        // 👉 Pass customerId to the next step
-        router.push({
-          pathname: "/signup/address",
-          params: { customerId: res.data.customerId },
-        });
+        Alert.alert("Success", "Registration completed successfully!", [
+          {
+            text: "OK",
+            onPress: () => router.push("/login"), // Navigate to login or success page
+          },
+        ]);
       } else {
-        Alert.alert("Error", res.data.message || "Something went wrong");
+        Alert.alert("Error", res.data.message);
       }
     } catch (err) {
       console.error(err);
-      Alert.alert("Error", err.response?.data?.message || "Server error");
+      Alert.alert("Error", err.response?.data?.message || "Server error occurred");
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePrevious = () => {
+    if (currentStep === 3) {
+      setCurrentStep(2);
+    } else if (currentStep === 2) {
+      setCurrentStep(1);
+    } else {
+      router.back();
+    }
+  };
+
+  const renderPersonalInfoForm = () => (
+    <>
+      <View style={styles.headerTextRow}>
+        <Text style={styles.stepText}>Step 1</Text>
+        <Text style={styles.personalText}>Personal Info</Text>
+      </View>
+
+      <View style={styles.photoContainer}>
+        <Image
+          source={require("../../assets/images/personal_info.png")}
+          style={styles.photoImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.subText}>All Fields with * are required</Text>
+      </View>
+
+      <View style={styles.container}>
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("firstName", firstName) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("firstName", firstName) ? "First Name *" : ""}
+          placeholderTextColor="#888"
+          value={firstName}
+          onChangeText={setFirstName}
+          autoCapitalize="sentences"
+          allowFontScaling={false}
+          onFocus={() => setFocusField("firstName")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("middleName", middleName) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("middleName", middleName) ? "Middle Name *" : ""}
+          placeholderTextColor="#888"
+          value={middleName}
+          onChangeText={setMiddleName}
+          autoCapitalize="sentences"
+          allowFontScaling={false}
+          onFocus={() => setFocusField("middleName")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("lastName", lastName) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("lastName", lastName) ? "Last Name *" : ""}
+          placeholderTextColor="#888"
+          value={lastName}
+          onChangeText={setLastName}
+          autoCapitalize="sentences"
+          allowFontScaling={false}
+          onFocus={() => setFocusField("lastName")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("email", email) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("email", email) ? "Email *" : ""}
+          placeholderTextColor="#888"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          allowFontScaling={false}
+          onFocus={() => setFocusField("email")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("phoneNumber", phoneNumber) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("phoneNumber", phoneNumber) ? "Phone Number *" : ""}
+          placeholderTextColor="#888"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
+          allowFontScaling={false}
+          onFocus={() => setFocusField("phoneNumber")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <Pressable
+          style={[
+            styles.input,
+            { justifyContent: date ? "center" : "flex-start" }
+          ]}
+          onPress={() => {
+            setShow(true);
+            setFocusField("birthday");
+          }}
+        >
+          <Text
+            style={{
+              color: date ? "#000" : "#888",
+              fontSize: date ? inputFontSize : inputFontSize * 0.8,
+              marginTop: date ? 0 : 8,
+            }}
+          >
+            {date ? formattedDate : "Birthday *"}
+          </Text>
+        </Pressable>
+
+        {show && (
+          <DateTimePicker
+            value={date || new Date()}
+            mode="date"
+            display="default"
+            maximumDate={new Date()}
+            onChange={(event, selectedDate) => {
+              if (selectedDate) {
+                setDate(selectedDate);
+              }
+              setShow(false);
+              setFocusField("");
+            }}
+          />
+        )}
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("gender", gender) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("gender", gender) ? "Gender *" : ""}
+          placeholderTextColor="#888"
+          value={gender}
+          onChangeText={setGender}
+          autoCapitalize="words"
+          allowFontScaling={false}
+          onFocus={() => setFocusField("gender")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <View style={styles.passwordWrapper}>
+          <TextInput
+            style={[
+              styles.inputPassword,
+              !isTextMode("password", password) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("password", password) ? "Password *" : ""}
+            placeholderTextColor="#888"
+            value={password}
+            onChangeText={setPassword}
+            autoCapitalize="none"
+            secureTextEntry={hidden}
+            allowFontScaling={false}
+            onFocus={() => setFocusField("password")}
+            onBlur={() => setFocusField("")}
+          />
+          <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
+            <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
+          </Pressable>
+        </View>
+      </View>
+    </>
+  );
+
+  const renderAddressForm = () => (
+    <>
+      <View style={styles.headerTextRow}>
+        <Text style={styles.stepText}>Step 2</Text>
+        <Text style={styles.personalText}>Address</Text>
+      </View>
+
+      <View style={styles.photoContainer}>
+        <Image
+          source={require("../../assets/images/address.png")}
+          style={styles.photoImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.subText}>All Fields with * are required</Text>
+      </View>
+
+      <View style={styles.container}>
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("houseBuilding", houseBuilding) && styles.placeholderInput,
+          ]}
+          placeholder={
+            !isTextMode("houseBuilding", houseBuilding)
+              ? "House No./Building No. *"
+              : ""
+          }
+          placeholderTextColor="#888"
+          value={houseBuilding}
+          onChangeText={setHouseBuilding}
+          autoCapitalize="sentences"
+          keyboardType="default"
+          onFocus={() => setFocusField("houseBuilding")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("street", street) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("street", street) ? "Street *" : ""}
+          placeholderTextColor="#888"
+          value={street}
+          onChangeText={setStreet}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("street")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("barangay", barangay) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("barangay", barangay) ? "Barangay *" : ""}
+          placeholderTextColor="#888"
+          value={barangay}
+          onChangeText={setBarangay}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("barangay")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("town", town) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("town", town) ? "Town *" : ""}
+          placeholderTextColor="#888"
+          value={town}
+          onChangeText={setTown}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("town")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("province", province) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("province", province) ? "Province *" : ""}
+          placeholderTextColor="#888"
+          value={province}
+          onChangeText={setProvince}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("province")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("country", country) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("country", country) ? "Country *" : ""}
+          placeholderTextColor="#888"
+          value={country}
+          onChangeText={setCountry}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("country")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("zipCode", zipCode) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("zipCode", zipCode) ? "Zip Code *" : ""}
+          placeholderTextColor="#888"
+          value={zipCode}
+          onChangeText={setZipCode}
+          keyboardType="numeric"
+          onFocus={() => setFocusField("zipCode")}
+          onBlur={() => setFocusField("")}
+        />
+      </View>
+    </>
+  );
+
+  const renderIdUploadForm = () => (
+    <>
+      <View style={styles.headerTextRow}>
+        <Text style={styles.stepText}>Step 3</Text>
+        <Text style={styles.personalText}>ID Upload/Guarantor</Text>
+      </View>
+
+      <View style={styles.photoContainer}>
+        <Image
+          source={require("../../assets/images/id_upload.png")}
+          style={styles.photoImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.subText}>All Fields with * are required</Text>
+        <Text style={styles.sub1Text}>Guarantor 1</Text>
+        <Text style={styles.sub2Text}>
+          People that can be contacted if renter is unavailable.
+        </Text>
+      </View>
+
+      <View style={styles.container}>
+        <TextInput
+          style={[styles.input, !isTextMode("fullName", fullName) && styles.placeholderInput]}
+          placeholder={!isTextMode("fullName", fullName) ? "Full Name *" : ""}
+          placeholderTextColor="#888"
+          value={fullName}
+          onChangeText={setFullName}
+          autoCapitalize="sentences"
+          keyboardType="default"
+          onFocus={() => setFocusField("fullName")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[styles.input, !isTextMode("address", address) && styles.placeholderInput]}
+          placeholder={!isTextMode("address", address) ? "Address *" : ""}
+          placeholderTextColor="#888"
+          value={address}
+          onChangeText={setAddress}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("address")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[styles.input, !isTextMode("mobileNumber", mobileNumber) && styles.placeholderInput]}
+          placeholder={!isTextMode("mobileNumber", mobileNumber) ? "Mobile Number *" : ""}
+          placeholderTextColor="#888"
+          value={mobileNumber}
+          onChangeText={setMobileNumber}
+          keyboardType="phone-pad"
+          autoCapitalize="none"
+          onFocus={() => setFocusField("mobileNumber")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <Text style={styles.sub3Text}>Guarantor 2</Text>
+        <Text style={styles.sub4Text}>
+          People that can be contacted if renter is unavailable.
+        </Text>
+
+        <TextInput
+          style={[styles.input, !isTextMode("fullName1", fullName1) && styles.placeholderInput]}
+          placeholder={!isTextMode("fullName1", fullName1) ? "Full Name *" : ""}
+          placeholderTextColor="#888"
+          value={fullName1}
+          onChangeText={setFullName1}
+          autoCapitalize="sentences"
+          keyboardType="default"
+          onFocus={() => setFocusField("fullName1")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[styles.input, !isTextMode("address1", address1) && styles.placeholderInput]}
+          placeholder={!isTextMode("address1", address1) ? "Address *" : ""}
+          placeholderTextColor="#888"
+          value={address1}
+          onChangeText={setAddress1}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("address1")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <TextInput
+          style={[styles.input, !isTextMode("mobileNumber1", mobileNumber1) && styles.placeholderInput]}
+          placeholder={!isTextMode("mobileNumber1", mobileNumber1) ? "Mobile Number *" : ""}
+          placeholderTextColor="#888"
+          value={mobileNumber1}
+          onChangeText={setMobileNumber1}
+          keyboardType="phone-pad"
+          autoCapitalize="none"
+          onFocus={() => setFocusField("mobileNumber1")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <Text style={styles.sub5Text}>ID Verification</Text>
+        <Text style={styles.sub6Text}>
+          Only JPEG, JPG and PNG files with max size of 4mb.
+        </Text>
+
+        <View style={styles.pickerContainer}>
+          {!idType && (
+            <Text style={styles.pickerOverlayText}>
+              Select Type of ID *
+            </Text>
+          )}
+
+          <Picker
+            selectedValue={idType}
+            onValueChange={(itemValue) => setIdType(itemValue)}
+            style={{ color: idType ? "#000" : "transparent", width: "100%" }}
+          >
+            <Picker.Item label="Select Type of ID " value="" color="#888" /> 
+            <Picker.Item label="Driver's ID" value="drivers" />
+            <Picker.Item label="Postal ID" value="postal" />
+            <Picker.Item label="SSS ID" value="sss" />
+            <Picker.Item label="PhilHealth ID" value="philhealth" />
+            <Picker.Item label="National ID" value="national" />
+          </Picker>
+        </View>
+
+        <TextInput
+          style={[styles.input, !isTextMode("idNumber", idNumber) && styles.placeholderInput]}
+          placeholder={!isTextMode("idNumber", idNumber) ? "ID Number *" : ""}
+          placeholderTextColor="#888"
+          value={idNumber}
+          onChangeText={setIdNumber}
+          keyboardType="phone-pad"
+          autoCapitalize="none"
+          onFocus={() => setFocusField("idNumber")}
+          onBlur={() => setFocusField("")}
+        />
+
+        <Pressable style={styles.uploadBox} onPress={pickIdPhoto}>
+          <Text style={styles.uploadText}>
+            {photoId ? photoId.split("/").pop() : "Photo of Your Valid ID *"}
+          </Text>
+          <Image
+            source={require("../../assets/images/upload.png")}
+            style={styles.iconRight}
+            resizeMode="contain"
+          />
+        </Pressable>
+
+        <Pressable style={styles.uploadBox} onPress={takeSelfie}>
+          <Text style={styles.uploadText}>
+            {selfie ? selfie.split("/").pop() : "Selfie *"}
+          </Text>
+          <Image
+            source={require("../../assets/images/camera.png")}
+            style={styles.iconRight}
+            resizeMode="contain"
+          />
+        </Pressable>
+      </View>
+    </>
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -102,214 +695,55 @@ export default function PersonalInfo() {
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        >
-      <KeyboardAwareScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
-        enableOnAndroid={true}
-        keyboardShouldPersistTaps="handled"
-        enableAutomaticScroll={true} // scrolls input into view automatically
       >
-        <View style={styles.headerWrapper}>
-          <Image
-            source={require("../../assets/images/header.png")}
-            style={styles.headerImage}
-            resizeMode="cover"
-            accessible
-            accessibilityLabel="Top banner"
-          />
-
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
-          </Pressable>
-
-          <Text style={styles.titleText}>Sign up</Text>
-        </View>
-
-        <View style={styles.headerTextRow}>
-          <Text style={styles.stepText}>Step 1</Text>
-          <Text style={styles.personalText}>Personal Info</Text>
-        </View>
-
-        <View style={styles.photoContainer}>
-          <Image
-            source={require("../../assets/images/personal_info.png")}
-            style={styles.photoImage}
-            resizeMode="contain"
-          />
-          <Text style={styles.subText}>All Fields with * are required</Text>
-        </View>
-
-        <View style={styles.container}>
-          {/* First Name */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("firstName", firstName) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("firstName", firstName) ? "First Name *" : ""}
-            placeholderTextColor="#888"
-            value={firstName}
-            onChangeText={setFirstName}
-            autoCapitalize="sentences"
-            allowFontScaling={false}
-            onFocus={() => setFocusField("firstName")}
-            onBlur={() => setFocusField("")}
-          />
-
-          {/* Middle Name */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("middleName", middleName) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("middleName", middleName) ? "Middle Name *" : ""}
-            placeholderTextColor="#888"
-            value={middleName}
-            onChangeText={setMiddleName}
-            autoCapitalize="sentences"
-            allowFontScaling={false}
-            onFocus={() => setFocusField("middleName")}
-            onBlur={() => setFocusField("")}
-          />
-
-          {/* Last Name */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("lastName", lastName) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("lastName", lastName) ? "Last Name *" : ""}
-            placeholderTextColor="#888"
-            value={lastName}
-            onChangeText={setLastName}
-            autoCapitalize="sentences"
-            allowFontScaling={false}
-            onFocus={() => setFocusField("lastName")}
-            onBlur={() => setFocusField("")}
-          />
-
-          {/* Email */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("email", email) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("email", email) ? "Email *" : ""}
-            placeholderTextColor="#888"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            allowFontScaling={false}
-            onFocus={() => setFocusField("email")}
-            onBlur={() => setFocusField("")}
-          />
-
-          {/* Phone Number */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("phoneNumber", phoneNumber) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("phoneNumber", phoneNumber) ? "Phone Number *" : ""}
-            placeholderTextColor="#888"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-            allowFontScaling={false}
-            onFocus={() => setFocusField("phoneNumber")}
-            onBlur={() => setFocusField("")}
-          />
-
-          {/* Birthday picker (Pressable) */}
-          <Pressable
-            style={[
-              styles.input,
-              { justifyContent: date ? "center" : "flex-start" } // 👈 changes alignment
-            ]}
-            onPress={() => {
-              setShow(true);
-              setFocusField("birthday");
-            }}
-          >
-            <Text
-              style={{
-                color: date ? "#000" : "#888",
-                fontSize: date ? inputFontSize : inputFontSize * 0.8, // smaller when placeholder
-                marginTop: date ? 0 : 8, // push placeholder down a little from the top
-              }}
-            >
-              {date ? formattedDate : "Birthday *"}
-            </Text>
-          </Pressable>
-         
-
-          {show && (
-            <DateTimePicker
-              value={date || new Date()}
-              mode="date"
-              display="default"
-              maximumDate={new Date()}
-              onChange={(event, selectedDate) => {
-                // selectedDate is undefined on dismiss in Android
-                if (selectedDate) {
-                  setDate(selectedDate);
-                }
-                setShow(false);
-                setFocusField(""); // clear focus after picker closes
-              }}
+        <KeyboardAwareScrollView
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+          enableOnAndroid={true}
+          keyboardShouldPersistTaps="handled"
+          enableAutomaticScroll={true}
+        >
+          <View style={styles.headerWrapper}>
+            <Image
+              source={require("../../assets/images/header.png")}
+              style={styles.headerImage}
+              resizeMode="cover"
+              accessible
+              accessibilityLabel="Top banner"
             />
-          )}
 
-          {/* Gender */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("gender", gender) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("gender", gender) ? "Gender *" : ""}
-            placeholderTextColor="#888"
-            value={gender}
-            onChangeText={setGender}
-            autoCapitalize="words"
-            allowFontScaling={false}
-            onFocus={() => setFocusField("gender")}
-            onBlur={() => setFocusField("")}
-          />
-
-          {/* Password */}
-          <View style={styles.passwordWrapper}>
-            <TextInput
-              style={[
-                styles.inputPassword,
-                !isTextMode("password", password) && styles.placeholderInput,
-              ]}
-              placeholder={!isTextMode("password", password) ? "Password *" : ""}
-              placeholderTextColor="#888"
-              value={password}
-              onChangeText={setPassword}
-              autoCapitalize="none"
-              secureTextEntry={hidden}
-              allowFontScaling={false}
-              onFocus={() => setFocusField("password")}
-              onBlur={() => setFocusField("")}
-            />
-            <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
-              <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
+            <Pressable style={styles.backButton} onPress={handlePrevious}>
+              <Ionicons name="arrow-back" size={width * 0.07} color="#fff" />
             </Pressable>
+
+            <Text style={styles.titleText}>Sign up</Text>
           </View>
 
-        <Pressable
-                style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-                onPress={handleNext}
-                disabled={loading}
+          {currentStep === 1 && renderPersonalInfoForm()}
+          {currentStep === 2 && renderAddressForm()}
+          {currentStep === 3 && renderIdUploadForm()}
+
+          <View style={styles.buttonContainer}>
+            <Pressable
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={handleNext}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Submitting..." : 
+                 currentStep === 3 ? "Complete Registration" : "Next"}
+              </Text>
+            </Pressable>
+
+            {currentStep > 1 && (
+              <Pressable
+                style={({ pressed }) => [styles.previous, pressed && styles.previousPressed]}
+                onPress={handlePrevious}
               >
-                <Text style={styles.buttonText}>
-                  {loading ? "Saving..." : "Next"}
-                </Text>
-        </Pressable>
-        </View>
-      </KeyboardAwareScrollView>
+                <Text style={styles.previousText}>Previous</Text>
+              </Pressable>
+            )}
+          </View>
+        </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -317,7 +751,7 @@ export default function PersonalInfo() {
 
 const inputFontSize = width * 0.04;
 const inputPaddingVertical = height * 0.015;
-const lockedHeight = inputPaddingVertical * 2 + inputFontSize + 10; // locked height
+const lockedHeight = inputPaddingVertical * 2 + inputFontSize + 10;
 
 const styles = StyleSheet.create({
   safe: {
@@ -382,11 +816,60 @@ const styles = StyleSheet.create({
     fontWeight: "200",
     color: "#A95E09",
   },
+  sub1Text: {
+    position: "absolute",
+    top: height * 0.13,
+    left: width * 0.06,
+    fontSize: width * 0.04,
+    fontWeight: "600",
+    color: "#000",
+  },
+  sub2Text: {
+    position: "absolute",
+    top: height * 0.16,
+    left: width * 0.06,
+    fontSize: width * 0.03,
+    fontWeight: "200",
+    color: "#000",
+  },
+  sub3Text: {
+    right: width * 0.34,
+    fontSize: width * 0.04,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: height * 0.008,
+  },
+  sub4Text: {
+    right: width * 0.105,
+    fontSize: width * 0.03,
+    fontWeight: "200",
+    color: "#000",
+    marginBottom: height * 0.02,
+  },
+  sub5Text: {
+    right: width * 0.310,
+    fontSize: width * 0.04,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: height * 0.008,
+  },
+  sub6Text: {
+    right: width * 0.097,
+    fontSize: width * 0.03,
+    fontWeight: "200",
+    color: "#000",
+    marginBottom: height * 0.02,
+  },
   container: {
     flex: 1,
     alignItems: "center",
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.07,
+  },
+  buttonContainer: {
+    alignItems: "center",
+    paddingHorizontal: width * 0.08,
+    paddingBottom: height * 0.02,
   },
   input: {
     width: "100%",
@@ -401,12 +884,12 @@ const styles = StyleSheet.create({
     borderColor: "#057474",
     backgroundColor: "#FFF6F6",
     textAlign: "left",
-    textAlignVertical: "center", // typed text centered
+    textAlignVertical: "center",
     includeFontPadding: false,
   },
   placeholderInput: {
-    fontSize: inputFontSize * 0.8, // smaller placeholder
-    textAlignVertical: "top", // sits higher
+    fontSize: inputFontSize * 0.8,
+    textAlignVertical: "top",
     transform: [{ translateY: -2 }],
   },
   passwordWrapper: {
@@ -432,13 +915,56 @@ const styles = StyleSheet.create({
   eyeIcon: {
     marginLeft: 10,
   },
+  pickerContainer: { 
+    width: "100%",
+    height: lockedHeight,
+    borderWidth: 1,
+    borderRadius: 12,
+    borderColor: "#057474",
+    backgroundColor: "#FFF6F6",
+    justifyContent: "center",
+    marginBottom: 17,
+  },
+  pickerOverlayText: {
+    position: "absolute",
+    top: 9,
+    left: 14,
+    fontSize: width * 0.03,
+    color: "#888",
+    zIndex: 2,
+  },
+  uploadBox: {
+    width: "100%",
+    minHeight: lockedHeight,
+    borderWidth: 1,
+    borderColor: "#057474",
+    borderRadius: 12,
+    backgroundColor: "#FFF6F6",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  uploadText: {
+    fontSize: Math.min(width * 0.031, 18),
+    color: "#888",
+    flexShrink: 1,
+  },
+  iconRight: {
+    width: 24,
+    height: 24,
+    marginLeft: 10,
+    tintColor: "#057474",
+  },
   button: {
     width: "100%",
     backgroundColor: "#057474",
     paddingVertical: height * 0.018,
     borderRadius: 30,
     alignItems: "center",
- 
+    marginTop: 11,
   },
   buttonText: {
     color: "#fff",
@@ -446,6 +972,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   buttonPressed: {
+    opacity: 0.85,
+  },
+  previous: {
+    width: "100%",
+    backgroundColor: "#FFF",
+    paddingVertical: height * 0.018,
+    borderRadius: 30,
+    alignItems: "center",
+    marginTop: 11,
+    borderWidth: 1,
+    borderColor: "#057474",
+  },
+  previousText: {
+    color: "#057474",
+    fontSize: width * 0.045,
+    fontWeight: "600",
+  },
+  previousPressed: {
     opacity: 0.85,
   },
 });
