@@ -13,6 +13,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -60,8 +61,11 @@ export default function PersonalInfo() {
   const [selfie, setSelfie] = useState(null);
   const [idType, setIdType] = useState("");
   
+  // Review States
+  const [isChecked, setIsChecked] = useState(false);
+  
   // UI States
-  const [currentStep, setCurrentStep] = useState(1); // 1, 2, or 3
+  const [currentStep, setCurrentStep] = useState(1); // 1, 2, 3, or 4
   const [loading, setLoading] = useState(false);
   const [focusField, setFocusField] = useState("");
 
@@ -99,6 +103,14 @@ export default function PersonalInfo() {
   const validateIdInfo = () => {
     if (!fullName || !address || !mobileNumber || !fullName1 || !address1 || !mobileNumber1 || !idType || !idNumber || !photoId || !selfie) {
       Alert.alert("Missing Info", "Please fill in all required ID verification and guarantor fields.");
+      return false;
+    }
+    return true;
+  };
+
+  const validateReview = () => {
+    if (!isChecked) {
+      Alert.alert("Error", "Please accept the terms and conditions");
       return false;
     }
     return true;
@@ -142,8 +154,11 @@ export default function PersonalInfo() {
         setCurrentStep(3);
       }
     } else if (currentStep === 3) {
+      if (validateIdInfo()) {
         setCurrentStep(4);
-    } else {
+      }
+    } else if (currentStep === 4) {
+      if (validateReview()) {
         await handleSubmit();
       }
     }
@@ -229,7 +244,9 @@ export default function PersonalInfo() {
   };
 
   const handlePrevious = () => {
-    if (currentStep === 3) {
+    if (currentStep === 4) {
+      setCurrentStep(3);
+    } else if (currentStep === 3) {
       setCurrentStep(2);
     } else if (currentStep === 2) {
       setCurrentStep(1);
@@ -689,6 +706,123 @@ export default function PersonalInfo() {
     </>
   );
 
+  const renderReviewForm = () => (
+    <>
+      <View style={styles.headerTextRow}>
+        <Text style={styles.stepText}>Step 4</Text>
+        <Text style={styles.personalText}>Review</Text>
+      </View>
+
+      <View style={styles.photoContainer}>
+        <Image
+          source={require("../../assets/images/review.png")}
+          style={styles.photoImage}
+          resizeMode="contain"
+        />
+        <Text style={styles.subText}>Check all your provided details</Text>
+      </View>
+
+      <ScrollView style={styles.reviewContainer}>
+        {/* Personal Info Section */}
+        <View style={styles.info}>
+          <Text style={styles.sectionTitle}>Personal Info</Text>
+          <Text style={styles.infoText}>First Name: {firstName || 'N/A'}</Text>
+          <Text style={styles.infoText}>Middle Name: {middleName || 'N/A'}</Text>
+          <Text style={styles.infoText}>Last Name: {lastName || 'N/A'}</Text>
+          <Text style={styles.infoText}>Email Address: {email || 'N/A'}</Text>
+          <Text style={styles.infoText}>Phone Number: {phoneNumber || 'N/A'}</Text>
+          <Text style={styles.infoText}>Birthday: {formattedDate || 'N/A'}</Text>
+          <Text style={styles.infoText}>Gender: {gender || 'N/A'}</Text>
+          <Text style={styles.infoText}>Password: ******</Text>
+          <View style={styles.divider} />
+        </View>
+
+        {/* Address Section */}
+        <View style={styles.address}>
+          <Text style={styles.sectionTitle1}>Address</Text>
+          <Text style={styles.addressText}>House No./Building No.: {houseBuilding || 'N/A'}</Text>
+          <Text style={styles.addressText}>Street: {street || 'N/A'}</Text>
+          <Text style={styles.addressText}>Barangay: {barangay || 'N/A'}</Text>
+          <Text style={styles.addressText}>Town: {town || 'N/A'}</Text>
+          <Text style={styles.addressText}>Province: {province || 'N/A'}</Text>
+          <Text style={styles.addressText}>Country: {country || 'N/A'}</Text>
+          <Text style={styles.addressText}>Zip Code: {zipCode || 'N/A'}</Text>
+          <View style={styles.divider1} />
+        </View>
+
+        {/* ID/Guarantor Section */}
+        <View style={styles.address}>
+          <Text style={styles.sectionTitle1}>ID Upload/Guarantor</Text>
+
+          <Text style={styles.addressText1}>Guarantor 1:</Text>
+          <Text style={styles.addressText}>Full Name: {fullName || 'N/A'}</Text>
+          <Text style={styles.addressText}>Address: {address || 'N/A'}</Text>
+          <Text style={styles.addressText}>Mobile Number: {mobileNumber || 'N/A'}</Text>
+
+          <Text style={styles.addressText1}>Guarantor 2:</Text>
+          <Text style={styles.addressText}>Full Name: {fullName1 || 'N/A'}</Text>
+          <Text style={styles.addressText}>Address: {address1 || 'N/A'}</Text>
+          <Text style={styles.addressText}>Mobile Number: {mobileNumber1 || 'N/A'}</Text>
+          
+          <Text style={styles.addressText1}>ID Upload:</Text>
+          <Text style={styles.addressText}>Type of ID: {idType || 'N/A'}</Text>
+          <Text style={styles.addressText}>ID Number: {idNumber || 'N/A'}</Text>
+
+          {photoId ? (
+            <View>
+              <Text style={styles.imageLabel}>ID Photo:</Text>
+              <Image
+                source={{ uri: photoId }}
+                style={styles.uploadedImage}
+                resizeMode="contain"
+              />
+            </View>
+          ) : (
+            <Text style={styles.noImageText}>No ID photo uploaded</Text>
+          )}
+
+          {selfie ? (
+            <View>
+              <Text style={styles.imageLabel}>Selfie:</Text>
+              <Image
+                source={{ uri: selfie }}
+                style={styles.uploadedImage}
+                resizeMode="contain"
+              />
+            </View>
+          ) : (
+            <Text style={styles.noImageText}>No selfie uploaded</Text>
+          )}
+        </View>
+
+        {/* Terms Checkbox */}
+        <View style={styles.checkboxContainer}>
+          <Pressable
+            style={[styles.checkbox, isChecked && styles.checkboxChecked]}
+            onPress={() => setIsChecked(!isChecked)}
+            hitSlop={10}
+          >
+            {isChecked && (
+              <Ionicons name="checkmark" size={width * 0.04} color="#fff" />
+            )}
+          </Pressable>
+
+          <View style={styles.checkboxRow}>
+            <Text style={styles.checkboxText}>
+              I confirm that I have read, understood, and agree to be bound by{" "}
+              <Text
+                style={styles.checkboxLink}
+                onPress={() => router.push("/terms")}
+              >
+                Terms and Conditions.
+              </Text>
+            </Text>
+          </View>
+        </View>
+      </ScrollView>
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
@@ -721,23 +855,32 @@ export default function PersonalInfo() {
           {currentStep === 1 && renderPersonalInfoForm()}
           {currentStep === 2 && renderAddressForm()}
           {currentStep === 3 && renderIdUploadForm()}
+          {currentStep === 4 && renderReviewForm()}
 
           <View style={styles.buttonContainer}>
             <Pressable
-              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              style={({ pressed }) => [
+                styles.button, 
+                pressed && styles.buttonPressed,
+                (currentStep === 4 && (!isChecked || loading)) && styles.buttonDisabled
+              ]}
               onPress={handleNext}
-              disabled={loading}
+              disabled={(currentStep === 4 && (!isChecked || loading)) || loading}
             >
-              <Text style={styles.buttonText}>
-                {loading ? "Submitting..." : 
-                 currentStep === 3 ? "Complete Registration" : "Next"}
-              </Text>
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {currentStep === 4 ? "Complete Registration" : "Next"}
+                </Text>
+              )}
             </Pressable>
 
             {currentStep > 1 && (
               <Pressable
                 style={({ pressed }) => [styles.previous, pressed && styles.previousPressed]}
                 onPress={handlePrevious}
+                disabled={loading}
               >
                 <Text style={styles.previousText}>Previous</Text>
               </Pressable>
@@ -866,6 +1009,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.08,
     marginTop: height * 0.07,
   },
+  reviewContainer: {
+    flex: 1,
+    paddingHorizontal: width * 0.08,
+    marginTop: height * 0.02,
+  },
   buttonContainer: {
     alignItems: "center",
     paddingHorizontal: width * 0.08,
@@ -958,6 +1106,113 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     tintColor: "#057474",
   },
+  // Review styles
+  info: {
+    width: "100%",
+    marginBottom: height * 0.02,
+  },
+  sectionTitle: {
+    fontSize: width * 0.05,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: height * 0.015,
+  },
+  infoText: {
+    fontSize: width * 0.038,
+    fontWeight: "400",
+    color: "#333",
+    marginBottom: height * 0.01,
+  },
+  divider: {
+    borderBottomColor: "#057474",
+    borderBottomWidth: 1.5,
+    marginTop: height * 0.015,
+  },
+  address: {
+    width: "100%",
+    marginBottom: height * 0.02,
+  },
+  sectionTitle1: {
+    fontSize: width * 0.05,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: height * 0.02,
+  },
+  addressText: {
+    fontSize: width * 0.038,
+    fontWeight: "400",
+    color: "#333",
+    marginBottom: height * 0.01, 
+  },
+  addressText1: {
+    fontSize: width * 0.042,
+    fontWeight: "600",
+    color: "#333",
+    paddingVertical: height * 0.002,
+    marginBottom: 6, 
+  },
+  divider1: {
+    borderBottomColor: "#057474",
+    borderBottomWidth: 1.5,
+    marginTop: height * 0.015,
+  },
+  uploadedImage: {
+    width: width * 0.6,
+    height: height * 0.25,
+    marginTop: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  imageLabel: {
+    fontSize: width * 0.038,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 10,
+  },
+  noImageText: {
+    fontSize: width * 0.035,
+    fontStyle: "italic",
+    color: "#999",
+    paddingVertical: 40,
+  },
+  checkboxContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: height * 0.03,
+    marginBottom: height * 0.02,
+  },
+  checkbox: {
+    width: width * 0.045,
+    height: width * 0.045,
+    borderWidth: 1.5,
+    borderColor: "#057474",
+    borderRadius: 2,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: width * 0.03,
+    backgroundColor: "#FFF",
+    marginTop: 5,
+  },
+  checkboxChecked: {
+    backgroundColor: "#057474",
+  },
+  checkboxRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
+  },
+  checkboxText: {
+    fontSize: width * 0.030,
+    color: "#333",
+    flexShrink: 1,
+  },
+  checkboxLink: {
+    fontSize: width * 0.030,
+    color: "#000",
+    fontWeight: "700",
+  },
   button: {
     width: "100%",
     backgroundColor: "#057474",
@@ -965,6 +1220,8 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     alignItems: "center",
     marginTop: 11,
+    flexDirection: "row",
+    justifyContent: "center",
   },
   buttonText: {
     color: "#fff",
@@ -973,6 +1230,9 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     opacity: 0.85,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   previous: {
     width: "100%",
