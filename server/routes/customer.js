@@ -4,7 +4,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import {
-  signupGuarantorsAndId,
   fetchCustomers,
   updateCustomerDetails,
   customerSignUp
@@ -49,8 +48,6 @@ router.post(
     { name: "photoId", maxCount: 1 },
     { name: "selfie", maxCount: 1 },
   ]),
-  validateGuarantors, 
-  signupGuarantorsAndId
 );
 
 router.post("/sign-up", customerSignUp);
