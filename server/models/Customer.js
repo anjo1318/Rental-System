@@ -187,38 +187,6 @@ const Customer = sequelize.define('customer', {
     type: DataTypes.TEXT, // Base64 encoded image or file path
     allowNull: true
   },
-
-  // Signup Progress Tracking
-  signupStep: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    defaultValue: 0,
-    validate: {
-      min: 0,
-      max: 4
-    }
-    // 0 = not started
-    // 1 = personal info completed
-    // 2 = address completed
-    // 3 = guarantors/id completed
-    // 4 = signup finalized
-  },
-  isSignupComplete: {
-    type: DataTypes.BOOLEAN,
-    allowNull: false,
-    defaultValue: false
-  },
-  signupCompletedAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  },
-
-  // Account Status
-  role: {
-    type: DataTypes.ENUM('pending', 'customer', 'admin'),
-    allowNull: false,
-    defaultValue: 'pending'
-  },
   isActive: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -230,11 +198,6 @@ const Customer = sequelize.define('customer', {
     defaultValue: false
   },
 
-  // Timestamps
-  lastLoginAt: {
-    type: DataTypes.DATE,
-    allowNull: true
-  }
 }, {
   tableName: 'customer',
   timestamps: true,
@@ -245,58 +208,8 @@ const Customer = sequelize.define('customer', {
     },
     {
       fields: ['phoneNumber']
-    },
-    {
-      fields: ['signupStep']
-    },
-    {
-      fields: ['isSignupComplete']
     }
   ]
 });
-
-// Instance methods
-Customer.prototype.getFullName = function() {
-  return this.middleName 
-    ? `${this.firstName} ${this.middleName} ${this.lastName}`
-    : `${this.firstName} ${this.lastName}`;
-};
-
-Customer.prototype.getFullAddress = function() {
-  const addressParts = [
-    this.houseNumber,
-    this.street,
-    this.barangay,
-    this.town,
-    this.province,
-    this.country,
-    this.zipCode
-  ].filter(Boolean);
-  
-  return addressParts.join(', ');
-};
-
-Customer.prototype.isStepComplete = function(step) {
-  return this.signupStep >= step;
-};
-
-Customer.prototype.getNextStep = function() {
-  if (this.isSignupComplete) return null;
-  return this.signupStep + 1;
-};
-
-// Class methods
-Customer.findByEmail = function(email) {
-  return this.findOne({ where: { emailAddress: email } });
-};
-
-Customer.findIncompleteSignups = function() {
-  return this.findAll({ 
-    where: { 
-      isSignupComplete: false,
-      signupStep: { [DataTypes.Op.gt]: 0 }
-    }
-  });
-};
 
 export default Customer;
