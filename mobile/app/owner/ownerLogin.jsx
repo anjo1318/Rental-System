@@ -239,7 +239,7 @@ export default function ownerLogin() {
             {/* Logo (Animated scale) */}
             <View style={styles.middle}>
               <Animated.Image
-                source={require("../../assets/images/logo2.png")}
+                source={require("../../assets/images/app_logo.png")}
                 style={[
                   styles.logo,
                   { transform: [{ scale: logoScale }] }, // scale down while moving up
