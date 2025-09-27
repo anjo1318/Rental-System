@@ -53,9 +53,7 @@ const Customer = sequelize.define('customer', {
     type: DataTypes.DATEONLY,
     allowNull: false,
     validate: {
-      isDate: true,
-      // Remove isBefore if you don’t need it:
-      // isBefore: new Date().toISOString().split("T")[0]
+      isDate: true
     }
   },
   gender: {
@@ -184,9 +182,15 @@ const Customer = sequelize.define('customer', {
     }
   },
   idPhoto: {
-    type: DataTypes.TEXT, // Base64 encoded image or file path
+    type: DataTypes.TEXT, // For file path or base64
     allowNull: true
   },
+  selfie: {
+    type: DataTypes.TEXT, // For file path or base64 - ADDED THIS
+    allowNull: true
+  },
+  
+  // Status fields
   isActive: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -200,7 +204,7 @@ const Customer = sequelize.define('customer', {
 
 }, {
   tableName: 'customer',
-  timestamps: true,
+  timestamps: true, // This adds createdAt and updatedAt
   indexes: [
     {
       unique: true,

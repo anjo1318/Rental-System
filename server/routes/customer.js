@@ -6,7 +6,8 @@ import fs from 'fs';
 import {
   fetchCustomers,
   updateCustomerDetails,
-  customerSignUp
+  customerSignUp,
+  getCustomerProgress // We need to add this to the controller
 } from "../controllers/customerController.js";
 
 const router = express.Router();
@@ -41,22 +42,49 @@ const upload = multer({
   }
 });
 
+// ✅ ADD THE MISSING ROUTE that your frontend is calling
+router.get("/sign-up/progress/:id", getCustomerProgress);
 
+// File upload route for guarantors and ID
 router.post(
   "/sign-up/guarantors-id", 
   upload.fields([
     { name: "photoId", maxCount: 1 },
     { name: "selfie", maxCount: 1 },
   ]),
+  (req, res) => {
+    try {
+      const files = req.files;
+      const response = {
+        success: true,
+        message: "Files uploaded successfully",
+        files: {
+          photoId: files.photoId ? files.photoId[0].filename : null,
+          selfie: files.selfie ? files.selfie[0].filename : null
+        }
+      };
+      
+      res.status(200).json(response);
+    } catch (error) {
+      console.error("File upload error:", error);
+      res.status(500).json({
+        success: false,
+        message: "File upload failed"
+      });
+    }
+  }
 );
 
+// Final signup route
 router.post("/sign-up", customerSignUp);
 
-
+// Get all customers
 router.get("/", fetchCustomers);
 
+// Update customer details
 router.put("/update/:id", updateCustomerDetails);
 
+// Error handling middleware for multer
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {

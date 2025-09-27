@@ -129,6 +129,70 @@ const customerSignUp = async (req, res) => {
   }
 };
 
+// ✅ ADD THIS NEW FUNCTION - This is what your frontend is calling
+const getCustomerProgress = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`📊 Fetching customer progress for ID: ${id}`);
+    
+    const customer = await Customer.findByPk(id);
+    
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found"
+      });
+    }
+
+    // Return customer data without sensitive info like password
+    const customerData = {
+      id: customer.id,
+      firstName: customer.firstName,
+      middleName: customer.middleName,
+      lastName: customer.lastName,
+      emailAddress: customer.emailAddress,
+      phoneNumber: customer.phoneNumber,
+      birthday: customer.birthday,
+      gender: customer.gender,
+      houseNumber: customer.houseNumber,
+      street: customer.street,
+      barangay: customer.barangay,
+      town: customer.town,
+      province: customer.province,
+      country: customer.country,
+      zipCode: customer.zipCode,
+      guarantor1FullName: customer.guarantor1FullName,
+      guarantor1Address: customer.guarantor1Address,
+      guarantor1MobileNumber: customer.guarantor1MobileNumber,
+      guarantor2FullName: customer.guarantor2FullName,
+      guarantor2Address: customer.guarantor2Address,
+      guarantor2MobileNumber: customer.guarantor2MobileNumber,
+      idType: customer.idType,
+      idNumber: customer.idNumber,
+      // For images, you might need to construct full URLs
+      idPhotoUrl: customer.idPhoto ? `${req.protocol}://${req.get('host')}/uploads/${customer.idPhoto}` : null,
+      selfieUrl: customer.selfie ? `${req.protocol}://${req.get('host')}/uploads/${customer.selfie}` : null,
+      isActive: customer.isActive,
+      isVerified: customer.isVerified
+    };
+
+    console.log("✅ Customer data retrieved successfully");
+
+    return res.status(200).json({
+      success: true,
+      customer: customerData
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching customer progress:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+
 const fetchCustomers = async (req, res) => {
   try{
     const response = await Customer.findAll();
@@ -152,8 +216,8 @@ const updateCustomerDetails = async (req, res) => {
       firstName: req.body.firstName,
       middleName: req.body.middleName,
       lastName: req.body.lastName,
-      email: req.body.email,
-      phone: req.body.phone,
+      emailAddress: req.body.emailAddress, // Fixed: was 'email', should be 'emailAddress'
+      phoneNumber: req.body.phoneNumber,   // Fixed: was 'phone', should be 'phoneNumber'
       birthday: req.body.birthday,
       gender: req.body.gender,
       houseNumber: req.body.houseNumber,
@@ -166,19 +230,22 @@ const updateCustomerDetails = async (req, res) => {
     });
 
     console.log("After the request", customer);
-
     console.log("Customer detail updated successfully");
 
-    return res.status(200).json({ success: true, message: "Customer details updated", updatedCustomer: customer });
+    return res.status(200).json({ 
+      success: true, 
+      message: "Customer details updated", 
+      updatedCustomer: customer 
+    });
   } catch (error) {
     console.error("Update error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-
 export { 
   fetchCustomers,
-  updateCustomerDetails ,
-  customerSignUp
+  updateCustomerDetails,
+  customerSignUp,
+  getCustomerProgress  // ✅ ADD THIS TO EXPORTS
 };
