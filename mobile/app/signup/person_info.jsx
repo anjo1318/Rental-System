@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import {
-  SafeAreaView,
-  View,
+import {View,
   Image,
   Text,
   TextInput,
@@ -15,6 +13,7 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";

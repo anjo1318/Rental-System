@@ -6,8 +6,6 @@ import {
   Text,
   Image,
   FlatList,
-  StyleSheet,
-  Dimensions,
   ActivityIndicator,
   Pressable,
   TextInput,

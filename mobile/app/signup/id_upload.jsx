@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import {SafeAreaView,View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,KeyboardAvoidingView,Platform,} from "react-native";
+import {View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,KeyboardAvoidingView,Platform,} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";   // 👈 make sure axios is imported
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";

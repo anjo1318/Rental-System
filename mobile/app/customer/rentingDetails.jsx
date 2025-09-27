@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {View,Text,StyleSheet,Dimensions,TouchableOpacity,StatusBar,Alert,
-  Image,
   TextInput,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  SafeAreaView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DateTimePicker from '@react-native-community/datetimepicker';

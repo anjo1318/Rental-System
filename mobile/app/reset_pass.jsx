@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  SafeAreaView,
-  View,
+import {View,
   Text,
   TextInput,
   Pressable,
@@ -15,6 +13,7 @@ import {
   Keyboard,
   Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";

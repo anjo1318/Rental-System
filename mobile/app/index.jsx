@@ -1,8 +1,8 @@
 import React from "react";
-import {
-  SafeAreaView,View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,Platform,
+import {View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 

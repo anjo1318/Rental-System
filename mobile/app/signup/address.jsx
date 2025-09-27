@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-import {
-  SafeAreaView,
-  View,
+import {View,
   Image,
   Text,
   TextInput,
@@ -12,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
