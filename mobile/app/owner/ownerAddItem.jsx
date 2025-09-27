@@ -143,23 +143,35 @@ export default function OwnerAddItem() {
   };
 
   // Upload images to server using your existing API structure
+  // Updated uploadImages function with better debugging
   const uploadImages = async () => {
-    if (images.length === 0) return [];
+    if (images.length === 0) {
+      console.log('No images to upload');
+      return [];
+    }
 
+    console.log(`Starting upload of ${images.length} images...`);
     setUploadingImages(true);
     const uploadedUrls = [];
 
     try {
-      for (const image of images) {
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        console.log(`Uploading image ${i + 1}/${images.length}: ${image.name}`);
+        
         const formData = new FormData();
         formData.append('image', {
           uri: image.uri,
-          type: image.type,
-          name: image.name,
+          type: image.type || 'image/jpeg',
+          name: image.name || `image_${Date.now()}_${i}.jpg`,
         });
 
-        console.log(`Uploading image: ${image.name}`);
-        console.log(`API URL: ${API_URL}/api/upload/image`);
+        console.log('FormData created for image:', {
+          uri: image.uri,
+          type: image.type,
+          name: image.name,
+          size: image.size
+        });
 
         const uploadResponse = await axios.post(
           `${API_URL}/api/upload/image`,
@@ -169,30 +181,58 @@ export default function OwnerAddItem() {
               'Content-Type': 'multipart/form-data',
               Authorization: `Bearer ${token}`,
             },
-            timeout: 30000, // 30 second timeout
+            timeout: 30000,
           }
         );
 
-        console.log('Upload response:', uploadResponse.data);
+        console.log(`Upload response for image ${i + 1}:`, uploadResponse.data);
 
-        if (uploadResponse.data.success) {
+        if (uploadResponse.data.success && uploadResponse.data.imageUrl) {
           uploadedUrls.push(uploadResponse.data.imageUrl);
+          console.log(`✅ Image ${i + 1} uploaded successfully:`, uploadResponse.data.imageUrl);
         } else {
-          throw new Error(`Upload failed: ${uploadResponse.data.error}`);
+          console.error(`❌ Image ${i + 1} upload failed:`, uploadResponse.data);
+          throw new Error(`Upload failed for image ${i + 1}: ${uploadResponse.data.error || 'Unknown error'}`);
         }
       }
+
+      console.log('All images uploaded successfully:', uploadedUrls);
+      return uploadedUrls;
+
     } catch (error) {
-      console.error('Error uploading images:', error);
-      console.error('Error details:', error.response?.data);
-      throw new Error(`Failed to upload images: ${error.response?.data?.error || error.message}`);
+      console.error('❌ Error uploading images:', error);
+      
+      if (error.response) {
+        console.error('Error response status:', error.response.status);
+        console.error('Error response data:', error.response.data);
+        console.error('Error response headers:', error.response.headers);
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+      } else {
+        console.error('Error setting up request:', error.message);
+      }
+      
+      // More specific error messages
+      let errorMessage = 'Failed to upload images';
+      if (error.response?.status === 401) {
+        errorMessage = 'Authentication failed. Please login again.';
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.error || 'Invalid image file';
+      } else if (error.response?.status === 413) {
+        errorMessage = 'Image file too large. Please use smaller images.';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'Upload timeout. Please try again with smaller images.';
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+      
+      throw new Error(errorMessage);
     } finally {
       setUploadingImages(false);
     }
-
-    return uploadedUrls;
   };
 
-  // Submit handler
+  // Updated handleAddItem function for your React Native component
   const handleAddItem = async () => {
     if (!title || !pricePerDay || !ownerId) {
       Alert.alert("Validation Error", "Title, Price per day, and Owner ID are required.");
@@ -215,36 +255,63 @@ export default function OwnerAddItem() {
       console.log('Uploaded image URLs:', uploadedImageUrls);
       
       const newItem = {
-        title,
-        description,
-        pricePerDay,
-        category,
-        location,
+        title: title.trim(),
+        description: description?.trim() || null,
+        pricePerDay: parseFloat(pricePerDay),
+        category: category?.trim() || null,
+        location: location?.trim() || null,
         quantity: parsedQuantity,
-        itemImages: uploadedImageUrls.length > 0 ? uploadedImageUrls : undefined,
-        ownerId,
+        availability: true, // Set default availability
+        itemImages: uploadedImageUrls.length > 0 ? uploadedImageUrls : [], // Send as array, empty array if no images
+        ownerId: parseInt(ownerId),
       };
 
       console.log('Creating item with data:', newItem);
 
       const response = await axios.post(`${API_URL}/api/item`, newItem, {
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
+        timeout: 30000, // 30 second timeout
       });
 
       console.log('Item creation response:', response.data);
 
-      Alert.alert("Success", "Item added successfully!");
-      router.replace("owner/ownerHome");
+      if (response.data.success) {
+        Alert.alert("Success", "Item added successfully!");
+        
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setPricePerDay("");
+        setCategory("");
+        setLocation("");
+        setQuantity("1");
+        setImages([]);
+        
+        // Navigate back to home
+        router.replace("owner/ownerHome");
+      } else {
+        throw new Error(response.data.error || 'Failed to create item');
+      }
+
     } catch (error) {
       console.error("Error creating item:", error);
       console.error("Error response:", error.response?.data);
-      Alert.alert("Error", error.response?.data?.error || error.message || "Failed to add item.");
+      
+      let errorMessage = "Failed to add item.";
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+};
 
   return (
     <KeyboardAvoidingView
