@@ -135,7 +135,12 @@ export default function Login() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor="#007F7F" />
+      <StatusBar
+        backgroundColor="#007F7F"
+        barStyle="light-content"
+        translucent={false}
+      />
+
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
