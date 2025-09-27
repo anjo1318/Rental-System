@@ -5,67 +5,72 @@ import sequelize from "../database/database.js";
 
 const customerSignUp = async (req, res) => {
   const {
-    firstName, 
-    middleName, 
-    lastName, 
-    emailAddress, 
-    phoneNumber, 
-    birthday, 
-    gender, 
-    password, 
-    houseNumber, 
-    street, 
-    barangay, 
-    town, 
+    firstName,
+    middleName,
+    lastName,
+    emailAddress,
+    phoneNumber,
+    birthday,
+    gender,
+    password,
+    houseNumber,
+    street,
+    barangay,
+    town,
     province,
-    country, 
-    zipCode, 
-    guarantor1FullName, 
+    country,
+    zipCode,
+    guarantor1FullName,
     guarantor1Address,
     guarantor1MobileNumber,
     guarantor2FullName,
     guarantor2Address,
     guarantor2MobileNumber,
     idType,
-    idNumber
+    idNumber,
   } = req.body;
 
-  // ✅ ACCESS UPLOADED FILES CORRECTLY
-  const idPhoto = req.files?.photoId?.[0]?.path || null;
-  const selfie = req.files?.selfie?.[0]?.path || null;
-
-  console.log("Incoming data for signup", req.body);
-  console.log("Uploaded files:", req.files); // Debug uploaded files
-  console.log("ID Photo path:", idPhoto);
-  console.log("Selfie path:", selfie);
-  
   try {
-    // Input validation
+    // ✅ Input validation
     if (!firstName || !lastName || !emailAddress || !phoneNumber || !birthday || !gender || !password) {
       return res.status(400).json({
-        success: false, 
-        message: "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password"
+        success: false,
+        message:
+          "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password",
       });
     }
 
-    // Check if email already exists
-    const existingCustomer = await Customer.findOne({ 
-      where: { emailAddress: emailAddress } 
+    // ✅ Check if email already exists
+    const existingCustomer = await Customer.findOne({
+      where: { emailAddress },
     });
 
     if (existingCustomer) {
       return res.status(409).json({
-        success: false, 
-        message: "Email address already exists"
+        success: false,
+        message: "Email address already exists",
       });
     }
 
-    // Hash the password correctly
+    // ✅ Handle uploaded files
+    const idPhotoFile = req.files?.photoId?.[0] || null;
+    const selfieFile = req.files?.selfie?.[0] || null;
+
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const idPhotoUrl = idPhotoFile ? `${baseUrl}/uploads/${idPhotoFile.filename}` : null;
+    const selfieUrl = selfieFile ? `${baseUrl}/uploads/${selfieFile.filename}` : null;
+
+    console.log("Incoming data for signup:", req.body);
+    console.log("Uploaded files:", req.files);
+    console.log("ID Photo URL:", idPhotoUrl);
+    console.log("Selfie URL:", selfieUrl);
+
+    // ✅ Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Create new customer
+
+    // ✅ Create new customer
     const response = await Customer.create({
-      firstName, 
+      firstName,
       middleName,
       lastName,
       emailAddress,
@@ -78,7 +83,7 @@ const customerSignUp = async (req, res) => {
       barangay,
       town,
       province,
-      country: country || 'Philippines',
+      country: country || "Philippines",
       zipCode,
       guarantor1FullName,
       guarantor1Address,
@@ -88,51 +93,57 @@ const customerSignUp = async (req, res) => {
       guarantor2MobileNumber,
       idType,
       idNumber,
-      idPhoto, // ✅ NOW USING THE CORRECT FILE PATH
-      selfie,  // ✅ ADD SELFIE FIELD (make sure this exists in your model)
+      idPhoto: idPhotoUrl, // ✅ Save public URL
+      selfie: selfieUrl,   // ✅ Save public URL
       isActive: true,
-      isVerified: false
+      isVerified: false,
     });
 
     console.log("Customer created successfully:", response.id);
 
     return res.status(201).json({
-      success: true, 
+      success: true,
       message: "Customer signup completed successfully",
-      customerId: response.id
+      customerId: response.id,
+      idPhoto: idPhotoUrl,
+      selfie: selfieUrl,
     });
-
   } catch (error) {
     console.error("Error during customer signup:", error);
-    
-    // Handle Sequelize validation errors
-    if (error.name === 'SequelizeValidationError') {
-      const validationErrors = error.errors.map(err => ({
+
+    // ✅ Handle Sequelize validation errors
+    if (error.name === "SequelizeValidationError") {
+      const validationErrors = error.errors.map((err) => ({
         field: err.path,
-        message: err.message
+        message: err.message,
       }));
-      
+
       return res.status(400).json({
-        success: false, 
+        success: false,
         message: "Validation failed",
-        errors: validationErrors
+        errors: validationErrors,
       });
     }
-    
-    // Handle unique constraint errors
-    if (error.name === 'SequelizeUniqueConstraintError') {
+
+    // ✅ Handle unique constraint errors
+    if (error.name === "SequelizeUniqueConstraintError") {
       return res.status(409).json({
-        success: false, 
-        message: "Email address already exists"
+        success: false,
+        message: "Email address already exists",
       });
     }
-    
+
     return res.status(500).json({
-      success: false, 
-      message: "Internal server error during signup"
+      success: false,
+      message: "Internal server error during signup",
     });
   }
 };
+
+
+
+
+
 
 // ✅ ADD THIS NEW FUNCTION - This is what your frontend is calling
 const getCustomerProgress = async (req, res) => {
