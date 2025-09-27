@@ -25,6 +25,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
+app.get("/debug/uploads", (req, res) => {
+  const uploadPath = path.join(process.cwd(), "server", "uploads");
+  fs.readdir(uploadPath, (err, files) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ files });
+  });
+});
+
+
+
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

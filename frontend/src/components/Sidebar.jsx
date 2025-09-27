@@ -15,7 +15,7 @@ const Sidebar = () => {
   const location = useLocation();
 
   // Hide Sidebar on login or landing page
-  const hideOnRoutes = ["/", "/"];
+  const hideOnRoutes = ["/", "/login"];
   if (hideOnRoutes.includes(location.pathname)) {
     return null;
   }
@@ -34,7 +34,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     // Example: clear token and redirect
     localStorage.removeItem("authToken");
-    window.location.href = "/";
+    window.location.href = "/login";
   };
 
   return (
