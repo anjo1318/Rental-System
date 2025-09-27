@@ -180,97 +180,113 @@ export default function PersonalInfo() {
       return null;
     }
   };
+
+
   // Handle API submission with FormData for file uploads
   const handleSubmit = async () => {
     setLoading(true);
+
     try {
       // Create FormData for file uploads
       const formData = new FormData();
-      
+
       // Add personal details (match backend field names exactly)
-      formData.append('firstName', firstName);
-      formData.append('middleName', middleName);
-      formData.append('lastName', lastName);
-      formData.append('emailAddress', email); // Backend expects 'emailAddress'
-      formData.append('phoneNumber', phoneNumber);
-      formData.append('gender', gender);
-      formData.append('password', password);
-      formData.append('birthday', date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-      
+      formData.append("firstName", firstName);
+      formData.append("middleName", middleName);
+      formData.append("lastName", lastName);
+      formData.append("emailAddress", email);
+      formData.append("phoneNumber", phoneNumber);
+      formData.append("gender", gender);
+      formData.append("password", password);
+      formData.append("birthday", date.toISOString().split("T")[0]);
+
       // Add address details
-      formData.append('houseNumber', houseBuilding); 
-      formData.append('street', street);
-      formData.append('barangay', barangay);
-      formData.append('town', town);
-      formData.append('province', province);
-      formData.append('country', country);
-      formData.append('zipCode', zipCode);
-      
+      formData.append("houseNumber", houseBuilding);
+      formData.append("street", street);
+      formData.append("barangay", barangay);
+      formData.append("town", town);
+      formData.append("province", province);
+      formData.append("country", country);
+      formData.append("zipCode", zipCode);
+
       // Add guarantor details
-      formData.append('guarantor1FullName', fullName);
-      formData.append('guarantor1Address', address);
-      formData.append('guarantor1MobileNumber', mobileNumber);
-      formData.append('guarantor2FullName', fullName1);
-      formData.append('guarantor2Address', address1);
-      formData.append('guarantor2MobileNumber', mobileNumber1);
-      
+      formData.append("guarantor1FullName", fullName);
+      formData.append("guarantor1Address", address);
+      formData.append("guarantor1MobileNumber", mobileNumber);
+      formData.append("guarantor2FullName", fullName1);
+      formData.append("guarantor2Address", address1);
+      formData.append("guarantor2MobileNumber", mobileNumber1);
+
       // Add ID details
-      formData.append('idType', idType);
-      formData.append('idNumber', idNumber);
-      
+      formData.append("idType", idType);
+      formData.append("idNumber", idNumber);
+
       // Add files
       if (photoId) {
-        formData.append('photoId', {
+        formData.append("photoId", {
           uri: photoId,
-          type: 'image/jpeg',
-          name: 'photo_id.jpg',
-        });
-      }
-      
-      if (selfie) {
-        formData.append('selfie', {
-          uri: selfie,
-          type: 'image/jpeg',
-          name: 'selfie.jpg',
+          type: "image/jpeg",
+          name: "photo_id.jpg",
         });
       }
 
-      console.log('📤 Sending signup data to:', `${API_URL}/api/customer/sign-up`);
+      if (selfie) {
+        formData.append("selfie", {
+          uri: selfie,
+          type: "image/jpeg",
+          name: "selfie.jpg",
+        });
+      }
+
+      console.log("📤 Sending signup data to:", `${API_URL}/api/customer/sign-up`);
 
       const res = await axios.post(`${API_URL}/api/customer/sign-up`, formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
         },
+        timeout: 20000, // prevent hanging requests
       });
 
-      if (res.data.success) {
-        Alert.alert("Success", "Registration completed successfully! Please wait for admin approval.", [
-          {
-            text: "OK",
-            onPress: () => router.push("/login"),
-          },
-        ]);
+      // ✅ Handle success
+      if (res.data?.success) {
+        Alert.alert(
+          "Success",
+          "Registration completed successfully! Please wait for admin approval.",
+          [
+            {
+              text: "OK",
+              onPress: () => router.push("/login"),
+            },
+          ]
+        );
       } else {
-        Alert.alert("Error", res.data.message);
+        Alert.alert("Error", res.data?.message || "Something went wrong.");
       }
     } catch (err) {
-      console.error('❌ Error during signup:', err);
-      
+      console.error("❌ Error during signup:", err);
+
       let errorMessage = "Failed to complete signup";
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.errors) {
-        // Handle validation errors
-        const errors = err.response.data.errors.map(error => error.message).join(", ");
-        errorMessage = `Validation errors: ${errors}`;
+
+      if (err.response) {
+        // Server responded with a status code outside 2xx
+        errorMessage =
+          err.response.data?.message ||
+          `Server error: ${err.response.status} ${err.response.statusText}`;
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        // Something else went wrong
+        errorMessage = err.message;
       }
-      
+
       Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handlePrevious = () => {
     if (currentStep === 4) {

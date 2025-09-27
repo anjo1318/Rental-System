@@ -84,10 +84,7 @@ const Customers = () => {
               <div className="bg-white rounded-xl shadow p-6 flex justify-between items-center w-[213%]">
                 <div className="flex items-center gap-4">
                   <img
-                    src={
-                      getImageUrl(selectedCustomer.selfie) ||
-                      "/placeholder-profile.png"
-                    }
+                    src={selectedCustomer.selfie || "/placeholder-profile.png"}
                     alt="Profile"
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                     onError={(e) => {
@@ -268,7 +265,7 @@ const Customers = () => {
                       <div className="flex-1">
                         <p className="font-medium text-gray-700 mb-2">ID Photo:</p>
                         <img
-                          src={getImageUrl(selectedCustomer.idPhoto)}
+                          src={selectedCustomer.idPhoto}
                           alt="ID Document"
                           className="w-full max-w-xs h-48 object-cover border rounded-lg"
                           onError={(e) => {
@@ -281,7 +278,7 @@ const Customers = () => {
                       <div className="flex-1">
                         <p className="font-medium text-gray-700 mb-2">Selfie:</p>
                         <img
-                          src={getImageUrl(selectedCustomer.selfie)}
+                          src={selectedCustomer.selfie}
                           alt="Customer Selfie"
                           className="w-full max-w-xs h-48 object-cover border rounded-lg"
                           onError={(e) => {
@@ -291,6 +288,7 @@ const Customers = () => {
                       </div>
                     )}
                   </div>
+
                 </div>
               </div>
             </>

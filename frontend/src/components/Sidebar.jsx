@@ -8,13 +8,14 @@ import {
   UserSquare,
   Settings,
   LogOut,
+  CheckSquare
 } from "lucide-react"; // icons
 
 const Sidebar = () => {
   const location = useLocation();
 
   // Hide Sidebar on login or landing page
-  const hideOnRoutes = ["/", "/login"];
+  const hideOnRoutes = ["/", "/"];
   if (hideOnRoutes.includes(location.pathname)) {
     return null;
   }
@@ -25,13 +26,15 @@ const Sidebar = () => {
     { path: "/owners", label: "Owners", icon: <Users size={18} /> },
     { path: "/customers", label: "Customers", icon: <UserSquare size={18} /> },
     { path: "/settings", label: "Settings", icon: <Settings size={18} /> },
+    { path: "/approvals", label: "Approvals", icon: <CheckSquare size={18} /> }, // ✅ fixed
   ];
+
 
   // 🔐 Logout handler
   const handleLogout = () => {
     // Example: clear token and redirect
     localStorage.removeItem("authToken");
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   return (

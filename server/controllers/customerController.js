@@ -141,10 +141,6 @@ const customerSignUp = async (req, res) => {
 };
 
 
-
-
-
-
 // ✅ ADD THIS NEW FUNCTION - This is what your frontend is calling
 const getCustomerProgress = async (req, res) => {
   try {
@@ -212,7 +208,7 @@ const getCustomerProgress = async (req, res) => {
 const fetchCustomers = async (req, res) => {
   try{
     const response = await Customer.findAll();
-    return res.status(200).json({success:true, message:response});
+    return res.status(200).json({success:true, data:response});
   } catch (error) {
     return res.status(500).json({success:false, message:error});
   }

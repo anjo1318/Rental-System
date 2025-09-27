@@ -5,7 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 const Navbar = () => {
   const location = useLocation();
 
-  const hideOnRoutes = ["/", "/login"];
+  const hideOnRoutes = ["/", "/"];
 
   if (hideOnRoutes.includes(location.pathname)) {
     return null;
