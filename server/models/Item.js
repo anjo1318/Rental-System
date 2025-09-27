@@ -39,10 +39,62 @@ const Item = sequelize.define("Item", {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
-    itemImage: {
-  type: DataTypes.STRING,
-  allowNull: true,
-  defaultValue: "N/A",
+
+  // Updated to handle multiple images as JSON array
+  itemImages: {
+    type: DataTypes.JSON,
+    allowNull: true,
+    defaultValue: [],
+    get() {
+      const value = this.getDataValue('itemImages');
+      // Ensure we always return an array
+      if (!value) return [];
+      return Array.isArray(value) ? value : [value];
+    },
+    set(value) {
+      // Handle both single string and array of strings
+      if (typeof value === 'string') {
+        this.setDataValue('itemImages', [value]);
+      } else if (Array.isArray(value)) {
+        this.setDataValue('itemImages', value);
+      } else {
+        this.setDataValue('itemImages', []);
+      }
+    }
+  },
+
+  // Add quantity field
+  quantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: 1,
+    validate: {
+      min: 0
+    }
+  },
+
+  // Available quantity (tracks current availability)
+  availableQuantity: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    defaultValue: function() {
+      return this.quantity || 1;
+    },
+    validate: {
+      min: 0,
+      max: function(value) {
+        if (value > this.quantity) {
+          throw new Error('Available quantity cannot exceed total quantity');
+        }
+      }
+    }
+  }
+});
+
+// Hook to set availableQuantity equal to quantity when creating new item
+Item.addHook('beforeCreate', (item) => {
+  if (item.availableQuantity === undefined || item.availableQuantity === null) {
+    item.availableQuantity = item.quantity;
   }
 });
 

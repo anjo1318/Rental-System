@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import {View,
+import {
+  View,
   Text,
   TextInput,
   Pressable,
@@ -12,6 +13,7 @@ import {View,
   Platform,
   Keyboard,
   Animated,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -28,6 +30,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hidden, setHidden] = useState(true);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
 
   // animated value for moving the whole screen up/down
   const translateY = useRef(new Animated.Value(0)).current;
@@ -129,23 +132,9 @@ export default function Login() {
       
       const errorMessage = error.response?.data?.error;
       
-      // Handle email verification error specifically
-      if (error.response?.status === 403 && errorMessage?.includes('verify your email')) {
-        Alert.alert(
-          "Email Verification Required", 
-          "Please check your email and click the verification link before logging in.",
-          [
-            { text: "OK" },
-            { 
-              text: "Resend Email", 
-              onPress: () => {
-                // You can implement a resend verification email function here
-                console.log("Resend verification email for:", email);
-                // router.push("/resend-verification"); // if you have this route
-              }
-            }
-          ]
-        );
+      // Handle email verification error specifically - show modal instead of alert
+      if (error.response?.status === 403) {
+        setShowVerificationModal(true);
       } else {
         Alert.alert("Error", errorMessage || "Something went wrong.");
       }
@@ -161,7 +150,6 @@ export default function Login() {
         barStyle="light-content"
         translucent={false}
       />
-
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -265,11 +253,39 @@ export default function Login() {
                   <Text style={styles.termsLink}>Terms</Text>
                 </Pressable>
               </View>
-              
             </View>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Verification Modal */}
+      <Modal
+        visible={showVerificationModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowVerificationModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Ionicons name="warning-outline" size={50} color="#FF6B6B" />
+            </View>
+            
+            <Text style={styles.modalTitle}>Account Not Verified</Text>
+            
+            <Text style={styles.modalMessage}>
+              Your account is not yet verified. Please wait for the approval. Thank you for your patience.
+            </Text>
+            
+            <Pressable 
+              style={styles.modalButton}
+              onPress={() => setShowVerificationModal(false)}
+            >
+              <Text style={styles.modalButtonText}>OK</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -391,7 +407,7 @@ const styles = StyleSheet.create({
     color: "#000", 
     fontWeight: "700",
   },
-    termsRow: { 
+  termsRow: { 
     flexDirection: "row", 
     justifyContent: "center", 
     marginTop: 24 
@@ -405,5 +421,58 @@ const styles = StyleSheet.create({
     color: "#000", 
     fontWeight: "700" 
   },
-});
 
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 30,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+    width: width * 0.85,
+    maxWidth: 400,
+  },
+  modalHeader: {
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: width * 0.055,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  modalMessage: {
+    fontSize: width * 0.04,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 25,
+  },
+  modalButton: {
+    backgroundColor: "#057474",
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    minWidth: 100,
+  },
+  modalButtonText: {
+    color: "white",
+    fontSize: width * 0.042,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+});

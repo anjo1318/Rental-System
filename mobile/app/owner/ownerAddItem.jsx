@@ -29,7 +29,8 @@ export default function OwnerAddItem() {
   const [pricePerDay, setPricePerDay] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
-  const [itemImage, setItemImage] = useState("");
+  const [quantity, setQuantity] = useState("1"); // New quantity field
+  const [imageUrls, setImageUrls] = useState([""]); // Array for multiple images
 
   const [loading, setLoading] = useState(false);
 
@@ -56,6 +57,30 @@ export default function OwnerAddItem() {
     loadOwner();
   }, []);
 
+  // Add new image URL input
+  const addImageInput = () => {
+    if (imageUrls.length < 5) { // Limit to 5 images max
+      setImageUrls([...imageUrls, ""]);
+    } else {
+      Alert.alert("Limit Reached", "You can add up to 5 images maximum.");
+    }
+  };
+
+  // Remove image URL input
+  const removeImageInput = (index) => {
+    if (imageUrls.length > 1) {
+      const newImageUrls = imageUrls.filter((_, i) => i !== index);
+      setImageUrls(newImageUrls);
+    }
+  };
+
+  // Update specific image URL
+  const updateImageUrl = (index, value) => {
+    const newImageUrls = [...imageUrls];
+    newImageUrls[index] = value;
+    setImageUrls(newImageUrls);
+  };
+
   // Submit handler
   const handleAddItem = async () => {
     if (!title || !pricePerDay || !ownerId) {
@@ -63,15 +88,26 @@ export default function OwnerAddItem() {
       return;
     }
 
+    // Validate quantity
+    const parsedQuantity = parseInt(quantity);
+    if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+      Alert.alert("Validation Error", "Quantity must be at least 1.");
+      return;
+    }
+
     setLoading(true);
     try {
+      // Filter out empty image URLs
+      const validImageUrls = imageUrls.filter(url => url.trim() !== "");
+      
       const newItem = {
         title,
         description,
         pricePerDay,
         category,
         location,
-        itemImage,
+        quantity: parsedQuantity,
+        itemImages: validImageUrls.length > 0 ? validImageUrls : undefined,
         ownerId,
       };
 
@@ -112,6 +148,7 @@ export default function OwnerAddItem() {
           value={title}
           onChangeText={setTitle}
         />
+        
         <TextInput
           style={[styles.input, styles.textArea]}
           placeholder="Description"
@@ -119,6 +156,7 @@ export default function OwnerAddItem() {
           onChangeText={setDescription}
           multiline
         />
+        
         <TextInput
           style={styles.input}
           placeholder="Price Per Day *"
@@ -126,24 +164,58 @@ export default function OwnerAddItem() {
           value={pricePerDay}
           onChangeText={setPricePerDay}
         />
+        
+        <TextInput
+          style={styles.input}
+          placeholder="Quantity *"
+          keyboardType="numeric"
+          value={quantity}
+          onChangeText={setQuantity}
+        />
+        
         <TextInput
           style={styles.input}
           placeholder="Category"
           value={category}
           onChangeText={setCategory}
         />
+        
         <TextInput
           style={styles.input}
           placeholder="Location"
           value={location}
           onChangeText={setLocation}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Item Image URL"
-          value={itemImage}
-          onChangeText={setItemImage}
-        />
+
+        {/* Multiple Image URLs Section */}
+        <View style={styles.imageSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Item Images</Text>
+            <Pressable onPress={addImageInput} style={styles.addButton}>
+              <Icon name="add" size={20} color="#057474" />
+              <Text style={styles.addButtonText}>Add Image</Text>
+            </Pressable>
+          </View>
+
+          {imageUrls.map((url, index) => (
+            <View key={index} style={styles.imageInputContainer}>
+              <TextInput
+                style={[styles.input, styles.imageInput]}
+                placeholder={`Image URL ${index + 1}`}
+                value={url}
+                onChangeText={(value) => updateImageUrl(index, value)}
+              />
+              {imageUrls.length > 1 && (
+                <Pressable
+                  onPress={() => removeImageInput(index)}
+                  style={styles.removeButton}
+                >
+                  <Icon name="remove" size={20} color="#FF6B6B" />
+                </Pressable>
+              )}
+            </View>
+          ))}
+        </View>
 
         <Pressable style={styles.submitButton} onPress={handleAddItem} disabled={loading}>
           {loading ? (
@@ -193,6 +265,47 @@ const styles = StyleSheet.create({
   textArea: {
     height: 80,
     textAlignVertical: "top",
+  },
+  imageSection: {
+    marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addButtonText: {
+    color: "#057474",
+    fontSize: 14,
+    marginLeft: 4,
+    fontWeight: "500",
+  },
+  imageInputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  imageInput: {
+    flex: 1,
+    marginBottom: 0,
+    marginRight: 8,
+  },
+  removeButton: {
+    padding: 8,
+    backgroundColor: "#FFE5E5",
+    borderRadius: 6,
   },
   submitButton: {
     backgroundColor: "#057474",

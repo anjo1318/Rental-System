@@ -100,9 +100,10 @@ const fetchOwnerItems = async (req, res) => {
         description, 
         pricePerDay, 
         category, 
-        location,        // ✅ include location
+        location,
         availability = true, 
-        itemImage,
+        itemImages, // Changed from itemImage to itemImages
+        quantity = 1, // Add quantity with default value
         ownerId 
       } = req.body;
 
@@ -111,6 +112,15 @@ const fetchOwnerItems = async (req, res) => {
         return res.status(400).json({
           success: false,
           error: "Title, price per day, and owner ID are required"
+        });
+      }
+
+      // Validate quantity
+      const parsedQuantity = parseInt(quantity);
+      if (isNaN(parsedQuantity) || parsedQuantity < 0) {
+        return res.status(400).json({
+          success: false,
+          error: "Quantity must be a valid non-negative number"
         });
       }
 
@@ -123,14 +133,33 @@ const fetchOwnerItems = async (req, res) => {
         });
       }
 
+      // Process images - handle both single image and multiple images
+      let processedImages = [];
+      if (itemImages) {
+        if (typeof itemImages === 'string') {
+          // Single image URL
+          processedImages = [itemImages];
+        } else if (Array.isArray(itemImages)) {
+          // Multiple image URLs - filter out empty strings
+          processedImages = itemImages.filter(img => img && typeof img === 'string' && img.trim() !== '');
+        }
+      }
+      
+      // Add default placeholder if no images provided
+      if (processedImages.length === 0) {
+        processedImages = ["https://via.placeholder.com/150"];
+      }
+
       const newItem = await Item.create({
         title,
         description,
         pricePerDay: parseFloat(pricePerDay),
         category,
-        location,                        // ✅ save location
+        location,
         availability,
-        itemImage: itemImage || "https://via.placeholder.com/150",
+        itemImages: processedImages, // Store as array
+        quantity: parsedQuantity,
+        availableQuantity: parsedQuantity, // Initially all items are available
         ownerId
       });
 
@@ -151,13 +180,13 @@ const fetchOwnerItems = async (req, res) => {
         message: "Item created successfully"
       });
     } catch (error) {
+      console.error('Create item error:', error);
       return res.status(500).json({
         success: false,
         error: error.message
       });
     }
   };
-
 
 // UPDATE - Update existing item
 const updateItem = async (req, res) => {
