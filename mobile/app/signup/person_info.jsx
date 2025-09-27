@@ -180,63 +180,66 @@ export default function PersonalInfo() {
       return null;
     }
   };
-
-  // Handle API submission with JSON data (compatible with your current backend)
+  // Handle API submission with FormData for file uploads
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Convert images to base64 if they exist
-      let photoIdBase64 = null;
-      let selfieBase64 = null;
+      // Create FormData for file uploads
+      const formData = new FormData();
       
+      // Add personal details (match backend field names exactly)
+      formData.append('firstName', firstName);
+      formData.append('middleName', middleName);
+      formData.append('lastName', lastName);
+      formData.append('emailAddress', email); // Backend expects 'emailAddress'
+      formData.append('phoneNumber', phoneNumber);
+      formData.append('gender', gender);
+      formData.append('password', password);
+      formData.append('birthday', date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
+      
+      // Add address details
+      formData.append('houseNumber', houseBuilding); 
+      formData.append('street', street);
+      formData.append('barangay', barangay);
+      formData.append('town', town);
+      formData.append('province', province);
+      formData.append('country', country);
+      formData.append('zipCode', zipCode);
+      
+      // Add guarantor details
+      formData.append('guarantor1FullName', fullName);
+      formData.append('guarantor1Address', address);
+      formData.append('guarantor1MobileNumber', mobileNumber);
+      formData.append('guarantor2FullName', fullName1);
+      formData.append('guarantor2Address', address1);
+      formData.append('guarantor2MobileNumber', mobileNumber1);
+      
+      // Add ID details
+      formData.append('idType', idType);
+      formData.append('idNumber', idNumber);
+      
+      // Add files
       if (photoId) {
-        photoIdBase64 = await uriToBase64(photoId);
+        formData.append('photoId', {
+          uri: photoId,
+          type: 'image/jpeg',
+          name: 'photo_id.jpg',
+        });
       }
       
       if (selfie) {
-        selfieBase64 = await uriToBase64(selfie);
+        formData.append('selfie', {
+          uri: selfie,
+          type: 'image/jpeg',
+          name: 'selfie.jpg',
+        });
       }
-
-      // Create regular JSON object (not FormData)
-      const signUpData = {
-        // Personal details (match backend field names exactly)
-        firstName,
-        middleName,
-        lastName,
-        emailAddress: email, // Backend expects 'emailAddress', not 'email'
-        phoneNumber,
-        gender,
-        password,
-        birthday: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-        
-        // Address details (match backend field names)
-        houseNumber: houseBuilding, // Backend expects 'houseNumber'
-        street,
-        barangay,
-        town,
-        province,
-        country,
-        zipCode,
-        
-        // Guarantor details (match backend field names exactly)
-        guarantor1FullName: fullName,
-        guarantor1Address: address,
-        guarantor1MobileNumber: mobileNumber, // Backend expects 'MobileNumber'
-        guarantor2FullName: fullName1,
-        guarantor2Address: address1,
-        guarantor2MobileNumber: mobileNumber1, // Backend expects 'MobileNumber'
-        
-        // ID details
-        idType,
-        idNumber,
-        idPhoto: photoIdBase64 // Send as base64 string to match backend expectation
-      };
 
       console.log('📤 Sending signup data to:', `${API_URL}/api/customer/sign-up`);
 
-      const res = await axios.post(`${API_URL}/api/customer/sign-up`, signUpData, {
+      const res = await axios.post(`${API_URL}/api/customer/sign-up`, formData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
       });
 

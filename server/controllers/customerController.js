@@ -3,8 +3,6 @@ import bcrypt from "bcryptjs";
 import { validationResult } from 'express-validator';
 import sequelize from "../database/database.js";
 
-
-
 const customerSignUp = async (req, res) => {
   const {
     firstName, 
@@ -29,11 +27,17 @@ const customerSignUp = async (req, res) => {
     guarantor2Address,
     guarantor2MobileNumber,
     idType,
-    idNumber,
-    idPhoto
+    idNumber
   } = req.body;
 
+  // ✅ ACCESS UPLOADED FILES CORRECTLY
+  const idPhoto = req.files?.photoId?.[0]?.path || null;
+  const selfie = req.files?.selfie?.[0]?.path || null;
+
   console.log("Incoming data for signup", req.body);
+  console.log("Uploaded files:", req.files); // Debug uploaded files
+  console.log("ID Photo path:", idPhoto);
+  console.log("Selfie path:", selfie);
   
   try {
     // Input validation
@@ -74,7 +78,7 @@ const customerSignUp = async (req, res) => {
       barangay,
       town,
       province,
-      country: country || 'Philippines', // Default value
+      country: country || 'Philippines',
       zipCode,
       guarantor1FullName,
       guarantor1Address,
@@ -84,14 +88,14 @@ const customerSignUp = async (req, res) => {
       guarantor2MobileNumber,
       idType,
       idNumber,
-      idPhoto,
+      idPhoto, // ✅ NOW USING THE CORRECT FILE PATH
+      selfie,  // ✅ ADD SELFIE FIELD (make sure this exists in your model)
       isActive: true,
       isVerified: false
     });
 
-    console.log("✅ Customer created successfully:", response.id);
+    console.log("Customer created successfully:", response.id);
 
-    // Return success response (don't send sensitive data like password)
     return res.status(201).json({
       success: true, 
       message: "Customer signup completed successfully",
@@ -99,7 +103,7 @@ const customerSignUp = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Error during customer signup:", error);
+    console.error("Error during customer signup:", error);
     
     // Handle Sequelize validation errors
     if (error.name === 'SequelizeValidationError') {
@@ -123,7 +127,6 @@ const customerSignUp = async (req, res) => {
       });
     }
     
-    // Generic error response
     return res.status(500).json({
       success: false, 
       message: "Internal server error during signup"
