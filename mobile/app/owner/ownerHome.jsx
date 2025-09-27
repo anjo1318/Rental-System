@@ -87,7 +87,7 @@ export default function ownerHome() {
         return;
       }
 
-      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/owner/items?ownerId=${userId}`;
+      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/owner/owner/items?ownerId=${userId}`;
       console.log('🔍 Fetching from URL:', apiUrl);
       console.log('🔍 Using token:', token.substring(0, 20) + '...');
       
