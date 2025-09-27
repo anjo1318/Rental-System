@@ -46,9 +46,6 @@ const verify = (req, res) => {
   return res.status(200).json({ success: true, admin: req.admin });
 };
 
-
-
-
 const mobileUserLogin = async (req, res) => {
   console.log("Trying to login using mobileUserLogin");
   try {
@@ -61,6 +58,15 @@ const mobileUserLogin = async (req, res) => {
 
     if (!customer) {
       return res.status(404).json({ success: false, error: 'Customer not found' });
+    }
+
+    // 🔹 CHECK EMAIL VERIFICATION STATUS - PREVENT UNVERIFIED USERS FROM LOGGING IN
+    if (!customer.isVerified) {
+      console.log(`Login blocked for unverified user: ${customer.emailAddress}`);
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Please verify your email address before logging in. Check your inbox for the verification link.' 
+      });
     }
 
     // 🔹 Compare passwords
@@ -93,8 +99,8 @@ const mobileUserLogin = async (req, res) => {
         birthday: customer.birthday,
         gender: customer.gender,
         houseNumber: customer.houseNumber,
-        street:customer.street,
-        barangay:customer.barangay,
+        street: customer.street,
+        barangay: customer.barangay,
         town: customer.town,
         province: customer.province,
         country: customer.country,
@@ -102,7 +108,6 @@ const mobileUserLogin = async (req, res) => {
         role: 'customer'
       },
     });
-
 
   } catch (error) {
     console.error('Login Error:', error);

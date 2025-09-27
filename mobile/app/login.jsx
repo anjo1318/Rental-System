@@ -111,7 +111,6 @@ export default function Login() {
           country: user.country,
           zipCode: user.zipCode,
           role: user.role,
-          town: user.town,
         };
 
         console.log("after login", userData);
@@ -127,7 +126,29 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login error:", error);
-      Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
+      
+      const errorMessage = error.response?.data?.error;
+      
+      // Handle email verification error specifically
+      if (error.response?.status === 403 && errorMessage?.includes('verify your email')) {
+        Alert.alert(
+          "Email Verification Required", 
+          "Please check your email and click the verification link before logging in.",
+          [
+            { text: "OK" },
+            { 
+              text: "Resend Email", 
+              onPress: () => {
+                // You can implement a resend verification email function here
+                console.log("Resend verification email for:", email);
+                // router.push("/resend-verification"); // if you have this route
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("Error", errorMessage || "Something went wrong.");
+      }
     } finally {
       setLoading(false);
     }
