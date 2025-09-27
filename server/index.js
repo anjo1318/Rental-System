@@ -41,7 +41,7 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Serve static files with absolute path
-app.use("/uploads", express.static(path.join(process.cwd(), "server/uploads")));
+app.use("/uploads", express.static(path.join(process.cwd(), "server", "uploads")));
 
 
 // Debug route to check what files exist

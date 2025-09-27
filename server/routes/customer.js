@@ -12,34 +12,23 @@ import {
 
 const router = express.Router();
 
-const uploadDir = path.join(process.cwd(), "uploads");
+const uploadDir = path.join(process.cwd(), "server", "uploads");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // ✅ use absolute path
+    cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
     cb(null, `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`);
   },
 });
 
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
-      cb(null, true);
-    } else {
-      cb(new Error("Only image files are allowed!"), false);
-    }
-  },
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
-  },
-});
+const upload = multer({ storage });
+
 
 
 // ✅ ADD THE MISSING ROUTE that your frontend is calling
