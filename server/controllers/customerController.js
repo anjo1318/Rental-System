@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { validationResult } from 'express-validator';
 import sequelize from "../database/database.js";
 
+
+
 const customerSignUp = async (req, res) => {
   const {
     firstName, 

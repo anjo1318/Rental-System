@@ -91,7 +91,7 @@ export default function Review() {
       const response = await axios.post(`${API_URL}/api/customer/sign-up`, signUpData);
 
       if (response.data.success) {
-        Alert.alert("Success", "Signup completed successfully!", [
+        Alert.alert("Success", "Signup completed, please wait for the approval of the admins", [
           {
             text: "OK",
             onPress: () => router.push("/home")

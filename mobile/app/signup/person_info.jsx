@@ -164,80 +164,106 @@ export default function PersonalInfo() {
     }
   };
 
-  // Handle API submission with FormData for file uploads
+  // Helper function to convert image URI to base64
+  const uriToBase64 = async (uri) => {
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return null;
+    }
+  };
+
+  // Handle API submission with JSON data (compatible with your current backend)
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Create FormData for file uploads
-      const formData = new FormData();
+      // Convert images to base64 if they exist
+      let photoIdBase64 = null;
+      let selfieBase64 = null;
       
-      // Add personal details
-      formData.append('firstName', firstName);
-      formData.append('middleName', middleName);
-      formData.append('lastName', lastName);
-      formData.append('email', email);
-      formData.append('phoneNumber', phoneNumber);
-      formData.append('gender', gender);
-      formData.append('password', password);
-      formData.append('birthDate', date.toISOString());
-      
-      // Add address details
-      formData.append('houseNumber', houseBuilding);
-      formData.append('street', street);
-      formData.append('barangay', barangay);
-      formData.append('town', town);
-      formData.append('province', province);
-      formData.append('country', country);
-      formData.append('zipCode', zipCode);
-      
-      // Add guarantor details
-      formData.append('guarantor1FullName', fullName);
-      formData.append('guarantor1Address', address);
-      formData.append('guarantor1Mobile', mobileNumber);
-      formData.append('guarantor2FullName', fullName1);
-      formData.append('guarantor2Address', address1);
-      formData.append('guarantor2Mobile', mobileNumber1);
-      
-      // Add ID details
-      formData.append('idType', idType);
-      formData.append('idNumber', idNumber);
-      
-      // Add files
       if (photoId) {
-        formData.append('photoId', {
-          uri: photoId,
-          type: 'image/jpeg',
-          name: 'photo_id.jpg',
-        });
+        photoIdBase64 = await uriToBase64(photoId);
       }
       
       if (selfie) {
-        formData.append('selfie', {
-          uri: selfie,
-          type: 'image/jpeg',
-          name: 'selfie.jpg',
-        });
+        selfieBase64 = await uriToBase64(selfie);
       }
 
-      const res = await axios.post(`${API_URL}/api/customer/sign-up-complete`, formData, {
+      // Create regular JSON object (not FormData)
+      const signUpData = {
+        // Personal details (match backend field names exactly)
+        firstName,
+        middleName,
+        lastName,
+        emailAddress: email, // Backend expects 'emailAddress', not 'email'
+        phoneNumber,
+        gender,
+        password,
+        birthday: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        
+        // Address details (match backend field names)
+        houseNumber: houseBuilding, // Backend expects 'houseNumber'
+        street,
+        barangay,
+        town,
+        province,
+        country,
+        zipCode,
+        
+        // Guarantor details (match backend field names exactly)
+        guarantor1FullName: fullName,
+        guarantor1Address: address,
+        guarantor1MobileNumber: mobileNumber, // Backend expects 'MobileNumber'
+        guarantor2FullName: fullName1,
+        guarantor2Address: address1,
+        guarantor2MobileNumber: mobileNumber1, // Backend expects 'MobileNumber'
+        
+        // ID details
+        idType,
+        idNumber,
+        idPhoto: photoIdBase64 // Send as base64 string to match backend expectation
+      };
+
+      console.log('📤 Sending signup data to:', `${API_URL}/api/customer/sign-up`);
+
+      const res = await axios.post(`${API_URL}/api/customer/sign-up`, signUpData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'Content-Type': 'application/json',
         },
       });
 
       if (res.data.success) {
-        Alert.alert("Success", "Registration completed successfully!", [
+        Alert.alert("Success", "Registration completed successfully! Please wait for admin approval.", [
           {
             text: "OK",
-            onPress: () => router.push("/login"), // Navigate to login or success page
+            onPress: () => router.push("/login"),
           },
         ]);
       } else {
         Alert.alert("Error", res.data.message);
       }
     } catch (err) {
-      console.error(err);
-      Alert.alert("Error", err.response?.data?.message || "Server error occurred");
+      console.error('❌ Error during signup:', err);
+      
+      let errorMessage = "Failed to complete signup";
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.errors) {
+        // Handle validation errors
+        const errors = err.response.data.errors.map(error => error.message).join(", ");
+        errorMessage = `Validation errors: ${errors}`;
+      }
+      
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }

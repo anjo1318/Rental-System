@@ -75,8 +75,11 @@ router.post(
   }
 );
 
-// Final signup route
-router.post("/sign-up", customerSignUp);
+// ✅ UPDATED: Final signup route with file upload support
+router.post("/sign-up", upload.fields([
+  { name: "photoId", maxCount: 1 },
+  { name: "selfie", maxCount: 1 }
+]), customerSignUp);
 
 // Get all customers
 router.get("/", fetchCustomers);
