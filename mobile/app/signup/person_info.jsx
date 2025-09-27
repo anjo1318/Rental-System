@@ -180,97 +180,91 @@ export default function PersonalInfo() {
       return null;
     }
   };
+
+
   // Handle API submission with FormData for file uploads
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      // Create FormData for file uploads
       const formData = new FormData();
-      
-      // Add personal details (match backend field names exactly)
-      formData.append('firstName', firstName);
-      formData.append('middleName', middleName);
-      formData.append('lastName', lastName);
-      formData.append('emailAddress', email); // Backend expects 'emailAddress'
-      formData.append('phoneNumber', phoneNumber);
-      formData.append('gender', gender);
-      formData.append('password', password);
-      formData.append('birthday', date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-      
-      // Add address details
-      formData.append('houseNumber', houseBuilding); 
-      formData.append('street', street);
-      formData.append('barangay', barangay);
-      formData.append('town', town);
-      formData.append('province', province);
-      formData.append('country', country);
-      formData.append('zipCode', zipCode);
-      
-      // Add guarantor details
-      formData.append('guarantor1FullName', fullName);
-      formData.append('guarantor1Address', address);
-      formData.append('guarantor1MobileNumber', mobileNumber);
-      formData.append('guarantor2FullName', fullName1);
-      formData.append('guarantor2Address', address1);
-      formData.append('guarantor2MobileNumber', mobileNumber1);
-      
-      // Add ID details
-      formData.append('idType', idType);
-      formData.append('idNumber', idNumber);
-      
-      // Add files
+
+      // Personal details
+      formData.append("firstName", firstName);
+      formData.append("middleName", middleName);
+      formData.append("lastName", lastName);
+      formData.append("emailAddress", email);
+      formData.append("phoneNumber", phoneNumber);
+      formData.append("gender", gender);
+      formData.append("password", password);
+      formData.append("birthday", date.toISOString().split("T")[0]);
+
+      // Address
+      formData.append("houseNumber", houseBuilding);
+      formData.append("street", street);
+      formData.append("barangay", barangay);
+      formData.append("town", town);
+      formData.append("province", province);
+      formData.append("country", country);
+      formData.append("zipCode", zipCode);
+
+      // Guarantors
+      formData.append("guarantor1FullName", fullName);
+      formData.append("guarantor1Address", address);
+      formData.append("guarantor1MobileNumber", mobileNumber);
+      formData.append("guarantor2FullName", fullName1);
+      formData.append("guarantor2Address", address1);
+      formData.append("guarantor2MobileNumber", mobileNumber1);
+
+      // ID details
+      formData.append("idType", idType);
+      formData.append("idNumber", idNumber);
+
+      // 📸 Attach files
       if (photoId) {
-        formData.append('photoId', {
-          uri: photoId,
-          type: 'image/jpeg',
-          name: 'photo_id.jpg',
+        formData.append("photoId", {
+          uri: photoId,              // e.g. "file:///..."
+          type: "image/jpeg",        // adjust if png
+          name: "photo_id.jpg",
         });
       }
-      
+
       if (selfie) {
-        formData.append('selfie', {
+        formData.append("selfie", {
           uri: selfie,
-          type: 'image/jpeg',
-          name: 'selfie.jpg',
+          type: "image/jpeg",
+          name: "selfie.jpg",
         });
       }
 
-      console.log('📤 Sending signup data to:', `${API_URL}/api/customer/sign-up`);
+      console.log("📤 Uploading to:", `${API_URL}/api/customer/sign-up`);
 
-      const res = await axios.post(`${API_URL}/api/customer/sign-up`, formData, {
+      const response = await fetch(`${API_URL}/api/customer/sign-up`, {
+        method: "POST",
+        body: formData,
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
         },
       });
 
-      if (res.data.success) {
-        Alert.alert("Success", "Registration completed successfully! Please wait for admin approval.", [
-          {
-            text: "OK",
-            onPress: () => router.push("/login"),
-          },
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        Alert.alert("✅ Success", "Registration completed successfully! Please wait for admin approval.", [
+          { text: "OK", onPress: () => router.push("/login") },
         ]);
       } else {
-        Alert.alert("Error", res.data.message);
+        Alert.alert("❌ Error", data.message || "Something went wrong");
       }
     } catch (err) {
-      console.error('❌ Error during signup:', err);
-      
-      let errorMessage = "Failed to complete signup";
-      
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.errors) {
-        // Handle validation errors
-        const errors = err.response.data.errors.map(error => error.message).join(", ");
-        errorMessage = `Validation errors: ${errors}`;
-      }
-      
-      Alert.alert("Error", errorMessage);
+      console.error("❌ Upload error:", err);
+      Alert.alert("Error", "Failed to complete signup");
     } finally {
       setLoading(false);
     }
   };
+
+
 
   const handlePrevious = () => {
     if (currentStep === 4) {

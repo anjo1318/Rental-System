@@ -31,8 +31,13 @@ const customerSignUp = async (req, res) => {
   } = req.body;
 
   try {
+    console.log("📩 Incoming request to /customer/signup");
+    console.log("📌 Request body:", req.body);
+    console.log("📂 Request files:", req.files);
+
     // ✅ Input validation
     if (!firstName || !lastName || !emailAddress || !phoneNumber || !birthday || !gender || !password) {
+      console.warn("⚠️ Missing required fields");
       return res.status(400).json({
         success: false,
         message:
@@ -41,11 +46,11 @@ const customerSignUp = async (req, res) => {
     }
 
     // ✅ Check if email already exists
-    const existingCustomer = await Customer.findOne({
-      where: { emailAddress },
-    });
+    console.log(`🔍 Checking if email exists: ${emailAddress}`);
+    const existingCustomer = await Customer.findOne({ where: { emailAddress } });
 
     if (existingCustomer) {
+      console.warn("⚠️ Email already exists:", emailAddress);
       return res.status(409).json({
         success: false,
         message: "Email address already exists",
@@ -56,19 +61,23 @@ const customerSignUp = async (req, res) => {
     const idPhotoFile = req.files?.photoId?.[0] || null;
     const selfieFile = req.files?.selfie?.[0] || null;
 
+    console.log("📸 ID Photo file object:", idPhotoFile);
+    console.log("🤳 Selfie file object:", selfieFile);
+
     const baseUrl = `${req.protocol}://${req.get("host")}`;
     const idPhotoUrl = idPhotoFile ? `${baseUrl}/uploads/${idPhotoFile.filename}` : null;
     const selfieUrl = selfieFile ? `${baseUrl}/uploads/${selfieFile.filename}` : null;
 
-    console.log("Incoming data for signup:", req.body);
-    console.log("Uploaded files:", req.files);
-    console.log("ID Photo URL:", idPhotoUrl);
-    console.log("Selfie URL:", selfieUrl);
+    console.log("✅ Generated ID Photo URL:", idPhotoUrl);
+    console.log("✅ Generated Selfie URL:", selfieUrl);
 
     // ✅ Hash password
+    console.log("🔐 Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("✅ Password hashed successfully");
 
     // ✅ Create new customer
+    console.log("🛠️ Creating customer in DB...");
     const response = await Customer.create({
       firstName,
       middleName,
@@ -93,13 +102,13 @@ const customerSignUp = async (req, res) => {
       guarantor2MobileNumber,
       idType,
       idNumber,
-      idPhoto: idPhotoUrl, // ✅ Save public URL
-      selfie: selfieUrl,   // ✅ Save public URL
+      idPhoto: idPhotoUrl,
+      selfie: selfieUrl,
       isActive: true,
       isVerified: false,
     });
 
-    console.log("Customer created successfully:", response.id);
+    console.log("✅ Customer created successfully with ID:", response.id);
 
     return res.status(201).json({
       success: true,
@@ -109,10 +118,11 @@ const customerSignUp = async (req, res) => {
       selfie: selfieUrl,
     });
   } catch (error) {
-    console.error("Error during customer signup:", error);
+    console.error("❌ Error during customer signup:", error);
 
     // ✅ Handle Sequelize validation errors
     if (error.name === "SequelizeValidationError") {
+      console.warn("⚠️ Validation error:", error.errors);
       const validationErrors = error.errors.map((err) => ({
         field: err.path,
         message: err.message,
@@ -127,6 +137,7 @@ const customerSignUp = async (req, res) => {
 
     // ✅ Handle unique constraint errors
     if (error.name === "SequelizeUniqueConstraintError") {
+      console.warn("⚠️ Unique constraint error on email:", emailAddress);
       return res.status(409).json({
         success: false,
         message: "Email address already exists",
@@ -139,9 +150,6 @@ const customerSignUp = async (req, res) => {
     });
   }
 };
-
-
-
 
 
 
@@ -212,7 +220,7 @@ const getCustomerProgress = async (req, res) => {
 const fetchCustomers = async (req, res) => {
   try{
     const response = await Customer.findAll();
-    return res.status(200).json({success:true, message:response});
+    return res.status(200).json({success:true, data:response});
   } catch (error) {
     return res.status(500).json({success:false, message:error});
   }
