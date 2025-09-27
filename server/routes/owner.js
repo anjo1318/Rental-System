@@ -13,7 +13,7 @@ const router = express.Router();
 
 // Public routes
 router.get('/all', fetchOwners); // Get all owners
-router.get('/items', fetchOwnerItems); // Get items for specific owner (query param)
+router.get('/items/:ownerId', fetchOwnerItems);
 
 // Protected routes (require authentication)
 router.get('/owner/items', authenticateToken, getOwnerItems); // Get authenticated owner's items

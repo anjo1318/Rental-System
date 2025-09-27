@@ -12,15 +12,18 @@ import { authenticateToken } from '../controllers/ownerController.js';
 const router = express.Router();
 
 // Public routes
-router.get('/', fetchItems); // GET /api/items - get all items
-router.get('/:id', fetchItemById); // GET /api/items/:id - get single item
+router.get('/', fetchItems);
 
-// Protected routes (require authentication)
-router.post('/', authenticateToken, createItem); // POST /api/items - create new item
-router.put('/:id', authenticateToken, updateItem); // PUT /api/items/:id - update item
-router.delete('/:id', deleteItem); // DELETE /api/items/:id - delete item
+// Owner-specific routes FIRST
+router.get('/owner/:ownerId', authenticateToken, fetchOwnerItems);
 
-// Owner-specific routes
-router.get('/owner/:ownerId', authenticateToken, fetchOwnerItems); // GET /api/items/owner/:ownerId - get items by owner
+// Then parameterized route
+router.get('/:id', fetchItemById);
+
+// Protected routes
+router.post('/', authenticateToken, createItem);
+router.put('/:id', authenticateToken, updateItem);
+router.delete('/:id', deleteItem);
+
 
 export default router;
