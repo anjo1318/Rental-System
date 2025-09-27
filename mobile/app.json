@@ -12,11 +12,6 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/logo2.png",
-        "backgroundColor": "#ffffff"
-      },
-      "edgeToEdgeEnabled": true,
       "package": "com.anthony08.mobile"
     },
     "web": {
@@ -29,10 +24,11 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/logo .png",
+          "image": "./assets/images/loading_logo.png",
           "imageWidth": 200,
+          "imageHeight": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#057474"
         }
       ]
     ],

@@ -73,7 +73,7 @@ export default function Messages() {
           <View style={styles.box}>
             <View style={styles.row}>
               <Image
-                source={require("../../assets/images/success.png")} // ✅ put your .png file here
+                source={require("../../assets/images/success.png")} 
                 style={styles.imagePlaceholder}
                 resizeMode="contain"
               />
