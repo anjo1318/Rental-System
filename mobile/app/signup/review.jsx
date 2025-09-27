@@ -48,7 +48,7 @@ export default function Review() {
     fetchCustomer();
   }, []);
 
-  // ✅ ADD THIS - Function to finalize signup
+
   const handleFinalize = async () => {
     if (!isChecked) {
       Alert.alert("Error", "Please accept the terms and conditions");
@@ -56,8 +56,39 @@ export default function Review() {
     }
 
     setFinalizing(true);
+    
     try {
-      const response = await axios.post(`${API_URL}/api/customer/sign-up`,signUpData);
+      // Prepare the signup data from the customer object
+      const signUpData = {
+        firstName: customer.firstName,
+        middleName: customer.middleName,
+        lastName: customer.lastName,
+        emailAddress: customer.emailAddress,
+        phoneNumber: customer.phoneNumber,
+        birthday: customer.birthday,
+        gender: customer.gender,
+        password: customer.password, // Make sure this is stored securely during the signup process
+        houseNumber: customer.houseNumber,
+        street: customer.street,
+        barangay: customer.barangay,
+        town: customer.town,
+        province: customer.province,
+        country: customer.country,
+        zipCode: customer.zipCode,
+        guarantor1FullName: customer.guarantor1FullName,
+        guarantor1Address: customer.guarantor1Address,
+        guarantor1MobileNumber: customer.guarantor1MobileNumber,
+        guarantor2FullName: customer.guarantor2FullName,
+        guarantor2Address: customer.guarantor2Address,
+        guarantor2MobileNumber: customer.guarantor2MobileNumber,
+        idType: customer.idType,
+        idNumber: customer.idNumber,
+        idPhoto: customer.idPhoto // This should be base64 encoded or file path
+      };
+
+      console.log("📤 Sending signup data:", signUpData);
+
+      const response = await axios.post(`${API_URL}/api/customer/sign-up`, signUpData);
 
       if (response.data.success) {
         Alert.alert("Success", "Signup completed successfully!", [
@@ -69,7 +100,18 @@ export default function Review() {
       }
     } catch (error) {
       console.error("❌ Error finalizing signup:", error);
-      Alert.alert("Error", error.response?.data?.message || "Failed to complete signup");
+      
+      let errorMessage = "Failed to complete signup";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors
+        const errors = error.response.data.errors.map(err => err.message).join(", ");
+        errorMessage = `Validation errors: ${errors}`;
+      }
+      
+      Alert.alert("Error", errorMessage);
     } finally {
       setFinalizing(false);
     }

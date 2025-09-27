@@ -3,9 +3,7 @@ import bcrypt from "bcryptjs";
 import { validationResult } from 'express-validator';
 import sequelize from "../database/database.js";
 
-
 const customerSignUp = async (req, res) => {
-
   const {
     firstName, 
     middleName, 
@@ -34,8 +32,32 @@ const customerSignUp = async (req, res) => {
   } = req.body;
 
   console.log("Incoming data for signup", req.body);
-  try{
-    const hashedPassword = await password.bcrypt.hash(10, password);
+  
+  try {
+    // Input validation
+    if (!firstName || !lastName || !emailAddress || !phoneNumber || !birthday || !gender || !password) {
+      return res.status(400).json({
+        success: false, 
+        message: "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password"
+      });
+    }
+
+    // Check if email already exists
+    const existingCustomer = await Customer.findOne({ 
+      where: { emailAddress: emailAddress } 
+    });
+
+    if (existingCustomer) {
+      return res.status(409).json({
+        success: false, 
+        message: "Email address already exists"
+      });
+    }
+
+    // Hash the password correctly
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create new customer
     const response = await Customer.create({
       firstName, 
       middleName,
@@ -44,13 +66,13 @@ const customerSignUp = async (req, res) => {
       phoneNumber,
       birthday,
       gender,
-      password:hashedPassword,
+      password: hashedPassword,
       houseNumber,
       street,
       barangay,
       town,
       province,
-      country,
+      country: country || 'Philippines', // Default value
       zipCode,
       guarantor1FullName,
       guarantor1Address,
@@ -60,17 +82,52 @@ const customerSignUp = async (req, res) => {
       guarantor2MobileNumber,
       idType,
       idNumber,
-      idPhoto
+      idPhoto,
+      isActive: true,
+      isVerified: false
     });
 
-    console.log(response);
+    console.log("✅ Customer created successfully:", response.id);
 
-    return res.status(200).json({success:true, message:"Success signing up"});
-  } catch (error){
-    return res.status(500).json({success:false, message: error.message});
+    // Return success response (don't send sensitive data like password)
+    return res.status(201).json({
+      success: true, 
+      message: "Customer signup completed successfully",
+      customerId: response.id
+    });
+
+  } catch (error) {
+    console.error("❌ Error during customer signup:", error);
+    
+    // Handle Sequelize validation errors
+    if (error.name === 'SequelizeValidationError') {
+      const validationErrors = error.errors.map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      
+      return res.status(400).json({
+        success: false, 
+        message: "Validation failed",
+        errors: validationErrors
+      });
+    }
+    
+    // Handle unique constraint errors
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
+        success: false, 
+        message: "Email address already exists"
+      });
+    }
+    
+    // Generic error response
+    return res.status(500).json({
+      success: false, 
+      message: "Internal server error during signup"
+    });
   }
-}
-
+};
 
 const fetchCustomers = async (req, res) => {
   try{
