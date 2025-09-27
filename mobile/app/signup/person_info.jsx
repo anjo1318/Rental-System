@@ -185,12 +185,10 @@ export default function PersonalInfo() {
   // Handle API submission with FormData for file uploads
   const handleSubmit = async () => {
     setLoading(true);
-
     try {
-      // Create FormData for file uploads
       const formData = new FormData();
 
-      // Add personal details (match backend field names exactly)
+      // Personal details
       formData.append("firstName", firstName);
       formData.append("middleName", middleName);
       formData.append("lastName", lastName);
@@ -200,7 +198,7 @@ export default function PersonalInfo() {
       formData.append("password", password);
       formData.append("birthday", date.toISOString().split("T")[0]);
 
-      // Add address details
+      // Address
       formData.append("houseNumber", houseBuilding);
       formData.append("street", street);
       formData.append("barangay", barangay);
@@ -209,7 +207,7 @@ export default function PersonalInfo() {
       formData.append("country", country);
       formData.append("zipCode", zipCode);
 
-      // Add guarantor details
+      // Guarantors
       formData.append("guarantor1FullName", fullName);
       formData.append("guarantor1Address", address);
       formData.append("guarantor1MobileNumber", mobileNumber);
@@ -217,15 +215,15 @@ export default function PersonalInfo() {
       formData.append("guarantor2Address", address1);
       formData.append("guarantor2MobileNumber", mobileNumber1);
 
-      // Add ID details
+      // ID details
       formData.append("idType", idType);
       formData.append("idNumber", idNumber);
 
-      // Add files
+      // 📸 Attach files
       if (photoId) {
         formData.append("photoId", {
-          uri: photoId,
-          type: "image/jpeg",
+          uri: photoId,              // e.g. "file:///..."
+          type: "image/jpeg",        // adjust if png
           name: "photo_id.jpg",
         });
       }
@@ -238,54 +236,34 @@ export default function PersonalInfo() {
         });
       }
 
-      console.log("📤 Sending signup data to:", `${API_URL}/api/customer/sign-up`);
+      console.log("📤 Uploading to:", `${API_URL}/api/customer/sign-up`);
 
-      const res = await axios.post(`${API_URL}/api/customer/sign-up`, formData, {
+      const response = await fetch(`${API_URL}/api/customer/sign-up`, {
+        method: "POST",
+        body: formData,
         headers: {
           "Content-Type": "multipart/form-data",
           Accept: "application/json",
         },
-        timeout: 20000, // prevent hanging requests
       });
 
-      // ✅ Handle success
-      if (res.data?.success) {
-        Alert.alert(
-          "Success",
-          "Registration completed successfully! Please wait for admin approval.",
-          [
-            {
-              text: "OK",
-              onPress: () => router.push("/login"),
-            },
-          ]
-        );
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        Alert.alert("✅ Success", "Registration completed successfully! Please wait for admin approval.", [
+          { text: "OK", onPress: () => router.push("/login") },
+        ]);
       } else {
-        Alert.alert("Error", res.data?.message || "Something went wrong.");
+        Alert.alert("❌ Error", data.message || "Something went wrong");
       }
     } catch (err) {
-      console.error("❌ Error during signup:", err);
-
-      let errorMessage = "Failed to complete signup";
-
-      if (err.response) {
-        // Server responded with a status code outside 2xx
-        errorMessage =
-          err.response.data?.message ||
-          `Server error: ${err.response.status} ${err.response.statusText}`;
-      } else if (err.request) {
-        // Request was made but no response received
-        errorMessage = "No response from server. Please check your connection.";
-      } else {
-        // Something else went wrong
-        errorMessage = err.message;
-      }
-
-      Alert.alert("Error", errorMessage);
+      console.error("❌ Upload error:", err);
+      Alert.alert("Error", "Failed to complete signup");
     } finally {
       setLoading(false);
     }
   };
+
 
 
   const handlePrevious = () => {
