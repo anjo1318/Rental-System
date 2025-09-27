@@ -77,20 +77,27 @@ const fetchOwnerItems = async (req, res) => {
   }
 };
 
-// GET - Fetch authenticated owner's items
+// Updated backend controller - Alternative approach
 const getOwnerItems = async (req, res) => {
   try {
     const { ownerId } = req.query;
     const requestingUserId = req.user.id;
-    const targetOwnerId = ownerId || requestingUserId;
     
-    // Security check: owners can only see their own items
-    if (req.user.role === 'owner' && targetOwnerId != requestingUserId) {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Access denied: You can only view your own items' 
-      });
+    // If ownerId is provided and user is owner, they can only see their own items
+    let targetOwnerId = requestingUserId; // Default to authenticated user
+    
+    if (ownerId) {
+      // If ownerId is provided, check permissions
+      if (req.user.role === 'owner' && ownerId != requestingUserId) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Access denied: You can only view your own items' 
+        });
+      }
+      targetOwnerId = ownerId;
     }
+    
+    console.log(`🔍 Fetching items for owner: ${targetOwnerId}, requested by: ${requestingUserId}`);
 
     const items = await Item.findAll({
       where: { ownerId: targetOwnerId },
@@ -103,7 +110,7 @@ const getOwnerItems = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    console.log(`Found ${items.length} items for owner ${targetOwnerId}`);
+    console.log(`✅ Found ${items.length} items for owner ${targetOwnerId}`);
 
     res.status(200).json({
       success: true,
@@ -113,7 +120,7 @@ const getOwnerItems = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching owner items:', error);
+    console.error('❌ Error fetching owner items:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch items' 
