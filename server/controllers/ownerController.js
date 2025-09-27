@@ -1,86 +1,53 @@
-// controllers/itemController.js
-import Item from "../models/Item.js";
 import Owner from "../models/Owner.js";
+import Item from "../models/Item.js";
 import jwt from 'jsonwebtoken';
 
-// GET - Fetch all items
-const fetchItems = async (req, res) => {
+// GET - Fetch all owners
+const fetchOwners = async (req, res) => {
   try {
-    const items = await Item.findAll({
-      include: [
-        {
-          model: Owner,
-          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
-        }
-      ],
-      order: [['createdAt', 'DESC']]
+    const response = await Owner.findAll({
+      attributes: { exclude: ['password'] } // Don't send passwords
     });
-
-    return res.status(200).json({
-      success: true,
-      data: items,
-      message: "Items fetched successfully"
+    return res.status(200).json({ 
+      success: true, 
+      data: response,
+      message: "Owners fetched successfully" 
     });
   } catch (error) {
-    console.error('Error fetching items:', error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch items"
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message 
     });
   }
 };
 
-// GET - Fetch single item by ID
-const fetchItemById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    const item = await Item.findByPk(id, {
-      include: [
-        {
-          model: Owner,
-          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
-        }
-      ]
-    });
-
-    if (!item) {
-      return res.status(404).json({
-        success: false,
-        error: "Item not found"
-      });
-    }
-
-    return res.status(200).json({
-      success: true,
-      data: item,
-      message: "Item fetched successfully"
-    });
-  } catch (error) {
-    console.error('Error fetching item:', error);
-    return res.status(500).json({
-      success: false,
-      error: "Failed to fetch item"
-    });
-  }
-};
-
-// GET - Fetch items for specific owner
+// GET - Fetch items for specific owner (public route)
 const fetchOwnerItems = async (req, res) => {
   try {
-    const { ownerId } = req.params;
-    const requestingUserId = req.user.id;
+    const { ownerId } = req.query;
     
-    console.log(`🔍 Fetching items for owner: ${ownerId}, requested by: ${requestingUserId}`);
-
-    // If user is an owner, they can only see their own items
-    if (req.user.role === 'owner' && ownerId != requestingUserId) {
-      return res.status(403).json({ 
+    console.log('🔍 Received request for owner items');
+    console.log('🔍 Query params:', req.query);
+    console.log('🔍 Owner ID:', ownerId);
+    
+    if (!ownerId) {
+      console.log('❌ Owner ID is missing');
+      return res.status(400).json({ 
         success: false, 
-        error: 'Access denied: You can only view your own items' 
+        error: "Owner ID is required" 
       });
     }
 
+    // Check if owner exists
+    const owner = await Owner.findByPk(ownerId);
+    if (!owner) {
+      return res.status(404).json({
+        success: false,
+        error: "Owner not found"
+      });
+    }
+
+    console.log('🔍 Searching for items with ownerId:', ownerId);
     const items = await Item.findAll({
       where: { ownerId: ownerId },
       include: [
@@ -92,9 +59,60 @@ const fetchOwnerItems = async (req, res) => {
       order: [['createdAt', 'DESC']]
     });
 
-    console.log(`✅ Found ${items.length} items for owner ${ownerId}`);
+    console.log('🔍 Found items:', items?.length || 0);
 
     return res.status(200).json({
+      success: true, 
+      message: "Items fetched successfully",
+      data: items,
+      count: items.length
+    });
+
+  } catch (error) {
+    console.error("❌ Error fetching owner items:", error);
+    return res.status(500).json({
+      success: false, 
+      error: "Error fetching items for specific owner"
+    });
+  }
+};
+
+// Updated backend controller - Alternative approach
+const getOwnerItems = async (req, res) => {
+  try {
+    const { ownerId } = req.query;
+    const requestingUserId = req.user.id;
+    
+    // If ownerId is provided and user is owner, they can only see their own items
+    let targetOwnerId = requestingUserId; // Default to authenticated user
+    
+    if (ownerId) {
+      // If ownerId is provided, check permissions
+      if (req.user.role === 'owner' && ownerId != requestingUserId) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'Access denied: You can only view your own items' 
+        });
+      }
+      targetOwnerId = ownerId;
+    }
+    
+    console.log(`🔍 Fetching items for owner: ${targetOwnerId}, requested by: ${requestingUserId}`);
+
+    const items = await Item.findAll({
+      where: { ownerId: targetOwnerId },
+      include: [
+        {
+          model: Owner,
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
+        }
+      ],
+      order: [['createdAt', 'DESC']]
+    });
+
+    console.log(`✅ Found ${items.length} items for owner ${targetOwnerId}`);
+
+    res.status(200).json({
       success: true,
       data: items,
       count: items.length,
@@ -103,15 +121,15 @@ const fetchOwnerItems = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Error fetching owner items:', error);
-    return res.status(500).json({ 
+    res.status(500).json({ 
       success: false, 
       error: 'Failed to fetch items' 
     });
   }
 };
 
-// CREATE - Add new item
-const createItem = async (req, res) => {
+// CREATE - Add new item for owner
+const createOwnerItem = async (req, res) => {
   try {
     const { 
       title, 
@@ -119,15 +137,13 @@ const createItem = async (req, res) => {
       pricePerDay, 
       category, 
       location,
-      quantity = 1,
+      quantity,
       availability = true, 
-      itemImage,        // Single image (backward compatibility)
-      itemImages,       // Multiple images (new feature)
-      ownerId          // Allow manual ownerId or use authenticated user
+      itemImage,
+      itemImages
     } = req.body;
 
-    // Use provided ownerId or authenticated user's ID
-    const finalOwnerId = ownerId || req.user.id;
+    const ownerId = req.user.id; // Get from authenticated user
 
     console.log('📝 Creating item with data:', {
       title,
@@ -138,7 +154,7 @@ const createItem = async (req, res) => {
       quantity,
       itemImages: itemImages?.length || 'none',
       itemImage: itemImage || 'none',
-      ownerId: finalOwnerId
+      ownerId: ownerId
     });
 
     // Validation
@@ -156,34 +172,13 @@ const createItem = async (req, res) => {
       });
     }
 
-    if (isNaN(quantity) || parseInt(quantity) < 1) {
-      return res.status(400).json({
-        success: false,
-        error: "Quantity must be at least 1"
-      });
-    }
-
     // Verify owner exists
-    const owner = await Owner.findByPk(finalOwnerId);
+    const owner = await Owner.findByPk(ownerId);
     if (!owner) {
       return res.status(404).json({
         success: false,
         error: "Owner not found"
       });
-    }
-
-    // Handle images - prioritize itemImages array, fallback to single itemImage
-    let finalItemImages = [];
-    if (itemImages && Array.isArray(itemImages) && itemImages.length > 0) {
-      finalItemImages = itemImages;
-      console.log('📸 Using multiple images:', itemImages.length);
-    } else if (itemImage) {
-      finalItemImages = [itemImage];
-      console.log('📸 Using single image:', itemImage);
-    } else {
-      // Use default placeholder
-      finalItemImages = ["https://via.placeholder.com/300x200?text=No+Image"];
-      console.log('📸 Using default placeholder image');
     }
 
     const newItem = await Item.create({
@@ -192,10 +187,10 @@ const createItem = async (req, res) => {
       pricePerDay: parseFloat(pricePerDay),
       category: category?.trim() || null,
       location: location?.trim() || null,
-      quantity: parseInt(quantity),
+      quantity: parseInt(quantity || 1),
       availability: Boolean(availability),
-      itemImages: finalItemImages, // Store as array directly
-      ownerId: parseInt(finalOwnerId)
+      itemImages: itemImages || [],
+      ownerId: parseInt(ownerId)
     });
 
     // Fetch the created item with owner details
@@ -209,7 +204,7 @@ const createItem = async (req, res) => {
       ]
     });
 
-    console.log(`✅ Item created successfully by owner ${finalOwnerId}`);
+    console.log(`✅ Item created successfully by owner ${ownerId}`);
 
     return res.status(201).json({
       success: true,
@@ -221,21 +216,21 @@ const createItem = async (req, res) => {
     console.error('❌ Error creating item:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || "Failed to create item"
+      error: "Failed to create item"
     });
   }
 };
 
-// UPDATE - Update item
-const updateItem = async (req, res) => {
+// UPDATE - Update owner's existing item
+const updateOwnerItem = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
       title, 
       description, 
       pricePerDay, 
-      category,
-      location, 
+      category, 
+      location,
       quantity,
       availability, 
       itemImage,
@@ -246,7 +241,7 @@ const updateItem = async (req, res) => {
 
     // Check if item exists and belongs to the authenticated owner
     const item = await Item.findOne({
-      where: { id, ownerId }
+      where: { id, ownerId } // Must belong to the authenticated owner
     });
 
     if (!item) {
@@ -256,7 +251,7 @@ const updateItem = async (req, res) => {
       });
     }
 
-    // Prepare update data
+    // Prepare update data (only update provided fields)
     const updateData = {};
     if (title !== undefined) updateData.title = title.trim();
     if (description !== undefined) updateData.description = description?.trim();
@@ -271,18 +266,8 @@ const updateItem = async (req, res) => {
     }
     if (category !== undefined) updateData.category = category?.trim();
     if (location !== undefined) updateData.location = location?.trim();
-    if (quantity !== undefined) {
-      if (isNaN(quantity) || parseInt(quantity) < 1) {
-        return res.status(400).json({
-          success: false,
-          error: "Quantity must be at least 1"
-        });
-      }
-      updateData.quantity = parseInt(quantity);
-    }
+    if (quantity !== undefined) updateData.quantity = parseInt(quantity);
     if (availability !== undefined) updateData.availability = Boolean(availability);
-    
-    // Handle images update
     if (itemImages !== undefined && Array.isArray(itemImages)) {
       updateData.itemImages = itemImages;
     } else if (itemImage !== undefined) {
@@ -322,8 +307,8 @@ const updateItem = async (req, res) => {
   }
 };
 
-// DELETE - Delete item
-const deleteItem = async (req, res) => {
+// DELETE - Delete owner's item
+const deleteOwnerItem = async (req, res) => {
   try {
     const { id } = req.params;
     const ownerId = req.user.id;
@@ -389,11 +374,11 @@ const authenticateToken = (req, res, next) => {
 };
 
 export { 
-  fetchItems, 
-  fetchItemById, 
-  fetchOwnerItems,
-  createItem,
-  updateItem,
-  deleteItem,
+  fetchOwners, 
+  fetchOwnerItems, 
+  getOwnerItems,
+  createOwnerItem,
+  updateOwnerItem,
+  deleteOwnerItem,
   authenticateToken 
 };
