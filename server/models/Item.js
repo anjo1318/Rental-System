@@ -74,12 +74,11 @@ const Item = sequelize.define("Item", {
   },
 
   // Available quantity (tracks current availability)
+  // Removed the function-based defaultValue that was causing the error
   availableQuantity: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    defaultValue: function() {
-      return this.quantity || 1;
-    },
+    defaultValue: 1, // Simple default value instead of function
     validate: {
       min: 0,
       max: function(value) {
@@ -93,7 +92,16 @@ const Item = sequelize.define("Item", {
 
 // Hook to set availableQuantity equal to quantity when creating new item
 Item.addHook('beforeCreate', (item) => {
-  if (item.availableQuantity === undefined || item.availableQuantity === null) {
+  // If availableQuantity is not explicitly set, use quantity value
+  if (item.availableQuantity === undefined || item.availableQuantity === null || item.availableQuantity === 1) {
+    item.availableQuantity = item.quantity || 1;
+  }
+});
+
+// Hook to update availableQuantity when quantity changes
+Item.addHook('beforeUpdate', (item) => {
+  // If quantity is being updated and availableQuantity exceeds new quantity
+  if (item.changed('quantity') && item.availableQuantity > item.quantity) {
     item.availableQuantity = item.quantity;
   }
 });
