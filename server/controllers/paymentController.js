@@ -6,22 +6,12 @@ dotenv.config();
 const gcashPayment = async (req, res) => {
   try {
     const {
-      itemId,
       itemDetails,
-      customerDetails,
-      rentalDetails,
-      paymentMethod, // frontend sends this
-      customerId,
-      ownerId,
-      amount,
       description,
     } = req.body;
 
     console.log("Incoming booking data:", req.body);
 
-    // Calculate the number of days between pickup and return dates
-    const pickupDate = new Date(rentalDetails.pickupDate);
-    const returnDate = new Date(rentalDetails.returnDate);
 
     const timeDifference = returnDate.getTime() - pickupDate.getTime();
     const numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
