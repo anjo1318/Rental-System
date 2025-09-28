@@ -9,6 +9,7 @@ import {View,
   Modal,
   ActivityIndicator,
   StatusBar,
+  Linking
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -19,7 +20,9 @@ const { width } = Dimensions.get("window");
 
 export default function RentingPaymentMethod({ bookingData, onBack, onContinue }) {
   const [currentStep, setCurrentStep] = useState(3);
-  const [selectedMethod, setSelectedMethod] = useState("Cash on Delivery"); // Set default payment method
+  const [selectedMethod, setSelectedMethod] = useState(
+    bookingData?.paymentMethod || null
+  );
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -53,51 +56,48 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
       );
 
   const confirmRent = async () => {
-    if (loading) return; // prevent double click
+    if (loading) return;
     setLoading(true);
 
     try {
-      // Format the data to match your backend controller expectations
-      const formattedBookingData = {
-        itemId: bookingData?.itemId,
-        itemDetails: {
-          title: bookingData?.itemDetails?.title,
-          category: bookingData?.itemDetails?.category,
-          location: bookingData?.itemDetails?.location,
-          pricePerDay: bookingData?.itemDetails?.pricePerDay,
-          itemImage: bookingData?.itemDetails?.itemImage,
-          ownerId: bookingData?.itemDetails?.ownerId
-        },
-        customerDetails: {
-          customerId: bookingData?.customerDetails?.customerId,
-          fullName: bookingData?.customerDetails?.fullName,
-          email: bookingData?.customerDetails?.email,
-          phone: bookingData?.customerDetails?.phone,
-          location: bookingData?.customerDetails?.location,
-          gender: bookingData?.customerDetails?.gender,
-        },
-        rentalDetails: {
-          period: bookingData?.rentalDetails?.period,
-          pickupDate: bookingData?.rentalDetails?.pickupDate,
-          returnDate: bookingData?.rentalDetails?.returnDate,
-        },
-        paymentMethod: selectedMethod
-      };
+      if (bookingData?.paymentMethod === "Gcash") {
+        // ✅ Hit your Express backend, which calls PayMongo
+        const response = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/payment/gcash`,
+          {
+            amount: bookingData.itemDetails.pricePerDay * 100, // PayMongo expects centavos
+            description: `Rental for ${bookingData.itemDetails.title}`,
+          }
+        );
 
-      console.log('Sending formatted booking data:', formattedBookingData);
+        const checkoutUrl = response.data.checkout_url || response.data.checkoutUrl;
+        console.log("Redirecting to PayMongo:", checkoutUrl);
 
-      const response = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item`,
-        formattedBookingData
-      );
+        // ✅ Open PayMongo Checkout in browser
+        await Linking.openURL(checkoutUrl);
 
-      console.log(response.data);
+      } else {
+        // ✅ Cash on Delivery → directly confirm booking
+        const response = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item`,
+          bookingData
+        );
 
-      // ✅ show modal when success
-      setModalVisible(true);
+if (response.data.success) {
+  console.log("Booking success:", response.data);
+  setModalVisible(true);
+} else {
+  console.warn("Booking failed:", response.data);
+  alert("Booking failed, please try again.");
+}
+
+        console.log("Booking success:", response.data);
+        setModalVisible(true);
+      }
     } catch (error) {
-      console.error('Booking error:', error.response?.data || error.message);
-      setLoading(false); // re-enable if failed
+      console.error("Booking/Payment error:", error.response?.data || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 

@@ -151,7 +151,11 @@ export default function Home() {
             {items.map((item) => (
               <View key={item.id} style={styles.featuredCard}>
                 <Image
-                  source={{ uri: item.itemImage }}
+                  source={{ 
+                    uri: item.itemImages && item.itemImages.length > 0 
+                      ? JSON.parse(item.itemImages[0])[0] 
+                      : "https://via.placeholder.com/150" 
+                  }}
                   style={styles.featuredImage}
                 />
               </View>
@@ -191,22 +195,48 @@ export default function Home() {
             data={filteredItems}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <Pressable onPress={() => router.push({ pathname: '/customer/itemDetail', params: { id: item.id } })}>
-                <View style={styles.card}>
-                  <View style={styles.upperHalf}>
-                    <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
-                  </View>
-                  <View style={styles.lowerHalf}>
-                    <Text style={styles.title}>{item.title}</Text>
-                    <View style={styles.ratingRow}>
-                      <Text style={styles.ratingValue}>5.0</Text>
-                      <Text style={styles.starIcon}>⭐</Text>
-                    </View>
-                    <Text style={styles.location}>{item.location}</Text>
-                    <Text style={styles.price}>₱{item.pricePerDay}</Text>
+            <Pressable 
+              onPress={() => router.push({ pathname: '/customer/itemDetail', params: { id: item.id } })}
+            >
+              <View style={styles.card}>
+                <View style={styles.upperHalf}>
+                  <Image
+                    source={{ 
+                      uri: item.itemImages && item.itemImages.length > 0 
+                        ? JSON.parse(item.itemImages[0])[0] 
+                        : "https://via.placeholder.com/150" 
+                    }}
+                    style={styles.itemImage}
+                  />
+
+                  {/* Availability Badge */}
+                  <View style={[
+                    styles.availabilityBadge,
+                    { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
+                  ]}>
+                    <Text style={styles.availabilityText}>
+                      {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
+                    </Text>
                   </View>
                 </View>
-              </Pressable>
+
+                <View style={styles.lowerHalf}>
+                  <Text style={styles.title}>{item.title}</Text>
+                  <View style={styles.ratingRow}>
+                    <Text style={styles.ratingValue}>5.0</Text>
+                    <Text style={styles.starIcon}>⭐</Text>
+                  </View>
+                  <Text style={styles.location}>{item.location}</Text>
+                  <Text style={styles.price}>₱{item.pricePerDay}</Text>
+
+                  {/* Quantity */}
+                  <Text style={styles.quantity}>
+                    Quantity: {item.availableQuantity} / {item.quantity}
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+
             )}
             numColumns={2}
             columnWrapperStyle={{

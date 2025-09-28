@@ -10,6 +10,7 @@ import itemRouter from './routes/item.js';
 import chatRouter from './routes/chat.js';
 import bookRouter from './routes/book.js';
 import uploadRouter from './routes/upload.js';
+import paymentRouter from './routes/payment.js'
 import cors from 'cors';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -84,6 +85,7 @@ app.use('/api/item', itemRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/book', bookRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/payment', paymentRouter);
 
 // ------------------ 404 Handler ------------------
 

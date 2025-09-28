@@ -73,68 +73,6 @@ export default function OwnerAddItem() {
     })();
   }, []);
 
-  // Pick single image
-  const pickImage = async () => {
-    if (images.length >= 5) {
-      Alert.alert("Limit Reached", "You can add up to 5 images maximum.");
-      return;
-    }
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-        base64: false,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const newImage = {
-          uri: result.assets[0].uri,
-          type: result.assets[0].type || 'image/jpeg',
-          name: result.assets[0].fileName || `image_${Date.now()}.jpg`,
-          size: result.assets[0].fileSize,
-        };
-        setImages([...images, newImage]);
-      }
-    } catch (error) {
-      console.error('Error picking image:', error);
-      Alert.alert("Error", "Failed to pick image");
-    }
-  };
-
-  // Pick multiple images
-  const pickMultipleImages = async () => {
-    if (images.length >= 5) {
-      Alert.alert("Limit Reached", "You can add up to 5 images maximum.");
-      return;
-    }
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        selectionLimit: Math.min(5 - images.length, 5),
-        aspect: [4, 3],
-        quality: 0.8,
-        base64: false,
-      });
-
-      if (!result.canceled && result.assets) {
-        const newImages = result.assets.map((asset, index) => ({
-          uri: asset.uri,
-          type: asset.type || 'image/jpeg',
-          name: asset.fileName || `image_${Date.now()}_${index}.jpg`,
-          size: asset.fileSize,
-        }));
-        setImages([...images, ...newImages]);
-      }
-    } catch (error) {
-      console.error('Error picking images:', error);
-      Alert.alert("Error", "Failed to pick images");
-    }
-  };
 
   // Remove image
   const removeImage = (index) => {
@@ -142,176 +80,340 @@ export default function OwnerAddItem() {
     setImages(newImages);
   };
 
-  // Upload images to server using your existing API structure
-  // Updated uploadImages function with better debugging
-  const uploadImages = async () => {
+
+
+// Simplified uploadImages function using fetch (more reliable than axios for React Native)
+const uploadImages = async () => {
+  if (images.length === 0) {
+    console.log('No images to upload');
+    return [];
+  }
+
+  console.log(`Starting upload of ${images.length} images...`);
+  setUploadingImages(true);
+  const uploadedUrls = [];
+
+  try {
+    for (let i = 0; i < images.length; i++) {
+      const image = images[i];
+      console.log(`Uploading image ${i + 1}/${images.length}: ${image.name}`);
+      
+      const formData = new FormData();
+      formData.append('image', {
+        uri: image.uri,
+        type: image.type || 'image/jpeg',
+        name: image.name || `image_${Date.now()}_${i}.jpg`,
+      });
+
+      console.log(`Making request to: ${API_URL}/api/upload/image`);
+
+      const response = await fetch(`${API_URL}/api/upload/image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // Don't set Content-Type with fetch and FormData - let it set automatically
+        },
+        body: formData,
+      });
+
+      console.log(`Response status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP Error ${response.status}:`, errorText);
+        throw new Error(`Upload failed: HTTP ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log(`Upload response:`, responseData);
+
+      if (responseData.success && responseData.imageUrl) {
+        uploadedUrls.push(responseData.imageUrl);
+        console.log(`✅ Image ${i + 1} uploaded successfully`);
+      } else {
+        throw new Error(`Upload failed: ${responseData.error || 'Unknown error'}`);
+      }
+    }
+
+    console.log('All images uploaded successfully:', uploadedUrls);
+    return uploadedUrls;
+
+  } catch (error) {
+    console.error('❌ Error uploading images:', error);
+    throw error; // Re-throw to be handled by handleAddItem
+  } finally {
+    setUploadingImages(false);
+  }
+};
+
+// Simplified handleAddItem function
+const handleAddItem = async () => {
+  // Validation
+  if (!title || !pricePerDay || !ownerId) {
+    Alert.alert("Validation Error", "Title, Price per day, and Owner ID are required.");
+    return;
+  }
+
+  const parsedQuantity = parseInt(quantity);
+  if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+    Alert.alert("Validation Error", "Quantity must be at least 1.");
+    return;
+  }
+
+  setLoading(true);
+  
+  try {
+    console.log('Starting item creation process...');
+    console.log('API_URL:', API_URL);
+    
+    // Upload images first
+    let uploadedImageUrls = [];
+    if (images.length > 0) {
+      console.log('Uploading images...');
+      uploadedImageUrls = await uploadImages();
+    }
+    
+    console.log('Creating item with uploaded images:', uploadedImageUrls);
+    
+    // Create item
+    const newItem = {
+      title: title.trim(),
+      description: description?.trim() || null,
+      pricePerDay: parseFloat(pricePerDay),
+      category: category?.trim() || null,
+      location: location?.trim() || null,
+      quantity: parsedQuantity,
+      availability: true,
+      itemImages: uploadedImageUrls,
+      ownerId: parseInt(ownerId),
+    };
+
+    console.log('Sending item data:', newItem);
+
+    const response = await fetch(`${API_URL}/api/item`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(newItem),
+    });
+
+    console.log('Item creation response status:', response.status);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`HTTP Error ${response.status}:`, errorText);
+      throw new Error(`Failed to create item: HTTP ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    console.log('Item creation response:', responseData);
+
+    if (responseData.success) {
+      Alert.alert("Success", "Item added successfully!");
+      
+      // Reset form
+      setTitle("");
+      setDescription("");
+      setPricePerDay("");
+      setCategory("");
+      setLocation("");
+      setQuantity("1");
+      setImages([]);
+      
+      // Navigate back
+      router.replace("owner/ownerHome");
+    } else {
+      throw new Error(responseData.error || 'Failed to create item');
+    }
+
+  } catch (error) {
+    console.error("Error in handleAddItem:", error);
+    
+    let errorMessage = "Failed to add item. Please try again.";
+    
+    if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    Alert.alert("Error", errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Also fix the image picker to ensure proper MIME types
+const pickImage = async () => {
+  if (images.length >= 5) {
+    Alert.alert("Limit Reached", "You can add up to 5 images maximum.");
+    return;
+  }
+
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const asset = result.assets[0];
+      
+      // Fix MIME type
+      let mimeType = 'image/jpeg';
+      if (asset.mimeType) {
+        mimeType = asset.mimeType;
+      } else if (asset.uri) {
+        const extension = asset.uri.split('.').pop()?.toLowerCase();
+        switch (extension) {
+          case 'png': mimeType = 'image/png'; break;
+          case 'jpg': case 'jpeg': mimeType = 'image/jpeg'; break;
+          case 'gif': mimeType = 'image/gif'; break;
+          case 'webp': mimeType = 'image/webp'; break;
+        }
+      }
+      
+      const newImage = {
+        uri: asset.uri,
+        type: mimeType,
+        name: asset.fileName || `image_${Date.now()}.jpg`,
+        size: asset.fileSize,
+      };
+      
+      console.log('Adding image:', newImage);
+      setImages([...images, newImage]);
+    }
+  } catch (error) {
+    console.error('Error picking image:', error);
+    Alert.alert("Error", "Failed to pick image");
+  }
+};
+
+const pickMultipleImages = async () => {
+  if (images.length >= 5) {
+    Alert.alert("Limit Reached", "You can add up to 5 images maximum.");
+    return;
+  }
+
+  try {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: Math.min(5 - images.length, 5),
+      aspect: [4, 3],
+      quality: 0.8,
+      base64: false,
+    });
+
+    if (!result.canceled && result.assets) {
+      const newImages = result.assets.map((asset, index) => {
+        let mimeType = 'image/jpeg';
+        if (asset.mimeType) {
+          mimeType = asset.mimeType;
+        } else if (asset.uri) {
+          const extension = asset.uri.split('.').pop()?.toLowerCase();
+          switch (extension) {
+            case 'png': mimeType = 'image/png'; break;
+            case 'jpg': case 'jpeg': mimeType = 'image/jpeg'; break;
+            case 'gif': mimeType = 'image/gif'; break;
+            case 'webp': mimeType = 'image/webp'; break;
+          }
+        }
+        
+        return {
+          uri: asset.uri,
+          type: mimeType,
+          name: asset.fileName || `image_${Date.now()}_${index}.jpg`,
+          size: asset.fileSize,
+        };
+      });
+      
+      console.log('Adding multiple images:', newImages);
+      setImages([...images, ...newImages]);
+    }
+  } catch (error) {
+    console.error('Error picking images:', error);
+    Alert.alert("Error", "Failed to pick images");
+  }
+};
+
+
+  const uploadImagesWithFetch = async () => {
     if (images.length === 0) {
-      console.log('No images to upload');
       return [];
     }
 
-    console.log(`Starting upload of ${images.length} images...`);
+    console.log('Using fetch for upload...');
     setUploadingImages(true);
     const uploadedUrls = [];
 
     try {
       for (let i = 0; i < images.length; i++) {
         const image = images[i];
-        console.log(`Uploading image ${i + 1}/${images.length}: ${image.name}`);
+        console.log(`Fetch uploading image ${i + 1}:`, image);
         
         const formData = new FormData();
         formData.append('image', {
           uri: image.uri,
-          type: image.type || 'image/jpeg',
-          name: image.name || `image_${Date.now()}_${i}.jpg`,
-        });
-
-        console.log('FormData created for image:', {
-          uri: image.uri,
           type: image.type,
           name: image.name,
-          size: image.size
         });
 
-        const uploadResponse = await axios.post(
-          `${API_URL}/api/upload/image`,
-          formData,
-          {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-              Authorization: `Bearer ${token}`,
-            },
-            timeout: 30000,
-          }
-        );
+        const response = await fetch(`${API_URL}/api/upload/image`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // Don't set Content-Type for fetch with FormData
+          },
+          body: formData,
+        });
 
-        console.log(`Upload response for image ${i + 1}:`, uploadResponse.data);
+        console.log('Fetch response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
 
-        if (uploadResponse.data.success && uploadResponse.data.imageUrl) {
-          uploadedUrls.push(uploadResponse.data.imageUrl);
-          console.log(`✅ Image ${i + 1} uploaded successfully:`, uploadResponse.data.imageUrl);
+        const responseData = await response.json();
+        console.log('Fetch response data:', responseData);
+        
+        if (responseData.success && responseData.imageUrl) {
+          uploadedUrls.push(responseData.imageUrl);
+          console.log(`✅ Image ${i + 1} uploaded with fetch`);
         } else {
-          console.error(`❌ Image ${i + 1} upload failed:`, uploadResponse.data);
-          throw new Error(`Upload failed for image ${i + 1}: ${uploadResponse.data.error || 'Unknown error'}`);
+          throw new Error(`Upload failed: ${responseData.error || 'Unknown error'}`);
         }
       }
 
-      console.log('All images uploaded successfully:', uploadedUrls);
       return uploadedUrls;
-
     } catch (error) {
-      console.error('❌ Error uploading images:', error);
-      
-      if (error.response) {
-        console.error('Error response status:', error.response.status);
-        console.error('Error response data:', error.response.data);
-        console.error('Error response headers:', error.response.headers);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
-      
-      // More specific error messages
-      let errorMessage = 'Failed to upload images';
-      if (error.response?.status === 401) {
-        errorMessage = 'Authentication failed. Please login again.';
-      } else if (error.response?.status === 400) {
-        errorMessage = error.response.data?.error || 'Invalid image file';
-      } else if (error.response?.status === 413) {
-        errorMessage = 'Image file too large. Please use smaller images.';
-      } else if (error.message.includes('timeout')) {
-        errorMessage = 'Upload timeout. Please try again with smaller images.';
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      }
-      
-      throw new Error(errorMessage);
+      console.error('Fetch upload error:', error);
+      throw new Error(`Upload failed: ${error.message}`);
     } finally {
       setUploadingImages(false);
     }
   };
 
-  // Updated handleAddItem function for your React Native component
-  const handleAddItem = async () => {
-    if (!title || !pricePerDay || !ownerId) {
-      Alert.alert("Validation Error", "Title, Price per day, and Owner ID are required.");
-      return;
-    }
-
-    // Validate quantity
-    const parsedQuantity = parseInt(quantity);
-    if (isNaN(parsedQuantity) || parsedQuantity < 1) {
-      Alert.alert("Validation Error", "Quantity must be at least 1.");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      console.log('Starting item creation process...');
-      
-      // Upload images first if any selected
-      const uploadedImageUrls = await uploadImages();
-      console.log('Uploaded image URLs:', uploadedImageUrls);
-      
-      const newItem = {
-        title: title.trim(),
-        description: description?.trim() || null,
-        pricePerDay: parseFloat(pricePerDay),
-        category: category?.trim() || null,
-        location: location?.trim() || null,
-        quantity: parsedQuantity,
-        availability: true, // Set default availability
-        itemImages: uploadedImageUrls.length > 0 ? uploadedImageUrls : [], // Send as array, empty array if no images
-        ownerId: parseInt(ownerId),
-      };
-
-      console.log('Creating item with data:', newItem);
-
-      const response = await axios.post(`${API_URL}/api/item`, newItem, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        timeout: 30000, // 30 second timeout
-      });
-
-      console.log('Item creation response:', response.data);
-
-      if (response.data.success) {
-        Alert.alert("Success", "Item added successfully!");
-        
-        // Reset form
-        setTitle("");
-        setDescription("");
-        setPricePerDay("");
-        setCategory("");
-        setLocation("");
-        setQuantity("1");
-        setImages([]);
-        
-        // Navigate back to home
-        router.replace("owner/ownerHome");
-      } else {
-        throw new Error(response.data.error || 'Failed to create item');
+  const testServerConnection = async () => {
+  try {
+    console.log('Testing server connection...');
+    const response = await axios.get(`${API_URL}/api/health`, {
+      timeout: 10000,
+      headers: {
+        Authorization: `Bearer ${token}`,
       }
-
-    } catch (error) {
-      console.error("Error creating item:", error);
-      console.error("Error response:", error.response?.data);
-      
-      let errorMessage = "Failed to add item.";
-      if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      Alert.alert("Error", errorMessage);
-    } finally {
-      setLoading(false);
-    }
+    });
+    console.log('Server connection test:', response.status, response.data);
+    return true;
+  } catch (error) {
+    console.error('Server connection failed:', error.message);
+    return false;
+  }
 };
+
 
   return (
     <KeyboardAvoidingView

@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
+import ItemImages from "./itemImages";
 
 export default function ItemDetail() {
   const router = useRouter();
@@ -124,20 +125,9 @@ export default function ItemDetail() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Item Image */}
-      <View style={styles.imageContainer}>
-        <Image source={{ uri: item.itemImage }} style={styles.image} />
-        {item.availability !== undefined && (
-          <View style={[
-            styles.availabilityBadge,
-            { backgroundColor: item.availability ? '#4CAF50' : '#FF5722' }
-          ]}>
-            <Text style={styles.availabilityText}>
-              {item.availability ? 'Available' : 'Not Available'}
-            </Text>
-          </View>
-        )}
-      </View>
+      {/* Item Images */}
+      <ItemImages images={item.itemImages} />
+
 
       {/* Item Info */}
       <View style={styles.infoContainer}>
