@@ -4,7 +4,7 @@ const { width, height } = Dimensions.get("window");
 
 const CARD_MARGIN = 16;
 const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.35;
+const CARD_HEIGHT = height * 0.45;
 
 const styles = StyleSheet.create({
   profileContainer: {
@@ -41,12 +41,12 @@ const styles = StyleSheet.create({
   },
   badge: {
     position: "absolute",
-    right: -2,
-    top: -2,
+    right: -8,
+    top: -8,
     backgroundColor: "#057474",
     borderRadius: 10,
-    width: 15,
-    height: 15,
+    width: 17,
+    height: 17,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -111,22 +111,23 @@ const styles = StyleSheet.create({
   },
 
   upperHalf: {
-    flex: 1,
+    flex: 0.9,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#E6E1D6",
   },
   itemImage: {
-    width: "85%",
-    height: "85%",
-    resizeMode: "contain",
-    borderRadius: width * 0.03,
+    width: "100%",
+    height: "95%",
+    resizeMode: "cover",
   },
   lowerHalf: {
-    flex: 1,
-    justifyContent: "flex-start",
+    flex: 1.1,
+    flexDirection: "column",
+    justifyContent: "space-between", // pushes elements apart
     paddingHorizontal: 8,
     paddingTop: 8,
+    paddingBottom: 10,
   },
 
   title: {
@@ -148,16 +149,51 @@ const styles = StyleSheet.create({
     fontSize: width * 0.035,
     color: "#f5a623",
   },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",   // ✅ center icon with multi-line text
+    marginLeft: -8,
+    marginTop: 10,
+  },
+
+  iconContainer: {
+    width: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 4,
+  },
+
+  textContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
   location: {
     fontSize: width * 0.035,
     color: "#555",
-    marginBottom: 2,
+    flexShrink: 1,
+    flexWrap: "wrap",
   },
+
   price: {
     fontWeight: "bold",
     fontSize: width * 0.04,
     marginTop: 12,
   },
+  availabilityBadge: {
+    width: "100%",        // 🔥 makes it full width
+    paddingVertical: 3,   // top & bottom spacing
+    alignItems: "center", // center the text horizontally
+    justifyContent: "center", // center vertically
+    marginBottom: 6,
+  },
+
+  availabilityText: {
+    color: "#fff",       // white text so it's readable on green/orange
+    fontSize: 14,
+    fontWeight: "400",
+  },
+
   
 
   categoryButton: {
