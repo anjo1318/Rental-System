@@ -301,7 +301,7 @@ export default function EditProfile() {
             </View>
             <Pressable onPress={pickGcashQR} style={{ marginBottom: 15 }}>
               {gcashQR ? (
-                  <Image source={{ uri: `${API_URL}${currentUser.gcashQR}` }} />
+                <Image source={{ uri: gcashQR }} style={{ width: 100, height: 100, borderRadius: 8 }} />
               ) : (
                 <View style={{ width: 100, height: 100, borderWidth: 1, borderColor: "#ccc", justifyContent: "center", alignItems: "center" }}>
                   <Text>Select QR</Text>
