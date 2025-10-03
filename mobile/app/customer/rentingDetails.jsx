@@ -5,7 +5,6 @@ import {View,Text,StyleSheet,Dimensions,TouchableOpacity,StatusBar,Alert,
   ScrollView,
   Platform,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -287,7 +286,7 @@ const proceedWithBooking = (imageUrl) => {
   );
 
     return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
         {currentStep === 2 ? (
         // ✅ Payment screen takes full screen
@@ -568,7 +567,7 @@ const proceedWithBooking = (imageUrl) => {
           )}
         </>
         )}
-    </SafeAreaView>
+    </View>
     );
 
 }

@@ -98,6 +98,10 @@ export default function Home() {
     return matchCategory && matchSearch;
   });
 
+  const breakLongWords = (str, maxLen = 18) =>
+  str ? str.replace(new RegExp(`(\\S{${maxLen}})`, "g"), "$1\u200B") : "";
+
+
   return (
     <>
       {/* ✅ StatusBar must be OUTSIDE the main View */}
@@ -226,8 +230,25 @@ export default function Home() {
                     <Text style={styles.ratingValue}>5.0</Text>
                     <Text style={styles.starIcon}>⭐</Text>
                   </View>
-                  <Text style={styles.location}>{item.location}</Text>
-                  <Text style={styles.price}>₱{item.pricePerDay}</Text>
+                  <View style={styles.locationRow}>
+                  <View style={styles.iconContainer}>
+                    <Icon name="location-on" size={20} color="#666" />
+                  </View>
+
+                  <View style={styles.textContainer}>
+                    <Text
+                      style={styles.location}
+                      numberOfLines={0}          // ✅ allow unlimited lines
+                      ellipsizeMode="clip"       // ✅ no "..." truncation
+                    >
+                      {item.location}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.price}>₱{item.pricePerDay}</Text>
+
+
 
                   {/* Quantity */}
                   <Text style={styles.quantity}>
