@@ -155,6 +155,7 @@ const mobileOwnerLogin = async (req, res) => {
         phone: owner.phone || null,
         address: owner.address || null,
         profileImage: owner.profileImage || null,
+        gcashQR: owner.gcashQR || null,
         bio: owner.bio || null,
         isVerified: owner.isVerified || false,
         role: 'owner'

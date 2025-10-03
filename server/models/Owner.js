@@ -57,6 +57,11 @@ const Owner = sequelize.define("Owner", {
   type: DataTypes.STRING,
   allowNull: true,
   defaultValue: "N/A",
+  },
+  gcashQR: {
+  type: DataTypes.STRING,
+  allowNull: true,
+  defaultValue: "N/A",
   }
 });
 

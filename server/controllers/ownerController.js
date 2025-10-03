@@ -21,6 +21,46 @@ const fetchOwners = async (req, res) => {
   }
 };
 
+const updateOwnerProfile = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const owner = await Owner.findByPk(id);
+    if (!owner) {
+      return res.status(404).json({ success: false, message: "Owner not found" });
+    }
+
+    // handle uploaded files
+    let gcashQRPath = owner.gcashQR;
+    let profileImagePath = owner.profileImage;
+
+    if (req.files?.gcashQR) {
+      gcashQRPath = `/uploads/${req.files.gcashQR[0].filename}`;
+    }
+    if (req.files?.profileImage) {
+      profileImagePath = `/uploads/${req.files.profileImage[0].filename}`;
+    }
+
+    await owner.update({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      phone: req.body.phone,
+      gcashQR: gcashQRPath,
+      profileImage: profileImagePath
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Successfully updated owner details",
+      updatedOwner: owner,
+    });
+
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // GET - Fetch items for specific owner (public route)
 const fetchOwnerItems = async (req, res) => {
   try {
@@ -375,6 +415,7 @@ const authenticateToken = (req, res, next) => {
 
 export { 
   fetchOwners, 
+  updateOwnerProfile,
   fetchOwnerItems, 
   getOwnerItems,
   createOwnerItem,

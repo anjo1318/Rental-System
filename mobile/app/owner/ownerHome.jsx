@@ -79,7 +79,6 @@ export default function ownerHome() {
     try {
       setLoading(true);
       
-      // Get the token from AsyncStorage
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         console.log('❌ No token found, redirecting to login');
@@ -89,7 +88,6 @@ export default function ownerHome() {
 
       const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/owner/owner/items?ownerId=${userId}`;
       console.log('🔍 Fetching from URL:', apiUrl);
-      console.log('🔍 Using token:', token.substring(0, 20) + '...');
       
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -101,10 +99,8 @@ export default function ownerHome() {
       
       const data = await response.json();
       console.log('🔍 API Response:', data);
-      console.log('🔍 Response status:', response.status);
       
       if (response.status === 401) {
-        // Token expired or invalid
         console.log('❌ Token expired, clearing storage and redirecting to login');
         await AsyncStorage.multiRemove(['token', 'user', 'isLoggedIn']);
         router.replace('/ownerLogin');
@@ -112,15 +108,22 @@ export default function ownerHome() {
       }
       
       if (data.success) {
-        const fetchedItems = data.data.map(item => ({
-          id: item.id,
-          title: item.title,
-          itemImage: item.itemImage || "https://via.placeholder.com/150",
-          location: item.location || "Your Location",
-          pricePerDay: item.pricePerDay.toString(),
-          category: item.category,
-          isAvailable: item.availability,
-        }));
+        const fetchedItems = data.data.map(item => {
+          // ✅ FIX: Extract first image from itemImages array
+          const imageUrl = item.itemImages && item.itemImages.length > 0 
+            ? item.itemImages[0] 
+            : "https://via.placeholder.com/150";
+          
+          return {
+            id: item.id,
+            title: item.title,
+            itemImage: imageUrl, // ✅ Now using the correct image
+            location: item.location || "Your Location",
+            pricePerDay: item.pricePerDay.toString(),
+            category: item.category,
+            isAvailable: item.availability,
+          };
+        });
         
         console.log('🔍 Processed items:', fetchedItems);
         setItems(fetchedItems);
@@ -225,25 +228,31 @@ export default function ownerHome() {
         <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
-           <Pressable onPress={() => router.push("customer/profile")}>
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=3" }}
-              style={styles.avatar}
-            />
-          </Pressable >
-            <Text style={styles.username}>Marco Polo</Text>
-            <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("owner/ownerRequest")}>
-              <Image
-                source={require("../../assets/images/message_chat.png")}
-                style={{ width: 24, height: 24, tintColor: "#057474" }}
-                resizeMode="contain"
-              />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
-              </View>
-            </Pressable>
-        </View>
+            <Pressable onPress={() => router.push("owner/ownerProfile")}>
+                <Image
+                  source={{ 
+                    uri: currentUser?.profileImage && currentUser.profileImage !== "N/A" 
+                      ? currentUser.profileImage 
+                      : "https://i.pravatar.cc/150?img=3" 
+                  }}
+                  style={styles.avatar}
+                />
+              </Pressable>
+              <Text style={styles.username}>
+                {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Loading..."}
+              </Text>
+             <View style={styles.notificationWrapper}>
+              <Pressable onPress={() => router.push("owner/ownerRequest")}>
+                <Image
+                  source={require("../../assets/images/message_chat.png")}
+                  style={{ width: 24, height: 24, tintColor: "#057474" }}
+                  resizeMode="contain"
+                />
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>2</Text>
+                </View>
+              </Pressable>
+            </View>
         </View> 
         {/* Quick Stats Section */}
         <View style={styles.statsContainer}>

@@ -137,15 +137,26 @@ export default function RentingDetails() {
       return;
     }
 
+    // ✅ Extract image from itemImages array
+    const imageUrl = item.itemImages && item.itemImages.length > 0 
+      ? item.itemImages[0] 
+      : null;
+
+    if (!imageUrl) {
+      console.error("WARNING: No image found in item object");
+      Alert.alert("Error", "Item image is missing. Please try again.");
+      return;
+    }
+
     const data = {
       itemId: parseInt(itemId),
-      ownerId: item.Owner.id,   // ✅ make ownerId available at root
+      ownerId: item.Owner.id,
       itemDetails: {
-        ownerId: item.Owner.id, // ✅ also keep it here for item context
+        ownerId: item.Owner.id,
         title: item.title ?? "Unknown Product",
         category: item.category,
         location: item.location,
-        itemImage: item.itemImage,
+        itemImage: imageUrl, // ✅ Now using the first image from itemImages array
         pricePerDay: item.pricePerDay,
       },
       customerDetails: {
@@ -164,9 +175,43 @@ export default function RentingDetails() {
     };
 
     setBookingData(data);
-    console.log("Booking Data Prepared:", data);  // ✅ should show ownerId correctly now
+    console.log("Booking Data Prepared:", data);
+    console.log("Using image:", imageUrl);
     setCurrentStep(2);
   };
+
+const proceedWithBooking = (imageUrl) => {
+  const data = {
+    itemId: parseInt(itemId),
+    ownerId: item.Owner.id,
+    itemDetails: {
+      ownerId: item.Owner.id,
+      title: item.title ?? "Unknown Product",
+      category: item.category,
+      location: item.location,
+      itemImage: imageUrl,
+      pricePerDay: item.pricePerDay,
+    },
+    customerDetails: {
+      customerId: userId,
+      fullName,
+      email: emailAddress,
+      phone: phoneNumber,
+      location,
+      gender,
+    },
+    rentalDetails: {
+      period: rentalPeriod,
+      pickupDate,
+      returnDate,
+    },
+  };
+
+  console.log("Booking Data Prepared:", data);
+  console.log("Image URL:", imageUrl);
+  setBookingData(data);
+  setCurrentStep(2);
+};
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {

@@ -156,6 +156,7 @@ export default function ownerLogin() {
           phone: user.phone || null,
           address: user.address || null,
           profileImage: user.profileImage || null,
+          gcashQR: user.gcashQR || null, 
           bio: user.bio || null,
           isVerified: user.isVerified || false,
           role: user.role,
