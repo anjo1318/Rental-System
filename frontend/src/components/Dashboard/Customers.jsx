@@ -6,6 +6,7 @@ const Customers = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   useEffect(() => {
+    console.log("Customer tab to");
     fetchCustomers();
   }, []); 
 
@@ -14,9 +15,9 @@ const Customers = () => {
       const response = await axios.get(
         `${import.meta.env.VITE_APP_URL}/api/customer`
       );
-      if (Array.isArray(response.data.message)) {
-        setCustomers(response.data.message);
-        setSelectedCustomer(response.data.message[0] || null);
+      if (Array.isArray(response.data.data)) {
+        setCustomers(response.data.data);
+        setSelectedCustomer(response.data.data[0] || null);
       }
     } catch (error) {
       console.error("Error fetching customers:", error);
