@@ -122,8 +122,33 @@ export default function BookedItem() {
     }
   };
 
-  const handleDelete = () => {
-    console.log("Delete button pressed");
+  const handleDelete = async () => {
+    if (!selectedItemId) {
+      alert("Please select an item to delete");
+      return;
+    }
+
+    console.log("Delete button pressed for item ID:", selectedItemId);
+    
+    try {
+      // Use DELETE method and pass only the ID
+      const response = await axios.delete(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/delete/${selectedItemId}`
+      );
+      
+      if (response.data.success) {
+        alert("Booking deleted successfully!");
+        
+        // Clear selection and refresh the list
+        setSelectedItemId(null);
+        fetchBookedItems();
+      } else {
+        alert("Failed to delete booking: " + (response.data.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      alert("Error deleting booking: " + (error.response?.data?.message || error.message));
+    }
   };
 
   // ✅ Handle proceed to renting - redirect to rentingDetails with selected item

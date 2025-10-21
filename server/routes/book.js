@@ -5,6 +5,7 @@ import { approveBooking,
     bookItem, 
     bookNotification, 
     cancelBooking, 
+    deleteBooking, 
     fetchAllBooking, 
     fetchBookRequest, 
     rejectBooking, 
@@ -23,6 +24,8 @@ router.put('/cancel/:id', cancelBooking);
 router.put('/request/:id', requestBooking);
 router.put('/approve-request/:id', approveBookingRequest);
 router.put('/reject-request/:id', rejectBookingRequest);
+router.delete('/delete/:id', deleteBooking);
+
 
 //for owners
 router.get("/book-request/:id", fetchBookRequest);

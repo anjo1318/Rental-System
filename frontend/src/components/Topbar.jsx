@@ -42,14 +42,14 @@ const Topbar = () => {
           </button>
 
           {/* User Avatar */}
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <img
               src="https://via.placeholder.com/32"
               alt="User"
               className="h-8 w-8 rounded-full object-cover"
             />
             <span className="font-medium hidden lg:inline whitespace-nowrap">John Doe</span>
-          </div>
+          </div> */}
         </div>
       </div>
 
