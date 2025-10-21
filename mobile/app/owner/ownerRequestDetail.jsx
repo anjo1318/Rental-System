@@ -103,14 +103,19 @@ export default function ownerRequestDetail() {
       setShowTerminateModal(false);
     }
   }
-
   const handleApproveRequest = async () => {
     try {
-
-    }catch (errror) {
-
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/approve-request/${params.id}`);
+        router.push("owner/ownerRequest");
+        console.log("Successfully approved the request", response);
+    } catch (error) {
+        console.log(error);
+    } finally {
+      setShowTerminateModal(false);
     }
   }
+
+
 
 
 
@@ -291,7 +296,7 @@ export default function ownerRequestDetail() {
       <View style={styles.bottomContainer}>
         {isApproved ? (
           <>
-            {/* Terminate Button (replaces Reject when approved) */}
+            {/* Terminate Button */}
             <Pressable 
               style={[styles.button, styles.rejectButton]}
               onPress={() => setShowTerminateModal(true)}
@@ -299,7 +304,7 @@ export default function ownerRequestDetail() {
               <Text style={styles.rejectText}>Terminate</Text>
             </Pressable>
 
-            {/* Start Button (replaces Approve when approved) */}
+            {/* Start Button */}
             <Pressable 
               style={[styles.button, styles.approveButton]}
               onPress={() => setShowStartModal(true)}
@@ -309,7 +314,7 @@ export default function ownerRequestDetail() {
           </>
         ) : (
           <>
-            {/* Reject Button (for pending status) */}
+            {/* Reject Button */}
             <Pressable 
               style={[styles.button, styles.rejectButton]}
               onPress={() => setShowModal(true)}
@@ -317,10 +322,16 @@ export default function ownerRequestDetail() {
               <Text style={styles.rejectText}>Reject</Text>
             </Pressable>
 
-            {/* Approve Button (for pending status) */}
+            {/* Approve Button — conditionally trigger based on status */}
             <Pressable 
               style={[styles.button, styles.approveButton]}
-              onPress={() => setShowApproveModal(true)}
+              onPress={() => {
+                if (params.status?.toLowerCase() === "booked") {
+                  handleApproveRequest();
+                } else if (params.status?.toLowerCase() === "pending") {
+                  setShowApproveModal(true);
+                }
+              }}
             >
               <Text style={styles.approveText}>Approve</Text>
             </Pressable>

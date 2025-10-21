@@ -89,8 +89,9 @@ export default function ownerItem() {
   };
 
   const getFilteredBookedItems = () => {
-  return bookedItem.filter(item => item.status?.toLowerCase() === "booked");
+    return bookedItem.filter(item => item.status?.toLowerCase() !== "cart");
   };
+
 
   // Function to handle item press and navigate to detail screen
   const handleItemPress = (item) => {
@@ -212,12 +213,12 @@ export default function ownerItem() {
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>Loading...</Text>
           </View>
-        ) : (() => {
+        ) :(() => {
           const filteredItems = getFilteredBookedItems();
           return filteredItems.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                {userId ? "No booked items found" : "Please log in to view booked items"}
+                {userId ? "No items found" : "Please log in to view your items"}
               </Text>
             </View>
           ) : (

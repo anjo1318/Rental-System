@@ -611,7 +611,7 @@ const approveBookingRequest = async (req, res) => {
       return res.status(404).json({success:false, message: "Booking not found"});
     }
 
-    await booking.update({status: "booked"});
+    await booking.update({status: "Approved to Rent"});
 
     // Extract all booking details from the database record
     const {

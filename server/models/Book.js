@@ -89,7 +89,9 @@ const Books = sequelize.define("Books", {
       'cancelled', 
       'booked',
       'Approved to Rent', 
-      'Rejected to Rent'),
+      'Rejected to Rent',
+      'cart'
+    ),
     allowNull: false
   },
 

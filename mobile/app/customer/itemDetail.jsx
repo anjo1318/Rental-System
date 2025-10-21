@@ -58,20 +58,18 @@ export default function ItemDetail() {
 
   const handleBooking = async () => {
     try {
-      // Get user data from localStorage
-      const userToken = localStorage.getItem("token");
-      const userData = localStorage.getItem("user");
+      setIsBooking(true);
 
-      if (!userToken || !userData) {
-        Alert.alert("Authentication Required", "Please login to book an item", [
-          { text: "OK", onPress: () => router.push("/auth/login") }
-        ]);
+      const userData = await AsyncStorage.getItem("user");
+      if (!userData) {
+        Alert.alert("Error", "Please login first");
+        router.push("/auth/login");
         return;
       }
 
       const customer = JSON.parse(userData);
 
-      // Build full address from customer data
+      // Build full address
       const fullAddress = [
         customer.houseNumber,
         customer.street,
@@ -82,16 +80,21 @@ export default function ItemDetail() {
         customer.zipCode
       ].filter(Boolean).join(", ");
 
-      // Prepare booking data
+      // Calculate dates
+      const pickupDate = new Date().toISOString().split('T')[0];
+      const returnDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
       const bookingData = {
         itemId: item.id,
+        customerId: customer.id,
+        ownerId: item.ownerId,
         itemDetails: {
           title: item.title,
           category: item.category,
           location: item.location,
           pricePerDay: item.pricePerDay,
           ownerId: item.ownerId,
-          itemImage: item.itemImages?.[0] || null,
+          itemImage: item.itemImages?.[0] || "",
         },
         customerDetails: {
           customerId: customer.id,
@@ -102,35 +105,43 @@ export default function ItemDetail() {
           gender: customer.gender || "Not specified",
         },
         rentalDetails: {
-          pickupDate: new Date().toISOString().split('T')[0], // Today's date
-          returnDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
-          period: "7 days",
+          pickupDate: pickupDate,
+          returnDate: returnDate,
+          period: "To be updated",
         },
         paymentMethod: "pending",
       };
 
-      console.log("Booking data to send:", bookingData);
+      console.log("Sending booking:", bookingData);
 
       const response = await axios.post(
         `${API_URL}/api/book/book-item`,
-        bookingData,
-        {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            "Content-Type": "application/json",
-          },
-        }
+        bookingData
       );
 
-      console.log("Booking success:", response.data);
+      console.log("Response data:", response.data);
+      router.push("/customer/book") 
 
-      router.push("/customer/book");
+     
+
     } catch (error) {
-      console.error("Booking error:", error.response?.data || error.message);
-      Alert.alert(
-        "Booking Error",
-        error.response?.data?.message || "Failed to process booking. Please try again."
-      );
+      console.error("❌ Booking error:", error.message);
+      
+      if (error.response?.data?.success) {
+        Alert.alert("Success", "Item booked successfully!", [
+          { 
+            text: "View Bookings", 
+            onPress: () => router.push("/customer/book") 
+          }
+        ]);
+      } else {
+        Alert.alert(
+          "Booking Error", 
+          error.response?.data?.message || error.message || "Failed to book item"
+        );
+      }
+    } finally {
+      setIsBooking(false);
     }
   };
 

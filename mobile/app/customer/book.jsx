@@ -153,28 +153,34 @@ export default function BookedItem() {
 
   // ✅ Handle proceed to renting - redirect to rentingDetails with selected item
   const handleProceed = () => {
-    if (!selectedItemId) {
-      alert("Please select an item first");
-      return;
-    }
-
-    const selectedItem = bookedItem.find(item => item.id === selectedItemId);
-    
-    if (!selectedItem) {
-      alert("Selected item not found");
-      return;
-    }
-
-    // Navigate to rentingDetails with the item ID
-    router.push({
-      pathname: "customer/rentingDetails",
-      params: {
-        itemId: selectedItem.itemId || selectedItem.id,
-        // You can pass additional params if needed
-        fromBookedItems: "true"
+      if (!selectedItemId) {
+        alert("Please select an item first");
+        return;
       }
-    });
-  };
+
+      const selectedItem = bookedItem.find(item => item.id === selectedItemId);
+      
+      if (!selectedItem) {
+        alert("Selected item not found");
+        return;
+      }
+
+      // Check if item is in "Booked" status
+      if (selectedItem.status?.toLowerCase() === "booked") {
+        alert("Cannot proceed. Item is still in Booked status. Please request for rent first.");
+        return;
+      }
+
+      // Navigate to rentingDetails with the item ID
+      router.push({
+        pathname: "customer/rentingDetails",
+        params: {
+          itemId: selectedItem.itemId || selectedItem.id,
+          // You can pass additional params if needed
+          fromBookedItems: "true"
+        }
+      });
+    };
 
   const handleRequestRent = async (itemId) => {
     try {
