@@ -80,7 +80,16 @@ const Books = sequelize.define("Books", {
     allowNull:false 
   },
  status: {
-    type: DataTypes.ENUM('approved', 'pending', 'rejected', 'ongoing', 'terminated', 'cancelled'),
+    type: DataTypes.ENUM(
+      'approved', 
+      'pending', 
+      'rejected', 
+      'ongoing', 
+      'terminated', 
+      'cancelled', 
+      'booked',
+      'Approved to Rent', 
+      'Rejected to Rent'),
     allowNull: false
   },
 

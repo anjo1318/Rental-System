@@ -104,9 +104,20 @@ export default function ownerRequestDetail() {
     }
   }
 
+  const handleApproveRequest = async () => {
+    try {
+
+    }catch (errror) {
+
+    }
+  }
+
+
+
   // Check if status is approved to show different buttons
   const isApproved = params.status?.toLowerCase() === "approved";
-  
+  const isBookedStatus = params.status?.toLowerCase() === "booked";
+
 
   return (
     <View style={styles.container}>
@@ -136,94 +147,144 @@ export default function ownerRequestDetail() {
         </View>
       </View>
 
-      {/* Body */}
       <ScrollView
         style={styles.bodyWrapper}
         contentContainerStyle={{ paddingBottom: 120 }}
       >
-        {/* Product Info */}
-        <View style={styles.card}>
-          {params.itemImage ? (
-            <Image source={{ uri: params.itemImage }} style={styles.detailImage} resizeMode="cover" />
-          ) : (
-            <View style={[styles.detailImage, { justifyContent: "center", alignItems: "center", backgroundColor: "#eee" }]}>
-              <Icon name="photo-camera" size={40} color="#999" />
+        {isBookedStatus ? (
+          // Show only Request Details and Customer Information for "booked" status
+          <>
+            {/* Request Details - Minimal for booked status */}
+            <View style={styles.card}>
+              {params.itemImage ? (
+                <Image source={{ uri: params.itemImage }} style={styles.detailImage} resizeMode="cover" />
+              ) : (
+                <View style={[styles.detailImage, { justifyContent: "center", alignItems: "center", backgroundColor: "#eee" }]}>
+                  <Icon name="photo-camera" size={40} color="#999" />
+                </View>
+              )}
+
+              <Text style={styles.productName}>{params.product || "Unknown Product"}</Text>
             </View>
-          )}
 
-          <Text style={styles.productName}>{params.product || "Unknown Product"}</Text>
-          <Text style={styles.category}>{params.category || "No Category"}</Text>
+            {/* Customer Info */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Customer Information</Text>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Status:</Text>
-            <Text
-              style={[
-                styles.statusText,
-                params.status?.toLowerCase() === "pending" && { color: "#D4A017" },
-                (params.status?.toLowerCase() === "approved" || params.status?.toLowerCase() === "ongoing") && { color: "#057474" },
-                (params.status?.toLowerCase() === "rejected" || params.status?.toLowerCase() === "terminated" || params.status?.toLowerCase() === "cancelled") && { color: "#D40004" },
-              ]}
-              numberOfLines={1}
-            >
-              {params.status || "Unknown"}
-            </Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Name:</Text>
+                <Text style={styles.value}>{params.name || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Price/Day:</Text>
-            <Text style={styles.value}>₱{params.pricePerDay || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Email:</Text>
+                <Text style={styles.value}>{params.email || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Rental Period:</Text>
-            <Text style={styles.value}>{params.rentalPeriod || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Phone:</Text>
+                <Text style={styles.value}>{params.phone || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Payment Method:</Text>
-            <Text style={styles.value}>{params.paymentMethod || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Address:</Text>
+                <Text style={styles.value}>{params.address || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Pickup Date:</Text>
-            <Text style={styles.value}>{formatDate(params.pickUpDate)}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Gender:</Text>
+                <Text style={styles.value}>{params.gender || "N/A"}</Text>
+              </View>
+            </View>
+          </>
+        ) : (
+          // Show everything for other statuses
+          <>
+            {/* Product Info */}
+            <View style={styles.card}>
+              {params.itemImage ? (
+                <Image source={{ uri: params.itemImage }} style={styles.detailImage} resizeMode="cover" />
+              ) : (
+                <View style={[styles.detailImage, { justifyContent: "center", alignItems: "center", backgroundColor: "#eee" }]}>
+                  <Icon name="photo-camera" size={40} color="#999" />
+                </View>
+              )}
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Return Date:</Text>
-            <Text style={styles.value}>{formatDate(params.returnDate)}</Text>
-          </View>
-        </View>
+              <Text style={styles.productName}>{params.product || "Unknown Product"}</Text>
+              <Text style={styles.category}>{params.category || "No Category"}</Text>
 
-        {/* Customer Info */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Customer Information</Text>
+              <View style={styles.row}>
+                <Text style={styles.label}>Status:</Text>
+                <Text
+                  style={[
+                    styles.statusText,
+                    params.status?.toLowerCase() === "pending" && { color: "#D4A017" },
+                    (params.status?.toLowerCase() === "approved" || params.status?.toLowerCase() === "ongoing") && { color: "#057474" },
+                    (params.status?.toLowerCase() === "rejected" || params.status?.toLowerCase() === "terminated" || params.status?.toLowerCase() === "cancelled") && { color: "#D40004" },
+                  ]}
+                  numberOfLines={1}
+                >
+                  {params.status || "Unknown"}
+                </Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Name:</Text>
-            <Text style={styles.value}>{params.name || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Price/Day:</Text>
+                <Text style={styles.value}>₱{params.pricePerDay || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Email:</Text>
-            <Text style={styles.value}>{params.email || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Rental Period:</Text>
+                <Text style={styles.value}>{params.rentalPeriod || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Phone:</Text>
-            <Text style={styles.value}>{params.phone || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Payment Method:</Text>
+                <Text style={styles.value}>{params.paymentMethod || "N/A"}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Address:</Text>
-            <Text style={styles.value}>{params.address || "N/A"}</Text>
-          </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Pickup Date:</Text>
+                <Text style={styles.value}>{formatDate(params.pickUpDate)}</Text>
+              </View>
 
-          <View style={styles.row}>
-            <Text style={styles.label}>Gender:</Text>
-            <Text style={styles.value}>{params.gender || "N/A"}</Text>
-          </View>
-        </View>
+              <View style={styles.row}>
+                <Text style={styles.label}>Return Date:</Text>
+                <Text style={styles.value}>{formatDate(params.returnDate)}</Text>
+              </View>
+            </View>
+
+            {/* Customer Info */}
+            <View style={styles.card}>
+              <Text style={styles.sectionTitle}>Customer Information</Text>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Name:</Text>
+                <Text style={styles.value}>{params.name || "N/A"}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Email:</Text>
+                <Text style={styles.value}>{params.email || "N/A"}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Phone:</Text>
+                <Text style={styles.value}>{params.phone || "N/A"}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Address:</Text>
+                <Text style={styles.value}>{params.address || "N/A"}</Text>
+              </View>
+
+              <View style={styles.row}>
+                <Text style={styles.label}>Gender:</Text>
+                <Text style={styles.value}>{params.gender || "N/A"}</Text>
+              </View>
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {/* Conditional Bottom Buttons */}

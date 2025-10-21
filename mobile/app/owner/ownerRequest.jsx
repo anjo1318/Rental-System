@@ -88,6 +88,10 @@ export default function ownerItem() {
     }
   };
 
+  const getFilteredBookedItems = () => {
+  return bookedItem.filter(item => item.status?.toLowerCase() === "booked");
+  };
+
   // Function to handle item press and navigate to detail screen
   const handleItemPress = (item) => {
     try {
@@ -203,19 +207,21 @@ export default function ownerItem() {
 
       {/* Body */}
       <View style={styles.bodyWrapper}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading...</Text>
-            </View>
-          ) : bookedItem.length === 0 ? (
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        ) : (() => {
+          const filteredItems = getFilteredBookedItems();
+          return filteredItems.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
                 {userId ? "No booked items found" : "Please log in to view booked items"}
               </Text>
             </View>
           ) : (
-            bookedItem.map((item) => (
+            filteredItems.map((item) => (
               <Pressable 
                 key={item.id} 
                 style={({ pressed }) => [
@@ -248,15 +254,14 @@ export default function ownerItem() {
                   <Text 
                     style={[
                       styles.statusText,
-                      item.status?.toLowerCase() === "pending" && { color: "#D4A017" },   // Yellow
-                      (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" }, // Green
-                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated" || item.status?.toLowerCase() === "cancelled") && { color: "#D40004" }, // Red
+                      item.status?.toLowerCase() === "pending" && { color: "#D4A017" },
+                      (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" },
+                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated" || item.status?.toLowerCase() === "cancelled") && { color: "#D40004" },
                     ]}
                     numberOfLines={1}
                   >
                     {item.status || 'Unknown'} 
                   </Text>
-
                 </View>
 
                 {/* Right: date and chevron */}
@@ -268,8 +273,9 @@ export default function ownerItem() {
                 </View>
               </Pressable>
             ))
-          )}
-        </ScrollView>
+          );
+        })()}
+      </ScrollView>
 
       </View>
     </View>

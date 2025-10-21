@@ -249,7 +249,7 @@ export default function Login() {
               </View>
               
               <View style={styles.termsRow}>
-                <Pressable onPress={() => router.push("/customer/notif2")}>
+                <Pressable onPress={() => router.push("/terms")}>
                   <Text style={styles.termsLink}>Terms</Text>
                 </Pressable>
               </View>

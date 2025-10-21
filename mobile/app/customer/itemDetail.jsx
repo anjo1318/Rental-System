@@ -21,6 +21,7 @@ export default function ItemDetail() {
   const { id } = useLocalSearchParams(); // get item id from params
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isBooking, setIsBooking] = useState(false);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -57,37 +58,79 @@ export default function ItemDetail() {
 
   const handleBooking = async () => {
     try {
-      const token = await AsyncStorage.getItem("token");
-      
-      if (!token) {
-        Alert.alert("Authentication Required", "Please login to book items", [
+      // Get user data from localStorage
+      const userToken = localStorage.getItem("token");
+      const userData = localStorage.getItem("user");
+
+      if (!userToken || !userData) {
+        Alert.alert("Authentication Required", "Please login to book an item", [
           { text: "OK", onPress: () => router.push("/auth/login") }
         ]);
         return;
       }
 
-      const res = await axios.post(
+      const customer = JSON.parse(userData);
+
+      // Build full address from customer data
+      const fullAddress = [
+        customer.houseNumber,
+        customer.street,
+        customer.barangay,
+        customer.town,
+        customer.province,
+        customer.country,
+        customer.zipCode
+      ].filter(Boolean).join(", ");
+
+      // Prepare booking data
+      const bookingData = {
+        itemId: item.id,
+        itemDetails: {
+          title: item.title,
+          category: item.category,
+          location: item.location,
+          pricePerDay: item.pricePerDay,
+          ownerId: item.ownerId,
+          itemImage: item.itemImages?.[0] || null,
+        },
+        customerDetails: {
+          customerId: customer.id,
+          fullName: customer.name,
+          email: customer.email,
+          phone: customer.phone,
+          location: fullAddress,
+          gender: customer.gender || "Not specified",
+        },
+        rentalDetails: {
+          pickupDate: new Date().toISOString().split('T')[0], // Today's date
+          returnDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+          period: "7 days",
+        },
+        paymentMethod: "pending",
+      };
+
+      console.log("Booking data to send:", bookingData);
+
+      const response = await axios.post(
         `${API_URL}/api/book/book-item`,
-        { itemId: parseInt(item.id) },
-        { headers: { Authorization: `Bearer ${token}` } }
+        bookingData,
+        {
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      if (res.data.success) {
-        Alert.alert("Success", "Item booked successfully!");
-        router.back();
-      } else {
-        Alert.alert("Error", res.data.error || "Booking failed");
-      }
-    } catch (err) {
-      console.error("❌ Booking error:", err.response?.data || err.message);
-      
-      if (err.response?.status === 401) {
-        Alert.alert("Session Expired", "Please login again", [
-          { text: "OK", onPress: () => router.push("/auth/login") }
-        ]);
-      } else {
-        Alert.alert("Error", "Failed to book item");
-      }
+      console.log("Booking success:", response.data);
+
+      router.push("/customer/book");
+    } catch (error) {
+      console.error("Booking error:", error.response?.data || error.message);
+      Alert.alert(
+        "Booking Error",
+        error.response?.data?.message || "Failed to process booking. Please try again."
+      );
     }
   };
 
@@ -128,7 +171,6 @@ export default function ItemDetail() {
       {/* Item Images */}
       <ItemImages images={item.itemImages} />
 
-
       {/* Item Info */}
       <View style={styles.infoContainer}>
         <Text style={styles.title}>{item.title}</Text>
@@ -148,33 +190,28 @@ export default function ItemDetail() {
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        {/* Book Now Button - Fixed route */}
+        {/* Book Now Button */}
         <TouchableOpacity 
-          style={[styles.bookButton, !item.availability && styles.disabledButton]} 
-          onPress={() => {
-            if (!item.availability) {
-              Alert.alert("Not Available", "This item is currently not available for booking");
-              return;
-            }
-            
-            console.log("Navigating to rentingDetails with:", {
-              id: item.id,
-              itemId: item.id,
-              title: item.title
-            });
-            
-            // Fixed: Match the actual file name 'rentingDetails.jsx'
-            router.push(`/customer/rentingDetails?id=${item.id}&itemId=${item.id}`);
-          }}
-          disabled={!item.availability}
+          style={[styles.bookButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]} 
+          onPress={handleBooking}
+          disabled={!item.availability || isBooking}
           activeOpacity={0.8}
         >
-          <Icon name="book" size={20} color="#FFF" />
-          <Text style={styles.bookButtonText}>Book Now</Text>
+          {isBooking ? (
+            <>
+              <ActivityIndicator size="small" color="#FFF" />
+              <Text style={styles.bookButtonText}>Processing...</Text>
+            </>
+          ) : (
+            <>
+              <Icon name="book" size={20} color="#FFF" />
+              <Text style={styles.bookButtonText}>Book Now</Text>
+            </>
+          )}
         </TouchableOpacity>
 
-        {/* Chat Button */}
-        <TouchableOpacity
+        {/* Chat Button - Commented Out */}
+        {/* <TouchableOpacity
           style={[styles.bookButton, styles.chatButton]}
           onPress={async () => {
             try {
@@ -219,7 +256,7 @@ export default function ItemDetail() {
         >
           <Icon name="chat" size={20} color="#FFF" />
           <Text style={styles.bookButtonText}>Chat with Owner</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </ScrollView>
   );

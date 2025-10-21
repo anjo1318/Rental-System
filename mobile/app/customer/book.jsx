@@ -8,13 +8,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width, height } = Dimensions.get("window");
 
 // ✅ Responsive constants (bounded so they don't blow up on tablets or collapse on small screens)
-const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110); // min 60, max 110
-const ICON_BOX = Math.max(40, width * 0.1); // Fixed: was width * 0.00, now width * 0.1
-const ICON_SIZE = Math.max(20, width * 0.07); // min 20px
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // adaptive title font
-const BADGE_SIZE = Math.max(12, Math.round(width * 0.045)); // badge scales with width
-const PADDING_H = Math.min(Math.max(12, width * 0.02), 28); // Fixed: was min 7, now min 12
-const MARGIN_TOP = Math.min(Math.round(height * 0.02), 20); // Fixed: was height * 0.1, now height * 0.02
+const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110);
+const ICON_BOX = Math.max(40, width * 0.1);
+const ICON_SIZE = Math.max(20, width * 0.07);
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const BADGE_SIZE = Math.max(12, Math.round(width * 0.045));
+const PADDING_H = Math.min(Math.max(12, width * 0.02), 28);
+const MARGIN_TOP = Math.min(Math.round(height * 0.02), 20);
 
 export default function BookedItem() {
   const router = useRouter();
@@ -22,9 +22,10 @@ export default function BookedItem() {
   const [bookedItem, setBookedItem] = useState([]);
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [selectedItemId, setSelectedItemId] = useState(null); // Track selected item
 
   useEffect(() => {
-    loadUserData(); // run only once on mount
+    loadUserData();
   }, []);
 
   useEffect(() => {
@@ -41,20 +42,15 @@ export default function BookedItem() {
         const user = JSON.parse(userData);
         console.log("From local storage", userData);
         
-        // Ensure we have a valid user ID
         const userIdValue = user.id || user.userId || user._id || "";
         
         if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
           setUserId(userIdValue);
         } else {
           console.error("Invalid user ID found:", userIdValue);
-          // You might want to redirect to login screen here
-          // router.replace('/login');
         }
       } else {
         console.error("No user data found in AsyncStorage");
-        // You might want to redirect to login screen here
-        // router.replace('/login');
       }
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -62,7 +58,6 @@ export default function BookedItem() {
   };
 
   const fetchBookedItems = async () => {
-    // Don't make API call if userId is invalid
     if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
       console.error("Cannot fetch booked items: Invalid user ID:", userId);
       return;
@@ -89,10 +84,8 @@ export default function BookedItem() {
     }
   };
 
-  // Function to handle item press and navigate to detail screen
   const handleItemPress = (item) => {
     try {
-      // Option 1: If using simple file-based routing
       router.push({
         pathname: "customer/bookedProductDetail",
         params: {
@@ -106,7 +99,6 @@ export default function BookedItem() {
           pickUpDate: item.pickUpDate || "",
           returnDate: item.returnDate || "",
           itemImage: item.itemImage || "",
-          // Customer information - adjust these field names based on your API response
           name: item.customerName || item.name || "",
           email: item.customerEmail || item.email || "",
           phone: item.customerPhone || item.phone || "",
@@ -114,10 +106,6 @@ export default function BookedItem() {
           gender: item.customerGender || item.gender || "",
         }
       });
-
-      // Option 2: If using dynamic routing, use this instead:
-      // router.push(`/booked-product-detail/${item.id}`);
-      
     } catch (error) {
       console.error("Navigation error:", error);
     }
@@ -130,56 +118,89 @@ export default function BookedItem() {
         day: "numeric",
       });
     } catch (error) {
-      return dateString; // Return original string if parsing fails
+      return dateString;
     }
   };
 
-  // Handle delete button press
   const handleDelete = () => {
-    // Add your delete logic here
     console.log("Delete button pressed");
-    // You might want to show a confirmation dialog first
-    // Then call an API to delete selected items
   };
 
-  // Handle proceed button press
+  // ✅ Handle proceed to renting - redirect to rentingDetails with selected item
   const handleProceed = () => {
-    // Add your proceed to renting logic here
-    console.log("Proceed button pressed");
-    // Navigate to the renting flow or payment screen
-    // router.push('/renting-flow');
+    if (!selectedItemId) {
+      alert("Please select an item first");
+      return;
+    }
+
+    const selectedItem = bookedItem.find(item => item.id === selectedItemId);
+    
+    if (!selectedItem) {
+      alert("Selected item not found");
+      return;
+    }
+
+    // Navigate to rentingDetails with the item ID
+    router.push({
+      pathname: "customer/rentingDetails",
+      params: {
+        itemId: selectedItem.itemId || selectedItem.id,
+        // You can pass additional params if needed
+        fromBookedItems: "true"
+      }
+    });
   };
 
-  console.log("Fetching booked items from:", `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
-  console.log("bookedItem useState values", bookedItem);
+  const handleRequestRent = async (itemId) => {
+    try {
+      console.log("Requesting rent for item ID:", itemId);
+      
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/request/${itemId}`
+      );
+      
+      console.log("Request successful:", response.data);
+      
+      if (response.data.success) {
+        alert("Rental request sent successfully!");
+        fetchBookedItems();
+      } else {
+        alert("Failed to send rental request: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error in handleRequestRent:", error);
+      alert("Error sending rental request: " + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // ✅ Handle radio button selection
+  const handleRadioSelect = (itemId) => {
+    setSelectedItemId(itemId);
+  };
 
   return (
     <View style={styles.container}>
-      {/* Status bar */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" translucent={false} />
 
       {/* Header */}
       <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, paddingTop: MARGIN_TOP }]}>
         <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
-          {/* Left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
-
-
             <Pressable
-                onPress={() => {
-                  if (router.canGoBack()) {
-                    router.back();
-                      } else {
-                    router.replace("/customer/home"); // fallback screen
-                      }}}
-                      hitSlop={10}
-                      style={styles.iconPress}
-                      >
-                <Icon name="arrow-back" size={24} color="#000"/>
-              </Pressable>
+              onPress={() => {
+                if (router.canGoBack()) {
+                  router.back();
+                } else {
+                  router.replace("/customer/home");
+                }
+              }}
+              hitSlop={10}
+              style={styles.iconPress}
+            >
+              <Icon name="arrow-back" size={24} color="#000"/>
+            </Pressable>
           </View>
 
-          {/* Center: page title */}
           <Text
             numberOfLines={1}
             ellipsizeMode="tail"
@@ -188,7 +209,6 @@ export default function BookedItem() {
             Booked Item
           </Text>
 
-          {/* Right: notification */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <View
               style={[
@@ -243,6 +263,24 @@ export default function BookedItem() {
                 ]}
                 onPress={() => handleItemPress(item)}
               >
+                {/* ✅ Radio Button */}
+                <Pressable
+                  style={styles.radioContainer}
+                  onPress={(e) => {
+                    e.stopPropagation(); // Prevent card press
+                    handleRadioSelect(item.id);
+                  }}
+                >
+                  <View style={[
+                    styles.radioOuter,
+                    selectedItemId === item.id && styles.radioOuterSelected
+                  ]}>
+                    {selectedItemId === item.id && (
+                      <View style={styles.radioInner} />
+                    )}
+                  </View>
+                </Pressable>
+
                 {/* Left: item image */}
                 <View style={styles.imageWrapper}>
                   <Image
@@ -267,15 +305,21 @@ export default function BookedItem() {
                   <Text 
                     style={[
                       styles.statusText,
-                      item.status?.toLowerCase() === "pending" && { color: "#D4A017" },   // Yellow
-                      (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" }, // Green
-                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated" || item.status?.toLowerCase() === "cancelled") && { color: "#D40004" }, // Red
+                      item.status?.toLowerCase() === "pending" && { color: "#D4A017" },
+                      (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" },
+                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated" || item.status?.toLowerCase() === "cancelled") && { color: "#D40004" },
                     ]}
                     numberOfLines={1}
                   >
                     {item.status || 'Unknown'} 
                   </Text>
-
+                  
+                  <Pressable
+                    onPress={() => handleRequestRent(item.id)}
+                    style={styles.requestButton}
+                  >
+                    <Text style={styles.requestButtonText}>Request for Rent</Text>
+                  </Pressable>
                 </View>
 
                 {/* Right: date and chevron */}
@@ -301,8 +345,14 @@ export default function BookedItem() {
             </Pressable>
 
             <Pressable 
-              style={[styles.button, styles.proceedButton, { flex: 0, width: "60%" }]}
+              style={[
+                styles.button, 
+                styles.proceedButton, 
+                { flex: 0, width: "60%" },
+                !selectedItemId && styles.disabledButton
+              ]}
               onPress={handleProceed}
+              disabled={!selectedItemId}
             >
               <Text style={styles.proceedText}>Proceed to Renting</Text>
             </Pressable>
@@ -330,7 +380,7 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // keeps title centered
+    justifyContent: "space-between",
     height: "100%",
   },
 
@@ -435,6 +485,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
+  disabledButton: {
+    backgroundColor: "#888",
+    opacity: 0.5,
+  },
+
   deleteText: {
     color: "#D40004",
     fontSize: 13,
@@ -455,8 +510,36 @@ const styles = StyleSheet.create({
   },
 
   pressedCard: {
-    backgroundColor: "#C5C0B1", // Slightly darker when pressed
+    backgroundColor: "#C5C0B1",
     transform: [{ scale: 0.98 }],
+  },
+
+  // ✅ Radio button styles
+  radioContainer: {
+    marginRight: 10,
+    padding: 5,
+  },
+
+  radioOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    borderColor: "#666",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+  },
+
+  radioOuterSelected: {
+    borderColor: "#057474",
+  },
+
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "#057474",
   },
 
   imageWrapper: {
@@ -490,7 +573,7 @@ const styles = StyleSheet.create({
   },
 
   dateWrapper: {
-    width: 80, // Made slightly wider to accommodate chevron
+    width: 80,
     alignItems: "flex-end",
   },
 
@@ -503,10 +586,18 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  detailImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 16,
+  requestButton: {
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    backgroundColor: "#057474",
+    borderRadius: 6,
+    alignSelf: "flex-start",
   },
+
+  requestButtonText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "500",
+  }
 });

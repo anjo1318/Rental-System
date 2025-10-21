@@ -42,12 +42,14 @@ const Customers = () => {
   };
 
   return (
-    <div className="w-full h-screen p-6 overflow-visible pt-14">
-      <h1 className="text-2xl font-bold mb-6">Customers Profile</h1>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 lg:gap-6">
 
       <div className="flex w-full gap-6">
+
         {/* Sidebar */}
         <div className="w-64 bg-white rounded-lg shadow p-4">
+      <h1 className="text-2xl font-bold mb-6">Customers Profile</h1>
+
           <ul className="space-y-2">
             {customers.length > 0 ? (
               customers.map((customer) => (

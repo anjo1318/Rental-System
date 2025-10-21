@@ -7,6 +7,7 @@ const Owners = () => {
 
   useEffect(() => {
     fetchOwners();
+    console.log("Owners.jsx to");
   }, []);
 //hello hello 
   const fetchOwners = async () => {
@@ -15,9 +16,9 @@ const Owners = () => {
         `${import.meta.env.VITE_APP_URL}/api/owner/all`
       );
 
-      if (response.data.success && Array.isArray(response.data.message)) {
-        setOwners(response.data.message);
-        setSelectedOwner(response.data.message[0] || null);
+      if (response.data.success && Array.isArray(response.data.data)) {
+        setOwners(response.data.data);
+        setSelectedOwner(response.data.data[0] || null);
       }
     } catch (error) {
       console.error("Error fetching owners:", error);
@@ -38,7 +39,7 @@ const Owners = () => {
   };
 
   return (
-    <div className="w-full h-screen p-6 overflow-visible pt-14">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-5 lg:gap-6">
       <h1 className="text-2xl font-bold mb-6">Owners Profile</h1>
 
       <div className="flex w-full gap-6">
