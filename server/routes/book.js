@@ -3,6 +3,7 @@ import { approveBooking,
     approveBookingRequest, 
     bookedItems, 
     bookItem, 
+    bookItemUpdate, 
     bookNotification, 
     cancelBooking, 
     deleteBooking, 
@@ -18,6 +19,7 @@ const router = express.Router()
 
 //for customer
 router.post('/book-item', bookItem);
+router.put('/book-item/update/:id', bookItemUpdate );
 router.get('/notification/:id', bookNotification);
 router.get('/booked-items/:id', bookedItems);
 router.put('/cancel/:id', cancelBooking);
