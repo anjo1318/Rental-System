@@ -384,34 +384,28 @@ const bookItemUpdate = async (req, res) => {
       customerDetails,
       rentalDetails,
       paymentMethod,
-      customerId,
-      ownerId,
     } = req.body;
 
     console.log("Incoming booking update:", req.body);
 
-    const bookingId = req.params.id;
-
     // 🟡 Find existing booking
-    const existingBooking = await Books.findOne({ where: { id: itemId } });
+    const existingBooking = await Books.findOne({ where: { itemId } });
 
     if (!existingBooking) {
       return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
-    // Calculate number of days
+    // 🧮 Calculate rental duration and total amount
     const pickupDate = new Date(rentalDetails.pickupDate);
     const returnDate = new Date(rentalDetails.returnDate);
     const timeDiff = returnDate - pickupDate;
     const rentalDays = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
-
-    // Calculate total
     const pricePerDay = parseFloat(itemDetails.pricePerDay);
     const totalAmount = rentalDays * pricePerDay;
 
     console.log(`Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`);
 
-    // 🟢 Update the existing booking
+    // 🟢 Update booking
     await existingBooking.update({
       itemId,
       customerId: customerDetails.customerId,
@@ -434,37 +428,28 @@ const bookItemUpdate = async (req, res) => {
       paymentMethod,
     });
 
-    // Fetch updated record
-    const updatedBooking = await Books.findOne({ where: { id: bookingId } });
+    // ✅ Use updatedBooking directly
+    const updatedBooking = existingBooking;
 
-    // Owner details
+    // 👤 Owner details
     const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
     if (!ownerDetails) throw new Error("Owner not found");
 
     const ownerFullName = `${ownerDetails.firstName} ${ownerDetails.lastName}`;
 
-    // 📩 Send customer + owner emails (same as before)
-    const name = customerDetails.fullName;
-    const email = customerDetails.email;
-    const phone = customerDetails.phone;
-    const address = customerDetails.location;
-    const product = itemDetails.title;
-    const category = itemDetails.category;
-    const location = itemDetails.location;
-    const rentalPeriod = rentalDetails.period;
-    const requestNumber = bookingId;
+    // 📩 Email setup
     const formattedPickupDate = pickupDate.toLocaleDateString();
     const formattedReturnDate = returnDate.toLocaleDateString();
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
     const mailOptions = {
       from: process.env.EMAIL_USER,
-      to: email.trim(),
-      subject: `Booking Request Updated - ${product}`,
+      to: customerDetails.email.trim(),
+      subject: `Booking Request Updated - ${itemDetails.title}`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2 style="color: #28a745;">Booking Updated</h2>
-          <p>Your booking for <strong>${product}</strong> has been updated successfully.</p>
+          <p>Your booking for <strong>${itemDetails.title}</strong> has been updated successfully.</p>
           <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
           <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
         </div>
@@ -474,17 +459,18 @@ const bookItemUpdate = async (req, res) => {
     const ownerMailOptions = {
       from: process.env.EMAIL_USER,
       to: ownerDetails.email.trim(),
-      subject: `Booking Request Updated - ${product}`,
+      subject: `Booking Request Updated - ${itemDetails.title}`,
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px;">
           <h2 style="color: #ffc107;">Booking Update Notification</h2>
-          <p>${name} has updated their booking for <strong>${product}</strong>.</p>
+          <p>${customerDetails.fullName} has updated their booking for <strong>${itemDetails.title}</strong>.</p>
           <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
           <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
         </div>
       `
     };
 
+    // ✉️ Send emails
     try {
       await transporter.sendMail(mailOptions);
       console.log("Customer email sent");
