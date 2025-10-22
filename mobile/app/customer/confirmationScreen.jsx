@@ -77,11 +77,12 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         await Linking.openURL(checkoutUrl);
 
       } else {
+
+        console.log("Booking ID to update:", bookingData.itemId);
+
         // ✅ Cash on Delivery → directly confirm booking
         const response = await axios.put(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
-          bookingData
-        );
+          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`, bookingData);
 
       if (response.data.success) {
         console.log("Booking success:", response.data);
@@ -90,7 +91,6 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         console.warn("Booking failed:", response.data);
         alert("Booking failed, please try again.");
       }
-
         console.log("Booking success:", response.data);
         setModalVisible(true);
       }

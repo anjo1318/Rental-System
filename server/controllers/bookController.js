@@ -393,7 +393,7 @@ const bookItemUpdate = async (req, res) => {
     const bookingId = req.params.id;
 
     // 🟡 Find existing booking
-    const existingBooking = await Books.findOne({ where: { id: bookingId } });
+    const existingBooking = await Books.findOne({ where: { id: itemId } });
 
     if (!existingBooking) {
       return res.status(404).json({ success: false, message: "Booking not found." });
