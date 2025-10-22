@@ -375,6 +375,7 @@ const bookItem = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 const bookItemUpdate = async (req, res) => {
   try {
     const {
@@ -382,33 +383,36 @@ const bookItemUpdate = async (req, res) => {
       itemDetails,
       customerDetails,
       rentalDetails,
-      paymentMethod, // frontend sends this
+      paymentMethod,
       customerId,
       ownerId,
     } = req.body;
 
-    console.log("Incoming booking data:", req.body);
+    console.log("Incoming booking update:", req.body);
 
-    // Calculate the number of days between pickup and return dates
+    const bookingId = req.params.id;
+
+    // 🟡 Find existing booking
+    const existingBooking = await Books.findOne({ where: { id: bookingId } });
+
+    if (!existingBooking) {
+      return res.status(404).json({ success: false, message: "Booking not found." });
+    }
+
+    // Calculate number of days
     const pickupDate = new Date(rentalDetails.pickupDate);
     const returnDate = new Date(rentalDetails.returnDate);
-    
-    // Calculate the difference in milliseconds
-    const timeDifference = returnDate.getTime() - pickupDate.getTime();
-    
-    // Convert milliseconds to days (1 day = 24 * 60 * 60 * 1000 milliseconds)
-    const numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
-    
-    // Ensure minimum 1 day (in case same day pickup/return)
-    const rentalDays = Math.max(numberOfDays, 1);
-    
-    // Calculate total amount
+    const timeDiff = returnDate - pickupDate;
+    const rentalDays = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
+
+    // Calculate total
     const pricePerDay = parseFloat(itemDetails.pricePerDay);
     const totalAmount = rentalDays * pricePerDay;
 
     console.log(`Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`);
 
-    const response = await Books.create({
+    // 🟢 Update the existing booking
+    await existingBooking.update({
       itemId,
       customerId: customerDetails.customerId,
       ownerId: itemDetails.ownerId,
@@ -416,7 +420,7 @@ const bookItemUpdate = async (req, res) => {
       category: itemDetails.category,
       location: itemDetails.location,
       pricePerDay: itemDetails.pricePerDay,
-      name: customerDetails.fullName,         
+      name: customerDetails.fullName,
       email: customerDetails.email,
       phone: customerDetails.phone,
       address: customerDetails.location,
@@ -425,15 +429,21 @@ const bookItemUpdate = async (req, res) => {
       rentalPeriod: rentalDetails.period,
       pickUpDate: rentalDetails.pickupDate,
       returnDate: rentalDetails.returnDate,
-      amount: totalAmount, 
+      amount: totalAmount,
       status: "pending",
-      paymentMethod, 
+      paymentMethod,
     });
 
-    console.log("Success in adding request for booking");
-    console.log(`Total amount calculated: ₱${totalAmount} for ${rentalDays} days`);
+    // Fetch updated record
+    const updatedBooking = await Books.findOne({ where: { id: bookingId } });
 
-    // Extract email variables from the data
+    // Owner details
+    const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
+    if (!ownerDetails) throw new Error("Owner not found");
+
+    const ownerFullName = `${ownerDetails.firstName} ${ownerDetails.lastName}`;
+
+    // 📩 Send customer + owner emails (same as before)
     const name = customerDetails.fullName;
     const email = customerDetails.email;
     const phone = customerDetails.phone;
@@ -442,286 +452,61 @@ const bookItemUpdate = async (req, res) => {
     const category = itemDetails.category;
     const location = itemDetails.location;
     const rentalPeriod = rentalDetails.period;
-    const requestNumber = response.id;
-    
-    // Format dates for email display
+    const requestNumber = bookingId;
     const formattedPickupDate = pickupDate.toLocaleDateString();
     const formattedReturnDate = returnDate.toLocaleDateString();
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
-    // Get owner details
-    const ownerDetails = await Owner.findOne({where: {id: itemDetails.ownerId}});
-    console.log("Ownerdetails", ownerDetails);
-
-    if (!ownerDetails) {
-      throw new Error("Owner not found");
-    }
-
-    // Owner details
-    const ownerFirstName = ownerDetails.firstName;
-    const ownerLastName = ownerDetails.lastName;
-    const ownerEmail = ownerDetails.email;
-    const ownerFullName = `${ownerFirstName} ${ownerLastName}`;
-
-    // Prepare customer email options
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email.trim(),
-      subject: `Booking Request - ${product}`,
+      subject: `Booking Request Updated - ${product}`,
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; font-size: 24px;">EzRent</h1>
-            <p style="margin: 5px 0 0 0; font-size: 16px;">Booking Confirmation</p>
-          </div>
-          
-          <div style="padding: 30px; border: 1px solid #ddd; background-color: #fff;">
-            <h2 style="color: #333; margin-top: 0;">Dear ${name},</h2>
-            
-            <p style="font-size: 16px; line-height: 1.6;">
-              Your request to rent <strong>${product}</strong> is <strong>PENDING</strong>.
-            </p>
-            
-            <div style="background-color: #d4edda; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin: 20px 0;">
-              <p style="margin: 0; font-size: 14px; color: #155724;">
-                <strong>Status:</strong> Your booking is <strong>PENDING</strong>. Please wait for the response of the owner.
-              </p>
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #28a745;">Booking Details</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Booking Number:</td>
-                  <td style="padding: 8px 0;">${requestNumber}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Item:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${product}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Category:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${category}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Location:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${location}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${rentalPeriod}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Duration:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${rentDuration} (${rentalDays} days)</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Price Per Day:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">₱${Number(pricePerDay).toLocaleString()}</td>
-                </tr>
-                <tr style="background-color: #d4edda;">
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; border-top: 2px solid #28a745;">Total Amount:</td>
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; color: #28a745; border-top: 2px solid #28a745;">₱${totalAmount.toLocaleString()}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="background-color: #e8f4f8; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #0093DD;">Customer Information</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 30%;">Name:</td>
-                  <td style="padding: 8px 0;">${name}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Email:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${email}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Phone:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${phone}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Address:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${address}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin-top: 15px;">
-              <p style="margin: 0; font-size: 14px;">
-                <strong>ⓘ Confidentiality Notice:</strong> This email and any attached documents are intended solely for the individual to whom they are addressed. If you are not the intended recipient, please notify us immediately and delete this message. Any unauthorized review, use, disclosure, or distribution is strictly prohibited.
-              </p>
-            </div>
-            
-            <p style="margin-top: 25px; font-size: 14px; color: #666;">
-              If you have any questions regarding your booking, please contact us at <a href="mailto:ezrentofficialmail@gmail.com">ezrentofficialmail@gmail.com</a>.
-            </p>
-          </div>
-          
-          <div style="background-color: #28a745; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
-            <p style="margin: 0; font-size: 14px; color: white;">
-             EzRent Company<br>Pinamalayan, Oriental Mindoro<br>Email: ezrentofficialmail@gmail.com | Office Hours: Monday–Saturday, 8:00 AM–5:00 PM
-            </p>
-          </div>
-          
-          <div style="margin-top: 20px; padding: 15px; background-color: #d1ecf1; border-radius: 6px; border-left: 4px solid #17a2b8;">
-            <p style="margin: 0; font-size: 13px; color: #0c5460;">
-              <strong>Important:</strong> This is an automated email—please do not reply. Keep this confirmation for your records.
-            </p>
-          </div>
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #28a745;">Booking Updated</h2>
+          <p>Your booking for <strong>${product}</strong> has been updated successfully.</p>
+          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
+          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
         </div>
       `
     };
 
-    // Prepare owner email options
     const ownerMailOptions = {
       from: process.env.EMAIL_USER,
-      to: ownerEmail.trim(),
-      subject: `New Booking Request - ${product}`,
+      to: ownerDetails.email.trim(),
+      subject: `Booking Request Updated - ${product}`,
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #ffc107; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; font-size: 24px;">EzRent</h1>
-            <p style="margin: 5px 0 0 0; font-size: 16px;">New Booking Request</p>
-          </div>
-          
-          <div style="padding: 30px; border: 1px solid #ddd; background-color: #fff;">
-            <h2 style="color: #333; margin-top: 0;">Dear ${ownerFullName},</h2>
-            
-            <p style="font-size: 16px; line-height: 1.6;">
-              You have received a new booking request for <strong>${product}</strong>.
-            </p>
-            
-            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin: 20px 0;">
-              <p style="margin: 0; font-size: 14px; color: #856404;">
-                <strong>⏳ Action Required:</strong> Please review this booking request and respond accordingly through your EzRent dashboard.
-              </p>
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #ffc107;">Booking Details</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Booking Number:</td>
-                  <td style="padding: 8px 0;">${requestNumber}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Item:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${product}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Category:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${category}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Location:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${location}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${rentalPeriod}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Duration:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${rentDuration} (${rentalDays} days)</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Price Per Day:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">₱${Number(pricePerDay).toLocaleString()}</td>
-                </tr>
-                <tr style="background-color: #fff3cd;">
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; border-top: 2px solid #ffc107;">Total Amount:</td>
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; color: #856404; border-top: 2px solid #ffc107;">₱${totalAmount.toLocaleString()}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="background-color: #e8f4f8; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #0093DD;">Customer Information</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 30%;">Name:</td>
-                  <td style="padding: 8px 0;">${name}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Email:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${email}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Phone:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${phone}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Address:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${address}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin-top: 15px;">
-              <p style="margin: 0; font-size: 14px;">
-                <strong>ⓘ Confidentiality Notice:</strong> This email and any attached documents are intended solely for the individual to whom they are addressed. If you are not the intended recipient, please notify us immediately and delete this message. Any unauthorized review, use, disclosure, or distribution is strictly prohibited.
-              </p>
-            </div>
-            
-            <p style="margin-top: 25px; font-size: 14px; color: #666;">
-              If you have any questions regarding this booking request, please contact us at <a href="mailto:ezrentofficialmail@gmail.com">ezrentofficialmail@gmail.com</a>.
-            </p>
-          </div>
-          
-          <div style="background-color: #ffc107; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
-            <p style="margin: 0; font-size: 14px; color: #333;">
-             EzRent Company<br>Pinamalayan, Oriental Mindoro<br>Email: ezrentofficialmail@gmail.com | Office Hours: Monday–Saturday, 8:00 AM–5:00 PM
-            </p>
-          </div>
-          
-          <div style="margin-top: 20px; padding: 15px; background-color: #d1ecf1; border-radius: 6px; border-left: 4px solid #17a2b8;">
-            <p style="margin: 0; font-size: 13px; color: #0c5460;">
-              <strong>Important:</strong> This is an automated email—please do not reply. Please use your EzRent dashboard to respond to this booking request.
-            </p>
-          </div>
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #ffc107;">Booking Update Notification</h2>
+          <p>${name} has updated their booking for <strong>${product}</strong>.</p>
+          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
+          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
         </div>
       `
     };
 
-    // Send emails separately with proper error handling
     try {
       await transporter.sendMail(mailOptions);
-      console.log("Customer email sent successfully");
-    } catch (emailError) {
-      console.error("Error sending customer email:", emailError);
-      // Continue execution even if customer email fails
+      console.log("Customer email sent");
+    } catch (err) {
+      console.error("Error sending customer email:", err.message);
     }
 
     try {
       await transporter.sendMail(ownerMailOptions);
-      console.log("Owner email sent successfully");
-    } catch (emailError) {
-      console.error("Error sending owner email:", emailError);
-      // Continue execution even if owner email fails
+      console.log("Owner email sent");
+    } catch (err) {
+      console.error("Error sending owner email:", err.message);
     }
 
     return res.status(200).json({
       success: true,
-      message: "Success in sending rent request",
-      bookingDetails: {
-        bookingId: response.id,
-        rentalDays: rentalDays,
-        totalAmount: totalAmount,
-        pricePerDay: pricePerDay
-      }
+      message: "Booking updated successfully",
+      updatedBooking,
     });
+
   } catch (error) {
-    console.error("Booking error:", error);
+    console.error("Booking update error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
