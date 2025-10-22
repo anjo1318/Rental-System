@@ -24,6 +24,10 @@ const MARGIN_TOP = Math.round(height * 0.02); // top margin scales
 export default function Messages() {
   const router = useRouter();
 
+    const handleNavigation = (path) => {
+    router.push(`/${path}`);
+  };
+
   return (
     <View style={styles.container}>
       {/* Status bar */}
