@@ -100,6 +100,7 @@ export default function Home() {
 
   const breakLongWords = (str, maxLen = 18) =>
   str ? str.replace(new RegExp(`(\\S{${maxLen}})`, "g"), "$1\u200B") : "";
+  
 
 
   return (
@@ -151,19 +152,33 @@ export default function Home() {
           <View style={styles.featuredSection}>
             <Text style={styles.sectionTitle}>Featured Devices</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {items.map((item) => (
-              <View key={item.id} style={styles.featuredCard}>
-                <Image
-                  source={{ 
-                    uri: item.itemImages && item.itemImages.length > 0 
-                      ? JSON.parse(item.itemImages[0])[0] 
-                      : "https://via.placeholder.com/150" 
-                  }}
-                  style={styles.featuredImage}
-                />
-              </View>
-            ))}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {items.map((item) => {
+                          let imageUrl = "https://via.placeholder.com/150";
+                          
+                          if (item.itemImages && item.itemImages.length > 0) {
+                            try {
+                              const parsedImages = JSON.parse(item.itemImages[0]);
+                              if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                                imageUrl = parsedImages[0].replace(/^http:/, "https:");
+                              }
+                            } catch (e) {
+                              console.error('Image parse error for item', item.id, ':', e);
+                            }
+                          }
+
+                          return (
+                            <View key={item.id} style={styles.featuredCard}>
+                              <Image
+                                source={{ uri: imageUrl }}
+                                style={styles.featuredImage}
+                                resizeMode="cover"
+                                onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+                                onLoad={() => console.log('Image loaded:', imageUrl)}
+                              />
+                            </View>
+                          );
+                        })}
           </ScrollView>
 
           {/* 🔹 Recommendations */}
@@ -205,13 +220,28 @@ export default function Home() {
               <View style={styles.card}>
                 <View style={styles.upperHalf}>
                   <Image
-                    source={{ 
-                      uri: item.itemImages && item.itemImages.length > 0 
-                        ? JSON.parse(item.itemImages[0])[0] 
-                        : "https://via.placeholder.com/150" 
+                    source={{
+                      uri:
+                        item.itemImages && item.itemImages.length > 0
+                          ? (() => {
+                              try {
+                                const imgs = JSON.parse(item.itemImages[0]);
+                                let url =
+                                  Array.isArray(imgs) && imgs.length > 0
+                                    ? imgs[0]
+                                    : "https://via.placeholder.com/150";
+                                url = url.replace(/^http:\/\//, "https://").replace(/\\+$/, "");
+                                return url;
+                              } catch {
+                                return "https://via.placeholder.com/150";
+                              }
+                            })()
+                          : "https://via.placeholder.com/150",
                     }}
-                    style={styles.itemImage}
+                    style={styles.featuredImage}
+                    resizeMode="cover"
                   />
+
 
                   {/* Availability Badge */}
                   <View style={[

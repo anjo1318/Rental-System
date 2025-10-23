@@ -14,9 +14,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import ItemImages from "./itemImages";
-
-export default function ItemDetail() {
+import OwnerItemImages from "./ownerItemImages";
+export default function OwnerItemDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // get item id from params
   const [item, setItem] = useState(null);
@@ -146,6 +145,11 @@ export default function ItemDetail() {
     }
   };
 
+  const editItem = (id) => {
+    console.log("Navigating to edit item:",item.id);
+    router.push(`owner/ownerEditItem?id=${item.id}`);
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -181,7 +185,7 @@ export default function ItemDetail() {
       </View>
 
       {/* Item Images */}
-      <ItemImages images={item.itemImages} />
+      <OwnerItemImages images={item.itemImages} />
 
       {/* Item Info */}
       <View style={styles.infoContainer}>
@@ -205,7 +209,7 @@ export default function ItemDetail() {
         {/* Book Now Button */}
         <TouchableOpacity 
           style={[styles.bookButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]} 
-          onPress={handleBooking}
+          onPress={editItem}
           disabled={!item.availability || isBooking}
           activeOpacity={0.8}
         >
@@ -217,7 +221,7 @@ export default function ItemDetail() {
           ) : (
             <>
               <Icon name="book" size={20} color="#FFF" />
-              <Text style={styles.bookButtonText}>Book Now</Text>
+              <Text style={styles.bookButtonText}>Edit</Text>
             </>
           )}
         </TouchableOpacity>

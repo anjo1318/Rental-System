@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 
@@ -29,31 +29,30 @@ export default function ownerHome() {
     total: 0,
     available: 0,
     rented: 0,
-    monthlyEarnings: 0
+    monthlyEarnings: 0,
   });
 
-  // You'll need to get the actual owner ID from AsyncStorage
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
 
   // Load user data from AsyncStorage
   const loadUserData = async () => {
     try {
-      const userData = await AsyncStorage.getItem('user');
+      const userData = await AsyncStorage.getItem("user");
       if (userData) {
         const user = JSON.parse(userData);
         setCurrentUser(user);
         setOwnerId(user.id);
-        console.log('✅ User loaded from storage:', user);
+        console.log("✅ User loaded from storage:", user);
         return user.id;
       } else {
-        console.log('❌ No user data found, redirecting to login');
-        router.replace('/ownerLogin'); // Redirect to login if no user data
+        console.log("❌ No user data found, redirecting to login");
+        router.replace("/ownerLogin");
         return null;
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
-      router.replace('/ownerLogin');
+      console.error("Error loading user data:", error);
+      router.replace("/ownerLogin");
       return null;
     }
   };
@@ -67,72 +66,74 @@ export default function ownerHome() {
     { name: "Time", icon: "schedule", route: "owner/ownerTime", isImage: false },
   ];
 
-  // Fetch owner's items from API
-  // Update the fetchOwnerItems function in your ownerHome.js
-
+  // Fetch owner's items
   const fetchOwnerItems = async (userId) => {
     if (!userId) {
-      console.log('❌ No user ID provided');
+      console.log("❌ No user ID provided");
       return;
     }
 
     try {
       setLoading(true);
-      
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       if (!token) {
-        console.log('❌ No token found, redirecting to login');
-        router.replace('/ownerLogin');
+        console.log("❌ No token found, redirecting to login");
+        router.replace("/ownerLogin");
         return;
       }
 
       const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/owner/owner/items?ownerId=${userId}`;
-      console.log('🔍 Fetching from URL:', apiUrl);
-      
+      console.log("🔍 Fetching from URL:", apiUrl);
+
       const response = await fetch(apiUrl, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
       });
-      
+
       const data = await response.json();
-      console.log('🔍 API Response:', data);
-      
+      console.log("🔍 API Response:", data);
+
       if (response.status === 401) {
-        console.log('❌ Token expired, clearing storage and redirecting to login');
-        await AsyncStorage.multiRemove(['token', 'user', 'isLoggedIn']);
-        router.replace('/ownerLogin');
+        console.log("❌ Token expired, clearing storage and redirecting to login");
+        await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
+        router.replace("/ownerLogin");
         return;
       }
-      
+
       if (data.success) {
-        const fetchedItems = data.data.map(item => {
-          // ✅ FIX: Extract first image from itemImages array
-          const imageUrl = item.itemImages && item.itemImages.length > 0 
-            ? item.itemImages[0] 
-            : "https://via.placeholder.com/150";
-          
+        const fetchedItems = data.data.map((item) => {
+          let imageUrl = "https://via.placeholder.com/150";
+          if (item.itemImages) {
+            try {
+              const parsedImages = JSON.parse(item.itemImages);
+              if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                imageUrl = parsedImages[0];
+              }
+            } catch (e) {
+              console.warn("⚠️ Could not parse itemImages for item:", item.id, e);
+            }
+          }
+
           return {
             id: item.id,
             title: item.title,
-            itemImage: imageUrl, // ✅ Now using the correct image
+            itemImage: imageUrl,
             location: item.location || "Your Location",
             pricePerDay: item.pricePerDay.toString(),
             category: item.category,
             isAvailable: item.availability,
           };
         });
-        
-        console.log('🔍 Processed items:', fetchedItems);
+
         setItems(fetchedItems);
-        
-        // Calculate stats
+
         const totalItems = fetchedItems.length;
-        const availableItems = fetchedItems.filter(item => item.isAvailable).length;
+        const availableItems = fetchedItems.filter((item) => item.isAvailable).length;
         const rentedItems = totalItems - availableItems;
-        
+
         setStats({
           total: totalItems,
           available: availableItems,
@@ -158,31 +159,25 @@ export default function ownerHome() {
         await fetchOwnerItems(userId);
       }
     };
-
     initializeApp();
   }, []);
-
 
   const handleNavigation = (route) => {
     router.push(`/${route}`);
   };
 
-
+  // ✅ Make each item card clickable
   const renderItem = ({ item }) => {
-    console.log('🔍 Rendering item:', item);
     return (
-      <View style={styles.card}>
-        {/* Upper half for image */}
+      <Pressable
+        style={styles.card}
+        onPress={() => router.push({ pathname: "owner/ownerItemDetails", params: { id: item.id } })}
+      >
         <View style={styles.upperHalf}>
           <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
         </View>
-
-        {/* Lower half for text */}
         <View style={styles.lowerHalf}>
-          {/* Title */}
           <Text style={styles.title}>{item.title}</Text>
-
-          {/* Status Badge */}
           <View style={styles.statusRow}>
             <View
               style={[
@@ -195,20 +190,16 @@ export default function ownerHome() {
               </Text>
             </View>
           </View>
-
-          {/* Location */}
           <Text style={styles.location}>{item.location}</Text>
-
-          {/* Price */}
           <Text style={styles.price}>₱{item.pricePerDay}</Text>
         </View>
-      </View>
+      </Pressable>
     );
   };
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
         <ActivityIndicator size="large" color="#057474" />
         <Text style={{ marginTop: 10, color: "#666" }}>Loading your items...</Text>
       </View>
@@ -217,31 +208,29 @@ export default function ownerHome() {
 
   return (
     <>
-      {/* ✅ StatusBar must be OUTSIDE the main View */}
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#f2f2f2"
-        translucent={false}
-      />
+      <StatusBar barStyle="dark-content" backgroundColor="#f2f2f2" translucent={false} />
 
       <View style={styles.container}>
         <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-          {/* 🔹 Profile Section */}
+          {/* Profile Section */}
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
-                <Image
-                  source={{ 
-                    uri: currentUser?.profileImage && currentUser.profileImage !== "N/A" 
-                      ? currentUser.profileImage 
-                      : "https://i.pravatar.cc/150?img=3" 
-                  }}
-                  style={styles.avatar}
-                />
-              </Pressable>
-              <Text style={styles.username}>
-                {currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : "Loading..."}
-              </Text>
-             <View style={styles.notificationWrapper}>
+              <Image
+                source={{
+                  uri:
+                    currentUser?.profileImage && currentUser.profileImage !== "N/A"
+                      ? currentUser.profileImage
+                      : "https://i.pravatar.cc/150?img=3",
+                }}
+                style={styles.avatar}
+              />
+            </Pressable>
+            <Text style={styles.username}>
+              {currentUser
+                ? `${currentUser.firstName} ${currentUser.lastName}`
+                : "Loading..."}
+            </Text>
+            <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
                 <Image
                   source={require("../../assets/images/message_chat.png")}
@@ -253,153 +242,141 @@ export default function ownerHome() {
                 </View>
               </Pressable>
             </View>
-        </View> 
-        {/* Quick Stats Section */}
-        <View style={styles.statsContainer}>
-          <View style={[styles.statCard, styles.withBorder, { borderWidth: 1, borderColor: "#3D7BFF"}]}>
-            <Text style={[styles.statLabel, { color: "#3D7BFF" }]}>Total Unit</Text>
-            <View style={styles.numberContainer}>
-              <Text style={[styles.statNumber, { color: "#3D7BFF" }]}>{stats.total}</Text>
-              <Image source={require("../../assets/images/total.png")} style={styles.lowerLeftIcon} />
+          </View>
+
+          {/* Stats */}
+          <View style={styles.statsContainer}>
+            <View style={[styles.statCard, { borderWidth: 1, borderColor: "#3D7BFF" }]}>
+              <Text style={[styles.statLabel, { color: "#3D7BFF" }]}>Total Unit</Text>
+              <View style={styles.numberContainer}>
+                <Text style={[styles.statNumber, { color: "#3D7BFF" }]}>{stats.total}</Text>
+                <Image
+                  source={require("../../assets/images/total.png")}
+                  style={styles.lowerLeftIcon}
+                />
+              </View>
+            </View>
+
+            <View style={[styles.statCard, { borderWidth: 1, borderColor: "#007F7F" }]}>
+              <Text style={[styles.statLabel, { color: "#007F7F" }]}>Occupied Unit</Text>
+              <View style={styles.numberContainer}>
+                <Text style={[styles.statNumber, { color: "#007F7F" }]}>{stats.available}</Text>
+                <Image
+                  source={require("../../assets/images/occupied.png")}
+                  style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}
+                />
+              </View>
+            </View>
+
+            <View style={[styles.statCard, { borderWidth: 1, borderColor: "#FF521D" }]}>
+              <Text style={[styles.statLabel, { color: "#FF521D" }]}>Vacant Unit</Text>
+              <View style={styles.numberContainer}>
+                <Text style={[styles.statNumber, { color: "#FF521D" }]}>{stats.rented}</Text>
+                <Image
+                  source={require("../../assets/images/vacant.png")}
+                  style={styles.lowerLeftIcon}
+                />
+              </View>
             </View>
           </View>
 
-          <View style={[styles.statCard, { borderWidth: 1, borderColor: "#007F7F"}]}>
-            <Text style={[styles.statLabel, styles.withBorder, { color: "#007F7F" }]}>Occupied Unit</Text>
-            <View style={styles.numberContainer}>
-              <Text style={[styles.statNumber, { color: "#007F7F" }]}>{stats.available}</Text>
-              <Image source={require("../../assets/images/occupied.png")} style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}/>
-            </View>
+          {/* Search */}
+          <View style={styles.searchContainer}>
+            <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+            <TextInput
+              placeholder="Search your items.."
+              value={search}
+              onChangeText={setSearch}
+              style={styles.searchInput}
+              placeholderTextColor="#555"
+            />
+            <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
           </View>
 
-          <View style={[styles.statCard, { borderWidth: 1, borderColor: "#FF521D"}]}>
-            <Text style={[styles.statLabel, { color: "#FF521D" }]}>Vacant Unit</Text>
-            <View style={styles.numberContainer}>
-              <Text style={[styles.statNumber, { color: "#FF521D" }]}>{stats.rented}</Text>
-              <Image source={require("../../assets/images/vacant.png")} style={styles.lowerLeftIcon} />
-            </View>
-          </View>
-        </View>
-
-
-
-
-
-
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Icon
-            name="search"
-            size={20}
-            color="#cccccc"
-            style={styles.leftIcon}
-          />
-          <TextInput
-            placeholder="Search your items.."
-            value={search}
-            onChangeText={setSearch}
-            style={styles.searchInput}
-            placeholderTextColor="#555"
-          />
-          <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
-        </View>
-
-        {/* Item Categories */}
-        <Text style={styles.sectionTitle}>Manage Your Items</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ marginBottom: 10 }}
-        >
-          {categories.map((cat) => (
-            <Pressable
-              key={cat}
-              style={[
-                styles.categoryButton,
-                activeCategory === cat && styles.activeCategory,
-              ]}
-              onPress={() => setActiveCategory(cat)}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  activeCategory === cat && styles.activeCategoryText,
-                ]}
+          {/* Categories */}
+          <Text style={styles.sectionTitle}>Manage Your Items</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {categories.map((cat) => (
+              <Pressable
+                key={cat}
+                style={[styles.categoryButton, activeCategory === cat && styles.activeCategory]}
+                onPress={() => setActiveCategory(cat)}
               >
-                {cat}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.categoryText,
+                    activeCategory === cat && styles.activeCategoryText,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
 
-        {/* Item List */}
-        {items.length > 0 ? (
-          <FlatList
-            data={items} // Use items directly instead of filteredItems for testing
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderItem}
-            numColumns={2}
-            columnWrapperStyle={{
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          />
-        ) : (
-          <View style={styles.noItemsContainer}>
-            <Icon name="inventory" size={64} color="#ccc" />
-            <Text style={styles.noItemsText}>
-              {search || activeCategory !== "All" 
-                ? "No items match your search" 
-                : "You haven't added any items yet"
-              }
-            </Text>
+          {/* Items List */}
+          {items.length > 0 ? (
+            <FlatList
+              data={items}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderItem}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 16 }}
+              scrollEnabled={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+            />
+          ) : (
+            <View style={styles.noItemsContainer}>
+              <Icon name="inventory" size={64} color="#ccc" />
+              <Text style={styles.noItemsText}>
+                {search || activeCategory !== "All"
+                  ? "No items match your search"
+                  : "You haven't added any items yet"}
+              </Text>
+              <Pressable
+                style={styles.addItemButton}
+                onPress={() => router.push("owner/ownerAddItem")}
+              >
+                <Text style={styles.addItemButtonText}>Add Your First Item</Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Add Item Button */}
+          <View style={styles.addButtonContainer}>
             <Pressable
-              style={styles.addItemButton}
+              style={styles.addButton}
               onPress={() => router.push("owner/ownerAddItem")}
             >
-              <Text style={styles.addItemButtonText}>Add Your First Item</Text>
+              <Icon name="add" size={24} color="#FFF" />
+              <Text style={styles.addButtonText}>Add New Item</Text>
             </Pressable>
           </View>
-        )}
+        </ScrollView>
 
-        {/* Add Item Button */}
-        <View style={styles.addButtonContainer}>
-          <Pressable
-            style={styles.addButton}
-            onPress={() => router.push("owner/ownerAddItem")}
-          >
-            <Icon name="add" size={24} color="#FFF" />
-            <Text style={styles.addButtonText}>Add New Item</Text>
-          </Pressable>
+        {/* Bottom Nav */}
+        <View style={styles.bottomNav}>
+          {navigationItems.map((navItem, index) => (
+            <Pressable
+              key={index}
+              style={styles.navButton}
+              onPress={() => handleNavigation(navItem.route)}
+            >
+              {navItem.isImage ? (
+                <Image
+                  source={navItem.icon}
+                  style={{ width: 24, height: 24 }}
+                  tintColor="#fff"
+                  resizeMode="contain"
+                />
+              ) : (
+                <Icon name={navItem.icon} size={24} color="#fff" />
+              )}
+              <Text style={styles.navText}>{navItem.name}</Text>
+            </Pressable>
+          ))}
         </View>
-      </ScrollView>
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        {navigationItems.map((navItem, index) => (
-          <Pressable
-            key={index}
-            style={styles.navButton}
-            onPress={() => handleNavigation(navItem.route)}
-          >
-            {navItem.isImage ? (
-              <Image
-                source={navItem.icon}
-                style={{ width: 24, height: 24 }}
-                tintColor="#fff"
-                resizeMode="contain"
-              />
-            ) : (
-              <Icon name={navItem.icon} size={24} color="#fff" />
-            )}
-            <Text style={styles.navText}>{navItem.name}</Text>
-          </Pressable>
-        ))}
-
       </View>
-    </View>
     </>
   );
 }

@@ -209,23 +209,15 @@ const styles = StyleSheet.create({
     
   bottomNav: {
     flexDirection: "row",
-    justifyContent: "space-evenly",
-    alignItems: "center",
+    justifyContent: "space-around",
+    paddingVertical: 12,
     backgroundColor: "#057474",
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: height * 0.08,
-    paddingBottom: Platform.OS === "ios" ? height * 0.02 : 0,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: -2 },
-    shadowRadius: 4,
-    elevation: 10,
-    borderTopWidth: 0.5,
-    borderTopColor: "rgba(255,255,255,0.2)",
-    zIndex: 99, // ✅ ensures it stays above other content
   },
 
   navButton: {
