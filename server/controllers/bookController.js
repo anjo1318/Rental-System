@@ -381,41 +381,21 @@ const bookItem = async (req, res) => {
 };
 
 const bookNotification = async (req, res) => {
+  const { id } = req.params; // this will be the customerId coming from the mobile app
+
   try {
-    const { id } = req.params; // userId (or customerId)
-    const customer = await Customer.findByPk(id);
-
-    if (!customer || !customer.expoPushToken) {
-      return res
-        .status(404)
-        .json({ success: false, error: "User or Expo push token not found" });
-    }
-
-    // Customize your notification content here
-    const message = {
-      to: customer.expoPushToken,
-      sound: "default",
-      title: "📢 Booking Update",
-      body: "Your booking has been approved! 🎉",
-      data: { type: "booking", userId: id }, // optional
-    };
-
-    // Send the notification via Expo Push API
-    const response = await fetch("https://exp.host/--/api/v2/push/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(message),
+    const response = await Books.findAll({
+      where: { customerId: id }, // ✅ find all bookings for this customer
+      order: [["created_at", "DESC"]]
     });
 
-    const data = await response.json();
-    res.json({ success: true, message: "Notification sent", data });
+    return res.status(200).json({ success: true, data: response });
   } catch (error) {
-    console.error("Error sending push notification:", error);
-    res
-      .status(500)
-      .json({ success: false, error: "Failed to send notification" });
+    console.error("Notification fetch error:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 const bookedItems = async (req, res) => {

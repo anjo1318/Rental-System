@@ -12,7 +12,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.anthony08.mobile"
+      "package": "com.anjo13.ezrent"
     },
     "web": {
       "bundler": "metro",
@@ -36,8 +36,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4228b12f-cf48-477f-b68f-e6043b8f36e1"
+        "projectId": "8d33fbdf-e0f6-4c11-9e23-5b11ee9e307f"
       }
-    }
+    },
+    "owner": "anjo13"
   }
 }
