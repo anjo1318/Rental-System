@@ -47,9 +47,9 @@ app.use((req, res, next) => {
 });
 
 // ------------------ Uploads ------------------
-
-const uploadDir = path.join(__dirname, 'uploads');
+const uploadDir = process.env.UPLOAD_PATH || '/persistent_uploads';
 const imageUploadDir = path.join(uploadDir, 'images');
+
 
 // Create directories if they don't exist
 if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
