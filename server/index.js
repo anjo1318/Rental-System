@@ -10,7 +10,9 @@ import itemRouter from './routes/item.js';
 import chatRouter from './routes/chat.js';
 import bookRouter from './routes/book.js';
 import uploadRouter from './routes/upload.js';
-import paymentRouter from './routes/payment.js'
+import paymentRouter from './routes/payment.js';
+// ✨ Import the timer restoration function
+import { restoreActiveTimers } from './controllers/bookController.js';
 import cors from 'cors';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -107,14 +109,18 @@ app.use((err, req, res, next) => {
 // ------------------ Database + Server Start ------------------
 
 connectToDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
+  .then(async () => {
+    app.listen(PORT, async () => {
       const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
       console.log(`✅ Server running on port ${PORT}`);
       console.log(`📁 Static files served from: ${uploadDir}`);
       console.log(`🖼️  Images directory: ${imageUploadDir}`);
       console.log(`🌐 Health check: ${PUBLIC_URL}`);
       console.log(`📸 Upload endpoint: ${PUBLIC_URL}/api/upload/image`);
+      
+      // ✨ Restore deadline timers on server start
+      console.log('⏰ Restoring deadline timers...');
+      await restoreActiveTimers();
     });
   })
   .catch(err => {

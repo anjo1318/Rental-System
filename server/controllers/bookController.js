@@ -1826,20 +1826,11 @@ const deleteBooking = async (req, res) => {
 
 
 // ============================================
-// Simple Timer-Based Deadline Checker
+// BOOKCONTROLLER.JS - Timer Functions Only
 // ============================================
 
 // Store active timers in memory
 const activeTimers = new Map();
-
-/**
- * Calculate milliseconds until deadline
- */
-const getTimeUntilDeadline = (returnDate) => {
-  const now = new Date();
-  const deadline = new Date(returnDate);
-  return deadline - now;
-};
 
 /**
  * Send deadline notification
@@ -1863,8 +1854,7 @@ const sendDeadlineNotification = async (booking, message) => {
       `
     });
 
-    // Optional: Send push notification here
-    // await sendPushNotification(booking.userId, message);
+    console.log('✅ Notification sent successfully');
 
   } catch (error) {
     console.error('Error sending notification:', error);
@@ -1890,14 +1880,18 @@ const startDeadlineTimer = (booking) => {
   // Calculate when to send notifications
   const threeDaysBefore = new Date(returnDate);
   threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+  threeDaysBefore.setHours(8, 0, 0, 0); // 8 AM
   
   const oneDayBefore = new Date(returnDate);
   oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+  oneDayBefore.setHours(8, 0, 0, 0); // 8 AM
   
-  const dueDate = returnDate;
+  const dueDate = new Date(returnDate);
+  dueDate.setHours(8, 0, 0, 0); // 8 AM on due date
   
   const oneDayAfter = new Date(returnDate);
   oneDayAfter.setDate(oneDayAfter.getDate() + 1);
+  oneDayAfter.setHours(8, 0, 0, 0); // 8 AM
 
   const timers = [];
 
@@ -1949,6 +1943,8 @@ const startDeadlineTimer = (booking) => {
   if (timers.length > 0) {
     activeTimers.set(bookingId, timers);
     console.log(`✅ Started ${timers.length} timers for booking ${bookingId}`);
+  } else {
+    console.log(`⚠️ No timers needed for booking ${bookingId} (return date passed)`);
   }
 };
 
@@ -1961,6 +1957,42 @@ const cancelDeadlineTimer = (bookingId) => {
     timers.forEach(timer => clearTimeout(timer));
     activeTimers.delete(bookingId);
     console.log(`🛑 Cancelled timers for booking ${bookingId}`);
+  }
+};
+
+/**
+ * Restore timers on server restart
+ */
+const restoreActiveTimers = async () => {
+  try {
+    console.log('🔄 Restoring deadline timers...');
+    
+    const { Op } = await import('sequelize');
+    
+    const activeBookings = await Books.findAll({
+      where: {
+        status: ['pending', 'confirmed', 'active'],
+        returnDate: {
+          [Op.gte]: new Date() // Only future/current rentals
+        }
+      }
+    });
+
+    console.log(`Found ${activeBookings.length} active bookings`);
+
+    for (const booking of activeBookings) {
+      startDeadlineTimer({
+        id: booking.id,
+        product: booking.product,
+        email: booking.email,
+        returnDate: booking.returnDate,
+        userId: booking.customerId
+      });
+    }
+
+    console.log('✅ Timers restored successfully');
+  } catch (error) {
+    console.error('Error restoring timers:', error);
   }
 };
 
@@ -2021,7 +2053,7 @@ const bookItemUpdate = async (req, res) => {
 
     const updatedBooking = existingBooking;
 
-    // ✨ START DEADLINE TIMER
+    // ✨ START DEADLINE TIMER (ADD THIS LINE)
     startDeadlineTimer({
       id: updatedBooking.id,
       product: updatedBooking.product,
@@ -2097,78 +2129,6 @@ const bookItemUpdate = async (req, res) => {
   }
 };
 
-// ============================================
-// Server Restart: Restore Timers from Database
-// ============================================
-
-const restoreActiveTimers = async () => {
-  try {
-    console.log('🔄 Restoring deadline timers...');
-    
-    const activeBookings = await Books.findAll({
-      where: {
-        status: ['pending', 'confirmed', 'active'],
-        returnDate: {
-          [Op.gte]: new Date() // Only future/current rentals
-        }
-      }
-    });
-
-    console.log(`Found ${activeBookings.length} active bookings`);
-
-    for (const booking of activeBookings) {
-      startDeadlineTimer({
-        id: booking.id,
-        product: booking.product,
-        email: booking.email,
-        returnDate: booking.returnDate,
-        userId: booking.customerId
-      });
-    }
-
-    console.log('✅ Timers restored successfully');
-  } catch (error) {
-    console.error('Error restoring timers:', error);
-  }
-};
-
-// ============================================
-// Add to server.js / app.js
-// ============================================
-
-// After database connection, restore timers
-app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
-  
-  // Restore timers on server start
-  await restoreActiveTimers();
-});
-
-// ============================================
-// Handle booking cancellation/completion
-// ============================================
-
-const completeBooking = async (req, res) => {
-  try {
-    const { bookingId } = req.params;
-    
-    await Books.update(
-      { status: 'completed' },
-      { where: { id: bookingId } }
-    );
-
-    // Cancel timer when booking is completed
-    cancelDeadlineTimer(bookingId);
-
-    res.json({ success: true, message: 'Booking completed' });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-
-
-
 
 
 
@@ -2190,6 +2150,5 @@ export {
   bookItemUpdate,
   startDeadlineTimer,
   cancelDeadlineTimer,
-  restoreActiveTimers,
-  completeBooking
+  restoreActiveTimers
 };
