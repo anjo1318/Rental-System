@@ -112,7 +112,7 @@ export default function Home() {
       />
 
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>
@@ -284,7 +284,7 @@ export default function Home() {
               hitSlop={10}
               onPress={() => handleNavigation(navItem.route)}
             >
-              <Icon name={navItem.icon} size={24} color="#fff" />
+              <Icon name={navItem.icon} style={styles.navIcon} />
               <Text style={styles.navText}>{navItem.name}</Text>
             </Pressable>
           ))}

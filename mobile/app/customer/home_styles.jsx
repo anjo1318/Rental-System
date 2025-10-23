@@ -1,4 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
+import { StyleSheet, Dimensions,Platform } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
@@ -206,33 +206,47 @@ const styles = StyleSheet.create({
   activeCategory: { backgroundColor: "#007F7F" },
   categoryText: { fontSize: width * 0.035, color: "#555" },
   activeCategoryText: { color: "#fff", fontWeight: "bold" },
+    
+  bottomNav: {
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+    backgroundColor: "#057474",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: height * 0.08,
+    paddingBottom: Platform.OS === "ios" ? height * 0.02 : 0,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: -2 },
+    shadowRadius: 4,
+    elevation: 10,
+    borderTopWidth: 0.5,
+    borderTopColor: "rgba(255,255,255,0.2)",
+    zIndex: 99, // ✅ ensures it stays above other content
+  },
 
-bottomNav: {
-  position: "fixed",
-  flexDirection: "row",
-  justifyContent: "space-around",
-  alignItems: "center",
-  paddingVertical: height * 0.015,
-  backgroundColor: "#057474",
-  elevation: 1, // Android shadow
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: -2 },
-  shadowOpacity: 0.25,
-  shadowRadius: 5,
-  marginTop: 320
-},
+  navButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
 
-navButton: {
-  alignItems: "center",
-  justifyContent: "center",
-},
-navText: {
-  color: "#fff",
-  fontSize: 12,
-  marginTop: 2,
-},
+  navIcon: {
+    fontSize: Math.min(width * 0.06, 26),
+    color: "#fff",
+  },
 
+  navText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: Math.min(width * 0.03, 13),
+    marginTop: height * 0.004,
+  },
 
+ 
   center: { 
     flex: 1, 
     justifyContent: "center", 
