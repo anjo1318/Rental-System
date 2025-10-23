@@ -46,9 +46,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// ------------------ Uploads ------------------
+
+
 const uploadDir = process.env.UPLOAD_PATH || '/persistent_uploads';
 const imageUploadDir = path.join(uploadDir, 'images');
+
 
 
 // Create directories if they don't exist
