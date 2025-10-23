@@ -30,10 +30,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ✅ Get signup progress
 router.get("/sign-up/progress/:id", getCustomerProgress);
 
-// ✅ File upload (guarantors + ID)
 router.post(
   "/sign-up/guarantors-id",
   upload.fields([
@@ -61,7 +59,6 @@ router.post(
   }
 );
 
-// ✅ Final signup (with file upload support)
 router.post(
   "/sign-up",
   upload.fields([
@@ -71,10 +68,8 @@ router.post(
   customerSignUp
 );
 
-// ✅ Get all customers
 router.get("/", fetchCustomers);
 
-// ✅ Update customer details
 router.put("/update/:id", updateCustomerDetails);
 
 // Multer error handling

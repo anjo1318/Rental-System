@@ -125,7 +125,7 @@ export default function Notifications() {
   // Get notification icon based on type/status
   const getNotificationIcon = (status) => {
     switch(status?.toLowerCase()) {
-      case 'confirmed': return { name: 'check-circle', color: '#4CAF50', bg: '#E8F5E9' };
+      case 'ongoing': return { name: 'check-circle', color: '#4CAF50', bg: '#E8F5E9' };
       case 'pending': return { name: 'schedule', color: '#FF9800', bg: '#FFF3E0' };
       case 'cancelled': return { name: 'cancel', color: '#F44336', bg: '#FFEBEE' };
       case 'completed': return { name: 'done-all', color: '#2196F3', bg: '#E3F2FD' };
@@ -136,7 +136,7 @@ export default function Notifications() {
   // Generate notification title
   const getNotificationTitle = (notif) => {
     switch(notif.status?.toLowerCase()) {
-      case 'confirmed':
+      case 'ongoing':
         return 'Renting Successful';
       case 'pending':
         return 'Payment Being Processed';
@@ -152,7 +152,7 @@ export default function Notifications() {
   // Generate notification message
   const getNotificationMessage = (notif) => {
     switch(notif.status?.toLowerCase()) {
-      case 'confirmed':
+      case 'confongoingirmed':
         return `Your rental for "${notif.product}" has been confirmed. Check your email for details and instructions. Safe travels!`;
       case 'pending':
         return `Your payment was processed successfully! Keep using the app.`;
@@ -263,8 +263,7 @@ export default function Notifications() {
           ))
         )}
       </ScrollView>
-
-      {/* Bottom Nav */}
+      {/* 🔹 Bottom Nav */}
       <View style={styles.bottomNav}>
         {[
           { name: "Home", icon: "home", route: "customer/home" },
@@ -278,19 +277,8 @@ export default function Notifications() {
             hitSlop={10}
             onPress={() => handleNavigation(navItem.route)}
           >
-            <Icon 
-              name={navItem.icon} 
-              size={24} 
-              color={navItem.route === "customer/time" ? "#057474" : "#9E9E9E"} 
-            />
-            <Text 
-              style={[
-                styles.navText,
-                navItem.route === "customer/time" && styles.activeNavText
-              ]}
-            >
-              {navItem.name}
-            </Text>
+            <Icon name={navItem.icon} size={24} color="#fff" />
+            <Text style={styles.navText}>{navItem.name}</Text>
           </Pressable>
         ))}
       </View>
@@ -408,7 +396,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 12,
-    backgroundColor: "#FFF",
+    backgroundColor: "#057474",
     borderTopWidth: 1,
     borderTopColor: "#E0E0E0",
     position: "absolute",
@@ -418,13 +406,12 @@ const styles = StyleSheet.create({
   },
   navButton: {
     alignItems: "center",
-    flex: 1,
+    justifyContent: "center",
   },
   navText: {
-    color: "#9E9E9E",
-    fontSize: 11,
-    marginTop: 4,
-    fontWeight: "500",
+    color: "#fff",
+    fontSize: 12,
+    marginTop: 2,
   },
   activeNavText: {
     color: "#057474",

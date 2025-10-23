@@ -49,46 +49,47 @@ const verify = (req, res) => {
 const mobileUserLogin = async (req, res) => {
   console.log("Trying to login using mobileUserLogin");
   try {
-    const { email, password } = req.body;
-
+    const { email, password, expoPushToken } = req.body; // ← add this
     console.log("Login attempt:", req.body);
 
-    // 🔹 Use emailAddress instead of email (since that's your DB column)
     const customer = await Customer.findOne({ where: { emailAddress: email } });
 
     if (!customer) {
       return res.status(404).json({ success: false, error: 'Customer not found' });
     }
 
-    // 🔹 CHECK EMAIL VERIFICATION STATUS - PREVENT UNVERIFIED USERS FROM LOGGING IN
     if (!customer.isVerified) {
       console.log(`Login blocked for unverified user: ${customer.emailAddress}`);
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Please verify your email address before logging in. Check your inbox for the verification link.' 
+      return res.status(403).json({
+        success: false,
+        error: 'Please verify your email address before logging in. Check your inbox for the verification link.'
       });
     }
 
-    // 🔹 Compare passwords
     const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Wrong password' });
     }
 
-    // 🔹 Generate JWT with role = customer
+    // ✅ Save Expo token if present
+    if (expoPushToken && expoPushToken !== customer.expoPushToken) {
+      customer.expoPushToken = expoPushToken;
+      await customer.save();
+      console.log(`Saved Expo token for ${customer.emailAddress}`);
+    }
+
     const token = jwt.sign(
       { id: customer.id, role: 'customer' },
       process.env.JWT_KEY,
       { expiresIn: '10d' }
     );
 
-    console.log(`${customer.emailAddress}, successfully logged in`);
+    console.log(`${customer.emailAddress} successfully logged in`);
 
-    // 🔹 Send response (build full name)
     res.status(200).json({
       success: true,
       token,
-      user: { 
+      user: {
         id: customer.id,
         name: `${customer.firstName} ${customer.lastName}`,
         firstName: customer.firstName,
@@ -105,15 +106,16 @@ const mobileUserLogin = async (req, res) => {
         province: customer.province,
         country: customer.country,
         zipCode: customer.zipCode,
-        role: 'customer'
+        role: 'customer',
+        expoPushToken: customer.expoPushToken, // optional
       },
     });
-
   } catch (error) {
     console.error('Login Error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 const mobileOwnerLogin = async (req, res) => {
   console.log("Trying to login using mobileOwnerLogin");

@@ -4,6 +4,9 @@ import Owner from "../models/Owner.js";
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { Op } from "sequelize";
+import fetch from "node-fetch"; // if Node < 18, install: npm i node-fetch
+import Customer from "../models/Customer.js";
+
 
 dotenv.config();
 
@@ -377,23 +380,43 @@ const bookItem = async (req, res) => {
   }
 };
 
-
-
 const bookNotification = async (req, res) => {
-  const { id } = req.params; // this will be the customerId coming from the mobile app
-
   try {
-    const response = await Books.findAll({
-      where: { customerId: id }, // ✅ find all bookings for this customer
-      order: [["created_at", "DESC"]]
+    const { id } = req.params; // userId (or customerId)
+    const customer = await Customer.findByPk(id);
+
+    if (!customer || !customer.expoPushToken) {
+      return res
+        .status(404)
+        .json({ success: false, error: "User or Expo push token not found" });
+    }
+
+    // Customize your notification content here
+    const message = {
+      to: customer.expoPushToken,
+      sound: "default",
+      title: "📢 Booking Update",
+      body: "Your booking has been approved! 🎉",
+      data: { type: "booking", userId: id }, // optional
+    };
+
+    // Send the notification via Expo Push API
+    const response = await fetch("https://exp.host/--/api/v2/push/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(message),
     });
 
-    return res.status(200).json({ success: true, data: response });
+    const data = await response.json();
+    res.json({ success: true, message: "Notification sent", data });
   } catch (error) {
-    console.error("Notification fetch error:", error);
-    return res.status(500).json({ success: false, message: error.message });
+    console.error("Error sending push notification:", error);
+    res
+      .status(500)
+      .json({ success: false, error: "Failed to send notification" });
   }
 };
+
 
 const bookedItems = async (req, res) => {
   const { id } = req.params; // this will be the customerId coming from the mobile 
@@ -1825,17 +1848,8 @@ const deleteBooking = async (req, res) => {
   }
 }
 
-
-// ============================================
-// BOOKCONTROLLER.JS - Timer Functions Only
-// ============================================
-
-// Store active timers in memory
 const activeTimers = new Map();
 
-/**
- * Send deadline notification
- */
 const sendDeadlineNotification = async (booking, message) => {
   try {
     console.log(`🔔 Deadline alert for booking ${booking.id}: ${message}`);
@@ -1862,9 +1876,6 @@ const sendDeadlineNotification = async (booking, message) => {
   }
 };
 
-/**
- * Start countdown timer for a booking
- */
 const startDeadlineTimer = (booking) => {
   const bookingId = booking.id;
   

@@ -41,10 +41,6 @@ router.get('/notification/:userId/unread-count', getUnreadCount);
 
 router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
 
-
-
-
-
 //for owners
 router.get("/book-request/:id", fetchBookRequest);
 router.put('/approve-booking/:id', approveBooking);

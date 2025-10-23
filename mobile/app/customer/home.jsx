@@ -112,7 +112,7 @@ export default function Home() {
       />
 
       <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>

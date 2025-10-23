@@ -207,28 +207,31 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: width * 0.035, color: "#555" },
   activeCategoryText: { color: "#fff", fontWeight: "bold" },
 
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "#057474",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-  navButton: { 
-    alignItems: "center", 
-    flex: 1,
-    zIndex: 10, 
-  },
-    
-  navText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: width * 0.03,
-    marginTop: height * 0.005,
-  },
+bottomNav: {
+  position: "fixed",
+  flexDirection: "row",
+  justifyContent: "space-around",
+  alignItems: "center",
+  paddingVertical: height * 0.015,
+  backgroundColor: "#057474",
+  elevation: 1, // Android shadow
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: -2 },
+  shadowOpacity: 0.25,
+  shadowRadius: 5,
+  marginTop: 320
+},
+
+navButton: {
+  alignItems: "center",
+  justifyContent: "center",
+},
+navText: {
+  color: "#fff",
+  fontSize: 12,
+  marginTop: 2,
+},
+
 
   center: { 
     flex: 1, 

@@ -201,6 +201,11 @@ const Customer = sequelize.define('customer', {
     allowNull: false,
     defaultValue: false
   },
+  expoPushToken: {
+  type: DataTypes.STRING,
+  allowNull: true,
+},
+
 
 }, {
   tableName: 'customer',

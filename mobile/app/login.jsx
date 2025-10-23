@@ -20,10 +20,12 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import usePushNotifications from "./hooks/usePushNotifications";
 
 const { width, height } = Dimensions.get("window");
 
 export default function Login() {
+  const { expoPushToken } = usePushNotifications();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,6 +123,19 @@ export default function Login() {
         // Save token & user info
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
+        // ✅ Register device token to backend
+        if (expoPushToken) {
+          try {
+            await axios.put(
+              `${process.env.EXPO_PUBLIC_API_URL}/api/users/${user.id}/token`,
+              { expoPushToken }
+            );
+            console.log("Expo push token saved to backend");
+          } catch (err) {
+            console.error("Failed to save token:", err);
+          }
+        }
+
 
         router.push("customer/home");
       } 
