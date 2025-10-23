@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useId } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,47 +7,43 @@ import {
   Dimensions,
   Pressable,
   StatusBar,
-  Image
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from 'axios';
-import { Protected } from "expo-router/build/views/Protected";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 const { width, height } = Dimensions.get("window");
 
-// ✅ Responsive constants derived from screen size
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09)); // at least 64px
-const ICON_BOX = Math.round(width * 0.10); // 12% of width for icon slots
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06)); // icons scale with width
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // title font adapts to width
-const PADDING_H = Math.round(width * 0.02); // horizontal padding scales
-const MARGIN_TOP = Math.round(height * 0.02); // top margin scales
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.02);
 
 export default function Notifications() {
   const router = useRouter();
   const [notifications, setNotifications] = useState([]);
   const [userId, setUserId] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
-    useEffect(() => {
-    loadUserData(); // run only once on mount
-    }, []);
+  useEffect(() => {
+    loadUserData();
+  }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     if (userId) {
-        fetchNotifications(); // run only when userId is available
+      fetchNotifications();
     }
-    }, [userId]);
-
+  }, [userId]);
 
   const loadUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
       if (userData) {
         const user = JSON.parse(userData);
-        console.log("From local storgae", userData);
         setUserId(user.id || "");
       }
     } catch (error) {
@@ -55,128 +51,220 @@ export default function Notifications() {
     }
   };
 
-    const fetchNotifications = async () => {
+  const fetchNotifications = async () => {
     try {
-        console.log("Fetching notifications for userId:", userId);
+      console.log("Fetching notifications for userId:", userId);
 
-        const response = await axios.get(
+      const response = await axios.get(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book/notification/${userId}`
-        );
+      );
 
-        if (response.data.success) {
-        console.log("Notifications:", response.data.data);
-        setNotifications(response.data.data);
-        } else {
-        console.log("No notifications found");
-        }
+      if (response.data.success) {
+        // Group by date
+        const grouped = groupNotificationsByDate(response.data.data);
+        setNotifications(grouped);
+      } else {
+        setNotifications([]);
+      }
     } catch (error) {
-        console.error("Error fetching notifications:", error);
+      console.error("Error fetching notifications:", error);
+      setNotifications([]);
     }
-    };
+  };
 
-    const handleNavigation = (route) => {
-        router.push(`/${route}`);
-    };
+  // Group notifications by Today, Previous
+  const groupNotificationsByDate = (notifs) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    const todayNotifs = [];
+    const previousNotifs = [];
 
+    notifs.forEach(notif => {
+      const notifDate = new Date(notif.created_at);
+      notifDate.setHours(0, 0, 0, 0);
+
+      if (notifDate.getTime() === today.getTime()) {
+        todayNotifs.push(notif);
+      } else {
+        previousNotifs.push(notif);
+      }
+    });
+
+    const result = [];
+    if (todayNotifs.length > 0) {
+      result.push({ section: 'Today', data: todayNotifs });
+    }
+    if (previousNotifs.length > 0) {
+      result.push({ section: 'Previous', data: previousNotifs });
+    }
+
+    return result;
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+    setRefreshing(false);
+  };
+
+  const handleNavigation = (route) => {
+    router.push(`/${route}`);
+  };
+
+  // Format time (e.g., "09:41 AM")
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  // Get notification icon based on type/status
+  const getNotificationIcon = (status) => {
+    switch(status?.toLowerCase()) {
+      case 'confirmed': return { name: 'check-circle', color: '#4CAF50', bg: '#E8F5E9' };
+      case 'pending': return { name: 'schedule', color: '#FF9800', bg: '#FFF3E0' };
+      case 'cancelled': return { name: 'cancel', color: '#F44336', bg: '#FFEBEE' };
+      case 'completed': return { name: 'done-all', color: '#2196F3', bg: '#E3F2FD' };
+      default: return { name: 'notifications', color: '#057474', bg: '#E0F2F1' };
+    }
+  };
+
+  // Generate notification title
+  const getNotificationTitle = (notif) => {
+    switch(notif.status?.toLowerCase()) {
+      case 'confirmed':
+        return 'Renting Successful';
+      case 'pending':
+        return 'Payment Being Processed';
+      case 'cancelled':
+        return 'Booking Cancelled';
+      case 'completed':
+        return 'Rental Completed';
+      default:
+        return 'Booking Update';
+    }
+  };
+
+  // Generate notification message
+  const getNotificationMessage = (notif) => {
+    switch(notif.status?.toLowerCase()) {
+      case 'confirmed':
+        return `Your rental for "${notif.product}" has been confirmed. Check your email for details and instructions. Safe travels!`;
+      case 'pending':
+        return `Your payment was processed successfully! Keep using the app.`;
+      case 'cancelled':
+        return `Your booking for "${notif.product}" has been cancelled. If you need help, contact us.`;
+      case 'completed':
+        return `Thank you for returning "${notif.product}" on time. We hope to serve you again!`;
+      default:
+        return `Update for your "${notif.product}" rental. Pickup: ${new Date(notif.pickUpDate).toLocaleDateString()}`;
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Status bar */}
       <StatusBar
-        barStyle="light-content"
-        backgroundColor="#057474"
+        barStyle="dark-content"
+        backgroundColor="#FFF"
         translucent={false}
       />
 
       {/* Header */}
       <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
         <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }]}>
-          {/* Left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable
               onPress={() => router.back()}
               hitSlop={10}
               style={styles.iconPress}
             >
-              <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
+              <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
             </Pressable>
           </View>
 
-          {/* Center: page title */}
           <Text
             numberOfLines={1}
             ellipsizeMode="tail"
             style={[styles.pageName, { fontSize: TITLE_FONT }]}
           >
-            Notifications
+            Notification
           </Text>
 
-          {/* Right: placeholder (keeps title centered) */}
           <View style={[styles.iconBox, { width: ICON_BOX }]} />
         </View>
       </View>
 
       {/* Body */}
-      <View style={styles.bodyWrapper}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#057474"]}
+            tintColor="#057474"
+          />
+        }
+      >
         {notifications.length === 0 ? (
-            <Text style={styles.noNotif}>No notifications yet.</Text>
+          <View style={styles.emptyState}>
+            <Icon name="notifications-none" size={64} color="#D0D0D0" />
+            <Text style={styles.noNotif}>No notifications yet</Text>
+            <Text style={styles.pullToRefresh}>Pull down to refresh</Text>
+          </View>
         ) : (
-            notifications.map((notif, index) => (
-                            
-            // Inside notifications.map
-            <Pressable
-            key={notif.id}
-            style={styles.messageRow}
-            onPress={() =>
-                router.push({
-                pathname: "/customer/notificationDetails",
-                params: { ...notif }, // pass everything including itemImage
-                })
-            }
-            >
-            {/* Avatar / Image */}
-            {notif.itemImage ? (
-                <Image
-                source={{ uri: notif.itemImage }}
-                style={styles.avatarImage}
-                resizeMode="cover"
-                />
-            ) : (
-                <View style={styles.avatar}>
-                <Icon name="photo-camera" size={28} color="#666" />
-                </View>
-            )}
+          notifications.map((section, sectionIdx) => (
+            <View key={sectionIdx} style={styles.section}>
+              {/* Section Header */}
+              <Text style={styles.sectionHeader}>{section.section}</Text>
 
-            {/* Message content */}
-            <View style={styles.messageContent}>
-                <Text style={styles.messageName} numberOfLines={1}>
-                {notif.product || "Unknown Product"}
-                </Text>
-                <Text style={styles.messagePreview} numberOfLines={1}>
-                {notif.status} • Pickup: {notif.pickUpDate}
-                </Text>
+              {/* Notification Cards */}
+              {section.data.map((notif) => {
+                const iconData = getNotificationIcon(notif.status);
+                return (
+                  <Pressable
+                    key={notif.id}
+                    style={styles.notificationCard}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/customer/notificationDetails",
+                        params: { ...notif },
+                      })
+                    }
+                  >
+                    {/* Icon */}
+                    <View style={[styles.iconCircle, { backgroundColor: iconData.bg }]}>
+                      <Icon name={iconData.name} size={24} color={iconData.color} />
+                    </View>
+
+                    {/* Content */}
+                    <View style={styles.notifContent}>
+                      <View style={styles.notifHeader}>
+                        <Text style={styles.notifTitle}>
+                          {getNotificationTitle(notif)}
+                        </Text>
+                        <Text style={styles.notifTime}>
+                          {formatTime(notif.created_at)}
+                        </Text>
+                      </View>
+                      <Text style={styles.notifMessage} numberOfLines={2}>
+                        {getNotificationMessage(notif)}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
             </View>
-
-             <View style={styles.horizontalLine} />
-
-            {/* Date */}
-            <Text style={styles.messageDate}>
-                {new Date(notif.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                })}
-            </Text>
-            </Pressable>
-
-            ))
+          ))
         )}
-        </ScrollView>
+      </ScrollView>
 
-        </View>
-
-      {/* 🔹 Bottom Nav */}
+      {/* Bottom Nav */}
       <View style={styles.bottomNav}>
         {[
           { name: "Home", icon: "home", route: "customer/home" },
@@ -190,8 +278,19 @@ export default function Notifications() {
             hitSlop={10}
             onPress={() => handleNavigation(navItem.route)}
           >
-            <Icon name={navItem.icon} size={24} color="#fff" />
-            <Text style={styles.navText}>{navItem.name}</Text>
+            <Icon 
+              name={navItem.icon} 
+              size={24} 
+              color={navItem.route === "customer/time" ? "#057474" : "#9E9E9E"} 
+            />
+            <Text 
+              style={[
+                styles.navText,
+                navItem.route === "customer/time" && styles.activeNavText
+              ]}
+            >
+              {navItem.name}
+            </Text>
           </Pressable>
         ))}
       </View>
@@ -202,147 +301,133 @@ export default function Notifications() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#F5F5F5",
   },
-
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#057474",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
     justifyContent: "center",
   },
-
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-
   iconBox: {
     alignItems: "center",
     justifyContent: "center",
   },
-
   iconPress: {
-    padding: width * 0.02, // tap area scales with width
+    padding: width * 0.02,
     borderRadius: 6,
   },
-
   pageName: {
-    color: "#FFF",
+    color: "#000",
     textAlign: "center",
     flex: 1,
-    paddingHorizontal: width * 0.015, // keeps spacing consistent
     fontWeight: "600",
   },
-
-  bodyWrapper: {
+  scrollView: {
     flex: 1,
-    paddingHorizontal: width * 0.04, // responsive padding
-    paddingBottom: height * 0.04, // scales bottom padding
-    justifyContent: "space-between",
-
   },
-
   scrollContent: {
-    flexGrow: 1,
-    marginTop: 5,
+    paddingBottom: 80,
+  },
+  section: {
+    marginTop: 16,
+  },
+  sectionHeader: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#666",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: "#F5F5F5",
+  },
+  notificationCard: {
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  notifContent: {
+    flex: 1,
+  },
+  notifHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  notifTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000",
+    flex: 1,
+  },
+  notifTime: {
+    fontSize: 12,
+    color: "#999",
+    marginLeft: 8,
+  },
+  notifMessage: {
+    fontSize: 13,
+    color: "#666",
+    lineHeight: 18,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: height * 0.25,
+  },
+  noNotif: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#999",
+    marginTop: 16,
+  },
+  pullToRefresh: {
+    fontSize: 13,
+    color: "#CCC",
+    marginTop: 8,
   },
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "#057474",
+    paddingVertical: 12,
+    backgroundColor: "#FFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
   },
-  navButton: { 
-    alignItems: "center", 
+  navButton: {
+    alignItems: "center",
     flex: 1,
-    zIndex: 10, 
   },
-    
   navText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: width * 0.03,
-    marginTop: height * 0.005,
+    color: "#9E9E9E",
+    fontSize: 11,
+    marginTop: 4,
+    fontWeight: "500",
   },
-
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+  activeNavText: {
+    color: "#057474",
+    fontWeight: "600",
   },
-
-  messageRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  paddingVertical: 12,
-  borderBottomWidth: 1,
-  borderBottomColor: "#ddd",
-},
-
-avatar: {
-  width: 48,
-  height: 48,
-  borderRadius: 24,
-  backgroundColor: "#ccc",
-  justifyContent: "center",
-  alignItems: "center",
-  marginRight: 12,
-},
-
-messageContent: {
-  flex: 1,
-},
-
-messageName: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#000",
-},
-
-messagePreview: {
-  fontSize: 14,
-  color: "#666",
-  marginTop: 2,
-},
-horizontalLine: {
-    position: "absolute",
-    height: 1.5,
-    backgroundColor: "#05747480",
-    width: "80%", 
-    left: "18%",
-    top: 80,                    
-    zIndex: 1,       
-  },
-
-messageDate: {
-  fontSize: 12,
-  color: "#666",
-  marginLeft: 8,
-},
-
-noNotif: {
-  textAlign: "center",
-  marginTop: 20,
-  fontSize: 14,
-  color: "#666",
-},
-avatarImage: {
-  width: 48,
-  height: 48,
-  borderRadius: 24,
-  marginRight: 12,
-  backgroundColor: "#ddd",
-  marginTop: 10,
-},
-
-
 });
-
-

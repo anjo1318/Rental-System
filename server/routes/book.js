@@ -13,7 +13,12 @@ import { approveBooking,
     rejectBookingRequest, 
     requestBooking, 
     startBooking, 
-    terminateBooking } from '../controllers/bookController.js';
+    terminateBooking,
+    getUserNotifications,
+    markAsRead,
+    getUnreadCount,
+    cleanupOldNotifications
+} from '../controllers/bookController.js';
 
 const router = express.Router()
 
@@ -27,6 +32,17 @@ router.put('/request/:id', requestBooking);
 router.put('/approve-request/:id', approveBookingRequest);
 router.put('/reject-request/:id', rejectBookingRequest);
 router.delete('/delete/:id', deleteBooking);
+
+router.get('/notification/:userId', getUserNotifications);
+
+router.put('/notification/:notificationId/read', markAsRead);
+
+router.get('/notification/:userId/unread-count', getUnreadCount);
+
+router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
+
+
+
 
 
 //for owners

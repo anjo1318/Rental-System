@@ -79,6 +79,15 @@ const Books = sequelize.define("Books", {
     type: DataTypes.DECIMAL,
     allowNull:false 
   },
+  isRead: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    allowNull: false
+  },
+  readAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
  status: {
     type: DataTypes.ENUM(
       'approved', 

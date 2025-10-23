@@ -3,6 +3,7 @@ import Books from "../models/Book.js";
 import Owner from "../models/Owner.js";
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import { Op } from "sequelize";
 
 dotenv.config();
 
@@ -1996,9 +1997,6 @@ const restoreActiveTimers = async () => {
   }
 };
 
-// ============================================
-// Updated bookItemUpdate with Timer
-// ============================================
 
 const bookItemUpdate = async (req, res) => {
   try {
@@ -2053,7 +2051,6 @@ const bookItemUpdate = async (req, res) => {
 
     const updatedBooking = existingBooking;
 
-    // ✨ START DEADLINE TIMER (ADD THIS LINE)
     startDeadlineTimer({
       id: updatedBooking.id,
       product: updatedBooking.product,
@@ -2130,6 +2127,184 @@ const bookItemUpdate = async (req, res) => {
 };
 
 
+const getUserNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required"
+      });
+    }
+
+    // Fetch all bookings for this customer, ordered by newest first
+    const notifications = await Books.findAll({
+      where: {
+        customerId: userId
+      },
+      order: [['created_at', 'DESC']], // Newest first
+      // Optionally limit to recent notifications
+      // limit: 50
+    });
+
+
+    return res.status(200).json({
+      success: true,
+      data: notifications,
+      count: notifications.length
+    });
+
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch notifications",
+      error: error.message
+    });
+  }
+};
+
+const markAsRead = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+
+    const notification = await Books.findByPk(notificationId);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found"
+      });
+    }
+
+    // If you want to add a 'read' status, add this column to your database
+    await notification.update({
+      isRead: true,
+      readAt: new Date()
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Notification marked as read",
+      data: notification
+    });
+
+  } catch (error) {
+    console.error("Error marking notification as read:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to mark notification as read",
+      error: error.message
+    });
+  }
+};
+
+
+const getUnreadCount = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const count = await Books.count({
+      where: {
+        customerId: userId,
+        isRead: false // Requires 'isRead' column in database
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      unreadCount: count
+    });
+
+  } catch (error) {
+    console.error("Error getting unread count:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get unread count",
+      error: error.message
+    });
+  }
+};
+
+const cleanupOldNotifications = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const daysToKeep = 30; // Keep notifications for 30 days
+
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+
+    const deleted = await Books.destroy({
+      where: {
+        customerId: userId,
+        created_at: {
+          [Op.lt]: cutoffDate
+        },
+        status: ['completed', 'cancelled'] // Only delete completed/cancelled
+      }
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Deleted ${deleted} old notifications`,
+      deletedCount: deleted
+    });
+
+  } catch (error) {
+    console.error("Error cleaning up notifications:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to cleanup notifications",
+      error: error.message
+    });
+  }
+};
+
+
+const addNotificationReadStatus = {
+  up: async (queryInterface, Sequelize) => {
+    await queryInterface.addColumn('bookings', 'isRead', {
+      type: Sequelize.BOOLEAN,
+      defaultValue: false,
+      allowNull: false
+    });
+    
+    await queryInterface.addColumn('bookings', 'readAt', {
+      type: Sequelize.DATE,
+      allowNull: true
+    });
+  },
+
+  down: async (queryInterface, Sequelize) => {
+    await queryInterface.removeColumn('bookings', 'isRead');
+    await queryInterface.removeColumn('bookings', 'readAt');
+  }
+};
+
+
+const confirmBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    
+    await Books.update(
+      { 
+        status: 'confirmed',
+        // Optional: mark as unread when status changes
+        isRead: false
+      },
+      { where: { id: bookingId } }
+    );
+
+    // Notification automatically appears in customer's notification list!
+    
+    res.json({ success: true, message: 'Booking confirmed' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 
 
 export { 
@@ -2150,5 +2325,9 @@ export {
   bookItemUpdate,
   startDeadlineTimer,
   cancelDeadlineTimer,
-  restoreActiveTimers
+  restoreActiveTimers,
+  getUserNotifications,
+  markAsRead,
+  getUnreadCount,
+  cleanupOldNotifications
 };
