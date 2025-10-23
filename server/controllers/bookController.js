@@ -376,126 +376,7 @@ const bookItem = async (req, res) => {
   }
 };
 
-const bookItemUpdate = async (req, res) => {
-  try {
-    const {
-      itemId,
-      itemDetails,
-      customerDetails,
-      rentalDetails,
-      paymentMethod,
-    } = req.body;
 
-    console.log("Incoming booking update:", req.body);
-
-    // 🟡 Find existing booking
-    const existingBooking = await Books.findOne({ where: { itemId } });
-
-    if (!existingBooking) {
-      return res.status(404).json({ success: false, message: "Booking not found." });
-    }
-
-    // 🧮 Calculate rental duration and total amount
-    const pickupDate = new Date(rentalDetails.pickupDate);
-    const returnDate = new Date(rentalDetails.returnDate);
-    const timeDiff = returnDate - pickupDate;
-    const rentalDays = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
-    const pricePerDay = parseFloat(itemDetails.pricePerDay);
-    const totalAmount = rentalDays * pricePerDay;
-
-    console.log(`Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`);
-
-    // 🟢 Update booking
-    await existingBooking.update({
-      itemId,
-      customerId: customerDetails.customerId,
-      ownerId: itemDetails.ownerId,
-      product: itemDetails.title,
-      category: itemDetails.category,
-      location: itemDetails.location,
-      pricePerDay: itemDetails.pricePerDay,
-      name: customerDetails.fullName,
-      email: customerDetails.email,
-      phone: customerDetails.phone,
-      address: customerDetails.location,
-      gender: customerDetails.gender,
-      itemImage: itemDetails.itemImage,
-      rentalPeriod: rentalDetails.period,
-      pickUpDate: rentalDetails.pickupDate,
-      returnDate: rentalDetails.returnDate,
-      amount: totalAmount,
-      status: "pending",
-      paymentMethod,
-    });
-
-    // ✅ Use updatedBooking directly
-    const updatedBooking = existingBooking;
-
-    // 👤 Owner details
-    const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
-    if (!ownerDetails) throw new Error("Owner not found");
-
-    const ownerFullName = `${ownerDetails.firstName} ${ownerDetails.lastName}`;
-
-    // 📩 Email setup
-    const formattedPickupDate = pickupDate.toLocaleDateString();
-    const formattedReturnDate = returnDate.toLocaleDateString();
-    const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
-
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: customerDetails.email.trim(),
-      subject: `Booking Request Updated - ${itemDetails.title}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #28a745;">Booking Updated</h2>
-          <p>Your booking for <strong>${itemDetails.title}</strong> has been updated successfully.</p>
-          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
-          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
-        </div>
-      `
-    };
-
-    const ownerMailOptions = {
-      from: process.env.EMAIL_USER,
-      to: ownerDetails.email.trim(),
-      subject: `Booking Request Updated - ${itemDetails.title}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #ffc107;">Booking Update Notification</h2>
-          <p>${customerDetails.fullName} has updated their booking for <strong>${itemDetails.title}</strong>.</p>
-          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
-          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
-        </div>
-      `
-    };
-
-    // ✉️ Send emails
-    try {
-      await transporter.sendMail(mailOptions);
-      console.log("Customer email sent");
-    } catch (err) {
-      console.error("Error sending customer email:", err.message);
-    }
-
-    try {
-      await transporter.sendMail(ownerMailOptions);
-      console.log("Owner email sent");
-    } catch (err) {
-      console.error("Error sending owner email:", err.message);
-    }
-
-    return res.status(200).json({
-      success: true,
-      message: "Booking updated successfully",
-      updatedBooking,
-    });
-
-  } catch (error) {
-    console.error("Booking update error:", error);
-    return res.status(500).json({ success: false, message: error.message });
-  }
-};
 
 const bookNotification = async (req, res) => {
   const { id } = req.params; // this will be the customerId coming from the mobile app
@@ -1944,6 +1825,352 @@ const deleteBooking = async (req, res) => {
 }
 
 
+// ============================================
+// Simple Timer-Based Deadline Checker
+// ============================================
+
+// Store active timers in memory
+const activeTimers = new Map();
+
+/**
+ * Calculate milliseconds until deadline
+ */
+const getTimeUntilDeadline = (returnDate) => {
+  const now = new Date();
+  const deadline = new Date(returnDate);
+  return deadline - now;
+};
+
+/**
+ * Send deadline notification
+ */
+const sendDeadlineNotification = async (booking, message) => {
+  try {
+    console.log(`🔔 Deadline alert for booking ${booking.id}: ${message}`);
+    
+    // Send email to customer
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: booking.email,
+      subject: `⏰ Rental Deadline Alert - ${booking.product}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #f57c00;">Rental Deadline Alert</h2>
+          <p>${message}</p>
+          <p><strong>Item:</strong> ${booking.product}</p>
+          <p><strong>Return Date:</strong> ${new Date(booking.returnDate).toLocaleDateString()}</p>
+        </div>
+      `
+    });
+
+    // Optional: Send push notification here
+    // await sendPushNotification(booking.userId, message);
+
+  } catch (error) {
+    console.error('Error sending notification:', error);
+  }
+};
+
+/**
+ * Start countdown timer for a booking
+ */
+const startDeadlineTimer = (booking) => {
+  const bookingId = booking.id;
+  
+  // Clear existing timer if any
+  if (activeTimers.has(bookingId)) {
+    const timers = activeTimers.get(bookingId);
+    timers.forEach(timer => clearTimeout(timer));
+    activeTimers.delete(bookingId);
+  }
+
+  const returnDate = new Date(booking.returnDate);
+  const now = new Date();
+  
+  // Calculate when to send notifications
+  const threeDaysBefore = new Date(returnDate);
+  threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
+  
+  const oneDayBefore = new Date(returnDate);
+  oneDayBefore.setDate(oneDayBefore.getDate() - 1);
+  
+  const dueDate = returnDate;
+  
+  const oneDayAfter = new Date(returnDate);
+  oneDayAfter.setDate(oneDayAfter.getDate() + 1);
+
+  const timers = [];
+
+  // Schedule: 3 days before
+  if (threeDaysBefore > now) {
+    const timer1 = setTimeout(() => {
+      sendDeadlineNotification(booking, 
+        '📅 Reminder: Your rental is due in 3 days. Please prepare for return.'
+      );
+    }, threeDaysBefore - now);
+    timers.push(timer1);
+    console.log(`⏰ Timer set: 3 days before (${threeDaysBefore.toLocaleString()})`);
+  }
+
+  // Schedule: 1 day before
+  if (oneDayBefore > now) {
+    const timer2 = setTimeout(() => {
+      sendDeadlineNotification(booking, 
+        '⚠️ Important: Your rental is due tomorrow! Please arrange return.'
+      );
+    }, oneDayBefore - now);
+    timers.push(timer2);
+    console.log(`⏰ Timer set: 1 day before (${oneDayBefore.toLocaleString()})`);
+  }
+
+  // Schedule: Due date
+  if (dueDate > now) {
+    const timer3 = setTimeout(() => {
+      sendDeadlineNotification(booking, 
+        '🚨 Your rental is due TODAY! Please return the item by end of day.'
+      );
+    }, dueDate - now);
+    timers.push(timer3);
+    console.log(`⏰ Timer set: Due date (${dueDate.toLocaleString()})`);
+  }
+
+  // Schedule: 1 day overdue
+  if (oneDayAfter > now) {
+    const timer4 = setTimeout(() => {
+      sendDeadlineNotification(booking, 
+        '🔴 OVERDUE: Your rental was due yesterday. Please return immediately to avoid additional charges.'
+      );
+    }, oneDayAfter - now);
+    timers.push(timer4);
+    console.log(`⏰ Timer set: 1 day overdue (${oneDayAfter.toLocaleString()})`);
+  }
+
+  // Store timers
+  if (timers.length > 0) {
+    activeTimers.set(bookingId, timers);
+    console.log(`✅ Started ${timers.length} timers for booking ${bookingId}`);
+  }
+};
+
+/**
+ * Cancel timer for a booking (when returned/cancelled)
+ */
+const cancelDeadlineTimer = (bookingId) => {
+  if (activeTimers.has(bookingId)) {
+    const timers = activeTimers.get(bookingId);
+    timers.forEach(timer => clearTimeout(timer));
+    activeTimers.delete(bookingId);
+    console.log(`🛑 Cancelled timers for booking ${bookingId}`);
+  }
+};
+
+// ============================================
+// Updated bookItemUpdate with Timer
+// ============================================
+
+const bookItemUpdate = async (req, res) => {
+  try {
+    const {
+      itemId,
+      itemDetails,
+      customerDetails,
+      rentalDetails,
+      paymentMethod,
+    } = req.body;
+
+    console.log("Incoming booking update:", req.body);
+
+    const existingBooking = await Books.findOne({ where: { itemId } });
+
+    if (!existingBooking) {
+      return res.status(404).json({ success: false, message: "Booking not found." });
+    }
+
+    // Calculate rental details
+    const pickupDate = new Date(rentalDetails.pickupDate);
+    const returnDate = new Date(rentalDetails.returnDate);
+    const timeDiff = returnDate - pickupDate;
+    const rentalDays = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
+    const pricePerDay = parseFloat(itemDetails.pricePerDay);
+    const totalAmount = rentalDays * pricePerDay;
+
+    console.log(`Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`);
+
+    // Update booking
+    await existingBooking.update({
+      itemId,
+      customerId: customerDetails.customerId,
+      ownerId: itemDetails.ownerId,
+      product: itemDetails.title,
+      category: itemDetails.category,
+      location: itemDetails.location,
+      pricePerDay: itemDetails.pricePerDay,
+      name: customerDetails.fullName,
+      email: customerDetails.email,
+      phone: customerDetails.phone,
+      address: customerDetails.location,
+      gender: customerDetails.gender,
+      itemImage: itemDetails.itemImage,
+      rentalPeriod: rentalDetails.period,
+      pickUpDate: rentalDetails.pickupDate,
+      returnDate: rentalDetails.returnDate,
+      amount: totalAmount,
+      status: "pending",
+      paymentMethod,
+    });
+
+    const updatedBooking = existingBooking;
+
+    // ✨ START DEADLINE TIMER
+    startDeadlineTimer({
+      id: updatedBooking.id,
+      product: updatedBooking.product,
+      email: updatedBooking.email,
+      returnDate: updatedBooking.returnDate,
+      userId: updatedBooking.customerId
+    });
+
+    // Owner details
+    const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
+    if (!ownerDetails) throw new Error("Owner not found");
+
+    // Send confirmation emails
+    const formattedPickupDate = pickupDate.toLocaleDateString();
+    const formattedReturnDate = returnDate.toLocaleDateString();
+    const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: customerDetails.email.trim(),
+      subject: `Booking Request Updated - ${itemDetails.title}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #28a745;">Booking Updated</h2>
+          <p>Your booking for <strong>${itemDetails.title}</strong> has been updated successfully.</p>
+          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
+          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
+          <p style="color: #666; margin-top: 20px;">
+            ⏰ You will receive reminders before your return date.
+          </p>
+        </div>
+      `
+    };
+
+    const ownerMailOptions = {
+      from: process.env.EMAIL_USER,
+      to: ownerDetails.email.trim(),
+      subject: `Booking Request Updated - ${itemDetails.title}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2 style="color: #ffc107;">Booking Update Notification</h2>
+          <p>${customerDetails.fullName} has updated their booking for <strong>${itemDetails.title}</strong>.</p>
+          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
+          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
+        </div>
+      `
+    };
+
+    // Send emails
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("Customer email sent");
+    } catch (err) {
+      console.error("Error sending customer email:", err.message);
+    }
+
+    try {
+      await transporter.sendMail(ownerMailOptions);
+      console.log("Owner email sent");
+    } catch (err) {
+      console.error("Error sending owner email:", err.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking updated successfully",
+      updatedBooking,
+    });
+
+  } catch (error) {
+    console.error("Booking update error:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ============================================
+// Server Restart: Restore Timers from Database
+// ============================================
+
+const restoreActiveTimers = async () => {
+  try {
+    console.log('🔄 Restoring deadline timers...');
+    
+    const activeBookings = await Books.findAll({
+      where: {
+        status: ['pending', 'confirmed', 'active'],
+        returnDate: {
+          [Op.gte]: new Date() // Only future/current rentals
+        }
+      }
+    });
+
+    console.log(`Found ${activeBookings.length} active bookings`);
+
+    for (const booking of activeBookings) {
+      startDeadlineTimer({
+        id: booking.id,
+        product: booking.product,
+        email: booking.email,
+        returnDate: booking.returnDate,
+        userId: booking.customerId
+      });
+    }
+
+    console.log('✅ Timers restored successfully');
+  } catch (error) {
+    console.error('Error restoring timers:', error);
+  }
+};
+
+// ============================================
+// Add to server.js / app.js
+// ============================================
+
+// After database connection, restore timers
+app.listen(PORT, async () => {
+  console.log(`Server running on port ${PORT}`);
+  
+  // Restore timers on server start
+  await restoreActiveTimers();
+});
+
+// ============================================
+// Handle booking cancellation/completion
+// ============================================
+
+const completeBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    
+    await Books.update(
+      { status: 'completed' },
+      { where: { id: bookingId } }
+    );
+
+    // Cancel timer when booking is completed
+    cancelDeadlineTimer(bookingId);
+
+    res.json({ success: true, message: 'Booking completed' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+
 
 export { 
   bookItem, 
@@ -1960,5 +2187,9 @@ export {
   rejectBookingRequest,
   fetchAllBooking,
   deleteBooking,
-  bookItemUpdate
+  bookItemUpdate,
+  startDeadlineTimer,
+  cancelDeadlineTimer,
+  restoreActiveTimers,
+  completeBooking
 };

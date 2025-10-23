@@ -81,8 +81,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         console.log("Booking ID to update:", bookingData.itemId);
 
         // ✅ Cash on Delivery → directly confirm booking
-        const response = await axios.put(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`, bookingData);
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`, bookingData);
 
       if (response.data.success) {
         console.log("Booking success:", response.data);
