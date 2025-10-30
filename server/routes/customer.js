@@ -68,6 +68,8 @@ router.post(
   customerSignUp
 );
 
+router.post("/sign-up", add)
+
 router.get("/", fetchCustomers);
 
 router.put("/update/:id", updateCustomerDetails);

@@ -27,38 +27,37 @@ const { width, height } = Dimensions.get("window");
 export default function PersonalInfo() {
   const router = useRouter();
   
-  // Personal Info States
+  // Personal Info States in order
   const [firstName, setFirstName] = useState("");
   const [middleName, setMiddleName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [date, setDate] = useState(null); 
   const [gender, setGender] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+
+
+  //to determine kung para saan
   const [hidden, setHidden] = useState(true);
-  const [date, setDate] = useState(null); 
   const [show, setShow] = useState(false);
   
-  // Address Info States
-  const [houseBuilding, setHouseBuilding] = useState("");
-  const [street, setStreet] = useState("");
-  const [barangay, setBarangay] = useState("");
+  // Address Info States in order
+  const [country, setCountry] = useState("Philippines");
+  const [province, setProvince] = useState("Oriental Mindoro");
   const [town, setTown] = useState("");
-  const [province, setProvince] = useState("");
-  const [country, setCountry] = useState("");
+  const [barangay, setBarangay] = useState("");
+  const [street, setStreet] = useState("");
+  const [houseBuilding, setHouseBuilding] = useState("");
   const [zipCode, setZipCode] = useState("");
   
   // ID Upload States
-  const [fullName, setFullName] = useState("");
-  const [address, setAddress] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [fullName1, setFullName1] = useState("");
-  const [address1, setAddress1] = useState("");
-  const [mobileNumber1, setMobileNumber1] = useState("");
+  const [idType, setIdType] = useState("");
   const [idNumber, setIdNumber] = useState("");
   const [photoId, setPhotoId] = useState(null);
   const [selfie, setSelfie] = useState(null);
-  const [idType, setIdType] = useState("");
+  const [role, setRole] = useState("");
   
   // Review States
   const [isChecked, setIsChecked] = useState(false);
@@ -88,11 +87,44 @@ export default function PersonalInfo() {
       Alert.alert("Missing Info", "Please fill in all required personal information fields.");
       return false;
     }
+    
+    const passError = validatePassword(password);
+    if (passError) {
+      Alert.alert("Invalid Password", passError);
+      return false;
+    }
+    
     return true;
   };
 
+  const validatePassword = (pass) => {
+  if (pass.length < 8) {
+    return "Password must be at least 8 characters";
+  }
+  
+  const hasUpperCase = /[A-Z]/.test(pass);
+  const hasLowerCase = /[a-z]/.test(pass);
+  const hasNumber = /[0-9]/.test(pass);
+  const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass);
+  
+  if (!hasUpperCase) {
+    return "Password must contain at least 1 uppercase letter";
+  }
+  if (!hasLowerCase) {
+    return "Password must contain at least 1 lowercase letter";
+  }
+  if (!hasNumber) {
+    return "Password must contain at least 1 number";
+  }
+  if (!hasSymbol) {
+    return "Password must contain at least 1 symbol";
+  }
+  
+  return "";
+};
+
   const validateAddressInfo = () => {
-    if (!houseBuilding || !street || !barangay || !town || !province || !country || !zipCode) {
+    if (!street || !barangay || !town || !province || !country || !zipCode) {
       Alert.alert("Missing Info", "Please fill in all required address fields.");
       return false;
     }
@@ -100,12 +132,14 @@ export default function PersonalInfo() {
   };
 
   const validateIdInfo = () => {
-    if (!fullName || !address || !mobileNumber || !fullName1 || !address1 || !mobileNumber1 || !idType || !idNumber || !photoId || !selfie) {
-      Alert.alert("Missing Info", "Please fill in all required ID verification and guarantor fields.");
-      return false;
-    }
-    return true;
-  };
+
+  if (!idType || !idNumber || !photoId || !selfie) {
+    Alert.alert("Missing Info", "Please complete ID verification (type, number, photo, and selfie).");
+    return false;
+  }
+  return true;
+};
+
 
   const validateReview = () => {
     if (!isChecked) {
@@ -205,14 +239,6 @@ export default function PersonalInfo() {
       formData.append("province", province);
       formData.append("country", country);
       formData.append("zipCode", zipCode);
-
-      // Guarantors
-      formData.append("guarantor1FullName", fullName);
-      formData.append("guarantor1Address", address);
-      formData.append("guarantor1MobileNumber", mobileNumber);
-      formData.append("guarantor2FullName", fullName1);
-      formData.append("guarantor2Address", address1);
-      formData.append("guarantor2MobileNumber", mobileNumber1);
 
       // ID details
       formData.append("idType", idType);
@@ -407,41 +433,55 @@ export default function PersonalInfo() {
           />
         )}
 
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("gender", gender) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("gender", gender) ? "Gender *" : ""}
-          placeholderTextColor="#888"
-          value={gender}
-          onChangeText={setGender}
-          autoCapitalize="words"
-          allowFontScaling={false}
-          onFocus={() => setFocusField("gender")}
-          onBlur={() => setFocusField("")}
-        />
+      <View style={styles.pickerContainer}>
+        {!gender && (
+          <Text style={styles.pickerOverlayText}>
+            Select Gender *
+          </Text>
+        )}
 
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            style={[
-              styles.inputPassword,
-              !isTextMode("password", password) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("password", password) ? "Password *" : ""}
-            placeholderTextColor="#888"
-            value={password}
-            onChangeText={setPassword}
-            autoCapitalize="none"
-            secureTextEntry={hidden}
-            allowFontScaling={false}
-            onFocus={() => setFocusField("password")}
-            onBlur={() => setFocusField("")}
-          />
-          <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
-            <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
-          </Pressable>
-        </View>
+        <Picker
+          selectedValue={gender}
+          onValueChange={(itemValue) => setGender(itemValue)}
+          style={{ color: gender ? "#000" : "transparent", width: "100%" }}
+        >
+          <Picker.Item label="Select Gender " value="" color="#888" /> 
+          <Picker.Item label="Male" value="male" />
+          <Picker.Item label="Female" value="female" />
+          <Picker.Item label="Other" value="other" />
+        </Picker>
+      </View>
+
+    <View style={styles.passwordWrapper}>
+      <TextInput
+        style={[
+          styles.inputPassword,
+          !isTextMode("password", password) && styles.placeholderInput,
+        ]}
+        placeholder={!isTextMode("password", password) ? "Password *" : ""}
+        placeholderTextColor="#888"
+        value={password}
+        onChangeText={(text) => {
+          setPassword(text);
+          if (text) {
+            setPasswordError(validatePassword(text));
+          } else {
+            setPasswordError("");
+          }
+        }}
+        autoCapitalize="none"
+        secureTextEntry={hidden}
+        allowFontScaling={false}
+        onFocus={() => setFocusField("password")}
+        onBlur={() => setFocusField("")}
+      />
+      <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
+        <Ionicons name={hidden ? "eye-off" : "eye"} size={24} color="#888" />
+      </Pressable>
+    </View>
+{passwordError ? (
+  <Text style={styles.errorText}>{passwordError}</Text>
+) : null}
       </View>
     </>
   );
@@ -463,6 +503,95 @@ export default function PersonalInfo() {
       </View>
 
       <View style={styles.container}>
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("country", country) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("country", country) ? "Country *" : ""}
+          placeholderTextColor="#888"
+          value={"Philippines"}
+          onChangeText={setCountry}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("country")}
+          onBlur={() => setFocusField("")}
+          disabled
+        />
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("province", province) && styles.placeholderInput,
+          ]}
+          placeholder={!isTextMode("province", province) ? "Province *" : ""}
+          placeholderTextColor="#888"
+          value={"Oriental Mindoro"}
+          onChangeText={setProvince}
+          autoCapitalize="sentences"
+          onFocus={() => setFocusField("province")}
+          onBlur={() => setFocusField("")}
+          disabled
+        />
+                
+      <View style={styles.pickerContainer}>
+        {!town && (
+          <Text style={styles.pickerOverlayText}>
+            Select Town *
+          </Text>
+        )}
+
+        <Picker
+          selectedValue={town}
+          onValueChange={(itemValue) => setTown(itemValue)}
+          style={{ color: town ? "#000" : "transparent", width: "100%" }}
+        >
+          <Picker.Item label="Select Town " value="" color="#888" /> 
+          <Picker.Item label="Pinamalayan" value="Pinamalayan" />
+        </Picker>
+      </View>
+
+      <View style={styles.pickerContainer}>
+        {!barangay && (
+          <Text style={styles.pickerOverlayText}>
+            Select Barangay *
+          </Text>
+        )}
+
+        <Picker
+          selectedValue={barangay}
+          onValueChange={(itemValue) => setBarangay(itemValue)}
+          style={{ color: barangay ? "#000" : "transparent", width: "100%" }}
+        >
+          <Picker.Item label="Select Barangay " value="" color="#888" /> 
+          <Picker.Item label="Marfransisco" value="Marfransisco" />
+          <Picker.Item label="Wawa" value="Wawa" />
+          <Picker.Item label="Pili" value="Pili" />
+          <Picker.Item label="Cacawan" value="Cacawan" />
+          <Picker.Item label="Sta. Isabel" value="Sta. Isabel" />
+        </Picker>
+      </View>
+
+        <TextInput
+          style={[
+            styles.input,
+            !isTextMode("street", street) && styles.placeholderInput,
+          ]}
+          placeholder={
+            !isTextMode("street", street)
+              ? "Street *"
+              : ""
+          }
+          placeholderTextColor="#888"
+          value={street}
+          onChangeText={setStreet}
+          autoCapitalize="sentences"
+          keyboardType="default"
+          onFocus={() => setFocusField("street")}
+          onBlur={() => setFocusField("")}
+        />
+
+
         <TextInput
           style={[
             styles.input,
@@ -482,89 +611,23 @@ export default function PersonalInfo() {
           onBlur={() => setFocusField("")}
         />
 
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("street", street) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("street", street) ? "Street *" : ""}
-          placeholderTextColor="#888"
-          value={street}
-          onChangeText={setStreet}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("street")}
-          onBlur={() => setFocusField("")}
-        />
+      <View style={styles.pickerContainer}>
+        {!zipCode && (
+          <Text style={styles.pickerOverlayText}>
+            Select zip code *
+          </Text>
+        )}
 
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("barangay", barangay) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("barangay", barangay) ? "Barangay *" : ""}
-          placeholderTextColor="#888"
-          value={barangay}
-          onChangeText={setBarangay}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("barangay")}
-          onBlur={() => setFocusField("")}
-        />
+        <Picker
+          selectedValue={zipCode}
+          onValueChange={(itemValue) => setZipCode(itemValue)}
+          style={{ color: zipCode ? "#000" : "transparent", width: "100%" }}
+        >
+          <Picker.Item label="Select ZIP code " value="" color="#888" /> 
+          <Picker.Item label="5101" value="5101" />
 
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("town", town) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("town", town) ? "Town *" : ""}
-          placeholderTextColor="#888"
-          value={town}
-          onChangeText={setTown}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("town")}
-          onBlur={() => setFocusField("")}
-        />
-
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("province", province) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("province", province) ? "Province *" : ""}
-          placeholderTextColor="#888"
-          value={province}
-          onChangeText={setProvince}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("province")}
-          onBlur={() => setFocusField("")}
-        />
-
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("country", country) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("country", country) ? "Country *" : ""}
-          placeholderTextColor="#888"
-          value={country}
-          onChangeText={setCountry}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("country")}
-          onBlur={() => setFocusField("")}
-        />
-
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("zipCode", zipCode) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("zipCode", zipCode) ? "Zip Code *" : ""}
-          placeholderTextColor="#888"
-          value={zipCode}
-          onChangeText={setZipCode}
-          keyboardType="numeric"
-          onFocus={() => setFocusField("zipCode")}
-          onBlur={() => setFocusField("")}
-        />
+        </Picker>
+      </View>
       </View>
     </>
   );
@@ -583,87 +646,34 @@ export default function PersonalInfo() {
           resizeMode="contain"
         />
         <Text style={styles.subText}>All Fields with * are required</Text>
-        <Text style={styles.sub1Text}>Guarantor 1</Text>
-        <Text style={styles.sub2Text}>
-          People that can be contacted if renter is unavailable.
-        </Text>
+
+        
+
+      </View>
+
+      <View style={styles.pickerContainer}>
+        {!role && (
+          <Text style={styles.pickerOverlayText}>
+            Registration Role *
+          </Text>
+        )}
+
+        <Picker
+          selectedValue={role}
+          onValueChange={(itemValue) => setRole(itemValue)}
+          style={{ color: role ? "#000" : "transparent", width: "100%" }}
+        >
+          <Picker.Item label="Select Type of ID " value="" color="#888" /> 
+          <Picker.Item label="Customer" value="customer" />
+          <Picker.Item label="Owner" value="owner" />
+
+        </Picker>
       </View>
 
       <View style={styles.container}>
-        <TextInput
-          style={[styles.input, !isTextMode("fullName", fullName) && styles.placeholderInput]}
-          placeholder={!isTextMode("fullName", fullName) ? "Full Name *" : ""}
-          placeholderTextColor="#888"
-          value={fullName}
-          onChangeText={setFullName}
-          autoCapitalize="sentences"
-          keyboardType="default"
-          onFocus={() => setFocusField("fullName")}
-          onBlur={() => setFocusField("")}
-        />
 
-        <TextInput
-          style={[styles.input, !isTextMode("address", address) && styles.placeholderInput]}
-          placeholder={!isTextMode("address", address) ? "Address *" : ""}
-          placeholderTextColor="#888"
-          value={address}
-          onChangeText={setAddress}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("address")}
-          onBlur={() => setFocusField("")}
-        />
 
-        <TextInput
-          style={[styles.input, !isTextMode("mobileNumber", mobileNumber) && styles.placeholderInput]}
-          placeholder={!isTextMode("mobileNumber", mobileNumber) ? "Mobile Number *" : ""}
-          placeholderTextColor="#888"
-          value={mobileNumber}
-          onChangeText={setMobileNumber}
-          keyboardType="phone-pad"
-          autoCapitalize="none"
-          onFocus={() => setFocusField("mobileNumber")}
-          onBlur={() => setFocusField("")}
-        />
 
-        <Text style={styles.sub3Text}>Guarantor 2</Text>
-        <Text style={styles.sub4Text}>
-          People that can be contacted if renter is unavailable.
-        </Text>
-
-        <TextInput
-          style={[styles.input, !isTextMode("fullName1", fullName1) && styles.placeholderInput]}
-          placeholder={!isTextMode("fullName1", fullName1) ? "Full Name *" : ""}
-          placeholderTextColor="#888"
-          value={fullName1}
-          onChangeText={setFullName1}
-          autoCapitalize="sentences"
-          keyboardType="default"
-          onFocus={() => setFocusField("fullName1")}
-          onBlur={() => setFocusField("")}
-        />
-
-        <TextInput
-          style={[styles.input, !isTextMode("address1", address1) && styles.placeholderInput]}
-          placeholder={!isTextMode("address1", address1) ? "Address *" : ""}
-          placeholderTextColor="#888"
-          value={address1}
-          onChangeText={setAddress1}
-          autoCapitalize="sentences"
-          onFocus={() => setFocusField("address1")}
-          onBlur={() => setFocusField("")}
-        />
-
-        <TextInput
-          style={[styles.input, !isTextMode("mobileNumber1", mobileNumber1) && styles.placeholderInput]}
-          placeholder={!isTextMode("mobileNumber1", mobileNumber1) ? "Mobile Number *" : ""}
-          placeholderTextColor="#888"
-          value={mobileNumber1}
-          onChangeText={setMobileNumber1}
-          keyboardType="phone-pad"
-          autoCapitalize="none"
-          onFocus={() => setFocusField("mobileNumber1")}
-          onBlur={() => setFocusField("")}
-        />
 
         <Text style={styles.sub5Text}>ID Verification</Text>
         <Text style={styles.sub6Text}>
@@ -767,7 +777,7 @@ export default function PersonalInfo() {
           <Text style={styles.addressText}>Barangay: {barangay || 'N/A'}</Text>
           <Text style={styles.addressText}>Town: {town || 'N/A'}</Text>
           <Text style={styles.addressText}>Province: {province || 'N/A'}</Text>
-          <Text style={styles.addressText}>Country: {country || 'N/A'}</Text>
+          <Text style={styles.addressText}>Country: {"Philippines" || 'N/A'}</Text>
           <Text style={styles.addressText}>Zip Code: {zipCode || 'N/A'}</Text>
           <View style={styles.divider1} />
         </View>
@@ -775,16 +785,6 @@ export default function PersonalInfo() {
         {/* ID/Guarantor Section */}
         <View style={styles.address}>
           <Text style={styles.sectionTitle1}>ID Upload/Guarantor</Text>
-
-          <Text style={styles.addressText1}>Guarantor 1:</Text>
-          <Text style={styles.addressText}>Full Name: {fullName || 'N/A'}</Text>
-          <Text style={styles.addressText}>Address: {address || 'N/A'}</Text>
-          <Text style={styles.addressText}>Mobile Number: {mobileNumber || 'N/A'}</Text>
-
-          <Text style={styles.addressText1}>Guarantor 2:</Text>
-          <Text style={styles.addressText}>Full Name: {fullName1 || 'N/A'}</Text>
-          <Text style={styles.addressText}>Address: {address1 || 'N/A'}</Text>
-          <Text style={styles.addressText}>Mobile Number: {mobileNumber1 || 'N/A'}</Text>
           
           <Text style={styles.addressText1}>ID Upload:</Text>
           <Text style={styles.addressText}>Type of ID: {idType || 'N/A'}</Text>
@@ -1274,4 +1274,11 @@ const styles = StyleSheet.create({
   previousPressed: {
     opacity: 0.85,
   },
+  errorText: {
+  fontSize: width * 0.03,
+  color: "#d32f2f",
+  marginTop: -10,
+  marginBottom: 10,
+  width: "100%",
+},
 });

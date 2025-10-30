@@ -124,6 +124,21 @@ export default function AddressInfo() {
           <Text style={styles.subText}>All Fields with * are required</Text>
         </View>
 
+          {/* Country */}
+          <TextInput
+            style={[
+              styles.input,
+              !isTextMode("country", country) && styles.placeholderInput,
+            ]}
+            placeholder={!isTextMode("country", country) ? "Country *" : ""}
+            placeholderTextColor="#888"
+            value={country}
+            onChangeText={setCountry}
+            autoCapitalize="sentences"
+            onFocus={() => setFocusField("country")}
+            onBlur={() => setFocusField("")}
+          />
+
         <View style={styles.container}>
           {/* House No./Building No. */}
           <TextInput
@@ -205,20 +220,7 @@ export default function AddressInfo() {
             onBlur={() => setFocusField("")}
           />
 
-          {/* Country */}
-          <TextInput
-            style={[
-              styles.input,
-              !isTextMode("country", country) && styles.placeholderInput,
-            ]}
-            placeholder={!isTextMode("country", country) ? "Country *" : ""}
-            placeholderTextColor="#888"
-            value={country}
-            onChangeText={setCountry}
-            autoCapitalize="sentences"
-            onFocus={() => setFocusField("country")}
-            onBlur={() => setFocusField("")}
-          />
+
 
           {/* Zip Code */}
           <TextInput

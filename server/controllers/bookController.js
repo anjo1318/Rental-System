@@ -381,11 +381,11 @@ const bookItem = async (req, res) => {
 };
 
 const bookNotification = async (req, res) => {
-  const { id } = req.params; // this will be the customerId coming from the mobile app
+  const { id } = req.params;
 
   try {
     const response = await Books.findAll({
-      where: { customerId: id }, // ✅ find all bookings for this customer
+      where: { customerId: id }, 
       order: [["created_at", "DESC"]]
     });
 

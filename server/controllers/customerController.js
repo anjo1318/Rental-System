@@ -1,4 +1,5 @@
 import Customer from "../models/Customer.js";
+import Owner from '../models/Owner.js';
 import bcrypt from "bcryptjs";
 import { validationResult } from 'express-validator';
 import sequelize from "../database/database.js";
