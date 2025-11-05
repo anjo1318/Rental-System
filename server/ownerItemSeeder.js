@@ -1,18 +1,31 @@
 import Owner from "./models/Owner.js";
 import Item from "./models/Item.js";
 import bcrypt from "bcryptjs";
+import sequelize from "./database/database.js";
 
 const ownerItemSeeder = async () => {
   try {
+    // ✅ Sync database tables first
+    console.log("📋 Syncing database tables...");
+    await sequelize.sync({ alter: false }); // Creates tables if they don't exist
+    console.log("✅ Database tables synced successfully!");
+
     const owners = [
       {
         firstName: "Marco",
         lastName: "Polo",
-        email: "marcopolo03@gmail.com",
-        phone: "09354346468",
-        passwordHash: await bcrypt.hash("marco123", 10),
-        bio: "Team Manager and avid collector of gadgets.",        
-        address: "Batangas City, Philippines",
+        emailAddress: "marcopolo03@gmail.com",
+        phoneNumber: "09354346468",
+        password: await bcrypt.hash("marco123", 10),
+        birthday: "1990-05-15",
+        gender: "male",
+        country: "Philippines",
+        province: "Oriental Mindoro",
+        town: "Pinamalayan",
+        barangay: "Pili",
+        street: "Main Street",
+        houseNumber: "123",
+        zipCode: "5208",
         isVerified: true,
         items: [
           {
@@ -71,11 +84,18 @@ const ownerItemSeeder = async () => {
       {
         firstName: "Henry",
         lastName: "Ford",
-        email: "henryford@gmail.com",
-        phone: "09123456789",
-        passwordHash: await bcrypt.hash("ford123", 10),
-        bio: "Car enthusiast and entrepreneur.",
-        address: "Quezon City, Philippines",
+        emailAddress: "henryford@gmail.com",
+        phoneNumber: "09123456789",
+        password: await bcrypt.hash("ford123", 10),
+        birthday: "1985-07-20",
+        gender: "male",
+        country: "Philippines",
+        province: "Metro Manila",
+        town: "Quezon City",
+        barangay: "Commonwealth",
+        street: "Quirino Highway",
+        houseNumber: "456",
+        zipCode: "1121",
         isVerified: false,
         items: [
           {
@@ -133,11 +153,18 @@ const ownerItemSeeder = async () => {
       {
         firstName: "Juan",
         lastName: "Cruz",
-        email: "juan@gmail.com",
-        phone: "09287492392",
-        passwordHash: await bcrypt.hash("juan123", 10),
-        bio: "Programmer and entrepreneur.",
-        address: "Tagaytay City, Philippines",
+        emailAddress: "juan@gmail.com",
+        phoneNumber: "09287492392",
+        password: await bcrypt.hash("juan123", 10),
+        birthday: "1992-03-10",
+        gender: "male",
+        country: "Philippines",
+        province: "Cavite",
+        town: "Tagaytay",
+        barangay: "Silang Crossing",
+        street: "Aguinaldo Highway",
+        houseNumber: "789",
+        zipCode: "4120",
         isVerified: false,
         items: [
           {
@@ -171,7 +198,7 @@ const ownerItemSeeder = async () => {
 
     for (const owner of owners) {
       const existingOwner = await Owner.findOne({
-        where: { email: owner.email },
+        where: { emailAddress: owner.emailAddress },
       });
 
       if (!existingOwner) {
@@ -179,11 +206,18 @@ const ownerItemSeeder = async () => {
         const newOwner = await Owner.create({
           firstName: owner.firstName,
           lastName: owner.lastName,
-          email: owner.email,
-          phone: owner.phone,
-          passwordHash: owner.passwordHash,
-          bio: owner.bio,
-          address: owner.address,
+          emailAddress: owner.emailAddress,
+          phoneNumber: owner.phoneNumber,
+          password: owner.password,
+          birthday: owner.birthday,
+          gender: owner.gender,
+          country: owner.country,
+          province: owner.province,
+          town: owner.town,
+          barangay: owner.barangay,
+          street: owner.street,
+          houseNumber: owner.houseNumber,
+          zipCode: owner.zipCode,
           isVerified: owner.isVerified
         });
 
@@ -192,24 +226,25 @@ const ownerItemSeeder = async () => {
           await Item.create({ 
             ...item, 
             ownerId: newOwner.id,
-            // Ensure availableQuantity defaults to quantity if not specified
             availableQuantity: item.availableQuantity || item.quantity
           });
         }
 
-        console.log(`✅ Owner created: ${owner.email} with ${owner.items.length} items`);
+        console.log(`✅ Owner created: ${owner.emailAddress} with ${owner.items.length} items`);
       } else {
-        console.log(`ℹ️  Owner already exists: ${owner.email}`);
+        console.log(`ℹ️  Owner already exists: ${owner.emailAddress}`);
       }
     }
 
     console.log("🌱 Seeding completed successfully!");
+    process.exit(0); // Exit after seeding
   } catch (error) {
     console.error("❌ Error seeding owners and items:", error);
+    console.error("Full error details:", error.message);
+    process.exit(1); // Exit with error
   }
 };
 
 export default ownerItemSeeder;
-
 
 ownerItemSeeder();

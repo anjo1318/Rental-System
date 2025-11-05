@@ -179,7 +179,7 @@ const Customer = sequelize.define('Customer', {
     defaultValue: false
   },
 }, {
-  tableName: 'Customer',
+  tableName: 'customer',
   timestamps: true,
   indexes: [
     {
