@@ -8,7 +8,7 @@ const fetchItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "emailAddress", "profileImage"], // Changed from "email" to "emailAddress"
+          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto"], // Changed from "email" to "emailAddress"
         },
       ],
       order: [['createdAt', 'DESC']], // newest first
@@ -34,10 +34,10 @@ const fetchItemById = async (req, res) => {
 
     const item = await Item.findOne({
       where: { id },
-      include: [
+       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "email", "profileImage"],
+          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto"], // Changed from "email" to "emailAddress"
         },
       ],
     });
@@ -73,7 +73,7 @@ const fetchOwnerItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "email", "profileImage"],
+          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto"], // Changed from "email" to "emailAddress"
         },
       ],
       order: [['createdAt', 'DESC']],
@@ -167,11 +167,11 @@ const fetchOwnerItems = async (req, res) => {
       const createdItem = await Item.findOne({
         where: { id: newItem.id },
         include: [
-          {
-            model: Owner,
-            attributes: ["id", "firstName", "lastName", "email", "profileImage"],
-          },
-        ],
+        {
+          model: Owner,
+          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto"], // Changed from "email" to "emailAddress"
+        },
+      ],
       });
 
       return res.status(201).json({
@@ -230,7 +230,7 @@ const updateItem = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "email", "profileImage"],
+          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto"], // Changed from "email" to "emailAddress"
         },
       ],
     });
