@@ -563,12 +563,44 @@ export default function PersonalInfo() {
           onValueChange={(itemValue) => setBarangay(itemValue)}
           style={{ color: barangay ? "#000" : "transparent", width: "100%" }}
         >
-          <Picker.Item label="Select Barangay " value="" color="#888" /> 
-          <Picker.Item label="Marfransisco" value="Marfransisco" />
-          <Picker.Item label="Wawa" value="Wawa" />
-          <Picker.Item label="Pili" value="Pili" />
+         <Picker.Item label="Select Barangay" value="" color="#888" />
+          <Picker.Item label="Anoling" value="Anoling" />
+          <Picker.Item label="Bacungan" value="Bacungan" />
+          <Picker.Item label="Bangbang" value="Bangbang" />
+          <Picker.Item label="Banilad" value="Banilad" />
+          <Picker.Item label="Buli" value="Buli" />
           <Picker.Item label="Cacawan" value="Cacawan" />
+          <Picker.Item label="Calingag" value="Calingag" />
+          <Picker.Item label="Del Razon" value="Del Razon" />
+          <Picker.Item label="Guinhawa" value="Guinhawa" />
+          <Picker.Item label="Inclanay" value="Inclanay" />
+          <Picker.Item label="Lumambayan" value="Lumambayan" />
+          <Picker.Item label="Malaya" value="Malaya" />
+          <Picker.Item label="Maliancog" value="Maliancog" />
+          <Picker.Item label="Maningcol" value="Maningcol" />
+          <Picker.Item label="Marayos" value="Marayos" />
+          <Picker.Item label="Marfrancisco" value="Marfrancisco" />
+          <Picker.Item label="Nabuslot" value="Nabuslot" />
+          <Picker.Item label="Pagalagala" value="Pagalagala" />
+          <Picker.Item label="Palayan" value="Palayan" />
+          <Picker.Item label="Pambisan Malaki" value="Pambisan Malaki" />
+          <Picker.Item label="Pambisan Munti" value="Pambisan Munti" />
+          <Picker.Item label="Panggulayan" value="Panggulayan" />
+          <Picker.Item label="Papandayan" value="Papandayan" />
+          <Picker.Item label="Pili" value="Pili" />
+          <Picker.Item label="Quinabigan" value="Quinabigan" />
+          <Picker.Item label="Ranzo" value="Ranzo" />
+          <Picker.Item label="Rosario" value="Rosario" />
+          <Picker.Item label="Sabang" value="Sabang" />
           <Picker.Item label="Sta. Isabel" value="Sta. Isabel" />
+          <Picker.Item label="Sta. Maria" value="Sta. Maria" />
+          <Picker.Item label="Sta. Rita" value="Sta. Rita" />
+          <Picker.Item label="Sto. Nino (Santo Niño)" value="Sto. Nino (Santo Niño)" />
+          <Picker.Item label="Wawa" value="Wawa" />
+          <Picker.Item label="Zone I (Pob.)" value="Zone I (Pob.)" />
+          <Picker.Item label="Zone II (Pob.)" value="Zone II (Pob.)" />
+          <Picker.Item label="Zone III (Pob.)" value="Zone III (Pob.)" />
+          <Picker.Item label="Zone IV (Pob.)" value="Zone IV (Pob.)" />
         </Picker>
       </View>
 
