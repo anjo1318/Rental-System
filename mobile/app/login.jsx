@@ -20,7 +20,6 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import usePushNotifications from "./hooks/usePushNotifications";
 
 const { width, height } = Dimensions.get("window");
 
@@ -96,7 +95,7 @@ export default function Login() {
       if (response.data.success) {
         const { token, user } = response.data;
 
-        // Build a complete user object (include only what you need)
+        // Build a complete user object
         const userData = {
           id: user.id,
           name: user.name,
@@ -122,9 +121,6 @@ export default function Login() {
         // Save token & user info
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
-        // ✅ Register device token to backend
-
-
 
         router.push("customer/home");
       } 
@@ -326,10 +322,10 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    justifyContent: "flex-start", // keep inputs nearer to top by default
+    justifyContent: "flex-start",
     alignItems: "center",
     paddingHorizontal: width * 0.08,
-    paddingBottom: height * 0.06, // space for bottom row
+    paddingBottom: height * 0.06,
   },
 
   input: {
@@ -415,10 +411,6 @@ const styles = StyleSheet.create({
     flexDirection: "row", 
     justifyContent: "center", 
     marginTop: 24 
-  },
-  termsText: { 
-    fontSize: width * 0.035, 
-    color: "#000" 
   },
   termsLink: { 
     fontSize: width * 0.035, 

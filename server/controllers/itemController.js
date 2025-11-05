@@ -8,7 +8,7 @@ const fetchItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "email", "profileImage"],
+          attributes: ["id", "firstName", "lastName", "emailAddress", "profileImage"], // Changed from "email" to "emailAddress"
         },
       ],
       order: [['createdAt', 'DESC']], // newest first
