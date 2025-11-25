@@ -108,12 +108,12 @@ export default function Home() {
       {/* ✅ StatusBar must be OUTSIDE the main View */}
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#f2f2f2"
+        backgroundColor="#057474"
         translucent={false}
       />
 
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+        <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>
@@ -125,7 +125,7 @@ export default function Home() {
             <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
             <View style={styles.notificationWrapper}>
             <Pressable onPress={() => router.push("customer/notifications")}>
-              <Icon name="notifications-none" size={24} color="#057474" />
+              <Icon name="notifications-none" size={24} color="#007F7F" />
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>2</Text>
               </View>
@@ -147,6 +147,7 @@ export default function Home() {
             />
             <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
           </View>
+        </View>
 
           {/* 🔹 Featured Devices */}
           <View style={styles.featuredSection}>
@@ -298,8 +299,6 @@ export default function Home() {
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
 
-        </ScrollView>
-
         {/* 🔹 Bottom Nav */}
         <View style={styles.bottomNav}>
           {[
@@ -319,7 +318,7 @@ export default function Home() {
             </Pressable>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </>
   );
 }

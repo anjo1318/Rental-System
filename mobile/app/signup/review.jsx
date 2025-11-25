@@ -14,7 +14,6 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -119,24 +118,24 @@ export default function Review() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View style={styles.safe}>
         <ActivityIndicator size="large" color="#057474" />
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!customer) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View style={styles.safe}>
         <Text style={{ textAlign: "center", marginTop: 50 }}>
           No customer data found.
         </Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}
@@ -304,7 +303,7 @@ export default function Review() {
           </Pressable>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

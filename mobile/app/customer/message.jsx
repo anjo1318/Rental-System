@@ -39,7 +39,8 @@ export default function Messages() {
 
       {/* Header */}
       <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }]}>
+        <View style={styles.topBackground}>
+       <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }]}>
           {/* Left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable
@@ -63,6 +64,7 @@ export default function Messages() {
           {/* Right: placeholder (keeps title centered) */}
           <View style={[styles.iconBox, { width: ICON_BOX }]} />
         </View>
+      </View>
       </View>
 
       {/* Body */}
@@ -100,10 +102,12 @@ const styles = StyleSheet.create({
 
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#057474",
+    backgroundColor: "#007F7F",
     borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#007F7F",
     justifyContent: "center",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   profileContainer: {
@@ -120,6 +124,12 @@ const styles = StyleSheet.create({
   iconPress: {
     padding: width * 0.02, // tap area scales with width
     borderRadius: 6,
+  },
+
+  topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   pageName: {

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import {View,Image,Text,TextInput,Pressable,StyleSheet,Dimensions,StatusBar,KeyboardAvoidingView,Platform,} from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import axios from "axios";   // 👈 make sure axios is imported
 import { Ionicons } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
@@ -64,7 +63,7 @@ export default function IdUpload() {
 
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
       <KeyboardAvoidingView
               style={{ flex: 1 }}
@@ -277,7 +276,7 @@ export default function IdUpload() {
         </View>
       </KeyboardAwareScrollView>
     </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

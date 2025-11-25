@@ -46,6 +46,7 @@ export default function TimeDuration() {
           { height: HEADER_HEIGHT, paddingHorizontal: PADDING_H, paddingVertical: PADDING_V },
         ]}
       >
+        <View style={styles.topBackground}>
         <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
           {/* left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
@@ -60,10 +61,10 @@ export default function TimeDuration() {
           </Text>
 
           {/* right: placeholder for layout balance */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]} />
+           <View style={[styles.iconBox, { width: ICON_BOX }]} />
+          </View>
         </View>
       </View>
-
       {/* 🔹 Bottom Nav */}
       <View style={styles.bottomNav}>
         {[
@@ -94,10 +95,12 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor:"#007F7F",
     borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#007F7F",
     justifyContent: "center",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   profileContainer: {
     flexDirection: "row",
@@ -118,6 +121,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
     paddingHorizontal: 6,
+  },
+
+  topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   bottomNav: {
     flexDirection: "row",

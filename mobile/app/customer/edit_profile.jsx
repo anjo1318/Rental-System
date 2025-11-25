@@ -12,7 +12,6 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
-  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -150,17 +149,17 @@ export default function EditProfile() {
   // Show loading or redirect if no user data
   if (isLoading || !currentUser) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View style={styles.safe}>
         <View style={styles.loadingContainer}>
           <Text>Loading...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+    <View style={styles.safe}>
+      <StatusBar barStyle="dark-content" backgroundColor="#007F7F" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -176,10 +175,11 @@ export default function EditProfile() {
               { height: HEADER_HEIGHT, paddingHorizontal: PADDING_H, paddingVertical: PADDING_V },
             ]}
           >
+            <View style={styles.topBackground}>
             <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
               <View style={[styles.iconBox, { width: ICON_BOX }]}>
                 <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-                  <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
+                  <Icon name="arrow-back" size={ICON_SIZE} color="#ccc" />
                 </Pressable>
               </View>
 
@@ -192,9 +192,9 @@ export default function EditProfile() {
               </Text>
 
               <View style={[styles.iconBox, { width: ICON_BOX }]} />
+             </View>
             </View>
           </View>
-
           {/* Avatar */}
           <View style={styles.userContainer}>
             <View style={styles.userRow}>
@@ -388,7 +388,7 @@ export default function EditProfile() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -406,10 +406,12 @@ const styles = StyleSheet.create({
 
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#FFF",
     borderBottomWidth: 2,
     borderBottomColor: "#ccc",
     justifyContent: "center",
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   profileContainer: {
@@ -434,6 +436,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
     paddingHorizontal: 6,
+  },
+
+  topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   userContainer: {

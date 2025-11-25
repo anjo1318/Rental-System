@@ -135,6 +135,7 @@ export default function Profile() {
           },
         ]}
       >
+        <View style={styles.topBackground}>
         <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
@@ -146,7 +147,8 @@ export default function Profile() {
             Profile
           </Text>
 
-          <View style={[styles.iconBox, { width: ICON_BOX }]} />
+            <View style={[styles.iconBox, { width: ICON_BOX }]} />
+          </View>
         </View>
       </View>
 
@@ -301,10 +303,12 @@ const styles = StyleSheet.create({
 
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#FFF",
     borderBottomWidth: 3,
-    borderBottomColor: "#ccc",
+    borderBottomColor:"#007F7F",
     justifyContent: "center",
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   profileContainer: {
@@ -330,7 +334,11 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
   },
-
+   topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
   userContainer: {
     padding: 13,
   },

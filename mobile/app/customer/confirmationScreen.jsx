@@ -11,7 +11,6 @@ import {View,
   StatusBar,
   Linking
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -101,7 +100,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
   };
 
 return (
-  <SafeAreaView style={styles.safe}>
+  <View style={styles.safe}>
     <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
     {/* Header */}
@@ -281,7 +280,7 @@ return (
         </View>
       </View>
     </Modal>
-  </SafeAreaView>
+  </View>
 );
 
 }

@@ -211,10 +211,11 @@ export default function BookedItem() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" translucent={false} />
+      <StatusBar barStyle="dark-content" backgroundColor="#057474" translucent={false} />
 
       {/* Header */}
       <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, paddingTop: MARGIN_TOP }]}>
+        <View style={styles.topBackground}>
         <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable
@@ -228,7 +229,7 @@ export default function BookedItem() {
               hitSlop={10}
               style={styles.iconPress}
             >
-              <Icon name="arrow-back" size={24} color="#000"/>
+              <Icon name="arrow-back" size={24} color="#ccc"/>
             </Pressable>
           </View>
 
@@ -251,7 +252,7 @@ export default function BookedItem() {
                 },
               ]}
             >
-              <Icon name="notifications-none" size={Math.round(ICON_SIZE * 0.9)} color="#057474" />
+              <Icon name="notifications-none" size={Math.round(ICON_SIZE * 0.9)} color="#ccc" />
               <View
                 style={[
                   styles.badge,
@@ -268,6 +269,7 @@ export default function BookedItem() {
               </View>
             </View>
           </View>
+        </View>
         </View>
       </View>
 
@@ -402,10 +404,13 @@ const styles = StyleSheet.create({
 
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: "#007F7F",
     borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+    borderBottomColor: "#007F7F",
     justifyContent: "center",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+
   },
 
   profileContainer: {
@@ -427,7 +432,7 @@ const styles = StyleSheet.create({
 
   pageName: {
     fontWeight: "600",
-    color: "#000",
+    color: "#ccc",
     textAlign: "center",
     flex: 1,
     paddingHorizontal: 6,
@@ -436,21 +441,30 @@ const styles = StyleSheet.create({
   notificationWrapper: {
     position: "relative",
     borderWidth: 1.5,
-    borderColor: "#057474",
+    borderColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
   },
 
   badge: {
     position: "absolute",
-    backgroundColor: "#057474",
+    backgroundColor: "#007F7F",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+
   },
 
   badgeText: {
     color: "white",
     fontWeight: "bold",
+  },
+
+   topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   bodyWrapper: {

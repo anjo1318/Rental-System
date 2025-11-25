@@ -57,7 +57,7 @@ const sections = [
     content: `
      <p><b>    2.1 </b>    Users must be at least 18 years of age to use the platform and enter into binding agreements.</p>
      <p><b> 2.2 </b> Users are responsible for providing accurate, complete, and up-to-date information during registration. Failure to do so may result in account suspension or termination.</p>
-     <p><b>  2.3 </b>  Users must maintain the confidentiality of their account credentials and are responsible for any activity under their account. If you believe your account has been compromised, please notify us immediately.</p>
+     <p><b>  2.3 </b> Users must maintain the confidentiality of their account credentials and are responsible for any activity under their account. If you believe your account has been compromised, please notify us immediately.</p>
     `,
   },
   {

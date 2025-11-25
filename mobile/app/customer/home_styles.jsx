@@ -35,15 +35,16 @@ const styles = StyleSheet.create({
     height: width * 0.10,
     borderRadius: (width * 0.12) / 2,
     borderWidth: 2,
-    borderColor: "#057474",
+    borderColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#ccc",
   },
   badge: {
     position: "absolute",
     right: -8,
     top: -8,
-    backgroundColor: "#057474",
+    backgroundColor: "#ccc",
     borderRadius: 10,
     width: 17,
     height: 17,
@@ -51,7 +52,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   badgeText: {
-    color: "white",
+    color: "#007F7F",
     fontSize: 8,
     fontWeight: "bold",
   },
@@ -79,6 +80,16 @@ const styles = StyleSheet.create({
   rightIcon: { 
     marginLeft: 8 
   },
+
+  topBackground: {
+    backgroundColor:"#007F7F",
+    paddingTop: 10,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+
 
   sectionTitle: {
     fontWeight: "bold",

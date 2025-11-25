@@ -13,7 +13,6 @@ import {View,
   Platform,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
@@ -846,7 +845,7 @@ export default function ownerSignup() {
   );
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -910,7 +909,7 @@ export default function ownerSignup() {
           </View>
         </KeyboardAwareScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -13,7 +13,6 @@ import {View,
   Keyboard,
   Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
@@ -207,7 +206,7 @@ export default function ownerLogin() {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#007F7F" />
 
       <KeyboardAvoidingView
@@ -310,7 +309,7 @@ export default function ownerLogin() {
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
