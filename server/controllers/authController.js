@@ -169,14 +169,15 @@ const mobileOwnerLogin = async (req, res) => {
 
     console.log("Login attempt:", req.body);
 
-    const owner = await Owner.findOne({ where: { email } });
+    // Change 'email' to 'emailAddress' to match the model
+    const owner = await Owner.findOne({ where: { emailAddress: email } });
 
     if (!owner) {
       return res.status(404).json({ success: false, error: 'Owner not found' });
     }
 
-    // Compare passwords correctly
-    const isMatch = await bcrypt.compare(password, owner.passwordHash);
+    // Compare passwords correctly (assuming you're using 'password' field from model)
+    const isMatch = await bcrypt.compare(password, owner.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Wrong password' });
     }
@@ -188,9 +189,9 @@ const mobileOwnerLogin = async (req, res) => {
       { expiresIn: '10d' }
     );
 
-    console.log(`${owner.email}, successfully logged in`);
+    console.log(`${owner.emailAddress}, successfully logged in`);
 
-    // Send complete user data that matches frontend expectations
+    // Send complete user data
     res.status(200).json({
       success: true,
       token,
@@ -198,9 +199,9 @@ const mobileOwnerLogin = async (req, res) => {
         id: owner.id, 
         firstName: owner.firstName,
         lastName: owner.lastName,
-        email: owner.email,
-        phone: owner.phone || null,
-        address: owner.address || null,
+        email: owner.emailAddress, // Map emailAddress to email for frontend
+        phone: owner.phoneNumber || null,
+        address: owner.address || null, // Note: you don't have a single 'address' field
         profileImage: owner.profileImage || null,
         gcashQR: owner.gcashQR || null,
         bio: owner.bio || null,
