@@ -144,7 +144,7 @@ const getOwnerItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
+          attributes: ['id', 'firstName', 'lastName', 'emailAddress', 'profileImage'] // ✅ Changed 'email' to 'emailAddress'
         }
       ],
       order: [['createdAt', 'DESC']]
@@ -152,10 +152,20 @@ const getOwnerItems = async (req, res) => {
 
     console.log(`✅ Found ${items.length} items for owner ${targetOwnerId}`);
 
+    // ✅ Transform data to map emailAddress to email for frontend compatibility
+    const transformedItems = items.map(item => {
+      const itemData = item.toJSON();
+      if (itemData.Owner && itemData.Owner.emailAddress) {
+        itemData.Owner.email = itemData.Owner.emailAddress;
+        delete itemData.Owner.emailAddress; // Optional: remove to keep response clean
+      }
+      return itemData;
+    });
+
     res.status(200).json({
       success: true,
-      data: items,
-      count: items.length,
+      data: transformedItems, // ✅ Return transformed data
+      count: transformedItems.length,
       message: "Items fetched successfully"
     });
 
