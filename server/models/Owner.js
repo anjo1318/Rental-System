@@ -27,19 +27,23 @@ const Owner = sequelize.define("Owner", {
     allowNull: false,
   },
 
-  emailAddress: {
+  // ✅ Changed: Use 'email' in code, maps to 'emailAddress' in DB
+  email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    field: 'emailAddress', // ✅ This tells Sequelize the actual DB column name
     validate: {
       isEmail: true,
       notEmpty: true
     }
   },
 
-  phoneNumber: {
+  // ✅ Changed: Use 'phone' in code, maps to 'phoneNumber' in DB
+  phone: {
     type: DataTypes.STRING,
     allowNull: false,
+    field: 'phoneNumber', // ✅ Maps to phoneNumber column in DB
     validate: {
       notEmpty: true,
       len: [10, 15]
@@ -67,7 +71,7 @@ const Owner = sequelize.define("Owner", {
     }
   },
 
-country: {
+  country: {
     type: DataTypes.STRING,
     allowNull: true,
     defaultValue: 'Philippines',
@@ -108,8 +112,6 @@ country: {
     }
   },
 
-  
-  // Address Information (Step 2)
   houseNumber: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -126,7 +128,6 @@ country: {
     }
   },
 
-  // ID Information (Step 3)
   idType: {
     type: DataTypes.ENUM(
       'national_id', 
@@ -152,16 +153,15 @@ country: {
   },
 
   idPhoto: {
-    type: DataTypes.TEXT, // For file path or base64
+    type: DataTypes.TEXT,
     allowNull: true
   },
 
   selfie: {
-    type: DataTypes.TEXT, // For file path or base64 - ADDED THIS
+    type: DataTypes.TEXT,
     allowNull: true
   },
   
-  // Status fields
   isActive: {
     type: DataTypes.BOOLEAN,
     allowNull: false,
@@ -175,9 +175,19 @@ country: {
   },
 
   gcashQR: {
-  type: DataTypes.STRING,
-  allowNull: true,
-  defaultValue: "N/A",
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: "N/A",
+  },
+
+  profileImage: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  bio: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   }
 });
 

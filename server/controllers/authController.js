@@ -169,19 +169,19 @@ const mobileOwnerLogin = async (req, res) => {
 
     console.log("Login attempt:", req.body);
 
+    // ✅ Now works with 'email' because of field alias
     const owner = await Owner.findOne({ where: { email } });
 
     if (!owner) {
       return res.status(404).json({ success: false, error: 'Owner not found' });
     }
 
-    // Compare passwords correctly
-    const isMatch = await bcrypt.compare(password, owner.passwordHash);
+    // ✅ Compare passwords with 'password' field
+    const isMatch = await bcrypt.compare(password, owner.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Wrong password' });
     }
 
-    // Generate JWT with role = owner
     const token = jwt.sign(
       { id: owner.id, role: 'owner' },
       process.env.JWT_KEY,
@@ -190,7 +190,6 @@ const mobileOwnerLogin = async (req, res) => {
 
     console.log(`${owner.email}, successfully logged in`);
 
-    // Send complete user data that matches frontend expectations
     res.status(200).json({
       success: true,
       token,
@@ -198,9 +197,11 @@ const mobileOwnerLogin = async (req, res) => {
         id: owner.id, 
         firstName: owner.firstName,
         lastName: owner.lastName,
-        email: owner.email,
-        phone: owner.phone || null,
-        address: owner.address || null,
+        email: owner.email, // ✅ Now works
+        phone: owner.phone, // ✅ Now works
+        address: owner.street 
+          ? `${owner.houseNumber || ''} ${owner.street}, ${owner.barangay}, ${owner.town}, ${owner.province}`.trim() 
+          : null,
         profileImage: owner.profileImage || null,
         gcashQR: owner.gcashQR || null,
         bio: owner.bio || null,

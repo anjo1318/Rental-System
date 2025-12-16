@@ -121,13 +121,18 @@ const fetchOwnerItems = async (req, res) => {
 const getOwnerItems = async (req, res) => {
   try {
     const { ownerId } = req.query;
-    const requestingUserId = req.user.id;
     
-    // If ownerId is provided and user is owner, they can only see their own items
-    let targetOwnerId = requestingUserId; // Default to authenticated user
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'User not authenticated' 
+      });
+    }
+    
+    const requestingUserId = req.user.id;
+    let targetOwnerId = requestingUserId;
     
     if (ownerId) {
-      // If ownerId is provided, check permissions
       if (req.user.role === 'owner' && ownerId != requestingUserId) {
         return res.status(403).json({ 
           success: false, 
@@ -144,7 +149,7 @@ const getOwnerItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage']
+          attributes: ['id', 'firstName', 'lastName', 'email', 'profileImage'] // ✅ Now 'email' works!
         }
       ],
       order: [['createdAt', 'DESC']]
@@ -160,10 +165,13 @@ const getOwnerItems = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error fetching owner items:', error);
+    console.error('❌ Error fetching owner items:', error.message);
+    console.error('❌ Error stack:', error.stack);
+    
     res.status(500).json({ 
       success: false, 
-      error: 'Failed to fetch items' 
+      error: 'Failed to fetch items',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
