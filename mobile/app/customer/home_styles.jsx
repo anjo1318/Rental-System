@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
 
-  
 
   categoryButton: {
     paddingHorizontal: width * 0.04,

@@ -208,11 +208,12 @@ export default function ownerHome() {
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#f2f2f2" translucent={false} />
+      <StatusBar barStyle="light-content"backgroundColor="#007F7F"
+        translucent={false}/>
 
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
           {/* Profile Section */}
+          <View style={styles.topBackground}>
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
               <Image
@@ -232,24 +233,21 @@ export default function ownerHome() {
             </Text>
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
-                <Image
-                  source={require("../../assets/images/message_chat.png")}
-                  style={{ width: 24, height: 24, tintColor: "#057474" }}
-                  resizeMode="contain"
-                />
+                <Icon name="notifications-none" size={24} color="#007F7F" />
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>2</Text>
                 </View>
               </Pressable>
             </View>
           </View>
+        </View>
 
           {/* Stats */}
           <View style={styles.statsContainer}>
-            <View style={[styles.statCard, { borderWidth: 1, borderColor: "#3D7BFF" }]}>
-              <Text style={[styles.statLabel, { color: "#3D7BFF" }]}>Total Unit</Text>
+            <View style={[styles.statCard, { backgroundColor: "#3D7BFF", borderWidth: 1, borderColor: "white", right: -5 }]}>
+              <Text style={[styles.statLabel, { color: "white" }]}>Total Unit</Text>
               <View style={styles.numberContainer}>
-                <Text style={[styles.statNumber, { color: "#3D7BFF" }]}>{stats.total}</Text>
+                <Text style={[styles.statNumber, { color: "white" }]}>{stats.total}</Text>
                 <Image
                   source={require("../../assets/images/total.png")}
                   style={styles.lowerLeftIcon}
@@ -257,10 +255,10 @@ export default function ownerHome() {
               </View>
             </View>
 
-            <View style={[styles.statCard, { borderWidth: 1, borderColor: "#007F7F" }]}>
-              <Text style={[styles.statLabel, { color: "#007F7F" }]}>Occupied Unit</Text>
+            <View style={[styles.statCard, { backgroundColor: "#00CA2C",borderWidth: 1, borderColor: "white", }]}>
+              <Text style={[styles.statLabel, { color: "white", }]}>Vacant Unit</Text>
               <View style={styles.numberContainer}>
-                <Text style={[styles.statNumber, { color: "#007F7F" }]}>{stats.available}</Text>
+                <Text style={[styles.statNumber, { color: "white" }]}>{stats.available}</Text>
                 <Image
                   source={require("../../assets/images/occupied.png")}
                   style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}
@@ -268,17 +266,17 @@ export default function ownerHome() {
               </View>
             </View>
 
-            <View style={[styles.statCard, { borderWidth: 1, borderColor: "#FF521D" }]}>
-              <Text style={[styles.statLabel, { color: "#FF521D" }]}>Vacant Unit</Text>
+            <View style={[styles.statCard, {backgroundColor: "#FF2125",borderWidth: 1, borderColor: "white", right: 5  }]}>
+              <Text style={[styles.statLabel, { color: "white" }]}>Occupied Unit</Text>
               <View style={styles.numberContainer}>
-                <Text style={[styles.statNumber, { color: "#FF521D" }]}>{stats.rented}</Text>
+                <Text style={[styles.statNumber, { color: "white" }]}>{stats.rented}</Text>
                 <Image
                   source={require("../../assets/images/vacant.png")}
                   style={styles.lowerLeftIcon}
                 />
               </View>
             </View>
-          </View>
+        </View>
 
           {/* Search */}
           <View style={styles.searchContainer}>
@@ -352,7 +350,6 @@ export default function ownerHome() {
               <Text style={styles.addButtonText}>Add New Item</Text>
             </Pressable>
           </View>
-        </ScrollView>
 
         {/* Bottom Nav */}
         <View style={styles.bottomNav}>
@@ -376,12 +373,24 @@ export default function ownerHome() {
             </Pressable>
           ))}
         </View>
-      </View>
+      </ScrollView>
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",  // everything under the top header/status bar = white
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+  },
+    statusBarSpacer: {
+    height: StatusBar.currentHeight || 0,
+    backgroundColor: "#007F7F",  // this paints the actual OS status bar background
+  },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -390,10 +399,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
 
+
   avatar: { 
-    width: width * 0.1, 
-    height: width * 0.1, 
-    borderRadius: width * 0.05 
+    width: width * 0.12, 
+    height: width * 0.12, 
+    borderRadius: width * 0.1 ,
+    right: -5,
   },
   
   username: { 
@@ -411,49 +422,75 @@ const styles = StyleSheet.create({
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 2,
+    borderColor: "white",
+    backgroundColor: "white",
   },
   badge: {
     position: "absolute",
     right: -8,
     top: -3,
-    backgroundColor: "#057474",
+    backgroundColor: "white",
     borderRadius: 10,
     width: 15,
     height: 15,
     justifyContent: "center",
-    alignItemscd : "center",
+    alignItems : "center",
   },
   badgeText: {
-    color: "white",
-    fontSize: 8,
+    color: "#007F7F",
+    fontSize: 10,
     fontWeight: "bold",
+    right: -1,
+    top: -1,
+  },
+
+  topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    top: 20,
   },
   
 statsContainer: {
   flexDirection: "row",
   justifyContent: "space-between",
-  marginHorizontal: 16,
+  marginHorizontal: 10,
   marginTop: 20,
+  borderWidth: 2,
+  borderColor: "#00000040",
+  height: 195,
+  width: 330,
+  right: -10,
+  shadowColor: "white",   // translucent black
+  shadowOpacity: 0.5,
+  shadowRadius: 20,
+  borderRadius: 20,
+  top: 20,
+  left: 5,
 },
 
 statCard: {
-  flex: 1,
   alignItems: "center",
   paddingVertical: 40,
   marginHorizontal: 4,           
   backgroundColor: "#FFF",     
   borderRadius: 4,
+  height: 170,
+  width: 98,
+  top: 12,
+  borderRadius: 20,
 },
 
 statNumber: {
-  fontSize: 30,
+  fontSize: 35,
   fontWeight: "bold",
   color: "#057474",
   marginBottom: 4,
 },
 
 statLabel: {
-  fontSize: 12,
+  fontSize: 15    ,
   color: "#666",
   textAlign: "center",
 },
@@ -492,6 +529,7 @@ lowerLeftIcon: {
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+    top: 15,
   },
   leftIcon: {
     marginRight: 10,
@@ -511,6 +549,7 @@ lowerLeftIcon: {
     color: "#333",
     marginBottom: 12,
     paddingHorizontal: 16,
+    marginTop: 15,
   },
   
   categoryButton: {
@@ -522,6 +561,7 @@ lowerLeftIcon: {
     marginLeft: 16,
     borderWidth: 1,
     borderColor: "#E0E0E0",
+    marginBottom: 20,
   },
   activeCategory: {
     backgroundColor: "#057474",
@@ -603,7 +643,8 @@ lowerLeftIcon: {
     backgroundColor: "#057474",
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 20,
+    borderRadius: 20, 
+
   },
   addItemButtonText: {
     color: "#FFF",

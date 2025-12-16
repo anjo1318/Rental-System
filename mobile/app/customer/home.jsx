@@ -108,7 +108,7 @@ export default function Home() {
       {/* ✅ StatusBar must be OUTSIDE the main View */}
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#057474"
+        backgroundColor="#057474" 
         translucent={false}
       />
 
