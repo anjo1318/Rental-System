@@ -69,17 +69,24 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
+    justifyContent: "center",
+    paddingVertical: 20,
     paddingHorizontal: 16,
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   backButton: {
-    marginRight: 16,
+    top: 8,
+    right: 90,
   },
   headerTitle: {
     fontSize: 18,
     color: "#FFF",
     fontWeight: "600",
+    top: 8,
+    textAlign: 'center',
+    right: 10,
   },
   messageBubble: {
     padding: 12,

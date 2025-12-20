@@ -211,7 +211,8 @@ export default function ownerHome() {
       <StatusBar barStyle="light-content"backgroundColor="#007F7F"
         translucent={false}/>
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
           {/* Profile Section */}
           <View style={styles.topBackground}>
           <View style={styles.profileContainer}>

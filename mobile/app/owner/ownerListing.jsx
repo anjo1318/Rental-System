@@ -390,7 +390,7 @@ export default function OwnerListing() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Items ({items.length})</Text>
         <TouchableOpacity 
-          activeOpacity={0.7}
+          activeOpacity={0.5}
           onPress={() => {
             console.log("Add button pressed");
             addNewItem();
@@ -474,12 +474,9 @@ const styles = StyleSheet.create({
     alignItems: "center", 
     justifyContent: "space-between", 
     padding: 16, 
-    backgroundColor: "#057474",
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   backButton: { 
     padding: 12,
@@ -488,7 +485,6 @@ const styles = StyleSheet.create({
     minHeight: 48,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)'
   },
   headerTitle: { 
     fontSize: 18, 
@@ -498,13 +494,14 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   addButton: {
-    padding: 12,
+    padding: 4,
     borderRadius: 8,
-    minWidth: 48,
-    minHeight: 48,
+    minWidth: 40,
+    minHeight: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)'
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginRight: 10,
   },
   searchContainer: { 
     flexDirection: "row", 

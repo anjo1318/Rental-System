@@ -11,14 +11,19 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  Dimensions
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import * as ImagePicker from 'expo-image-picker';
+import { Picker } from "@react-native-picker/picker";
+
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+const { height } = Dimensions.get("window");
 
 export default function OwnerAddItem() {
   const router = useRouter();
@@ -26,16 +31,17 @@ export default function OwnerAddItem() {
   const [token, setToken] = useState(null);
 
   // Form fields
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [pricePerDay, setPricePerDay] = useState("");
+  const [productName, setProductName] = useState("");
+  const [productBrand, setProductBrand] = useState("");
+  const [pricePerHour, setPricePerHour] = useState("");
+  const [specification, setSpecification] = useState("");
+  const [productDescription, setProductDescription] = useState("");
   const [category, setCategory] = useState("");
   const [location, setLocation] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [images, setImages] = useState([]);
-
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [images, setImages] = useState([]);
+
 
   // Load owner info & token
   useEffect(() => {
@@ -149,16 +155,25 @@ const uploadImages = async () => {
 // Simplified handleAddItem function
 const handleAddItem = async () => {
   // Validation
-  if (!title || !pricePerDay || !ownerId) {
-    Alert.alert("Validation Error", "Title, Price per day, and Owner ID are required.");
-    return;
-  }
+  // Required field validation
+if (!productName.trim() || !pricePerHour || !ownerId) {
+  Alert.alert(
+    "Validation Error",
+    "Product name, price per hour, and owner information are required."
+  );
+  return;
+}
 
-  const parsedQuantity = parseInt(quantity);
-  if (isNaN(parsedQuantity) || parsedQuantity < 1) {
-    Alert.alert("Validation Error", "Quantity must be at least 1.");
-    return;
-  }
+// Price validation
+const parsedPrice = Number(pricePerHour);
+if (isNaN(parsedPrice) || parsedPrice <= 0) {
+  Alert.alert(
+    "Validation Error",
+    "Price per hour must be a valid number greater than zero."
+  );
+  return;
+}
+
 
   setLoading(true);
   
@@ -177,13 +192,13 @@ const handleAddItem = async () => {
     
     // Create item
     const newItem = {
-      title: title.trim(),
-      description: description?.trim() || null,
-      pricePerDay: parseFloat(pricePerDay),
-      category: category?.trim() || null,
-      location: location?.trim() || null,
-      quantity: parsedQuantity,
-      availability: true,
+      productName: productName.trim(),                
+      productBrand: productBrand?.trim() || null,     
+      pricePerHour: Number(pricePerHour),             
+      specification: specification?.trim() || null,   
+      productDescription: productDescription?.trim() || null,
+      category: category?.trim() || null,               
+      location: location?.trim() || null,              
       itemImages: uploadedImageUrls,
       ownerId: parseInt(ownerId),
     };
@@ -214,12 +229,12 @@ const handleAddItem = async () => {
       Alert.alert("Success", "Item added successfully!");
       
       // Reset form
-      setTitle("");
-      setDescription("");
-      setPricePerDay("");
+      setProductName("");
+      setProductBrand("");
+      setPricePerHour("");
+      setSpecification("");
       setCategory("");
       setLocation("");
-      setQuantity("1");
       setImages([]);
       
       // Navigate back
@@ -426,54 +441,117 @@ const pickMultipleImages = async () => {
         <Pressable onPress={() => router.replace("owner/ownerHome")} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#FFF" />
         </Pressable>
-        <Text style={styles.headerTitle}>Add Item</Text>
+        <Text style={styles.headerTitle}>Add New Product</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.form}>
+{/* PRODUCT NAME */}
+<View style={styles.pickerContainer}>
+  {!productName && (
+    <Text style={styles.pickerOverlayText}>Product Name *</Text>
+  )}
+  <Picker
+    selectedValue={productName}
+    onValueChange={(itemValue) => setProductName(itemValue)}
+    style={{ color: productName ? "#000" : "transparent", width: "100%" }}
+  >
+    <Picker.Item label="Select Product Name" value="" color="#888" />
+    <Picker.Item label="Laptop" value="laptop" />
+    <Picker.Item label="Smartphone" value="smartphone" />
+    <Picker.Item label="Tablet" value="tablet" />
+    <Picker.Item label="Camera" value="camera" />
+    <Picker.Item label="Gaming Console" value="gaming_console" />
+    <Picker.Item label="Projector" value="projector" />
+    <Picker.Item label="Drone" value="drone" />
+  </Picker>
+</View>
+
+{/* PRODUCT BRAND */}
+<View style={styles.pickerContainer}>
+  {!productBrand && (
+    <Text style={styles.pickerOverlayText}>Product Brand *</Text>
+  )}
+  <Picker
+    selectedValue={productBrand}
+    onValueChange={(itemValue) => setProductBrand(itemValue)}
+    style={{ color: productBrand ? "#000" : "transparent", width: "100%" }}
+  >
+    <Picker.Item label="Select Product Brand" value="" color="#888" />
+    <Picker.Item label="Apple" value="apple" />
+    <Picker.Item label="Samsung" value="samsung" />
+    <Picker.Item label="Sony" value="sony" />
+    <Picker.Item label="Dell" value="dell" />
+    <Picker.Item label="HP" value="hp" />
+    <Picker.Item label="Lenovo" value="lenovo" />
+    <Picker.Item label="Asus" value="asus" />
+    <Picker.Item label="Canon" value="canon" />
+    <Picker.Item label="Nikon" value="nikon" />
+  </Picker>
+</View>
+
         <TextInput
           style={styles.input}
-          placeholder="Title *"
-          value={title}
-          onChangeText={setTitle}
+          placeholder="Price Per Hour *"
+          value={pricePerHour}
+          onChangeText={setPricePerHour}
         />
         
         <TextInput
           style={[styles.input, styles.textArea]}
-          placeholder="Description"
-          value={description}
-          onChangeText={setDescription}
+          placeholder="Specification"
+          value={specification}
+          onChangeText={setSpecification}
+          multiline
+        />
+
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          placeholder="Product Description( actual condition) *"
+          value={productDescription}
+          onChangeText={setProductDescription}
           multiline
         />
         
-        <TextInput
-          style={styles.input}
-          placeholder="Price Per Day *"
-          keyboardType="numeric"
-          value={pricePerDay}
-          onChangeText={setPricePerDay}
-        />
+{/* CATEGORY */}
+<View style={styles.pickerContainer}>
+  {!category && (
+    <Text style={styles.pickerOverlayText}>Category *</Text>
+  )}
+  <Picker
+    selectedValue={category}
+    onValueChange={(itemValue) => setCategory(itemValue)}
+    style={{ color: category ? "#000" : "transparent", width: "100%" }}
+  >
+    <Picker.Item label="Select Category" value="" color="#888" />
+    <Picker.Item label="Personal Electronics" value="personal_electronics" />
+    <Picker.Item label="Office Equipment" value="office_equipment" />
+    <Picker.Item label="Photography & Video" value="photography_video" />
+    <Picker.Item label="Gaming & Entertainment" value="gaming_entertainment" />
+    <Picker.Item label="Presentation Equipment" value="presentation_equipment" />
+  </Picker>
+</View>
+
+{/* LOCATION */}
+<View style={styles.pickerContainer}>
+  {!location && (
+    <Text style={styles.pickerOverlayText}>Location *</Text>
+  )}
+  <Picker
+    selectedValue={location}
+    onValueChange={(itemValue) => setLocation(itemValue)}
+    style={{ color: location ? "#000" : "transparent", width: "100%" }}
+  >
+    <Picker.Item label="Select Location" value="" color="#888" />
+    <Picker.Item label="Main Campus" value="main_campus" />
+    <Picker.Item label="City Center" value="city_center" />
+    <Picker.Item label="North Area" value="north_area" />
+    <Picker.Item label="South Area" value="south_area" />
+    <Picker.Item label="East Area" value="east_area" />
+    <Picker.Item label="West Area" value="west_area" />
+  </Picker>
+</View>
+
         
-        <TextInput
-          style={styles.input}
-          placeholder="Quantity *"
-          keyboardType="numeric"
-          value={quantity}
-          onChangeText={setQuantity}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Category"
-          value={category}
-          onChangeText={setCategory}
-        />
-        
-        <TextInput
-          style={styles.input}
-          placeholder="Location"
-          value={location}
-          onChangeText={setLocation}
-        />
 
         {/* Image Upload Section */}
         <View style={styles.imageSection}>
@@ -547,17 +625,22 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
+    paddingVertical: 25,
     paddingHorizontal: 16,
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    justifyContent: "center",
   },
   backButton: {
-    marginRight: 16,
+    right: 80,
+    top: 10,
   },
   headerTitle: {
     fontSize: 18,
     color: "#FFF",
     fontWeight: "600",
+    top: 10,
   },
   form: {
     padding: 16,
@@ -572,6 +655,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 12,
   },
+  pickerContainer: {
+  width: "100%",
+  borderWidth: 1,
+  borderRadius: 8,
+  borderColor: "#ccc",
+  backgroundColor: "#FFF",
+  justifyContent: "center",
+  marginBottom: 12,
+  paddingHorizontal: 12,
+  paddingVertical: Platform.OS === "ios" ? 12 : 4,
+},
+
+  pickerOverlayText: {
+  position: "absolute",
+  left: 12,
+  fontSize: 14,
+  color: "#888",
+},
+
   textArea: {
     height: 80,
     textAlignVertical: "top",
