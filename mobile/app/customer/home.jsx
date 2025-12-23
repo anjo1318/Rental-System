@@ -122,7 +122,12 @@ export default function Home() {
               style={styles.avatar}
             />
           </Pressable >
-            <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
+           <Text style={styles.username}>
+  {currentUser
+    ? `${currentUser.firstName} ${currentUser.lastName}`
+    : ''}
+</Text>
+
             <View style={styles.notificationWrapper}>
             <Pressable onPress={() => router.push("customer/notifications")}>
               <Icon name="notifications-none" size={24} color="#007F7F" />
@@ -130,24 +135,26 @@ export default function Home() {
                 <Text style={styles.badgeText}>2</Text>
               </View>
             </Pressable>
-
+           </View>
 
             </View>
+            {/* 🔹 Search Bar (Clickable) */}
+            <Pressable onPress={() => router.push('/customer/tap_searchbar')}>
+              <View style={styles.searchContainer} pointerEvents="none">
+                <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+                <TextInput
+                  placeholder="Search your devices.."
+                  value={search}
+                  editable={false}
+                  style={styles.searchInput}
+                  placeholderTextColor="#555"
+                />
+                <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
+              </View>
+            </Pressable>
           </View>
 
-          {/* 🔹 Search Bar */}
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
-            <TextInput
-              placeholder="Search your devices.."
-              value={search}
-              onChangeText={setSearch}
-              style={styles.searchInput}
-              placeholderTextColor="#555"
-            />
-            <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
-          </View>
-        </View>
+          
 
           {/* 🔹 Featured Devices */}
           <View style={styles.featuredSection}>
