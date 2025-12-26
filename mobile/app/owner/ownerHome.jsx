@@ -16,15 +16,19 @@ import {
 import { useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usePathname } from "expo-router";
+
 
 const { width } = Dimensions.get("window");
 
-export default function ownerHome() {
+
+export default function OwnerHome() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
   const [stats, setStats] = useState({
     total: 0,
     available: 0,
@@ -60,11 +64,11 @@ export default function ownerHome() {
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
   const navigationItems = [
-    { name: "Dashboard", icon: "home", route: "owner/ownerDashboard", isImage: false },
-    { name: "Listing", icon: "list-alt", route: "owner/ownerListing", isImage: false },
-    { name: "Request", icon: require("../../assets/images/request.png"), route: "owner/ownerRequest", isImage: true },
-    { name: "Time", icon: "schedule", route: "owner/ownerTime", isImage: false },
-  ];
+  { name: "Dashboard", icon: "home", route: "/owner/ownerHome", isImage: false },
+  { name: "Listing", icon: "list-alt", route: "/owner/ownerListing", isImage: false },
+  { name: "Request", icon: require("../../assets/images/request.png"), route: "/owner/ownerRequest", isImage: true },
+  { name: "Time", icon: "schedule", route: "/owner/ownerTime", isImage: false },
+];
 
   // Fetch owner's items
   const fetchOwnerItems = async (userId) => {
@@ -353,27 +357,47 @@ export default function ownerHome() {
           </View>
 
         {/* Bottom Nav */}
-        <View style={styles.bottomNav}>
-          {navigationItems.map((navItem, index) => (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              onPress={() => handleNavigation(navItem.route)}
-            >
-              {navItem.isImage ? (
-                <Image
-                  source={navItem.icon}
-                  style={{ width: 24, height: 24 }}
-                  tintColor="#fff"
-                  resizeMode="contain"
-                />
-              ) : (
-                <Icon name={navItem.icon} size={24} color="#fff" />
-              )}
-              <Text style={styles.navText}>{navItem.name}</Text>
-            </Pressable>
-          ))}
-        </View>
+<View style={styles.bottomNav}>
+  {navigationItems.map((navItem, index) => {
+    const isActive = pathname === navItem.route;
+
+    return (
+      <Pressable
+        key={index}
+        style={styles.navButton}
+        onPress={() => router.push(navItem.route)}
+      >
+        {navItem.isImage ? (
+          <Image
+            source={navItem.icon}
+            style={{
+              width: 24,
+              height: 24,
+              tintColor: isActive ? "#057474" : "#999",
+            }}
+            resizeMode="contain"
+          />
+        ) : (
+          <Icon
+            name={navItem.icon}
+            size={24}
+            color={isActive ? "#057474" : "#999"}
+          />
+        )}
+
+        <Text
+          style={[
+            styles.navText,
+            { color: isActive ? "#057474" : "#999" },
+          ]}
+        >
+          {navItem.name}
+        </Text>
+      </Pressable>
+    );
+  })}
+</View>
+
       </ScrollView>
     </>
   );
@@ -681,20 +705,19 @@ lowerLeftIcon: {
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: "#057474",
+    backgroundColor: "#fff",
     flexDirection: "row",
     paddingVertical: 12,
     paddingHorizontal: 16,
     justifyContent: "space-around",
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: "#00000040",
   },
   navButton: {
     alignItems: "center",
     flex: 1,
   },
   navText: {
-    color: "#FFF",
     fontSize: 10,
     marginTop: 4,
   },

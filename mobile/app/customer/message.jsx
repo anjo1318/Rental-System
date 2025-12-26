@@ -7,105 +7,133 @@ import {
   Dimensions,
   Pressable,
   StatusBar,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import { usePathname } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
 // ✅ Responsive constants derived from screen size
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09)); // at least 64px
-const ICON_BOX = Math.round(width * 0.10); // 12% of width for icon slots
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06)); // icons scale with width
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // title font adapts to width
-const PADDING_H = Math.round(width * 0.02); // horizontal padding scales
-const MARGIN_TOP = Math.round(height * 0.02); // top margin scales
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.02);
 
 export default function Messages() {
   const router = useRouter();
+  const pathname = usePathname();
 
-    const handleNavigation = (path) => {
-    router.push(`/${path}`);
-  };
+  const messages = [
+    { id: 1, name: "Kenneth Senorin", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "Today" },
+    { id: 2, name: "John Michael Sevilla", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "Friday" },
+    { id: 3, name: "John Jori Noverario", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
+    { id: 4, name: "John Jori Noverario", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
+    { id: 5, name: "John Jori Noverario", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
+  ];
 
   return (
     <View style={styles.container}>
       {/* Status bar */}
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#057474"
-        translucent={false}
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#057474" />
 
       {/* Header */}
       <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
         <View style={styles.topBackground}>
-       <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }]}>
-          {/* Left: back button */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <Pressable
-              onPress={() => router.back()}
-              hitSlop={10}
-              style={styles.iconPress}
-            >
-              <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
-            </Pressable>
-          </View>
-
-          {/* Center: page title */}
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[styles.pageName, { fontSize: TITLE_FONT }]}
+          <View
+            style={[
+              styles.profileContainer,
+              { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
+            ]}
           >
-            Messages
-          </Text>
+            <View style={[styles.iconBox, { width: ICON_BOX }]}>
+              <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
+                <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
+              </Pressable>
+            </View>
 
-          {/* Right: placeholder (keeps title centered) */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]} />
+            <Text style={[styles.pageName, { fontSize: TITLE_FONT }]}>Messages</Text>
+
+            <View style={[styles.iconBox, { width: ICON_BOX }]} />
+          </View>
         </View>
       </View>
-      </View>
 
-      {/* Body */}
-      <View style={styles.bodyWrapper}>
-        <ScrollView contentContainerStyle={styles.scrollContent}></ScrollView>
-      </View>
-      {/* 🔹 Bottom Nav */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "customer/book" },
-          { name: "Message", icon: "mail", route: "customer/message" },
-          { name: "Time", icon: "schedule", route: "customer/time" },
-        ].map((navItem, index) => (
+      {/* 🔽 Messages List (ADDED ONLY THIS PART) */}
+      <ScrollView contentContainerStyle={styles.messageList}>
+        {messages.map((item) => (
           <Pressable
-            key={index}
-            style={styles.navButton}
-            hitSlop={10}
-            onPress={() => handleNavigation(navItem.route)}
+            key={item.id}
+            style={styles.messageItem}
+            onPress={() => router.push("/customer/convointerface")}
           >
-            <Icon name={navItem.icon} size={24} color="#fff" />
-            <Text style={styles.navText}>{navItem.name}</Text>
+            <View style={styles.bottomDivider} />
+            <Image
+              source={{ uri: "https://i.pravatar.cc/150?img=3" }}
+              style={styles.avatar}
+            />
+            <View style={styles.messageContent}>
+              <View style={styles.messageHeader}>
+                <Text style={styles.sender}>{item.name}</Text>
+                <Text style={styles.date}>{item.date}</Text>
+              </View>
+              <Text style={styles.preview} numberOfLines={1}>
+                {item.text}
+              </Text>
+            </View>
           </Pressable>
         ))}
+      </ScrollView>
+
+      {/* Bottom Nav */}
+      <View style={styles.bottomNav}>
+        {[
+          { name: "Home", icon: "home", route: "/customer/home" },
+          { name: "Book", icon: "shopping-cart", route: "/customer/book" },
+          { name: "Message", icon: "mail", route: "/customer/message" },
+          { name: "Time", icon: "schedule", route: "/customer/time" },
+        ].map((navItem, index) => {
+          const isActive = pathname === navItem.route;
+
+          return (
+            <Pressable
+              key={index}
+              style={styles.navButton}
+              onPress={() => router.push(navItem.route)}
+            >
+              <Icon
+                name={navItem.icon}
+                size={24}
+                color={isActive ? "#057474" : "#999"}
+              />
+              <Text
+                style={[
+                  styles.navText,
+                  { color: isActive ? "#057474" : "#999" },
+                ]}
+              >
+                {navItem.name}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#E6E1D6",
+  container: { 
+    flex: 1, 
+    backgroundColor: "#E6E1D6" 
   },
 
   headerWrapper: {
     width: "100%",
     backgroundColor: "#007F7F",
-    borderBottomWidth: 2,
-    borderBottomColor: "#007F7F",
-    justifyContent: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -116,18 +144,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
 
-  iconBox: {
-    alignItems: "center",
+  iconBox: { 
+    alignItems: "center", 
     justifyContent: "center",
+    top: 10,
+    left: 10,
   },
 
-  iconPress: {
-    padding: width * 0.02, // tap area scales with width
-    borderRadius: 6,
+  iconPress: { 
+    padding: width * 0.02 
   },
 
   topBackground: {
-    backgroundColor:"#007F7F",
+    backgroundColor: "#007F7F",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -136,46 +165,80 @@ const styles = StyleSheet.create({
     color: "#FFF",
     textAlign: "center",
     flex: 1,
-    paddingHorizontal: width * 0.015, // keeps spacing consistent
     fontWeight: "600",
+    top: 10,
   },
 
-  bodyWrapper: {
+  /* 🔽 Message styles */
+  messageList: {
+    paddingBottom: height * 0.12,
+  },
+
+  messageItem: {
+    flexDirection: "row",
+    backgroundColor: "#E6E1D6",
+    padding: 20,
+  },
+
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginRight: 12,
+  },
+
+  bottomDivider: {
+    position: "absolute",
+    bottom: 0,
+    left: 68,
+    right: 0,
+    height: 1,
+    backgroundColor: "#05747480",
+  },
+
+
+  messageContent: {
     flex: 1,
-    paddingHorizontal: width * 0.04, // responsive padding
-    paddingBottom: height * 0.04, // scales bottom padding
+  },
+
+  messageHeader: {
+    flexDirection: "row",
     justifyContent: "space-between",
   },
 
-  scrollContent: {
-    flexGrow: 1,
+  sender: {
+    fontWeight: "600",
+    color: "#000",
   },
+
+  date: {
+    fontSize: 12,
+    color: "#888",
+  },
+
+  preview: {
+    color: "#666",
+    marginTop: 4,
+  },
+
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: height * 0.015,
-    backgroundColor: "#057474",
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#00000040",
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
   },
-  navButton: { 
-    alignItems: "center", 
-    flex: 1,
-    zIndex: 10, 
-  },
-    
+
+  navButton: { alignItems: "center", flex: 1 },
+
   navText: {
-    color: "#fff",
     fontWeight: "bold",
     fontSize: width * 0.03,
     marginTop: height * 0.005,
-  },
-
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
   },
 });

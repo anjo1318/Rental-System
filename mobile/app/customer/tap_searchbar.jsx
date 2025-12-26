@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styles, filterStyles } from "./searchbar_styles";
+import { styles, filterStyles } from "../styles/searchbar_styles";
 
 
 import {

@@ -83,7 +83,7 @@ const styles = StyleSheet.create({
     borderWidth: .1,
     overflow: "hidden",
     marginBottom: width * 0.04,
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: "#007F7F99",
   },
 

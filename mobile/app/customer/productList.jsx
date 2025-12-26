@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import styles from "./home_styles";
+import { styles } from "../styles/home_styles";
+
 
 import {
   View,

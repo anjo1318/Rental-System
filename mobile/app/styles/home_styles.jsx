@@ -13,6 +13,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between", // avatar left, bell right
     padding: 16,
     marginTop: 16,
+
+  },
+
+    topBackground: {
+    backgroundColor:"#007F7F",
+    paddingTop: 10,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   avatar: { 
@@ -64,7 +74,7 @@ const styles = StyleSheet.create({
     borderColor: "#007F7F",
     borderRadius: 20,
     paddingHorizontal: 10,
-    marginHorizontal: 16,
+    marginHorizontal: 10,
     marginVertical: 10,
     height: 45,
     backgroundColor: "#fff",
@@ -81,15 +91,6 @@ const styles = StyleSheet.create({
     marginLeft: 8 
   },
 
-  topBackground: {
-    backgroundColor:"#007F7F",
-    paddingTop: 10,
-    paddingBottom: 20,
-    paddingHorizontal: 16,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
 
   sectionTitle: {
     fontWeight: "bold",
@@ -104,6 +105,8 @@ const styles = StyleSheet.create({
     borderRadius: width * 0.03,
     marginLeft: width * 0.04,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#007F7F99",
   },
   featuredImage: { 
     width: "100%", 
@@ -116,9 +119,10 @@ const styles = StyleSheet.create({
     height: CARD_HEIGHT,
     backgroundColor: "#fff",
     borderRadius: width * 0.05,
-    borderWidth: .1,
     overflow: "hidden",
     marginBottom: width * 0.04,
+    borderWidth: 1,
+    borderColor: "#007F7F99",
   },
 
   upperHalf: {
@@ -221,9 +225,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 12,
-    backgroundColor: "#057474",
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: "#00000040",
     position: "absolute",
     bottom: 0,
     left: 0,
@@ -238,11 +242,11 @@ const styles = StyleSheet.create({
 
   navIcon: {
     fontSize: Math.min(width * 0.06, 26),
-    color: "#fff",
+    color: "#057474",
   },
 
   navText: {
-    color: "#fff",
+    color: "#057474",
     fontWeight: "600",
     fontSize: Math.min(width * 0.03, 13),
     marginTop: height * 0.004,
@@ -256,4 +260,70 @@ const styles = StyleSheet.create({
   },
 });
 
-export default styles;
+const filterStyles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.3)",
+  },
+  backdrop: {
+    flex: 1,
+  },
+  modal: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: "70%",
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    padding: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "500",
+    marginTop: 10,
+    marginBottom: 6,
+  },
+  input: {
+    height: 42,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    justifyContent: "center",
+    paddingHorizontal: 12,
+  },
+  placeholder: {
+    color: "#999",
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  doneButton: {
+    marginTop: 100,
+    backgroundColor: "#007F7F",
+    paddingVertical: 12,
+    borderRadius: 10,
+    width: "70%",
+    alignItems: "center",
+    alignSelf: "center",
+  },
+  doneText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+});
+
+
+export { styles, filterStyles };

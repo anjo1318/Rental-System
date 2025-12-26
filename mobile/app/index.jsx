@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styles from "./customer/home_styles";
+import { styles } from "./styles/home_styles";
 
 import {
   View,

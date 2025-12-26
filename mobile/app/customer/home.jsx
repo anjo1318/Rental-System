@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styles from "./home_styles";
+import { styles, filterStyles } from "../styles/home_styles";
 
 import {
   View,
@@ -11,11 +11,16 @@ import {
   TextInput,
   ScrollView,
   StatusBar,
+  StyleSheet,
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Slider from "@react-native-community/slider";
+import { usePathname } from "expo-router";
+
+
 
 
 export default function Home() {
@@ -27,6 +32,9 @@ export default function Home() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
+  const [showFilter, setShowFilter] = useState(false);
+  const pathname = usePathname();
+
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -112,7 +120,9 @@ export default function Home() {
         translucent={false}
       />
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
         <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
@@ -140,7 +150,7 @@ export default function Home() {
             </View>
             {/* 🔹 Search Bar (Clickable) */}
             <Pressable onPress={() => router.push('/customer/tap_searchbar')}>
-              <View style={styles.searchContainer} pointerEvents="none">
+              <View style={styles.searchContainer}>
                 <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
                 <TextInput
                   placeholder="Search your devices.."
@@ -149,7 +159,14 @@ export default function Home() {
                   style={styles.searchInput}
                   placeholderTextColor="#555"
                 />
-                <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
+                <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
+  <Icon
+    name="tune"
+    size={20}
+    color="gray"
+    style={styles.filterIcon}
+  />
+</Pressable>
               </View>
             </Pressable>
           </View>
@@ -306,26 +323,102 @@ export default function Home() {
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
 
-        {/* 🔹 Bottom Nav */}
-        <View style={styles.bottomNav}>
-          {[
-            { name: "Home", icon: "home", route: "customer/home" },
-            { name: "Book", icon: "shopping-cart", route: "customer/book" },
-            { name: "Message", icon: "mail", route: "customer/message" },
-            { name: "Time", icon: "schedule", route: "customer/time" },
-          ].map((navItem, index) => (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              hitSlop={10}
-              onPress={() => handleNavigation(navItem.route)}
-            >
-              <Icon name={navItem.icon} style={styles.navIcon} />
-              <Text style={styles.navText}>{navItem.name}</Text>
-            </Pressable>
-          ))}
-        </View>
+<View style={styles.bottomNav}>
+  {[
+    { name: "Home", icon: "home", route: "/customer/home" },
+    { name: "Book", icon: "shopping-cart", route: "/customer/book" },
+    { name: "Message", icon: "mail", route: "/customer/message" },
+    { name: "Time", icon: "schedule", route: "/customer/time" },
+  ].map((navItem, index) => {
+    const isActive = pathname === navItem.route;
+
+    return (
+      <Pressable
+        key={index}
+        style={styles.navButton}
+        hitSlop={10}
+        onPress={() => router.push(navItem.route)}
+      >
+        <Icon
+          name={navItem.icon}
+          size={24}
+          color={isActive ? "#057474" : "#999"}   // ✅ green / gray
+        />
+        <Text
+          style={[
+            styles.navText,
+            { color: isActive ? "#057474" : "#999" }, // ✅ text too
+          ]}
+        >
+          {navItem.name}
+        </Text>
+      </Pressable>
+    );
+  })}
+</View>
+
       </ScrollView>
+      {showFilter && (
+  <Filter onClose={() => setShowFilter(false)} />
+)}
     </>
+  );
+}
+
+function Filter({ onClose }) {
+  const [price, setPrice] = useState(2000);
+
+  return (
+    <View style={filterStyles.overlay}>
+      {/* Transparent backdrop */}
+      <Pressable style={filterStyles.backdrop} onPress={onClose} />
+
+      {/* Bottom modal */}
+      <View style={filterStyles.modal}>
+        <View style={filterStyles.header}>
+          <Pressable onPress={onClose}>
+            <Icon name="close" size={22} color="#333" />
+          </Pressable>
+          <Text style={filterStyles.headerTitle}>Filter</Text>
+          <View style={{ width: 22 }} />
+        </View>
+
+        <Text style={filterStyles.label}>Category</Text>
+        <View style={filterStyles.input}>
+          <Text style={filterStyles.placeholder}>Select Category</Text>
+        </View>
+
+        <Text style={filterStyles.label}>Brand</Text>
+        <View style={filterStyles.input}>
+          <Text style={filterStyles.placeholder}>Select Brand</Text>
+        </View>
+
+        <Text style={filterStyles.label}>Price Range</Text>
+        <Slider
+          minimumValue={1000}
+          maximumValue={3000}
+          step={100}
+          value={price}
+          onValueChange={setPrice}
+          minimumTrackTintColor="#007F7F"
+          maximumTrackTintColor="#ccc"
+          thumbTintColor="#007F7F"
+        />
+
+        <View style={filterStyles.priceRow}>
+          <Text>₱ 1000</Text>
+          <Text>₱ {price}</Text>
+        </View>
+
+        <Text style={filterStyles.label}>Location</Text>
+        <View style={filterStyles.input}>
+          <Text style={filterStyles.placeholder}>Select Location</Text>
+        </View>
+
+        <Pressable style={filterStyles.doneButton} onPress={onClose}>
+          <Text style={filterStyles.doneText}>Done</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }

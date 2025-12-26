@@ -423,6 +423,7 @@ const styles = StyleSheet.create({
   iconBox: {
     alignItems: "center",
     justifyContent: "center",
+    right: 5,
   },
 
   iconPress: {
@@ -436,6 +437,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
     paddingHorizontal: 6,
+    right: 6,
   },
 
   notificationWrapper: {
