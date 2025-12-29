@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styles from "./customer/first_styles";
+import styles from "./styles/index_styles";
 
 import {
   View,
@@ -16,6 +16,8 @@ import axios from "axios";
 import {useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { usePathname } from "expo-router";
+
 
 
 export default function Index() {
@@ -27,6 +29,7 @@ export default function Index() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -119,7 +122,9 @@ export default function Index() {
         translucent={false}
       />
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
         <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
@@ -329,24 +334,39 @@ export default function Index() {
           />
 
         {/* 🔹 Bottom Nav */}
-        <View style={styles.bottomNav}>
-          {[
-            { name: "Home", icon: "home", route: "customer/home" },
-            { name: "Book", icon: "shopping-cart", route: "customer/book" },
-            { name: "Message", icon: "mail", route: "customer/message" },
-            { name: "Time", icon: "schedule", route: "customer/time" },
-          ].map((navItem, index) => (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              hitSlop={10}
-              onPress={() => handleNavigation(navItem.route)}
-            >
-              <Icon name={navItem.icon} style={styles.navIcon} />
-              <Text style={styles.navText}>{navItem.name}</Text>
-            </Pressable>
-          ))}
-        </View>
+<View style={styles.bottomNav}>
+  {[
+    { name: "Home", icon: "home", route: "/customer/home" },
+    { name: "Book", icon: "shopping-cart", route: "/customer/book" },
+    { name: "Message", icon: "mail", route: "/customer/message" },
+    { name: "Time", icon: "schedule", route: "/customer/time" },
+  ].map((navItem, index) => {
+    const isActive = pathname === navItem.route;
+
+    return (
+      <Pressable
+        key={index}
+        style={styles.navButton}
+        hitSlop={10}
+        onPress={() => router.push(navItem.route)}
+      >
+        <Icon
+          name={navItem.icon}
+          size={24}
+          color={isActive ? "#057474" : "#999"}   // ✅ green / gray
+        />
+        <Text
+          style={[
+            styles.navText,
+            { color: isActive ? "#057474" : "#999" }, // ✅ text too
+          ]}
+        >
+          {navItem.name}
+        </Text>
+      </Pressable>
+    );
+  })}
+</View>
       </ScrollView>
     </>
   );

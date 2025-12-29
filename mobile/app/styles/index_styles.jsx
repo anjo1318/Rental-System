@@ -240,17 +240,25 @@ signupText: {
     backgroundColor: "transparent",
     marginLeft: width * 0.04,
   },
-  activeCategory: { backgroundColor: "#007F7F" },
-  categoryText: { fontSize: width * 0.035, color: "#555" },
-  activeCategoryText: { color: "#fff", fontWeight: "bold" },
+  activeCategory: { 
+    backgroundColor: "#007F7F" 
+  },
+  categoryText: { 
+    fontSize: width * 0.035, 
+    color: "#555" 
+  },
+  activeCategoryText: { 
+    color: "#fff", 
+    fontWeight: "bold" 
+  },
     
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 12,
-    backgroundColor: "#057474",
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: "#00000040",
     position: "absolute",
     bottom: 0,
     left: 0,

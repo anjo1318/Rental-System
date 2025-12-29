@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import styles from "./customer/first_styles";
+import styles from "./styles/index_styles";
 
 import {
   View,
@@ -119,7 +119,9 @@ export default function Index() {
         translucent={false}
       />
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
         <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>

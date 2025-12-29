@@ -217,9 +217,17 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
     marginLeft: width * 0.04,
   },
-  activeCategory: { backgroundColor: "#007F7F" },
-  categoryText: { fontSize: width * 0.035, color: "#555" },
-  activeCategoryText: { color: "#fff", fontWeight: "bold" },
+  activeCategory: { 
+    backgroundColor: "#007F7F" 
+  },
+  categoryText: { 
+    fontSize: width * 0.035, 
+    color: "#555" 
+  },
+  activeCategoryText: { 
+    color: "#fff", 
+    fontWeight: "bold" 
+  },
     
   bottomNav: {
     flexDirection: "row",
