@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { styles } from "./styles/home_styles";
+import styles from "./customer/first_styles";
 
 import {
   View,
@@ -25,84 +25,75 @@ export default function Index() {
   const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [OWNER_ID, setOwnerId] = useState(null);
 
   useEffect(() => {
-    checkAuthAndRedirect();
+    const fetchItems = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/item`
+        );
+        if (response.data.success) {
+          setItems(Array.isArray(response.data.data) ? response.data.data : []);
+        }
+        else {
+          setError("Failed to fetch items");
+        }
+      } catch (err) {
+        setError(err.message || "Error fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchItems();
   }, []);
 
-  useEffect(() => {
-    if (!checkingAuth) {
-      fetchItems();
-    }
-  }, [checkingAuth]);
+  useEffect(()=>{
+    loadUserData();
+  },[]);
 
-  const checkAuthAndRedirect = async () => {
+  const loadUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
       if (userData) {
-        // User is logged in, redirect to home
-        router.replace('/customer/home');
+        const user = JSON.parse(userData);
+        setCurrentUser(user);
+        setOwnerId(user.id);
+        console.log('✅ User loaded from storage in home.jsx:', user);
+        return user.id;
       } else {
-        // User is not logged in, stay on this page
-        setIsLoggedIn(false);
+          console.log('ℹ️ Guest user allowed on first.jsx');
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
       }
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      setIsLoggedIn(false);
-    } finally {
-      setCheckingAuth(false);
-    }
   };
 
-  const fetchItems = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/item`
-      );
-      if (response.data.success) {
-        setItems(Array.isArray(response.data.data) ? response.data.data : []);
-      }
-      else {
-        setError("Failed to fetch items");
-      }
-    } catch (err) {
-      setError(err.message || "Error fetching data");
-    } finally {
-      setLoading(false);
-    }
+  const handleNavigation = (route) => {
+    // 🚫 Prevent navigating to the same "home"
+    if (route === "customer/home") return;
+    router.push(`/${route}`);
   };
 
-  const handleItemPress = async (itemId) => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        // User is logged in, navigate to item detail
-        router.push({ pathname: '/customer/itemDetail', params: { id: itemId } });
-      } else {
-        // User is not logged in, redirect to login
-        router.push('/customer/loginInterface');
-      }
-    } catch (error) {
-      console.error('Error checking auth:', error);
-      router.push('/customer/loginInterface');
+  // ✅ Handle product click with login check
+  const handleProductClick = (item) => {
+    if (!currentUser) {
+      // User is not logged in, redirect to login
+      router.push('/login');
+    } else {
+      // User is logged in, go to item detail
+      router.push({ pathname: '/customer/itemDetail', params: { id: item.id } });
     }
   };
-
-  if (checkingAuth) {
-    return <ActivityIndicator size="large" style={{ flex: 1 }} />;
-  }
 
   if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
-  
-  if (error) {
+  if (error)
     return (
       <View style={styles.center}>
         <Text>Error: {error}</Text>
       </View>
     );
-  }
 
   // Filtering items
   const filteredItems = items.filter((item) => {
@@ -114,16 +105,139 @@ export default function Index() {
     return matchCategory && matchSearch;
   });
 
+  const breakLongWords = (str, maxLen = 18) =>
+  str ? str.replace(new RegExp(`(\\S{${maxLen}})`, "g"), "$1\u200B") : "";
+  
+
+
   return (
     <>
+      {/* ✅ StatusBar must be OUTSIDE the main View */}
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#f2f2f2"
+        backgroundColor="#057474" 
         translucent={false}
       />
 
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+        <View style={styles.topBackground}>
+          {/* 🔹 Profile Section */}
+          <View style={styles.profileContainer}>
+           <Pressable onPress={() => router.push("customer/profile")}>
+            <Image
+              source={require("../assets/images/new_user.png")}
+              style={styles.avatar}
+            />
+          </Pressable >
+                    <View style={styles.loginActions}>
+          <Pressable
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Login</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.loginButton, styles.signupButton]}
+            onPress={() => router.push('/signup/person_info')}
+          >
+            <Text style={[styles.loginButtonText, styles.signupText]}>
+              Sign Up
+            </Text>
+          </Pressable>
+        </View>
+
+            <View style={styles.notificationWrapper}>
+            <Pressable onPress={() => router.push("customer/notifications")}>
+              <Icon name="notifications-none" size={24} color="#007F7F" />
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>2</Text>
+              </View>
+            </Pressable>
+
+
+            </View>
+          </View>
+
+          {/* 🔹 Search Bar */}
+          <View style={styles.searchContainer}>
+            <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+            <TextInput
+              placeholder="Search your devices.."
+              value={search}
+              onChangeText={setSearch}
+              style={styles.searchInput}
+              placeholderTextColor="#555"
+            />
+            <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
+          </View>
+        </View>
+
+          {/* 🔹 Featured Devices */}
+          <View style={styles.featuredSection}>
+            <Text style={styles.sectionTitle}>Featured Devices</Text>
+          </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                        {items.map((item) => {
+                          let imageUrl = "https://via.placeholder.com/150";
+                          
+                          if (item.itemImages && item.itemImages.length > 0) {
+                            try {
+                              const parsedImages = JSON.parse(item.itemImages[0]);
+                              if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+                                imageUrl = parsedImages[0].replace(/^http:/, "https:");
+                              }
+                            } catch (e) {
+                              console.error('Image parse error for item', item.id, ':', e);
+                            }
+                          }
+
+                          return (
+                            <Pressable 
+                              key={item.id} 
+                              onPress={() => handleProductClick(item)}
+                            >
+                              <View style={styles.featuredCard}>
+                                <Image
+                                  source={{ uri: imageUrl }}
+                                  style={styles.featuredImage}
+                                  resizeMode="cover"
+                                  onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+                                  onLoad={() => console.log('Image loaded:', imageUrl)}
+                                />
+                              </View>
+                            </Pressable>
+                          );
+                        })}
+          </ScrollView>
+
+          {/* 🔹 Recommendations */}
+          <Text style={styles.sectionTitle}>Our Recommendations</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginBottom: 10 }}
+          >
+            {["All", "Cellphone", "Projector", "Laptop", "Speaker"].map((cat) => (
+              <Pressable
+                key={cat}
+                style={[
+                  styles.categoryButton,
+                  activeCategory === cat && styles.activeCategory,
+                ]}
+                onPress={() => setActiveCategory(cat)}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+                    activeCategory === cat && styles.activeCategoryText,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
 
           {/* 🔹 Items Grid */}
           <FlatList
@@ -131,7 +245,7 @@ export default function Index() {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
             <Pressable 
-              onPress={() => handleItemPress(item.id)}
+              onPress={() => handleProductClick(item)}
             >
               <View style={styles.card}>
                 <View style={styles.upperHalf}>
@@ -158,6 +272,7 @@ export default function Index() {
                     resizeMode="cover"
                   />
 
+
                   {/* Availability Badge */}
                   <View style={[
                     styles.availabilityBadge,
@@ -183,8 +298,8 @@ export default function Index() {
                   <View style={styles.textContainer}>
                     <Text
                       style={styles.location}
-                      numberOfLines={0}
-                      ellipsizeMode="clip"
+                      numberOfLines={0}          // ✅ allow unlimited lines
+                      ellipsizeMode="clip"       // ✅ no "..." truncation
                     >
                       {item.location}
                     </Text>
@@ -192,6 +307,8 @@ export default function Index() {
                 </View>
 
                 <Text style={styles.price}>₱{item.pricePerDay}</Text>
+
+
 
                   {/* Quantity */}
                   <Text style={styles.quantity}>
@@ -211,8 +328,26 @@ export default function Index() {
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
 
-        </ScrollView>
-      </View>
+        {/* 🔹 Bottom Nav */}
+        <View style={styles.bottomNav}>
+          {[
+            { name: "Home", icon: "home", route: "customer/home" },
+            { name: "Book", icon: "shopping-cart", route: "customer/book" },
+            { name: "Message", icon: "mail", route: "customer/message" },
+            { name: "Time", icon: "schedule", route: "customer/time" },
+          ].map((navItem, index) => (
+            <Pressable
+              key={index}
+              style={styles.navButton}
+              hitSlop={10}
+              onPress={() => handleNavigation(navItem.route)}
+            >
+              <Icon name={navItem.icon} style={styles.navIcon} />
+              <Text style={styles.navText}>{navItem.name}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </ScrollView>
     </>
   );
 }

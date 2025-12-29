@@ -1988,7 +1988,6 @@ const restoreActiveTimers = async () => {
   }
 };
 
-
 const bookItemUpdate = async (req, res) => {
   try {
     const {
@@ -1997,6 +1996,8 @@ const bookItemUpdate = async (req, res) => {
       customerDetails,
       rentalDetails,
       paymentMethod,
+      pricing,
+      guarantors,
     } = req.body;
 
     console.log("Incoming booking update:", req.body);
@@ -2007,17 +2008,43 @@ const bookItemUpdate = async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
-    // Calculate rental details
+    // ✅ Calculate rental details based on period type
     const pickupDate = new Date(rentalDetails.pickupDate);
     const returnDate = new Date(rentalDetails.returnDate);
-    const timeDiff = returnDate - pickupDate;
-    const rentalDays = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
-    const pricePerDay = parseFloat(itemDetails.pricePerDay);
-    const totalAmount = rentalDays * pricePerDay;
+    const rentalPeriod = rentalDetails.period; // "Hour", "Day", or "Week"
+    const rentalDuration = rentalDetails.duration; // from frontend calculation
+    
+    // ✅ Use pricing data from frontend
+    const ratePerPeriod = pricing?.rate ? parseFloat(pricing.rate) : parseFloat(itemDetails.pricePerDay);
+    const deliveryCharge = pricing?.deliveryCharge ? parseFloat(pricing.deliveryCharge) : 25.00;
+    const grandTotal = pricing?.grandTotal ? parseFloat(pricing.grandTotal) : 0;
 
-    console.log(`Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`);
+    // Fallback calculation if pricing not provided
+    let calculatedAmount = grandTotal;
+    if (!grandTotal) {
+      const timeDiff = returnDate - pickupDate;
+      let duration = rentalDuration;
+      
+      if (!duration) {
+        if (rentalPeriod === "Hour") {
+          duration = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60)), 1);
+        } else if (rentalPeriod === "Week") {
+          duration = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)), 1);
+        } else {
+          duration = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
+        }
+      }
+      
+      calculatedAmount = (ratePerPeriod * duration) + deliveryCharge;
+    }
 
-    // Update booking
+    console.log(`Rental calculation: ${rentalDuration} ${rentalPeriod}(s) × ₱${ratePerPeriod} + ₱${deliveryCharge} delivery = ₱${calculatedAmount}`);
+
+    // ✅ Extract guarantor data
+    const guarantor1 = guarantors && guarantors[0] ? guarantors[0] : {};
+    const guarantor2 = guarantors && guarantors[1] ? guarantors[1] : {};
+
+    // ✅ Update booking with all new fields
     await existingBooking.update({
       itemId,
       customerId: customerDetails.customerId,
@@ -2032,10 +2059,25 @@ const bookItemUpdate = async (req, res) => {
       address: customerDetails.location,
       gender: customerDetails.gender,
       itemImage: itemDetails.itemImage,
-      rentalPeriod: rentalDetails.period,
+      rentalPeriod: rentalPeriod,
       pickUpDate: rentalDetails.pickupDate,
       returnDate: rentalDetails.returnDate,
-      amount: totalAmount,
+      amount: calculatedAmount,
+      // ✅ New pricing fields
+      rentalDuration: rentalDuration,
+      ratePerPeriod: ratePerPeriod,
+      deliveryCharge: deliveryCharge,
+      grandTotal: calculatedAmount,
+      // ✅ Guarantor 1 fields
+      guarantor1FullName: guarantor1.fullName || null,
+      guarantor1PhoneNumber: guarantor1.phoneNumber || null,
+      guarantor1Address: guarantor1.address || null,
+      guarantor1Email: guarantor1.email || null,
+      // ✅ Guarantor 2 fields
+      guarantor2FullName: guarantor2.fullName || null,
+      guarantor2PhoneNumber: guarantor2.phoneNumber || null,
+      guarantor2Address: guarantor2.address || null,
+      guarantor2Email: guarantor2.email || null,
       status: "pending",
       paymentMethod,
     });
@@ -2054,21 +2096,70 @@ const bookItemUpdate = async (req, res) => {
     const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
     if (!ownerDetails) throw new Error("Owner not found");
 
-    // Send confirmation emails
-    const formattedPickupDate = pickupDate.toLocaleDateString();
-    const formattedReturnDate = returnDate.toLocaleDateString();
+    // ✅ Format dates for email based on rental period
+    const formattedPickupDate = rentalPeriod === "Hour" 
+      ? pickupDate.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+      : pickupDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    
+    const formattedReturnDate = rentalPeriod === "Hour"
+      ? returnDate.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
+      : returnDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
+    const durationLabel = rentalPeriod === "Hour" ? "hours" : rentalPeriod === "Week" ? "weeks" : "days";
 
+    // ✅ Enhanced email with guarantor info
+    const guarantorInfo = [];
+    if (guarantor1.fullName) {
+      guarantorInfo.push(`
+        <div style="margin-top: 10px;">
+          <h4 style="margin-bottom: 5px;">Guarantor 1:</h4>
+          <p style="margin: 2px 0;"><strong>Name:</strong> ${guarantor1.fullName}</p>
+          <p style="margin: 2px 0;"><strong>Phone:</strong> ${guarantor1.phoneNumber || 'N/A'}</p>
+          <p style="margin: 2px 0;"><strong>Email:</strong> ${guarantor1.email || 'N/A'}</p>
+          <p style="margin: 2px 0;"><strong>Address:</strong> ${guarantor1.address || 'N/A'}</p>
+        </div>
+      `);
+    }
+    if (guarantor2.fullName) {
+      guarantorInfo.push(`
+        <div style="margin-top: 10px;">
+          <h4 style="margin-bottom: 5px;">Guarantor 2:</h4>
+          <p style="margin: 2px 0;"><strong>Name:</strong> ${guarantor2.fullName}</p>
+          <p style="margin: 2px 0;"><strong>Phone:</strong> ${guarantor2.phoneNumber || 'N/A'}</p>
+          <p style="margin: 2px 0;"><strong>Email:</strong> ${guarantor2.email || 'N/A'}</p>
+          <p style="margin: 2px 0;"><strong>Address:</strong> ${guarantor2.address || 'N/A'}</p>
+        </div>
+      `);
+    }
+
+    // Send confirmation emails
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: customerDetails.email.trim(),
       subject: `Booking Request Updated - ${itemDetails.title}`,
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #28a745;">Booking Updated</h2>
-          <p>Your booking for <strong>${itemDetails.title}</strong> has been updated successfully.</p>
-          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
-          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+          <h2 style="color: #28a745;">Booking Updated Successfully</h2>
+          <p>Your booking for <strong>${itemDetails.title}</strong> has been updated.</p>
+          
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Rental Summary</h3>
+            <p><strong>Duration:</strong> ${rentalDuration} ${durationLabel} (${rentDuration})</p>
+            <p><strong>Rate per ${rentalPeriod}:</strong> ₱${ratePerPeriod.toLocaleString()}</p>
+            <p><strong>Delivery Charge:</strong> ₱${deliveryCharge.toLocaleString()}</p>
+            <p style="font-size: 18px; color: #057474;"><strong>Grand Total:</strong> ₱${calculatedAmount.toLocaleString()}</p>
+          </div>
+
+          <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+          
+          ${guarantorInfo.length > 0 ? `
+            <div style="margin-top: 20px;">
+              <h3>Guarantor Information</h3>
+              ${guarantorInfo.join('')}
+            </div>
+          ` : ''}
+          
           <p style="color: #666; margin-top: 20px;">
             ⏰ You will receive reminders before your return date.
           </p>
@@ -2079,13 +2170,37 @@ const bookItemUpdate = async (req, res) => {
     const ownerMailOptions = {
       from: process.env.EMAIL_USER,
       to: ownerDetails.email.trim(),
-      subject: `Booking Request Updated - ${itemDetails.title}`,
+      subject: `New Booking Request - ${itemDetails.title}`,
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2 style="color: #ffc107;">Booking Update Notification</h2>
-          <p>${customerDetails.fullName} has updated their booking for <strong>${itemDetails.title}</strong>.</p>
-          <p><strong>Total Amount:</strong> ₱${totalAmount.toLocaleString()}</p>
-          <p><strong>Duration:</strong> ${rentalDays} days (${rentDuration})</p>
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+          <h2 style="color: #ffc107;">New Booking Notification</h2>
+          <p><strong>${customerDetails.fullName}</strong> has made a booking request for <strong>${itemDetails.title}</strong>.</p>
+          
+          <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Rental Details</h3>
+            <p><strong>Duration:</strong> ${rentalDuration} ${durationLabel} (${rentDuration})</p>
+            <p><strong>Rate per ${rentalPeriod}:</strong> ₱${ratePerPeriod.toLocaleString()}</p>
+            <p><strong>Delivery Charge:</strong> ₱${deliveryCharge.toLocaleString()}</p>
+            <p style="font-size: 18px; color: #057474;"><strong>Grand Total:</strong> ₱${calculatedAmount.toLocaleString()}</p>
+          </div>
+
+          <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Customer Information</h3>
+            <p><strong>Name:</strong> ${customerDetails.fullName}</p>
+            <p><strong>Email:</strong> ${customerDetails.email}</p>
+            <p><strong>Phone:</strong> ${customerDetails.phone}</p>
+            <p><strong>Address:</strong> ${customerDetails.location}</p>
+            <p><strong>Payment Method:</strong> ${paymentMethod}</p>
+          </div>
+
+          ${guarantorInfo.length > 0 ? `
+            <div style="background-color: #e7f3ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Guarantor Information</h3>
+              ${guarantorInfo.join('')}
+            </div>
+          ` : ''}
+          
+          <p style="margin-top: 20px;">Please review and approve/reject this booking request in your dashboard.</p>
         </div>
       `
     };
@@ -2105,6 +2220,103 @@ const bookItemUpdate = async (req, res) => {
       console.error("Error sending owner email:", err.message);
     }
 
+    // ✅ Send emails to guarantors
+    const guarantorEmails = [];
+    
+    if (guarantor1.email && guarantor1.fullName) {
+      const guarantor1MailOptions = {
+        from: process.env.EMAIL_USER,
+        to: guarantor1.email.trim(),
+        subject: `You are listed as a Guarantor - ${itemDetails.title} Rental`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+            <h2 style="color: #057474;">Guarantor Notification</h2>
+            <p>Dear <strong>${guarantor1.fullName}</strong>,</p>
+            <p>You have been listed as a <strong>Guarantor</strong> for a rental booking made by <strong>${customerDetails.fullName}</strong>.</p>
+            
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Rental Details</h3>
+              <p><strong>Item:</strong> ${itemDetails.title}</p>
+              <p><strong>Category:</strong> ${itemDetails.category}</p>
+              <p><strong>Duration:</strong> ${rentalDuration} ${durationLabel} (${rentDuration})</p>
+              <p><strong>Total Amount:</strong> ₱${calculatedAmount.toLocaleString()}</p>
+            </div>
+
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Renter Information</h3>
+              <p><strong>Name:</strong> ${customerDetails.fullName}</p>
+              <p><strong>Email:</strong> ${customerDetails.email}</p>
+              <p><strong>Phone:</strong> ${customerDetails.phone}</p>
+              <p><strong>Address:</strong> ${customerDetails.location}</p>
+            </div>
+
+            <p style="color: #666; margin-top: 20px;">
+              ⚠️ As a guarantor, you may be contacted regarding this rental agreement. 
+              Please ensure the contact information provided is correct.
+            </p>
+            
+            <p style="color: #666;">
+              If you have any questions or did not authorize being listed as a guarantor, 
+              please contact <strong>${customerDetails.fullName}</strong> at ${customerDetails.phone} or ${customerDetails.email}.
+            </p>
+          </div>
+        `
+      };
+      guarantorEmails.push(guarantor1MailOptions);
+    }
+
+    if (guarantor2.email && guarantor2.fullName) {
+      const guarantor2MailOptions = {
+        from: process.env.EMAIL_USER,
+        to: guarantor2.email.trim(),
+        subject: `You are listed as a Guarantor - ${itemDetails.title} Rental`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+            <h2 style="color: #057474;">Guarantor Notification</h2>
+            <p>Dear <strong>${guarantor2.fullName}</strong>,</p>
+            <p>You have been listed as a <strong>Guarantor</strong> for a rental booking made by <strong>${customerDetails.fullName}</strong>.</p>
+            
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Rental Details</h3>
+              <p><strong>Item:</strong> ${itemDetails.title}</p>
+              <p><strong>Category:</strong> ${itemDetails.category}</p>
+              <p><strong>Duration:</strong> ${rentalDuration} ${durationLabel} (${rentDuration})</p>
+              <p><strong>Total Amount:</strong> ₱${calculatedAmount.toLocaleString()}</p>
+            </div>
+
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0;">Renter Information</h3>
+              <p><strong>Name:</strong> ${customerDetails.fullName}</p>
+              <p><strong>Email:</strong> ${customerDetails.email}</p>
+              <p><strong>Phone:</strong> ${customerDetails.phone}</p>
+              <p><strong>Address:</strong> ${customerDetails.location}</p>
+            </div>
+
+            <p style="color: #666; margin-top: 20px;">
+              ⚠️ As a guarantor, you may be contacted regarding this rental agreement. 
+              Please ensure the contact information provided is correct.
+            </p>
+            
+            <p style="color: #666;">
+              If you have any questions or did not authorize being listed as a guarantor, 
+              please contact <strong>${customerDetails.fullName}</strong> at ${customerDetails.phone} or ${customerDetails.email}.
+            </p>
+          </div>
+        `
+      };
+      guarantorEmails.push(guarantor2MailOptions);
+    }
+
+    // Send guarantor emails
+    for (const emailOptions of guarantorEmails) {
+      try {
+        await transporter.sendMail(emailOptions);
+        console.log(`Guarantor email sent to ${emailOptions.to}`);
+      } catch (err) {
+        console.error(`Error sending guarantor email to ${emailOptions.to}:`, err.message);
+      }
+    }
+
     return res.status(200).json({
       success: true,
       message: "Booking updated successfully",
@@ -2116,7 +2328,6 @@ const bookItemUpdate = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 const getUserNotifications = async (req, res) => {
   try {

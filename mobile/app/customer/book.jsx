@@ -347,12 +347,7 @@ export default function BookedItem() {
                     {item.status || 'Unknown'} 
                   </Text>
                   
-                  <Pressable
-                    onPress={() => handleRequestRent(item.id)}
-                    style={styles.requestButton}
-                  >
-                    <Text style={styles.requestButtonText}>Request for Rent</Text>
-                  </Pressable>
+                
                 </View>
 
                 {/* Right: date and chevron */}

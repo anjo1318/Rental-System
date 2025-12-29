@@ -6,12 +6,15 @@ import {View,Text,StyleSheet,Dimensions,TouchableOpacity,StatusBar,Alert,
   Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { FolderPen } from "lucide-react-native";
+
 import { useRouter, useLocalSearchParams } from "expo-router";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import RentingPaymentMethod from "./rentingPaymentMethod";
 import ConfirmationScreen from "./confirmationScreen";
+import { use } from "react";
 
 const { width, height } = Dimensions.get("window");
 
@@ -54,6 +57,17 @@ export default function RentingDetails() {
   // Item data
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  //Guarantors Data
+  const [guarantor1FullName, setGuarantor1FullName] = useState("");
+  const [guarantor1PhoneNumber, setGuarantor1PhoneNumber] = useState("");
+  const [guarantor1Address, setGuarantor1Address] = useState("");
+  const [guarantor1Email, setGuarantor1Email] = useState("");
+  const [guarantor2FullName, setGuarantor2FullName] = useState("");
+  const [guarantor2PhoneNumber, setGuarantor2PhoneNumber] = useState("");
+  const [guarantor2Address, setGuarantor2Address] = useState("");
+  const [guarantor2Email, setGuarantor2Email] = useState("");
+
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -104,6 +118,24 @@ export default function RentingDetails() {
     }
   };
 
+  // ✅ Calculate rental duration based on period type
+  const calculateRentalDuration = () => {
+    if (rentalPeriod === "Hour") {
+      const diffMs = returnDate - pickupDate;
+      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+      return diffHours;
+    } else if (rentalPeriod === "Day") {
+      const diffMs = returnDate - pickupDate;
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      return diffDays;
+    } else if (rentalPeriod === "Week") {
+      const diffMs = returnDate - pickupDate;
+      const diffWeeks = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7));
+      return diffWeeks;
+    }
+    return 1;
+  };
+
   const validateForm = () => {
     if (!fullName.trim()) {
       Alert.alert("Validation Error", "Please enter your full name");
@@ -147,6 +179,9 @@ export default function RentingDetails() {
       return;
     }
 
+    // ✅ Calculate duration
+    const duration = calculateRentalDuration();
+
     const data = {
       itemId: parseInt(itemId),
       ownerId: item.Owner.id,
@@ -155,7 +190,7 @@ export default function RentingDetails() {
         title: item.title ?? "Unknown Product",
         category: item.category,
         location: item.location,
-        itemImage: imageUrl, // ✅ Now using the first image from itemImages array
+        itemImage: imageUrl,
         pricePerDay: item.pricePerDay,
       },
       customerDetails: {
@@ -167,10 +202,25 @@ export default function RentingDetails() {
         gender,
       },
       rentalDetails: {
-        period: rentalPeriod,
+        period: rentalPeriod, // "Hour", "Day", or "Week"
         pickupDate,
         returnDate,
+        duration, // ✅ calculated duration
       },
+      guarantors: [
+        {
+          fullName: guarantor1FullName,
+          phoneNumber: guarantor1PhoneNumber,
+          address: guarantor1Address,
+          email: guarantor1Email,
+        },
+        {
+          fullName: guarantor2FullName,
+          phoneNumber: guarantor2PhoneNumber,
+          address: guarantor2Address,
+          email: guarantor2Email,
+        },
+      ],
     };
 
     setBookingData(data);
@@ -180,6 +230,8 @@ export default function RentingDetails() {
   };
 
 const proceedWithBooking = (imageUrl) => {
+  const duration = calculateRentalDuration();
+  
   const data = {
     itemId: parseInt(itemId),
     ownerId: item.Owner.id,
@@ -203,7 +255,22 @@ const proceedWithBooking = (imageUrl) => {
       period: rentalPeriod,
       pickupDate,
       returnDate,
+      duration,
     },
+    guarantors: [
+      {
+        fullName: guarantor1FullName,
+        phoneNumber: guarantor1PhoneNumber,
+        address: guarantor1Address,
+        email: guarantor1Email,
+      },
+      {
+        fullName: guarantor2FullName,
+        phoneNumber: guarantor2PhoneNumber,
+        address: guarantor2Address,
+        email: guarantor2Email,
+      },
+    ],
   };
 
   console.log("Booking Data Prepared:", data);
@@ -472,7 +539,7 @@ const proceedWithBooking = (imageUrl) => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle3}>Location</Text>
                     <View style={styles.locationContainer}>
-                    <Icon name="location-on" size={20} color="#666" style={styles.locationIcon} />
+                    <Icon name="location-pin" size={20} color="#666" style={styles.locationIcon} />
                     <TextInput
                         style={styles.locationInput}
                         placeholder="Wawa Pinamalayan Oriental Mindoro"
@@ -484,6 +551,122 @@ const proceedWithBooking = (imageUrl) => {
                     </View>
                 </View>
 
+
+                {/* Guarantor Input */}
+                <View style={styles.guarantorSection}>
+                  <Text style={styles.sectionTitle3}>Guarantor 1</Text>
+                  <View style={styles.locationContainer}>
+                    {/* Use Lucide's FolderPen icon */}
+                    <FolderPen size={20} color="#666" style={styles.locationIcon} />
+
+                    <TextInput
+                      style={styles.locationInput}
+                      placeholder="Full Name"
+                      placeholderTextColor="#999"
+                      value={guarantor1FullName}
+                      onChangeText={setGuarantor1FullName}
+                      multiline
+                    />
+                  </View>
+                </View>
+                <View style={styles.guarantorSection}>
+                    <View style={styles.locationContainer}>
+                    <Icon name="phone" size={20} color="#666" style={styles.locationIcon} />
+                    <TextInput
+                        style={styles.locationInput}
+                        placeholder="Phone Number"
+                        placeholderTextColor="#999"
+                        value={guarantor1PhoneNumber}
+                        onChangeText={setGuarantor1PhoneNumber}
+                        multiline
+                    />
+                    </View>
+                </View>
+                <View style={styles.guarantorSection}>
+                    <View style={styles.locationContainer}>
+                    <Icon name="location-pin" size={20} color="#666" style={styles.locationIcon} />
+                    <TextInput
+                        style={styles.locationInput}
+                        placeholder="Address"
+                        placeholderTextColor="#999"
+                        value={guarantor1Address}
+                        onChangeText={setGuarantor1Address}
+                        multiline
+                    />
+                    </View>
+                </View>
+                <View style={styles.guarantorSection}>
+                    <View style={styles.locationContainer}>
+                    <Icon name="email" size={20} color="#666" style={styles.locationIcon} />
+                    <TextInput
+                        style={styles.locationInput}
+                        placeholder=" Email Address"
+                        placeholderTextColor="#999"
+                        value={guarantor1Email}
+                        onChangeText={setGuarantor1Email}
+                        multiline
+                    />
+                    </View>
+                </View>
+                {/* Guarantor Input */}
+                <View style={styles.guarantorSection}>
+                  <Text style={styles.sectionTitle3}>Guarantor 2</Text>
+                  <View style={styles.locationContainer}>
+                    {/* Use Lucide's FolderPen icon */}
+                    <FolderPen size={20} color="#666" style={styles.locationIcon} />
+
+                    <TextInput
+                      style={styles.locationInput}
+                      placeholder="Full Name"
+                      placeholderTextColor="#999"
+                      value={guarantor2FullName}
+                      onChangeText={setGuarantor2FullName}
+                      multiline
+                    />
+                  </View>
+                </View>
+                <View style={styles.guarantorSection}>
+                    <View style={styles.locationContainer}>
+                    <Icon name="phone" size={20} color="#666" style={styles.locationIcon} />
+                    <TextInput
+                        style={styles.locationInput}
+                        placeholder="Phone Number"
+                        placeholderTextColor="#999"
+                        value={guarantor2PhoneNumber}
+                        onChangeText={setGuarantor2PhoneNumber}
+                        multiline
+                    />
+                    </View>
+                </View>
+                <View style={styles.guarantorSection}>
+                    <View style={styles.locationContainer}>
+                    <Icon name="location-pin" size={20} color="#666" style={styles.locationIcon} />
+                    <TextInput
+                        style={styles.locationInput}
+                        placeholder="Address"
+                        placeholderTextColor="#999"
+                        value={guarantor2Address}
+                        onChangeText={setGuarantor2Address}
+                        multiline
+                    />
+                    </View>
+                </View>
+                <View style={styles.guarantorSection}>
+                    <View style={styles.locationContainer}>
+                    <Icon name="email" size={20} color="#666" style={styles.locationIcon} />
+                    <TextInput
+                        style={styles.locationInput}
+                        placeholder="Email Address"
+                        placeholderTextColor="#999"
+                        value={guarantor2Email}
+                        onChangeText={setGuarantor2Email}
+                        multiline
+                    />
+                    </View>
+                </View>
+              
+
+ 
                 {/* Proceed Button */}
                 <TouchableOpacity 
                     style={[styles.proceedButton, loading && styles.disabledButton]}
@@ -715,11 +898,15 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 24,
   },
+  guarantorSection: {
+    marginBottom: 10,
+  },
   optionsContainer: {
     flexDirection: "row",
     gap: 20,
     marginTop: 10,
   },
+
   optionButton: {
     flex: 1,
     paddingVertical: 6,
@@ -832,7 +1019,7 @@ const styles = StyleSheet.create({
   },
 
   locationIcon: {
-    marginTop: 17, // adjust as needed
+    marginTop: 10, // adjust as needed
   },
   sectionTitle3: {
     fontSize: 14,

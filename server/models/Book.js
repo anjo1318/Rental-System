@@ -2,11 +2,11 @@ import sequelize from "../database/database.js";
 import { DataTypes } from "sequelize";
 
 const Books = sequelize.define("Books", {
-    id: {
+  id: {
     type: DataTypes.UUID,
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    },
+  },
   itemId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -21,47 +21,47 @@ const Books = sequelize.define("Books", {
   },
   product: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   category: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   location: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   pricePerDay: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   name: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   email: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   phone: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   address: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   gender: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   itemImage: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   rentalPeriod: {
     type: DataTypes.STRING,
-    allowNull:false 
+    allowNull: false 
   },
   paymentMethod: {
     type: DataTypes.STRING,
@@ -69,15 +69,70 @@ const Books = sequelize.define("Books", {
   },
   pickUpDate: {
     type: DataTypes.DATE,
-    allowNull:false 
+    allowNull: false 
   },
   returnDate: {
     type: DataTypes.DATE,
-    allowNull:false 
+    allowNull: false 
   },
   amount: {
-    type: DataTypes.DECIMAL,
-    allowNull:false 
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: false 
+  },
+  // ✅ New fields for rental duration and pricing
+  rentalDuration: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    comment: 'Duration in hours, days, or weeks depending on rentalPeriod'
+  },
+  ratePerPeriod: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    comment: 'Rate per hour/day/week'
+  },
+  deliveryCharge: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    defaultValue: 25.00
+  },
+  grandTotal: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    comment: 'Final total including delivery charge'
+  },
+  // ✅ Guarantor 1 fields
+  guarantor1FullName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  guarantor1PhoneNumber: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  guarantor1Address: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  guarantor1Email: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  // ✅ Guarantor 2 fields
+  guarantor2FullName: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  guarantor2PhoneNumber: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  guarantor2Address: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  guarantor2Email: {
+    type: DataTypes.STRING,
+    allowNull: true
   },
   isRead: {
     type: DataTypes.BOOLEAN,
@@ -88,7 +143,7 @@ const Books = sequelize.define("Books", {
     type: DataTypes.DATE,
     allowNull: true
   },
- status: {
+  status: {
     type: DataTypes.ENUM(
       'approved', 
       'pending', 
@@ -103,13 +158,10 @@ const Books = sequelize.define("Books", {
     ),
     allowNull: false
   },
-
 }, {
   timestamps: true,
-  createdAt: 'created_at',  // if your column is named 'created_at'
-  updatedAt: 'updated_at'   // if your column is named 'updated_at'
-  // OR if your columns are named 'createdAt' and 'updatedAt', just use:
-  // timestamps: true
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
 });
 
 export default Books;

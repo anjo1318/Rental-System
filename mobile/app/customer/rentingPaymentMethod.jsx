@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar,} from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 
@@ -9,6 +9,66 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
   const router = useRouter();
 
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
+
+  // ✅ Calculate pricing based on rental period
+  const calculatePricing = () => {
+    if (!bookingData?.itemDetails?.pricePerDay || !bookingData?.rentalDetails) {
+      return { rateLabel: "Rate Per Day", rate: 0, duration: 0, deliveryCharge: 25, grandTotal: 0 };
+    }
+
+    const { period, duration } = bookingData.rentalDetails;
+    const basePrice = parseFloat(bookingData.itemDetails.pricePerDay);
+    const deliveryCharge = 25;
+
+    let rateLabel = "Rate Per Day";
+    let rate = basePrice;
+
+    // Adjust rate based on period
+    if (period === "Hour") {
+      rateLabel = "Rate Per Hour";
+      rate = basePrice / 24; // Assuming daily rate divided by 24 hours
+    } else if (period === "Week") {
+      rateLabel = "Rate Per Week";
+      rate = basePrice * 7; // Weekly rate
+    }
+
+    const subtotal = rate * duration;
+    const grandTotal = subtotal + deliveryCharge;
+
+    return {
+      rateLabel,
+      rate: rate.toFixed(2),
+      duration,
+      deliveryCharge,
+      grandTotal: grandTotal.toFixed(2),
+      period,
+    };
+  };
+
+  // ✅ Format date/time based on period
+  const formatDateTime = (date, period) => {
+    if (!date) return "N/A";
+    
+    const dateObj = new Date(date);
+    
+    if (period === "Hour") {
+      // Show time for hourly rentals
+      return dateObj.toLocaleTimeString([], { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+    } else {
+      // Show date for daily/weekly rentals
+      return dateObj.toLocaleDateString('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric'
+      });
+    }
+  };
+
+  const pricing = calculatePricing();
 
   const renderProgressStep = (stepNumber, stepName, isActive, isCompleted) => (
       <View style={styles.stepContainer} key={stepNumber}>
@@ -43,7 +103,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
     {/* Header */}
     <View style={styles.headerWrapper}>
     <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={onBack} style={styles.backButton}>
         <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.pageName}>Renting Details</Text>
@@ -78,49 +138,106 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         </View>
       </View>
 
-      <View style={styles.contentWrapper}>
-      <Text style={styles.sectionTitle}>Payment Method</Text>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {/* ✅ Rental Usage Section */}
+        <View style={styles.rentalUsageCard}>
+          <Text style={styles.cardTitle}>Rental Usage</Text>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>
+              {pricing.period === "Hour" ? "Time Picked-Up" : "Date Picked-Up"}
+            </Text>
+            <Text style={styles.infoValue}>
+              {formatDateTime(bookingData?.rentalDetails?.pickupDate, pricing.period)}
+            </Text>
+          </View>
 
-      
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>
+              {pricing.period === "Hour" ? "Time Return" : "Date Return"}
+            </Text>
+            <Text style={styles.infoValue}>
+              {formatDateTime(bookingData?.rentalDetails?.returnDate, pricing.period)}
+            </Text>
+          </View>
+        </View>
 
-      {["Cash on Delivery", "Gcash"].map((method) => (
-        <TouchableOpacity
-          key={method}
-          style={[
-            styles.option,
-            selectedMethod === method && styles.optionSelected
-          ]}
-          onPress={() => setSelectedMethod(method)}
-        >
-          <Text style={styles.optionText}>{method}</Text>
+        {/* ✅ Unit Price Section */}
+        <View style={styles.unitPriceCard}>
+          <Text style={styles.cardTitle}>Unit Price</Text>
+          
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>{pricing.rateLabel}</Text>
+            <Text style={styles.infoValue}>₱ {pricing.rate}</Text>
+          </View>
 
-          {/* Circle indicator on the right */}
-          <View style={[
-            styles.circle,
-            selectedMethod === method && styles.circleSelected
-          ]} />
-        </TouchableOpacity>
-      ))}
-      </View>
-  
-      <View style={styles.horizontalLine} />
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Rental Duration</Text>
+            <Text style={styles.infoValue}>
+              {pricing.duration} {pricing.period === "Hour" ? "hours" : pricing.period === "Week" ? "weeks" : "days"}
+            </Text>
+          </View>
 
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Delivery Charge</Text>
+            <Text style={styles.infoValue}>₱ {pricing.deliveryCharge}</Text>
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.infoRow}>
+            <Text style={styles.grandTotalLabel}>Grand Total</Text>
+            <Text style={styles.grandTotalValue}>₱ {pricing.grandTotal}</Text>
+          </View>
+        </View>
+
+        {/* Payment Method Section */}
+        <View style={styles.contentWrapper}>
+          <Text style={styles.sectionTitle}>Payment Method</Text>
+
+          {["Cash on Delivery", "Gcash"].map((method) => (
+            <TouchableOpacity
+              key={method}
+              style={[
+                styles.option,
+                selectedMethod === method && styles.optionSelected
+              ]}
+              onPress={() => setSelectedMethod(method)}
+            >
+              <Text style={styles.optionText}>{method}</Text>
+
+              {/* Circle indicator on the right */}
+              <View style={[
+                styles.circle,
+                selectedMethod === method && styles.circleSelected
+              ]} />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Action Buttons */}
       <View style={styles.actions}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
         </TouchableOpacity>
         <TouchableOpacity
-        onPress={() => {
+          onPress={() => {
             if (!selectedMethod) return;
-            onContinue({ ...bookingData, paymentMethod: selectedMethod });
-        }}
-        style={styles.continueBtn}
+            onContinue({ 
+              ...bookingData, 
+              paymentMethod: selectedMethod,
+              pricing: pricing // ✅ Pass pricing data to confirmation
+            });
+          }}
+          style={[styles.continueBtn, !selectedMethod && styles.disabledBtn]}
+          disabled={!selectedMethod}
         >
-        <Text style={{ color: "#FFF", fontWeight: "700"}}>Continue</Text>
-        </TouchableOpacity>
 
-      
-    </View>
+          <Text style={{ color: "#FFF", fontWeight: "700"}}>₱ {pricing.grandTotal}</Text>
+          <Text style={{ color: "#FFF", fontWeight: "700"}}>Continue</Text>
+        </TouchableOpacity>
+      </View>
    </View>
   );
 }
@@ -210,7 +327,7 @@ const styles = StyleSheet.create({
     color: "#057474",
     fontWeight: "600",
   },
-    progressLine: {
+  progressLine: {
     height: 2,
     backgroundColor: "#ccc",
     width: 94,            
@@ -218,55 +335,137 @@ const styles = StyleSheet.create({
   },
 
   lineWrapper: {
-    width: 40,            // same as line width to reserve space
-    alignItems: "center", // center the line
+    width: 40,
+    alignItems: "center",
   },
 
   completedProgressLine: {
     backgroundColor: "#4CAF50",
   },
 
+  // ✅ Rental Usage & Unit Price Cards
+  rentalUsageCard: {
+    width: "90%",
+    alignSelf: "center",
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    marginTop: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+
+  unitPriceCard: {
+    width: "90%",
+    alignSelf: "center",
+    padding: 20,
+    borderRadius: 12,
+    backgroundColor: "#FFF",
+    marginTop: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 16,
+  },
+
+  infoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+
+  infoLabel: {
+    fontSize: 14,
+    color: "#666",
+    flex: 1,
+  },
+
+  infoValue: {
+    fontSize: 14,
+    color: "#000",
+    fontWeight: "600",
+    textAlign: "right",
+  },
+
+  divider: {
+    height: 1,
+    backgroundColor: "#E0E0E0",
+    marginVertical: 12,
+  },
+
+  grandTotalLabel: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+  },
+
+  grandTotalValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#057474",
+  },
+
   sectionTitle:{ 
     fontSize: 16, 
     fontWeight: "600", 
-    marginBottom: 16 },
+    marginBottom: 16 
+  },
 
   contentWrapper: {
-    width: "90%",               // or a fixed width like 320
-    alignSelf: "center",        // centers the container horizontally
+    width: "90%",
+    alignSelf: "center",
     padding: 20,
-    borderWidth: 5,
-    borderColor: "transparent",
     borderRadius: 12,
     backgroundColor: "#FFF",
-    marginVertical: 16,         // spacing from other sections
+    marginVertical: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    marginBottom: 100, // Space for buttons
   },
 
   option: {
-    flexDirection: "row",      // put text and circle in one row
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // push circle to the right
-    padding: 5,
+    justifyContent: "space-between",
+    padding: 16,
     borderWidth: 1,
-    borderRadius: 1,
+    borderRadius: 8,
     marginBottom: 12,
-    borderColor: "transparent",
+    borderColor: "#E0E0E0",
+    backgroundColor: "#FFF",
   },
 
   optionSelected: {
-    borderColor: "transparent",
+    borderColor: "#057474",
     backgroundColor: "#E0F7F7",
   },
 
   optionText: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#000",
+    fontWeight: "500",
   },
+
   circle: {
-    width: 13,
-    height: 13,
+    width: 20,
+    height: 20,
     borderRadius: 10,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: "#057474",
     backgroundColor: "#FFF",
   },
@@ -275,36 +474,39 @@ const styles = StyleSheet.create({
     backgroundColor: "#057474", 
   },
 
-  horizontalLine: {
-    height: 1.5,
-    backgroundColor: "#05747480",
-    width: "74%",
-    position: "absolute",       // absolute positioning
-    top: 286,                    // distance from the top of the container
-    left: "13%",                // center horizontally (adjust as needed)
-    zIndex: 1,        
-  },
-
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 320,
+    position: "absolute",
+    bottom: 20,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    backgroundColor: "#f6f6f6",
+    paddingTop: 10,
   },
 
   backBtn: {
+    flex: 1,
     padding: 14,
-    paddingHorizontal: 50,
     backgroundColor: "#FFF",
     borderRadius: 20,
-    marginLeft: 15,
+    marginRight: 8,
     borderColor: "#057474",
     borderWidth: 1,
+    alignItems: "center",
   },
+
   continueBtn: {
+    flex: 1,
     padding: 14,
     backgroundColor: "#057474",
     borderRadius: 20,
-    paddingHorizontal: 50,
-    marginRight: 20,
+    marginLeft: 8,
+    alignItems: "center",
+  },
+
+  disabledBtn: {
+    opacity: 0.5,
   },
 });

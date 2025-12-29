@@ -18,7 +18,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
-export default function Home() {
+export default function Index() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,6 +76,17 @@ export default function Home() {
     router.push(`/${route}`);
   };
 
+  // ✅ Handle product click with login check
+  const handleProductClick = (item) => {
+    if (!currentUser) {
+      // User is not logged in, redirect to login
+      router.push('/login');
+    } else {
+      // User is logged in, go to item detail
+      router.push({ pathname: '/customer/itemDetail', params: { id: item.id } });
+    }
+  };
+
   if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
   if (error)
     return (
@@ -118,23 +129,23 @@ export default function Home() {
               style={styles.avatar}
             />
           </Pressable >
-            <View style={styles.loginActions}>
-  <Pressable
-    style={styles.loginButton}
-    onPress={() => router.push('/login')}
-  >
-    <Text style={styles.loginButtonText}>Login</Text>
-  </Pressable>
+                    <View style={styles.loginActions}>
+          <Pressable
+            style={styles.loginButton}
+            onPress={() => router.push('/login')}
+          >
+            <Text style={styles.loginButtonText}>Login</Text>
+          </Pressable>
 
-  <Pressable
-    style={[styles.loginButton, styles.signupButton]}
-    onPress={() => router.push('/signup/person_info')}
-  >
-    <Text style={[styles.loginButtonText, styles.signupText]}>
-      Sign Up
-    </Text>
-  </Pressable>
-</View>
+          <Pressable
+            style={[styles.loginButton, styles.signupButton]}
+            onPress={() => router.push('/signup/person_info')}
+          >
+            <Text style={[styles.loginButtonText, styles.signupText]}>
+              Sign Up
+            </Text>
+          </Pressable>
+        </View>
 
             <View style={styles.notificationWrapper}>
             <Pressable onPress={() => router.push("customer/notifications")}>
@@ -182,15 +193,20 @@ export default function Home() {
                           }
 
                           return (
-                            <View key={item.id} style={styles.featuredCard}>
-                              <Image
-                                source={{ uri: imageUrl }}
-                                style={styles.featuredImage}
-                                resizeMode="cover"
-                                onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-                                onLoad={() => console.log('Image loaded:', imageUrl)}
-                              />
-                            </View>
+                            <Pressable 
+                              key={item.id} 
+                              onPress={() => handleProductClick(item)}
+                            >
+                              <View style={styles.featuredCard}>
+                                <Image
+                                  source={{ uri: imageUrl }}
+                                  style={styles.featuredImage}
+                                  resizeMode="cover"
+                                  onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+                                  onLoad={() => console.log('Image loaded:', imageUrl)}
+                                />
+                              </View>
+                            </Pressable>
                           );
                         })}
           </ScrollView>
@@ -229,7 +245,7 @@ export default function Home() {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
             <Pressable 
-              onPress={() => router.push({ pathname: '/customer/itemDetail', params: { id: item.id } })}
+              onPress={() => handleProductClick(item)}
             >
               <View style={styles.card}>
                 <View style={styles.upperHalf}>
