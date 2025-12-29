@@ -73,7 +73,7 @@ const fetchOwnerItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto"], // Changed from "email" to "emailAddress"
+          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto", "gcashQR"], // Changed from "email" to "emailAddress"
         },
       ],
       order: [['createdAt', 'DESC']],
