@@ -8,11 +8,19 @@ const fetchItems = async (req, res) => {
       include: [
         {
           model: Owner,
-          attributes: ["id", "firstName", "lastName", "emailAddress", "idPhoto", , "gcashQR"], // Changed from "email" to "emailAddress"
+          attributes: [
+            "id",
+            "firstName",
+            "lastName",
+            "email",
+            "idPhoto",
+            "gcashQR"
+          ],
         },
       ],
-      order: [['createdAt', 'DESC']], // newest first
+      order: [["createdAt", "DESC"]],
     });
+    
 
     return res.status(200).json({ 
       success: true, 

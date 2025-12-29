@@ -1,50 +1,60 @@
 import axios from "axios";
 import dotenv from "dotenv";
+const { Server } = require("socket.io");
+
 
 dotenv.config();
 
-const gcashPayment = async (req, res) => {
-  try {
-    const { amount, description } = req.body; // ✅ only take what frontend sends
 
-    console.log("Incoming booking data:", req.body);
 
-    const response = await axios.post(
-      "https://api.paymongo.com/v1/checkout_sessions",
-      {
-        data: {
-          attributes: {
-            line_items: [
-              {
-                name: description || "Rental Item",
-                amount: parseInt(amount), // ✅ already in centavos (₱100 = 10000)
-                currency: "PHP",
-                quantity: 1,
-              },
-            ],
-            payment_method_types: ["gcash"],
-            success_url: `${process.env.FRONTEND_URL}/payment-success`,
-            cancel_url: `${process.env.FRONTEND_URL}/payment-cancel`,
-          },
-        },
-      },
-      {
-        headers: {
-          Authorization: `Basic ${Buffer.from(
-            process.env.PAYMONGO_SECRET_KEY + ":"
-          ).toString("base64")}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+let io;
 
-    res.json({
-      checkout_url: response.data.data.attributes.checkout_url,
+module.exports = {
+  init: (server) => {
+    io = new Server(server, {
+      cors: { origin: "*" },
     });
-  } catch (err) {
-    console.error("PayMongo Error:", err.response?.data || err.message);
-    res.status(500).json({ error: "Payment initialization failed" });
-  }
+
+    io.on("connection", (socket) => {
+      console.log("Connected:", socket.id);
+
+      socket.on("join-booking", ({ bookingId, role }) => {
+        socket.join(`booking-${bookingId}`);
+        socket.role = role;
+      });
+
+      // CUSTOMER selects GCash
+      socket.on("request-gcash", async ({ bookingId, ownerQR }) => {
+        // Send QR to customer
+        io.to(`booking-${bookingId}`).emit("show-gcash-qr", {
+          qr: ownerQR,
+        });
+
+        // Notify owner
+        io.to(`booking-${bookingId}`).emit("gcash-requested");
+      });
+
+      // OWNER accepts payment
+      socket.on("owner-accept", async ({ bookingData }) => {
+        // ✅ SAVE TO DATABASE HERE
+        await Booking.create({
+          ...bookingData,
+          paymentMethod: "GCash",
+          paymentStatus: "PAID",
+        });
+
+        io.to(`booking-${bookingData.itemId}`).emit("payment-success");
+      });
+
+      // OWNER rejects payment
+      socket.on("owner-reject", ({ bookingId }) => {
+        io.to(`booking-${bookingId}`).emit("payment-failed");
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected:", socket.id);
+      });
+    });
+  },
 };
 
-export { gcashPayment };
