@@ -402,6 +402,7 @@ const bookedItems = async (req, res) => {
   const { id } = req.params; // this will be the customerId coming from the mobile 
   
   console.log("Incoming data",req.params);
+  console.log("Ito yung specific na booking item para sa time tas sa right side ay yung id nung user",req.params);
 
   try {
     const response = await Books.findAll({

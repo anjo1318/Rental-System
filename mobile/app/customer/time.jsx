@@ -39,15 +39,19 @@ export default function TimeDuration() {
 
   // Get user ID from AsyncStorage
   useEffect(() => {
+    console.log("This is time.jsx");
     const getUserId = async () => {
       try {
         const id = await AsyncStorage.getItem("userId");
         setUserId(id);
+        console.log("This is time.jsx user id", id);
+
       } catch (error) {
         console.error("Error getting user ID:", error);
       }
     };
     getUserId();
+
   }, []);
 
   // Fetch booked items
@@ -58,32 +62,35 @@ export default function TimeDuration() {
   }, [userId]);
 
   const fetchBookedItems = async () => {
-    if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
-      console.error("Cannot fetch booked items: Invalid user ID:", userId);
-      setLoading(false);
-      return;
-    }
-
     try {
       setLoading(true);
-      console.log("Fetching booked items for user ID:", userId);
-      
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
-
-      if (response.data.success) {
-        console.log("Booked items response:", response.data.data);
-        setBookedItems(response.data.data || []);
+  
+      if (!process.env.EXPO_PUBLIC_API_URL) {
+        throw new Error("API URL is missing");
+      }
+  
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`
+      );
+  
+      console.log("API response:", response.data);
+  
+      if (response.data?.success) {
+        const ongoingItems = (response.data.data || []).filter(
+          item => item.status === "ongoing"
+        );
+        setBookedItems(ongoingItems);
       } else {
-        console.log("API returned success: false", response.data);
         setBookedItems([]);
       }
     } catch (error) {
-      console.error("Error fetching booked items:", error);
+      console.error("Fetch error:", error.message);
       setBookedItems([]);
     } finally {
       setLoading(false);
     }
   };
+  
 
   // Calculate time remaining for each booking
   const calculateTimeRemaining = (returnDate) => {
@@ -105,16 +112,19 @@ export default function TimeDuration() {
 
   // Update timers every second
   useEffect(() => {
+    if (bookedItems.length === 0) return;
+  
     const interval = setInterval(() => {
       const newTimers = {};
-      bookedItems.forEach((item) => {
+      bookedItems.forEach(item => {
         newTimers[item.id] = calculateTimeRemaining(item.returnDate);
       });
       setTimers(newTimers);
     }, 1000);
-
+  
     return () => clearInterval(interval);
   }, [bookedItems]);
+  
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -130,15 +140,29 @@ export default function TimeDuration() {
   // Parse image URL
   const getImageUrl = (itemImage) => {
     try {
-      if (typeof itemImage === 'string') {
+      let url = itemImage;
+  
+      if (typeof itemImage === "string") {
         const parsed = JSON.parse(itemImage);
-        return Array.isArray(parsed) ? parsed[0] : itemImage;
+        url = Array.isArray(parsed) ? parsed[0] : itemImage;
       }
-      return itemImage;
+  
+      // 🔥 Fix broken protocol
+      if (url && url.startsWith("ttp")) {
+        url = "h" + url;
+      }
+  
+      // 🔒 Force https
+      if (url && url.startsWith("http://")) {
+        url = url.replace("http://", "https://");
+      }
+  
+      return url;
     } catch {
-      return itemImage;
+      return null;
     }
   };
+  
 
   // Render booking card
   const renderBookingCard = (item) => {
@@ -148,49 +172,46 @@ export default function TimeDuration() {
       <View key={item.id} style={styles.card}>
         {/* Device info */}
         <View style={styles.deviceRow}>
-          <Image
-            source={{ uri: getImageUrl(item.itemImage) }}
-            style={styles.deviceImage}
-          />
+        <Image
+          source={{
+            uri: getImageUrl(item.itemImage) ||
+              "https://via.placeholder.com/150",
+          }}
+          style={styles.deviceImage}
+          onError={(e) =>
+            console.log("Image load error:", e.nativeEvent.error)
+          }
+        />
+
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{item.product}</Text>
             <Text style={styles.categoryText}>{item.category}</Text>
-            <View style={[styles.statusBadge, 
-              item.status === 'approved' && styles.statusApproved,
-              item.status === 'pending' && styles.statusPending,
-              item.status === 'rejected' && styles.statusRejected
-            ]}>
-              <Text style={styles.statusText}>
-                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-              </Text>
+            <View style={styles.statusOngoing}>
+              <Text style={styles.statusText}>Ongoing</Text>
             </View>
           </View>
         </View>
 
-        {/* Timer */}
-        {item.status === 'approved' && (
-          <>
-            {timer.expired ? (
-              <View style={styles.expiredContainer}>
-                <Icon name="access-time" size={40} color="#FF5252" />
-                <Text style={styles.expiredText}>Rental Period Ended</Text>
+        {/* Timer - Always show for ongoing items */}
+        {timer.expired ? (
+          <View style={styles.expiredContainer}>
+            <Icon name="access-time" size={40} color="#FF5252" />
+            <Text style={styles.expiredText}>Rental Period Ended</Text>
+          </View>
+        ) : (
+          <View style={styles.timerRow}>
+            {[
+              { value: String(timer.days).padStart(2, '0'), label: "Days" },
+              { value: String(timer.hours).padStart(2, '0'), label: "Hours" },
+              { value: String(timer.minutes).padStart(2, '0'), label: "Minutes" },
+              { value: String(timer.seconds).padStart(2, '0'), label: "Seconds" },
+            ].map((timeItem, index) => (
+              <View key={index} style={styles.timeBox}>
+                <Text style={styles.timeValue}>{timeItem.value}</Text>
+                <Text style={styles.timeLabel}>{timeItem.label}</Text>
               </View>
-            ) : (
-              <View style={styles.timerRow}>
-                {[
-                  { value: String(timer.days).padStart(2, '0'), label: "Days" },
-                  { value: String(timer.hours).padStart(2, '0'), label: "Hours" },
-                  { value: String(timer.minutes).padStart(2, '0'), label: "Minutes" },
-                  { value: String(timer.seconds).padStart(2, '0'), label: "Seconds" },
-                ].map((timeItem, index) => (
-                  <View key={index} style={styles.timeBox}>
-                    <Text style={styles.timeValue}>{timeItem.value}</Text>
-                    <Text style={styles.timeLabel}>{timeItem.label}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-          </>
+            ))}
+          </View>
         )}
 
         {/* Dates */}
@@ -275,8 +296,8 @@ export default function TimeDuration() {
         ) : bookedItems.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Icon name="schedule" size={60} color="#ccc" />
-            <Text style={styles.emptyText}>No active bookings</Text>
-            <Text style={styles.emptySubtext}>Your rental timers will appear here</Text>
+            <Text style={styles.emptyText}>No ongoing rentals</Text>
+            <Text style={styles.emptySubtext}>Your active rental timers will appear here</Text>
           </View>
         ) : (
           bookedItems.map(renderBookingCard)
@@ -453,23 +474,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
-  statusBadge: {
+  statusOngoing: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     alignSelf: "flex-start",
-  },
-
-  statusApproved: {
-    backgroundColor: "#4CAF50",
-  },
-
-  statusPending: {
-    backgroundColor: "#FF9800",
-  },
-
-  statusRejected: {
-    backgroundColor: "#F44336",
+    backgroundColor: "#2196F3",
   },
 
   statusText: {
