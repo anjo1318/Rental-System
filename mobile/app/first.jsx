@@ -1,355 +1,133 @@
-import React, { useEffect, useState } from "react";
-import styles from "./styles/index_styles";
-
-import {
-  View,
-  Text,
-  Image,
-  FlatList,
-  ActivityIndicator,
-  Pressable,
-  TextInput,
-  ScrollView,
-  StatusBar,
+import React from "react";
+import {View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,
 } from "react-native";
-import axios from "axios";
-import {useRouter } from "expo-router";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 
-export default function Index() {
+const { width, height } = Dimensions.get("window");
+
+export default function LoginInterface() {
   const router = useRouter();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [currentUser, setCurrentUser] = useState(null);
-  const [OWNER_ID, setOwnerId] = useState(null);
-
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/item`
-        );
-        if (response.data.success) {
-          setItems(Array.isArray(response.data.data) ? response.data.data : []);
-        }
-        else {
-          setError("Failed to fetch items");
-        }
-      } catch (err) {
-        setError(err.message || "Error fetching data");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, []);
-
-  useEffect(()=>{
-    loadUserData();
-  },[]);
-
-  const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        setCurrentUser(user);
-        setOwnerId(user.id);
-        console.log('✅ User loaded from storage in home.jsx:', user);
-        return user.id;
-      } else {
-          console.log('ℹ️ Guest user allowed on first.jsx');
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      }
-  };
-
-  const handleNavigation = (route) => {
-    // 🚫 Prevent navigating to the same "home"
-    if (route === "customer/home") return;
-    router.push(`/${route}`);
-  };
-
-  // ✅ Handle product click with login check
-  const handleProductClick = (item) => {
-    if (!currentUser) {
-      // User is not logged in, redirect to login
-      router.push('/login');
-    } else {
-      // User is logged in, go to item detail
-      router.push({ pathname: '/customer/itemDetail', params: { id: item.id } });
-    }
-  };
-
-  if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
-  if (error)
-    return (
-      <View style={styles.center}>
-        <Text>Error: {error}</Text>
-      </View>
-    );
-
-  // Filtering items
-  const filteredItems = items.filter((item) => {
-    const matchCategory =
-      activeCategory === "All" || item.category === activeCategory;
-    const matchSearch =
-      item.title.toLowerCase().includes(search.toLowerCase()) ||
-      item.description.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchSearch;
-  });
-
-  const breakLongWords = (str, maxLen = 18) =>
-  str ? str.replace(new RegExp(`(\\S{${maxLen}})`, "g"), "$1\u200B") : "";
-  
-
 
   return (
     <>
-      {/* ✅ StatusBar must be OUTSIDE the main View */}
+      {/* Status bar settings */}
       <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#057474" 
-        translucent={false}
+        barStyle="light-content"        // White icons/text
+        backgroundColor="#007F7F"       // Android status bar color
+        translucent={false}             // Keep layout unaffected
       />
 
-      <ScrollView style={styles.container} 
-      contentContainerStyle={{ paddingBottom: 80 }}
-      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
-        <View style={styles.topBackground}>
-          {/* 🔹 Profile Section */}
-          <View style={styles.profileContainer}>
-           <Pressable onPress={() => router.push("customer/profile")}>
-            <Image
-              source={require("../assets/images/new_user.png")}
-              style={styles.avatar}
-            />
-          </Pressable >
-                    <View style={styles.loginActions}>
-          <Pressable
-            style={styles.loginButton}
-            onPress={() => router.push('/login')}
-          >
-            <Text style={styles.loginButtonText}>Login</Text>
-          </Pressable>
+      <View style={styles.safe}>
+        {/* Header image */}
+        <Image
+          source={require("../assets/images/header.png")}
+          style={styles.headerImage}
+          resizeMode="cover"
+          accessible
+          accessibilityLabel="Top banner"
+        />
+
+        {/* Logo section */}
+        <View style={styles.middle}>
+          <Image
+            source={require("../assets/images/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+            accessible
+            accessibilityLabel="App logo"
+          />
+        </View>
+
+        {/* Buttons section */}
+        <View style={styles.bottom}>
+          <Text style={styles.prompt}>
+            How do you prefer to use this application
+          </Text>
+    
 
           <Pressable
-            style={[styles.loginButton, styles.signupButton]}
-            onPress={() => router.push('/signup/person_info')}
+            style={({ pressed }) => [
+              styles.button,
+              styles.buttonLower,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => router.push("/login")}
+            android_ripple={{ color: "#ddd" }}
           >
-            <Text style={[styles.loginButtonText, styles.signupText]}>
-              Sign Up
+            <Text style={[styles.buttonText, { color: "#057474" }]}>
+              Customer
             </Text>
           </Pressable>
-        </View>
 
-            <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("customer/notifications")}>
-              <Icon name="notifications-none" size={24} color="#007F7F" />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
-              </View>
-            </Pressable>
-
-
-            </View>
-          </View>
-
-          {/* 🔹 Search Bar */}
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
-            <TextInput
-              placeholder="Search your devices.."
-              value={search}
-              onChangeText={setSearch}
-              style={styles.searchInput}
-              placeholderTextColor="#555"
-            />
-            <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
-          </View>
-        </View>
-
-          {/* 🔹 Featured Devices */}
-          <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>Featured Devices</Text>
-          </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {items.map((item) => {
-                          let imageUrl = "https://via.placeholder.com/150";
-                          
-                          if (item.itemImages && item.itemImages.length > 0) {
-                            try {
-                              const parsedImages = JSON.parse(item.itemImages[0]);
-                              if (Array.isArray(parsedImages) && parsedImages.length > 0) {
-                                imageUrl = parsedImages[0].replace(/^http:/, "https:");
-                              }
-                            } catch (e) {
-                              console.error('Image parse error for item', item.id, ':', e);
-                            }
-                          }
-
-                          return (
-                            <Pressable 
-                              key={item.id} 
-                              onPress={() => handleProductClick(item)}
-                            >
-                              <View style={styles.featuredCard}>
-                                <Image
-                                  source={{ uri: imageUrl }}
-                                  style={styles.featuredImage}
-                                  resizeMode="cover"
-                                  onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-                                  onLoad={() => console.log('Image loaded:', imageUrl)}
-                                />
-                              </View>
-                            </Pressable>
-                          );
-                        })}
-          </ScrollView>
-
-          {/* 🔹 Recommendations */}
-          <Text style={styles.sectionTitle}>Our Recommendations</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginBottom: 10 }}
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              styles.buttonTop,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={() => router.push("/owner/ownerLogin")}
+            android_ripple={{ color: "#ddd" }}
           >
-            {["All", "Cellphone", "Projector", "Laptop", "Speaker"].map((cat) => (
-              <Pressable
-                key={cat}
-                style={[
-                  styles.categoryButton,
-                  activeCategory === cat && styles.activeCategory,
-                ]}
-                onPress={() => setActiveCategory(cat)}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    activeCategory === cat && styles.activeCategoryText,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* 🔹 Items Grid */}
-          <FlatList
-            data={filteredItems}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-            <Pressable 
-              onPress={() => handleProductClick(item)}
-            >
-              <View style={styles.card}>
-                <View style={styles.upperHalf}>
-                  <Image
-                    source={{
-                      uri:
-                        item.itemImages && item.itemImages.length > 0
-                          ? (() => {
-                              try {
-                                const imgs = JSON.parse(item.itemImages[0]);
-                                let url =
-                                  Array.isArray(imgs) && imgs.length > 0
-                                    ? imgs[0]
-                                    : "https://via.placeholder.com/150";
-                                url = url.replace(/^http:\/\//, "https://").replace(/\\+$/, "");
-                                return url;
-                              } catch {
-                                return "https://via.placeholder.com/150";
-                              }
-                            })()
-                          : "https://via.placeholder.com/150",
-                    }}
-                    style={styles.featuredImage}
-                    resizeMode="cover"
-                  />
-
-
-                  {/* Availability Badge */}
-                  <View style={[
-                    styles.availabilityBadge,
-                    { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
-                  ]}>
-                    <Text style={styles.availabilityText}>
-                      {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={styles.lowerHalf}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  <View style={styles.ratingRow}>
-                    <Text style={styles.ratingValue}>5.0</Text>
-                    <Text style={styles.starIcon}>⭐</Text>
-                  </View>
-                  <View style={styles.locationRow}>
-                  <View style={styles.iconContainer}>
-                    <Icon name="location-on" size={20} color="#666" />
-                  </View>
-
-                  <View style={styles.textContainer}>
-                    <Text
-                      style={styles.location}
-                      numberOfLines={0}          // ✅ allow unlimited lines
-                      ellipsizeMode="clip"       // ✅ no "..." truncation
-                    >
-                      {item.location}
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.price}>₱{item.pricePerDay}</Text>
-
-
-
-                  {/* Quantity */}
-                  <Text style={styles.quantity}>
-                    Quantity: {item.availableQuantity} / {item.quantity}
-                  </Text>
-                </View>
-              </View>
-            </Pressable>
-
-            )}
-            numColumns={2}
-            columnWrapperStyle={{
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          />
-
-        {/* 🔹 Bottom Nav */}
-        <View style={styles.bottomNav}>
-          {[
-            { name: "Home", icon: "home", route: "customer/home" },
-            { name: "Book", icon: "shopping-cart", route: "customer/book" },
-            { name: "Message", icon: "mail", route: "customer/message" },
-            { name: "Time", icon: "schedule", route: "customer/time" },
-          ].map((navItem, index) => (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              hitSlop={10}
-              onPress={() => handleNavigation(navItem.route)}
-            >
-              <Icon name={navItem.icon} style={styles.navIcon} />
-              <Text style={styles.navText}>{navItem.name}</Text>
-            </Pressable>
-          ))}
+            <Text style={styles.buttonText}>Owner</Text>
+          </Pressable>
         </View>
-      </ScrollView>
+      </View>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+  },
+  headerImage: {
+    width: "100%",
+    height: height * 0.22,
+  },
+  middle: {
+    alignItems: "center",
+    marginTop: height * 0.13,
+  },
+  logo: {
+    width: width * 0.3,
+    height: width * 0.3,
+    marginBottom: height * 0.08,
+  },
+  bottom: {
+    flex: 1,
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingBottom: height * 0.12,
+    gap: 12,
+  },
+  prompt: {
+    color: "black",
+    fontSize: width * 0.035,
+    marginBottom: 10,
+  },
+  button: {
+    width: width * 0.8,
+    paddingVertical: height * 0.018,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "#057474",
+  },
+  buttonLower: {
+    backgroundColor: "#FFFFFF",
+  },
+  buttonTop: {
+    backgroundColor: "#057474",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: width * 0.04,
+    fontWeight: "600",
+  },
+  buttonPressed: {
+    opacity: 0.85,
+  },
+});

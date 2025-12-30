@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from "react";
-
-
-
 import {
   View,
   Text,
@@ -12,13 +9,15 @@ import {
   TextInput,
   ScrollView,
   StatusBar,
-  Dimensions,
   StyleSheet,
+  Dimensions,
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Slider from "@react-native-community/slider";
+import { usePathname } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 
@@ -26,7 +25,8 @@ const CARD_MARGIN = 16;
 const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
 const CARD_HEIGHT = height * 0.45;
 
-export default function ProductList() {
+
+export default function Home() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,6 +35,9 @@ export default function ProductList() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
+  const [showFilter, setShowFilter] = useState(false);
+  const pathname = usePathname();
+
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -116,105 +119,47 @@ export default function ProductList() {
       {/* ✅ StatusBar must be OUTSIDE the main View */}
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#f2f2f2"
+        backgroundColor="#057474" 
         translucent={false}
       />
 
-      <View style={styles.container}>
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+        <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
-           <Pressable onPress={() => router.push("customer/profile")}>
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=3" }}
-              style={styles.avatar}
-            />
-          </Pressable >
-            <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
-            <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("customer/notifications")}>
-              <Icon name="notifications-none" size={24} color="#057474" />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
+            </View>
+            {/* 🔹 Search Bar (Clickable) */}
+            <Pressable onPress={() => router.push('/customer/tap_searchbar')}>
+              <View style={styles.searchContainer}>
+                <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+                <TextInput
+                  placeholder="Search your devices.."
+                  value={search}
+                  editable={false}
+                  style={styles.searchInput}
+                  placeholderTextColor="#555"
+                />
+                <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
+  <Icon
+    name="tune"
+    size={20}
+    color="gray"
+    style={styles.filterIcon}
+  />
+</Pressable>
               </View>
             </Pressable>
-
-
-            </View>
           </View>
-
-          {/* 🔹 Search Bar */}
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
-            <TextInput
-              placeholder="Search your devices.."
-              value={search}
-              onChangeText={setSearch}
-              style={styles.searchInput}
-              placeholderTextColor="#555"
-            />
-            <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
-          </View>
-
-          {/* 🔹 Featured Devices */}
-          <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>Featured Devices</Text>
-          </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {items.map((item) => {
-                          let imageUrl = "https://via.placeholder.com/150";
-                          
-                          if (item.itemImages && item.itemImages.length > 0) {
-                            try {
-                              const parsedImages = JSON.parse(item.itemImages[0]);
-                              if (Array.isArray(parsedImages) && parsedImages.length > 0) {
-                                imageUrl = parsedImages[0].replace(/^http:/, "https:");
-                              }
-                            } catch (e) {
-                              console.error('Image parse error for item', item.id, ':', e);
-                            }
-                          }
-
-                          return (
-                            <View key={item.id} style={styles.featuredCard}>
-                              <Image
-                                source={{ uri: imageUrl }}
-                                style={styles.featuredImage}
-                                resizeMode="cover"
-                                onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-                                onLoad={() => console.log('Image loaded:', imageUrl)}
-                              />
-                            </View>
-                          );
-                        })}
-          </ScrollView>
 
           {/* 🔹 Recommendations */}
-          <Text style={styles.sectionTitle}>Our Recommendations</Text>
+          <Text style={styles.sectionTitle}>Searched Result</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={{ marginBottom: 10 }}
           >
-            {["All", "Cellphone", "Projector", "Laptop", "Speaker"].map((cat) => (
-              <Pressable
-                key={cat}
-                style={[
-                  styles.categoryButton,
-                  activeCategory === cat && styles.activeCategory,
-                ]}
-                onPress={() => setActiveCategory(cat)}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    activeCategory === cat && styles.activeCategoryText,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </Pressable>
-            ))}
           </ScrollView>
 
           {/* 🔹 Items Grid */}
@@ -306,14 +251,105 @@ export default function ProductList() {
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
 
-        </ScrollView>
+<View style={styles.bottomNav}>
+  {[
+    { name: "Home", icon: "home", route: "/customer/home" },
+    { name: "Book", icon: "shopping-cart", route: "/customer/book" },
+    { name: "Message", icon: "mail", route: "/customer/message" },
+    { name: "Time", icon: "schedule", route: "/customer/time" },
+  ].map((navItem, index) => {
+    const isActive = pathname === navItem.route;
 
-       
-      </View>
+    return (
+      <Pressable
+        key={index}
+        style={styles.navButton}
+        hitSlop={10}
+        onPress={() => router.push(navItem.route)}
+      >
+        <Icon
+          name={navItem.icon}
+          size={24}
+          color={isActive ? "#057474" : "#999"}   // ✅ green / gray
+        />
+        <Text
+          style={[
+            styles.navText,
+            { color: isActive ? "#057474" : "#999" }, // ✅ text too
+          ]}
+        >
+          {navItem.name}
+        </Text>
+      </Pressable>
+    );
+  })}
+</View>
+
+      </ScrollView>
+      {showFilter && (
+  <Filter onClose={() => setShowFilter(false)} />
+)}
     </>
   );
 }
 
+function Filter({ onClose }) {
+  const [price, setPrice] = useState(2000);
+
+  return (
+    <View style={filterStyles.overlay}>
+      {/* Transparent backdrop */}
+      <Pressable style={filterStyles.backdrop} onPress={onClose} />
+
+      {/* Bottom modal */}
+      <View style={filterStyles.modal}>
+        <View style={filterStyles.header}>
+          <Pressable onPress={onClose}>
+            <Icon name="close" size={22} color="#333" />
+          </Pressable>
+          <Text style={filterStyles.headerTitle}>Filter</Text>
+          <View style={{ width: 22 }} />
+        </View>
+
+        <Text style={filterStyles.label}>Category</Text>
+        <View style={filterStyles.input}>
+          <Text style={filterStyles.placeholder}>Select Category</Text>
+        </View>
+
+        <Text style={filterStyles.label}>Brand</Text>
+        <View style={filterStyles.input}>
+          <Text style={filterStyles.placeholder}>Select Brand</Text>
+        </View>
+
+        <Text style={filterStyles.label}>Price Range</Text>
+        <Slider
+          minimumValue={1000}
+          maximumValue={3000}
+          step={100}
+          value={price}
+          onValueChange={setPrice}
+          minimumTrackTintColor="#007F7F"
+          maximumTrackTintColor="#ccc"
+          thumbTintColor="#007F7F"
+        />
+
+        <View style={filterStyles.priceRow}>
+          <Text>₱ 1000</Text>
+          <Text>₱ {price}</Text>
+        </View>
+
+        <Text style={filterStyles.label}>Location</Text>
+        <View style={filterStyles.input}>
+          <Text style={filterStyles.placeholder}>Select Location</Text>
+        </View>
+
+        <Pressable style={filterStyles.doneButton} onPress={onClose}>
+          <Text style={filterStyles.doneText}>Done</Text>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
 
 const styles = StyleSheet.create({
   profileContainer: {
@@ -641,3 +677,4 @@ const filterStyles = StyleSheet.create({
     fontWeight: "600",
   },
 });
+  

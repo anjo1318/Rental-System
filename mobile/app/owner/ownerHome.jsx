@@ -340,7 +340,7 @@ export default function OwnerHome() {
                 style={styles.addItemButton}
                 onPress={() => router.push("owner/ownerAddItem")}
               >
-                <Text style={styles.addItemButtonText}>Add Your First Item</Text>
+                <Text style={styles.addItemButtonText}>Add our First Item</Text>
               </Pressable>
             </View>
           )}
@@ -412,16 +412,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-    statusBarSpacer: {
-    height: StatusBar.currentHeight || 0,
-    backgroundColor: "#007F7F",  // this paints the actual OS status bar background
-  },
+
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between", // avatar left, bell right
     padding: 16,
     marginTop: 16,
+  },
+
+  
+  topBackground: {
+    backgroundColor:"#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
 
@@ -470,12 +474,6 @@ const styles = StyleSheet.create({
     top: -1,
   },
 
-  topBackground: {
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    top: 20,
-  },
   
 statsContainer: {
   flexDirection: "row",
@@ -491,8 +489,8 @@ statsContainer: {
   shadowOpacity: 0.5,
   shadowRadius: 20,
   borderRadius: 20,
-  top: 20,
   left: 5,
+  top: 5,
 },
 
 statCard: {
