@@ -1,5 +1,6 @@
-import React, { useState } from "react";
-import {View,
+import React, { useState, useEffect } from "react";
+import {
+  View,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -26,8 +27,14 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [qrModalVisible, setQrModalVisible] = useState(false);
+  const [qrCodeData, setQrCodeData] = useState(null);
+  const [paymentIntentId, setPaymentIntentId] = useState(null);
+  const [checkingPayment, setCheckingPayment] = useState(false);
+  const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-  // ✅ Format date/time based on period
+
+  // Format date/time based on period
   const formatDateTime = (date, period) => {
     if (!date) return "N/A";
     
@@ -47,6 +54,17 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
       });
     }
   };
+
+  // Auto-check payment status every 5 seconds when QR is displayed
+  useEffect(() => {
+    let interval;
+    if (qrModalVisible && paymentIntentId) {
+      interval = setInterval(() => {
+        checkPaymentStatus(paymentIntentId, true);
+      }, 5000);
+    }
+    return () => clearInterval(interval);
+  }, [qrModalVisible, paymentIntentId]);
 
   const renderProgressStep = (stepNumber, stepName, isActive, isCompleted) => (
     <View style={styles.stepContainer} key={stepNumber}>
@@ -75,37 +93,128 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
     </View>
   );
 
+
+  // Key changes in the payment check function:
+
+  const checkPaymentStatus = async (intentId, silent = false) => {
+    try {
+      if (!silent) setCheckingPayment(true);
+
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/status/${intentId}`
+      );
+
+      if (response.data.success) {
+        const { status } = response.data;
+
+        if (status === "succeeded") {
+          // ✅ 1. Close QR modal first
+          setQrModalVisible(false);
+          
+          // ✅ 2. Show success modal immediately
+          setPaymentCompleted(true);
+          setModalVisible(true);
+          
+          // ✅ 3. Update booking in background
+          await saveBookingAfterPayment(intentId);
+          
+          return true;
+        } else if (!silent) {
+          alert(`Payment Status: ${status}\n\nPlease scan the QR code to complete payment.`);
+        }
+      }
+      return false;
+    } catch (error) {
+      if (!silent) {
+        console.error("Error checking payment:", error);
+        alert("Error checking payment status");
+      }
+      return false;
+    } finally {
+      if (!silent) setCheckingPayment(false);
+    }
+  };
+
+  // ✅ Updated: Save booking immediately after payment
+  const saveBookingAfterPayment = async (intentId) => {
+    try {
+      console.log("Saving booking after successful payment...");
+      
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
+        {
+          ...bookingData,
+          paymentIntentId: intentId,
+          paymentStatus: "paid"
+        }
+      );
+
+      if (response.data.success) {
+        console.log("✅ Booking updated successfully:", response.data);
+        return true;
+      } else {
+        console.error("❌ Booking update failed:", response.data);
+        alert("Payment successful but booking update failed. Please contact support.");
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Error updating booking:", error.response?.data || error.message);
+      alert("Payment successful but booking update failed. Please contact support with reference: " + intentId);
+      return false;
+    }
+  };
+
+  // ✅ Updated confirmRent for QRPh payment
   const confirmRent = async () => {
     if (loading) return;
     setLoading(true);
 
     try {
-      if (bookingData?.paymentMethod === "Gcash") {
+      if (bookingData?.paymentMethod === "QRPh") {
+        // GCash redirect payment
         const response = await axios.post(
           `${process.env.EXPO_PUBLIC_API_URL}/api/payment/gcash`,
           {
             amount: parseFloat(bookingData.pricing.grandTotal) * 100,
             description: `Rental for ${bookingData.itemDetails.title}`,
+            bookingData
           }
         );
 
         const checkoutUrl = response.data.checkout_url || response.data.checkoutUrl;
-        console.log("Redirecting to PayMongo:", checkoutUrl);
+        console.log("Redirecting to PayMongo GCash:", checkoutUrl);
         await Linking.openURL(checkoutUrl);
 
-      } else {
-        console.log("Booking ID to update:", bookingData.itemId);
+      } else if (bookingData?.paymentMethod === "Gcash") {
+        // QRPh Payment - Generate QR Code
+        const response = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/payment/qrph`,
+          {
+            amount: parseFloat(bookingData.pricing.grandTotal) * 100,
+            description: `Rental for ${bookingData.itemDetails.title}`,
+            bookingData
+          }
+        );
 
+        if (response.data.success && response.data.qrCode) {
+          setQrCodeData(response.data.qrCode);
+          setPaymentIntentId(response.data.paymentIntentId);
+          setQrModalVisible(true);
+          // ✅ Auto-check will start via useEffect
+        } else {
+          alert("Failed to generate QR code");
+        }
+
+      } else {
+        // Cash Payment
         const response = await axios.put(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`, 
+          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
           bookingData
         );
 
         if (response.data.success) {
-          console.log("Booking success:", response.data);
           setModalVisible(true);
         } else {
-          console.warn("Booking failed:", response.data);
           alert("Booking failed, please try again.");
         }
       }
@@ -116,6 +225,39 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
       setLoading(false);
     }
   };
+
+  // ✅ Updated Success Modal to show different messages
+  <Modal
+    animationType="fade"
+    transparent
+    visible={modalVisible}
+    onRequestClose={() => setModalVisible(false)}
+  >
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Icon name="check-circle" size={60} color="#4CAF50" />
+      <Text style={styles.modalText}>
+        {paymentCompleted 
+          ? "Payment successful! Your booking is confirmed."
+          : bookingData?.paymentMethod === "Cash" 
+            ? "Request sent, please wait for the reply."
+            : "Booking confirmed!"}
+      </Text>
+
+      <TouchableOpacity
+        style={styles.modalButton}
+        onPress={() => {
+          setModalVisible(false);
+          setPaymentCompleted(false);
+          setLoading(false);
+          router.replace("customer/home");
+        }}
+      >
+        <Text style={styles.modalButtonText}>Go to Home</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
 
   return (
     <View style={styles.safe}>
@@ -174,7 +316,7 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
           )}
         </View>
 
-        {/* ✅ Rental Usage & Pricing Summary */}
+        {/* Rental Summary */}
         <View style={styles.summaryCard}>
           <Text style={styles.cardTitle}>Rental Summary</Text>
           
@@ -226,87 +368,61 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
           </View>
         </View>
 
-        {/* Booking Details */}
+        {/* Customer & Item Details - keeping your existing sections */}
         <View style={styles.detailsContainer}>
           <Text style={styles.detailsTitle}>Customer Information</Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Full Name: </Text>
             {bookingData?.customerDetails?.fullName}
           </Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Email: </Text>
             {bookingData?.customerDetails?.email}
           </Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Phone: </Text>
             {bookingData?.customerDetails?.phone}
           </Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Address: </Text>
             {bookingData?.customerDetails?.location}
           </Text>
-
-          <Text style={styles.detailItem}>
-            <Text style={styles.label}>Gender: </Text>
-            {bookingData?.customerDetails?.gender}
-          </Text>
         </View>
 
-        {/* Item Details */}
         <View style={styles.detailsContainer}>
           <Text style={styles.detailsTitle}>Item Information</Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Product: </Text>
             {bookingData?.itemDetails?.title}
           </Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Category: </Text>
             {bookingData?.itemDetails?.category}
           </Text>
-
-          <Text style={styles.detailItem}>
-            <Text style={styles.label}>Location: </Text>
-            {bookingData?.itemDetails?.location}
-          </Text>
-
           <Text style={styles.detailItem}>
             <Text style={styles.label}>Payment Method: </Text>
             {selectedMethod || "Not selected"}
           </Text>
         </View>
 
-        {/* ✅ Guarantors Information */}
+        {/* Guarantors */}
         {bookingData?.guarantors && bookingData.guarantors.length > 0 && (
           <>
             {bookingData.guarantors.map((guarantor, index) => (
               guarantor.fullName ? (
                 <View key={index} style={styles.detailsContainer}>
                   <Text style={styles.detailsTitle}>Guarantor {index + 1}</Text>
-
                   <Text style={styles.detailItem}>
                     <Text style={styles.label}>Full Name: </Text>
                     {guarantor.fullName}
                   </Text>
-
                   <Text style={styles.detailItem}>
-                    <Text style={styles.label}>Phone Number: </Text>
+                    <Text style={styles.label}>Phone: </Text>
                     {guarantor.phoneNumber}
                   </Text>
-
                   <Text style={styles.detailItem}>
                     <Text style={styles.label}>Address: </Text>
                     {guarantor.address}
-                  </Text>
-
-                  <Text style={styles.detailItem}>
-                    <Text style={styles.label}>Email: </Text>
-                    {guarantor.email}
                   </Text>
                 </View>
               ) : null
@@ -330,13 +446,69 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
             {loading ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <Text style={{ color: "#FFF", fontWeight: "700"}}>₱ {bookingData?.pricing?.grandTotal}  Rent Now</Text>
+              <Text style={{ color: "#FFF", fontWeight: "700"}}>
+                ₱ {bookingData?.pricing?.grandTotal} Rent Now
+              </Text>
             )}
           </TouchableOpacity>
         </View>
       </ScrollView>
 
-      {/* ✅ Success Modal */}
+      {/* QR Code Modal */}
+      <Modal
+        animationType="slide"
+        transparent
+        visible={qrModalVisible}
+        onRequestClose={() => setQrModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.qrModalContent}>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setQrModalVisible(false)}
+            >
+              <Icon name="close" size={24} color="#000" />
+            </TouchableOpacity>
+
+            <Text style={styles.qrTitle}>Scan to Pay</Text>
+            <Text style={styles.qrSubtitle}>
+              ₱ {qrCodeData?.amount ? (qrCodeData.amount / 100).toFixed(2) : "0.00"}
+            </Text>
+
+            {qrCodeData?.imageUrl ? (
+              <Image
+                source={{ uri: qrCodeData.imageUrl }}
+                style={styles.qrImage}
+                resizeMode="contain"
+              />
+            ) : (
+              <ActivityIndicator size="large" color="#057474" />
+            )}
+
+            <View style={styles.qrInstructions}>
+              <Text style={styles.instructionTitle}>How to pay:</Text>
+              <Text style={styles.instructionText}>1. Open your e-wallet app (GCash, Maya, etc.)</Text>
+              <Text style={styles.instructionText}>2. Go to "Scan QR" or "Pay via QR"</Text>
+              <Text style={styles.instructionText}>3. Scan the QR code above</Text>
+              <Text style={styles.instructionText}>4. Confirm the payment</Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.checkStatusBtn, checkingPayment && styles.disabledBtn]}
+              onPress={() => checkPaymentStatus(paymentIntentId)}
+              disabled={checkingPayment}
+            >
+              {checkingPayment ? (
+                <ActivityIndicator size="small" color="#FFF" />
+              ) : (
+                <Text style={styles.checkStatusText}>Check Payment Status</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Success Modal */}
       <Modal
         animationType="fade"
         transparent
@@ -347,7 +519,9 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
           <View style={styles.modalContent}>
             <Icon name="check-circle" size={60} color="#4CAF50" />
             <Text style={styles.modalText}>
-              Request sent, please wait for the reply.
+              {bookingData?.paymentMethod === "Cash" 
+                ? "Request sent, please wait for the reply."
+                : "Payment successful! Your booking is confirmed."}
             </Text>
 
             <TouchableOpacity
@@ -405,7 +579,6 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 40,
   },
-
   progressContainer: {
     backgroundColor: "#f6f6f6",
     paddingVertical: 20,
@@ -455,27 +628,22 @@ const styles = StyleSheet.create({
   progressLine: {
     height: 2,
     backgroundColor: "#ccc",
-    width: 94,            
+    width: 94,
     marginBottom: 25,
   },
-
   lineWrapper: {
     width: 40,
     alignItems: "center",
   },
-
   completedProgressLine: {
     backgroundColor: "#4CAF50",
   },
-
   productImage: {
     width: width * 0.9,
     height: 220,
     borderRadius: 12,
     resizeMode: "cover",
   },
-
-  // ✅ Summary Card Styles
   summaryCard: {
     width: width * 0.9,
     backgroundColor: "#FFF",
@@ -488,52 +656,44 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
   },
-
   cardTitle: {
     fontSize: 18,
     fontWeight: "700",
     color: "#000",
     marginBottom: 16,
   },
-
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 12,
   },
-
   summaryLabel: {
     fontSize: 14,
     color: "#666",
     flex: 1,
   },
-
   summaryValue: {
     fontSize: 14,
     color: "#000",
     fontWeight: "600",
     textAlign: "right",
   },
-
   divider: {
     height: 1,
     backgroundColor: "#E0E0E0",
     marginVertical: 12,
   },
-
   grandTotalLabel: {
     fontSize: 16,
     fontWeight: "700",
     color: "#000",
   },
-
   grandTotalValue: {
     fontSize: 18,
     fontWeight: "700",
     color: "#057474",
   },
-
   detailsContainer: {
     width: width * 0.9,
     backgroundColor: "#FFF",
@@ -558,7 +718,32 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
   },
-  
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 20,
+    gap: 12,
+    width: width * 0.9,
+  },
+  backBtn: {
+    flex: 1,
+    padding: 14,
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    borderColor: "#057474",
+    borderWidth: 1,
+    alignItems: "center",
+  },
+  continueBtn: {
+    flex: 1,
+    padding: 14,
+    backgroundColor: "#057474",
+    borderRadius: 20,
+    alignItems: "center",
+  },
+  disabledBtn: {
+    opacity: 0.5,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -591,33 +776,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    paddingVertical: 20,
-    gap: 12,
+  // QR Modal Styles
+  qrModalContent: {
     width: width * 0.9,
-  },
-
-  backBtn: {
-    flex: 1,
-    padding: 14,
+    maxHeight: "90%",
     backgroundColor: "#FFF",
-    borderRadius: 20,
-    borderColor: "#057474",
-    borderWidth: 1,
+    borderRadius: 16,
+    padding: 24,
     alignItems: "center",
+    elevation: 5,
   },
-  
-  continueBtn: {
-    flex: 1,
-    padding: 14,
+  closeButton: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    zIndex: 10,
+  },
+  qrTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#000",
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  qrSubtitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#057474",
+    marginBottom: 24,
+  },
+  qrImage: {
+    width: 280,
+    height: 280,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#E0E0E0",
+    padding: 8,
+    marginBottom: 24,
+  },
+  qrInstructions: {
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    padding: 16,
+    width: "100%",
+    marginBottom: 20,
+  },
+  instructionTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 8,
+  },
+  instructionText: {
+    fontSize: 13,
+    color: "#555",
+    marginBottom: 4,
+    lineHeight: 20,
+  },
+  checkStatusBtn: {
     backgroundColor: "#057474",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
     borderRadius: 20,
+    width: "100%",
     alignItems: "center",
   },
-
-  disabledBtn: {
-    opacity: 0.5,
+  checkStatusText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

@@ -13,12 +13,12 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
   // ✅ Calculate pricing based on rental period
   const calculatePricing = () => {
     if (!bookingData?.itemDetails?.pricePerDay || !bookingData?.rentalDetails) {
-      return { rateLabel: "Rate Per Day", rate: 0, duration: 0, deliveryCharge: 25, grandTotal: 0 };
+      return { rateLabel: "Rate Per Day", rate: 0, duration: 0, deliveryCharge: 5, grandTotal: 0 };
     }
 
     const { period, duration } = bookingData.rentalDetails;
     const basePrice = parseFloat(bookingData.itemDetails.pricePerDay);
-    const deliveryCharge = 25;
+    const deliveryCharge = 5;
 
     let rateLabel = "Rate Per Day";
     let rate = basePrice;
