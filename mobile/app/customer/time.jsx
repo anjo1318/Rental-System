@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,11 +7,15 @@ import {
   Pressable,
   StatusBar,
   Image,
+  ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { RFValue } from "react-native-responsive-fontsize";
 import { usePathname } from "expo-router";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
@@ -27,6 +31,202 @@ const PADDING_V = Math.min(Math.round(height * 0.0), 8);
 export default function TimeDuration() {
   const router = useRouter();
   const pathname = usePathname();
+  
+  const [bookedItems, setBookedItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [timers, setTimers] = useState({});
+
+  // Get user ID from AsyncStorage
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const id = await AsyncStorage.getItem("userId");
+        setUserId(id);
+      } catch (error) {
+        console.error("Error getting user ID:", error);
+      }
+    };
+    getUserId();
+  }, []);
+
+  // Fetch booked items
+  useEffect(() => {
+    if (userId) {
+      fetchBookedItems();
+    }
+  }, [userId]);
+
+  const fetchBookedItems = async () => {
+    if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
+      console.error("Cannot fetch booked items: Invalid user ID:", userId);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("Fetching booked items for user ID:", userId);
+      
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
+
+      if (response.data.success) {
+        console.log("Booked items response:", response.data.data);
+        setBookedItems(response.data.data || []);
+      } else {
+        console.log("API returned success: false", response.data);
+        setBookedItems([]);
+      }
+    } catch (error) {
+      console.error("Error fetching booked items:", error);
+      setBookedItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Calculate time remaining for each booking
+  const calculateTimeRemaining = (returnDate) => {
+    const now = new Date().getTime();
+    const returnTime = new Date(returnDate).getTime();
+    const difference = returnTime - now;
+
+    if (difference <= 0) {
+      return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+    return { days, hours, minutes, seconds, expired: false };
+  };
+
+  // Update timers every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimers = {};
+      bookedItems.forEach((item) => {
+        newTimers[item.id] = calculateTimeRemaining(item.returnDate);
+      });
+      setTimers(newTimers);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [bookedItems]);
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  // Parse image URL
+  const getImageUrl = (itemImage) => {
+    try {
+      if (typeof itemImage === 'string') {
+        const parsed = JSON.parse(itemImage);
+        return Array.isArray(parsed) ? parsed[0] : itemImage;
+      }
+      return itemImage;
+    } catch {
+      return itemImage;
+    }
+  };
+
+  // Render booking card
+  const renderBookingCard = (item) => {
+    const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
+
+    return (
+      <View key={item.id} style={styles.card}>
+        {/* Device info */}
+        <View style={styles.deviceRow}>
+          <Image
+            source={{ uri: getImageUrl(item.itemImage) }}
+            style={styles.deviceImage}
+          />
+          <View style={styles.deviceInfo}>
+            <Text style={styles.deviceName}>{item.product}</Text>
+            <Text style={styles.categoryText}>{item.category}</Text>
+            <View style={[styles.statusBadge, 
+              item.status === 'approved' && styles.statusApproved,
+              item.status === 'pending' && styles.statusPending,
+              item.status === 'rejected' && styles.statusRejected
+            ]}>
+              <Text style={styles.statusText}>
+                {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Timer */}
+        {item.status === 'approved' && (
+          <>
+            {timer.expired ? (
+              <View style={styles.expiredContainer}>
+                <Icon name="access-time" size={40} color="#FF5252" />
+                <Text style={styles.expiredText}>Rental Period Ended</Text>
+              </View>
+            ) : (
+              <View style={styles.timerRow}>
+                {[
+                  { value: String(timer.days).padStart(2, '0'), label: "Days" },
+                  { value: String(timer.hours).padStart(2, '0'), label: "Hours" },
+                  { value: String(timer.minutes).padStart(2, '0'), label: "Minutes" },
+                  { value: String(timer.seconds).padStart(2, '0'), label: "Seconds" },
+                ].map((timeItem, index) => (
+                  <View key={index} style={styles.timeBox}>
+                    <Text style={styles.timeValue}>{timeItem.value}</Text>
+                    <Text style={styles.timeLabel}>{timeItem.label}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Dates */}
+        <View style={styles.dateRow}>
+          <View style={styles.dateItem}>
+            <Text style={styles.dateLabel}>Start Date:</Text>
+            <Text style={styles.dateText}>{formatDate(item.pickUpDate)}</Text>
+          </View>
+          <View style={styles.dateItem}>
+            <Text style={styles.dateLabel}>Return Date:</Text>
+            <Text style={styles.dateText}>{formatDate(item.returnDate)}</Text>
+          </View>
+        </View>
+
+        {/* Rental Details */}
+        <View style={styles.detailsRow}>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Duration:</Text>
+            <Text style={styles.detailValue}>
+              {item.rentalDuration} {item.rentalPeriod}(s)
+            </Text>
+          </View>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Total:</Text>
+            <Text style={styles.detailValue}>₱{parseFloat(item.grandTotal).toFixed(2)}</Text>
+          </View>
+        </View>
+
+        {/* Payment Method */}
+        <View style={styles.paymentRow}>
+          <Icon name="payment" size={16} color="#666" />
+          <Text style={styles.paymentText}>{item.paymentMethod}</Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -61,44 +261,27 @@ export default function TimeDuration() {
         </View>
       </View>
 
-      {/* 🔽 ADDED CONTENT BELOW HEADER (ONLY THIS PART) */}
-      <View style={styles.contentWrapper}>
-        <View style={styles.card}>
-          {/* Device info */}
-          <View style={styles.deviceRow}>
-            <Image
-              source={{ uri: "https://i.imgur.com/Wv2XG9P.png" }}
-              style={styles.deviceImage}
-            />
-            <Text style={styles.deviceName}>Acer Aspire Predator</Text>
+      {/* Content */}
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentWrapper}
+        showsVerticalScrollIndicator={false}
+      >
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#057474" />
+            <Text style={styles.loadingText}>Loading your bookings...</Text>
           </View>
-
-          {/* Timer */}
-          <View style={styles.timerRow}>
-            {[
-              { value: "03", label: "Days" },
-              { value: "12", label: "Hours" },
-              { value: "55", label: "Minutes" },
-              { value: "17", label: "Seconds" },
-            ].map((item, index) => (
-              <View key={index} style={styles.timeBox}>
-                <Text style={styles.timeValue}>{item.value}</Text>
-                <Text style={styles.timeLabel}>{item.label}</Text>
-              </View>
-            ))}
+        ) : bookedItems.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="schedule" size={60} color="#ccc" />
+            <Text style={styles.emptyText}>No active bookings</Text>
+            <Text style={styles.emptySubtext}>Your rental timers will appear here</Text>
           </View>
-
-          {/* Dates */}
-          <View style={styles.dateRow}>
-            <Text style={styles.dateText}>
-              Start : November 13, 2025
-            </Text>
-            <Text style={styles.dateText}>
-              Ended : November 18, 2025
-            </Text>
-          </View>
-        </View>
-      </View>
+        ) : (
+          bookedItems.map(renderBookingCard)
+        )}
+      </ScrollView>
 
       {/* Bottom Nav */}
       <View style={styles.bottomNav}>
@@ -143,7 +326,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E1D6",
   },
 
-  /* Header (unchanged) */
+  /* Header */
   headerWrapper: {
     width: "100%",
     backgroundColor: "#007F7F",
@@ -184,9 +367,47 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
 
-  /* 🔽 NEW CONTENT STYLES */
+  /* Content */
+  scrollView: {
+    flex: 1,
+  },
+
   contentWrapper: {
     padding: 16,
+    paddingBottom: 80,
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+
+  loadingText: {
+    marginTop: 12,
+    fontSize: RFValue(12),
+    color: "#666",
+  },
+
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 100,
+  },
+
+  emptyText: {
+    fontSize: RFValue(16),
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 16,
+  },
+
+  emptySubtext: {
+    fontSize: RFValue(12),
+    color: "#999",
+    marginTop: 8,
   },
 
   card: {
@@ -194,6 +415,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    marginBottom: 16,
   },
 
   deviceRow: {
@@ -203,21 +429,63 @@ const styles = StyleSheet.create({
   },
 
   deviceImage: {
-    width: 60,
-    height: 40,
-    resizeMode: "contain",
+    width: 70,
+    height: 70,
+    resizeMode: "cover",
     marginRight: 12,
+    borderRadius: 8,
+  },
+
+  deviceInfo: {
+    flex: 1,
   },
 
   deviceName: {
     fontSize: RFValue(14),
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 4,
+  },
+
+  categoryText: {
+    fontSize: RFValue(11),
+    color: "#666",
+    marginBottom: 6,
+  },
+
+  statusBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+  },
+
+  statusApproved: {
+    backgroundColor: "#4CAF50",
+  },
+
+  statusPending: {
+    backgroundColor: "#FF9800",
+  },
+
+  statusRejected: {
+    backgroundColor: "#F44336",
+  },
+
+  statusText: {
+    fontSize: RFValue(10),
     fontWeight: "600",
+    color: "#fff",
   },
 
   timerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 16,
+    paddingVertical: 12,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 8,
+    paddingHorizontal: 8,
   },
 
   timeBox: {
@@ -232,20 +500,88 @@ const styles = StyleSheet.create({
   },
 
   timeLabel: {
-    fontSize: RFValue(10),
+    fontSize: RFValue(9),
     color: "#777",
+    marginTop: 2,
+  },
+
+  expiredContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "#FFEBEE",
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+
+  expiredText: {
+    fontSize: RFValue(14),
+    fontWeight: "600",
+    color: "#FF5252",
+    marginLeft: 8,
   },
 
   dateRow: {
-    marginTop: 4,
+    marginBottom: 12,
+  },
+
+  dateItem: {
+    marginBottom: 8,
+  },
+
+  dateLabel: {
+    fontSize: RFValue(10),
+    color: "#999",
+    marginBottom: 2,
   },
 
   dateText: {
-    fontSize: RFValue(11),
-    color: "#555",
+    fontSize: RFValue(12),
+    color: "#333",
+    fontWeight: "500",
   },
 
-  /* Bottom Nav (unchanged) */
+  detailsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+    marginBottom: 8,
+  },
+
+  detailItem: {
+    flex: 1,
+  },
+
+  detailLabel: {
+    fontSize: RFValue(10),
+    color: "#999",
+    marginBottom: 4,
+  },
+
+  detailValue: {
+    fontSize: RFValue(13),
+    fontWeight: "600",
+    color: "#000",
+  },
+
+  paymentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: "#f0f0f0",
+  },
+
+  paymentText: {
+    fontSize: RFValue(11),
+    color: "#666",
+    marginLeft: 6,
+  },
+
+  /* Bottom Nav */
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
