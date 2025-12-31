@@ -79,7 +79,6 @@ const Books = sequelize.define("Books", {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false 
   },
-  // ✅ New fields for rental duration and pricing
   rentalDuration: {
     type: DataTypes.INTEGER,
     allowNull: true,
@@ -100,7 +99,6 @@ const Books = sequelize.define("Books", {
     allowNull: true,
     comment: 'Final total including delivery charge'
   },
-  // ✅ Guarantor 1 fields
   guarantor1FullName: {
     type: DataTypes.STRING,
     allowNull: true
@@ -117,7 +115,6 @@ const Books = sequelize.define("Books", {
     type: DataTypes.STRING,
     allowNull: true
   },
-  // ✅ Guarantor 2 fields
   guarantor2FullName: {
     type: DataTypes.STRING,
     allowNull: true

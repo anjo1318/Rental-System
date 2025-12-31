@@ -2016,18 +2016,15 @@ const bookItemUpdate = async (req, res) => {
       return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
-    // ✅ Calculate rental details based on period type
     const pickupDate = new Date(rentalDetails.pickupDate);
     const returnDate = new Date(rentalDetails.returnDate);
-    const rentalPeriod = rentalDetails.period; // "Hour", "Day", or "Week"
-    const rentalDuration = rentalDetails.duration; // from frontend calculation
+    const rentalPeriod = rentalDetails.period; 
+    const rentalDuration = rentalDetails.duration; 
     
-    // ✅ Use pricing data from frontend
     const ratePerPeriod = pricing?.rate ? parseFloat(pricing.rate) : parseFloat(itemDetails.pricePerDay);
     const deliveryCharge = pricing?.deliveryCharge ? parseFloat(pricing.deliveryCharge) : 25.00;
     const grandTotal = pricing?.grandTotal ? parseFloat(pricing.grandTotal) : 0;
 
-    // Fallback calculation if pricing not provided
     let calculatedAmount = grandTotal;
     if (!grandTotal) {
       const timeDiff = returnDate - pickupDate;
@@ -2048,11 +2045,9 @@ const bookItemUpdate = async (req, res) => {
 
     console.log(`Rental calculation: ${rentalDuration} ${rentalPeriod}(s) × ₱${ratePerPeriod} + ₱${deliveryCharge} delivery = ₱${calculatedAmount}`);
 
-    // ✅ Extract guarantor data
     const guarantor1 = guarantors && guarantors[0] ? guarantors[0] : {};
     const guarantor2 = guarantors && guarantors[1] ? guarantors[1] : {};
 
-    // ✅ Update booking with all new fields
     await existingBooking.update({
       itemId,
       customerId: customerDetails.customerId,
@@ -2071,22 +2066,19 @@ const bookItemUpdate = async (req, res) => {
       pickUpDate: rentalDetails.pickupDate,
       returnDate: rentalDetails.returnDate,
       amount: calculatedAmount,
-      // ✅ New pricing fields
       rentalDuration: rentalDuration,
       ratePerPeriod: ratePerPeriod,
       deliveryCharge: deliveryCharge,
       grandTotal: calculatedAmount,
-      // ✅ Guarantor 1 fields
       guarantor1FullName: guarantor1.fullName || null,
       guarantor1PhoneNumber: guarantor1.phoneNumber || null,
       guarantor1Address: guarantor1.address || null,
       guarantor1Email: guarantor1.email || null,
-      // ✅ Guarantor 2 fields
       guarantor2FullName: guarantor2.fullName || null,
       guarantor2PhoneNumber: guarantor2.phoneNumber || null,
       guarantor2Address: guarantor2.address || null,
       guarantor2Email: guarantor2.email || null,
-      status: "pending",
+      status: "booked",
       paymentMethod,
     });
 
@@ -2104,7 +2096,6 @@ const bookItemUpdate = async (req, res) => {
     const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
     if (!ownerDetails) throw new Error("Owner not found");
 
-    // ✅ Format dates for email based on rental period
     const formattedPickupDate = rentalPeriod === "Hour" 
       ? pickupDate.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
       : pickupDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
@@ -2116,7 +2107,6 @@ const bookItemUpdate = async (req, res) => {
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
     const durationLabel = rentalPeriod === "Hour" ? "hours" : rentalPeriod === "Week" ? "weeks" : "days";
 
-    // ✅ Enhanced email with guarantor info
     const guarantorInfo = [];
     if (guarantor1.fullName) {
       guarantorInfo.push(`
@@ -2228,7 +2218,6 @@ const bookItemUpdate = async (req, res) => {
       console.error("Error sending owner email:", err.message);
     }
 
-    // ✅ Send emails to guarantors
     const guarantorEmails = [];
     
     if (guarantor1.email && guarantor1.fullName) {
