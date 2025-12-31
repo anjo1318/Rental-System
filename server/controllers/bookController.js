@@ -1295,6 +1295,13 @@ const approveBooking = async (req, res) => {
     }
 
     await booking.update({status: "approved"});
+    startDeadlineTimer({
+      id: booking.id,
+      product: booking.product,
+      email: booking.email,
+      returnDate: booking.returnDate,
+      userId: booking.customerId
+    });
 
     // Extract all booking details from the database record
     const {
@@ -2507,8 +2514,494 @@ const confirmBooking = async (req, res) => {
   }
 };
 
+// ====================================
+// CONFIGURATION
+// ====================================
+const VIOLATION_CONFIG = {
+  // Grace period in hours before marking as late
+  gracePeriodHours: 2,
+  
+  // Late fee structure
+  lateFees: {
+    perDay: 50,      // ₱50 per day late
+    perHour: 10,     // ₱10 per hour late (for hourly rentals)
+    perWeek: 300,    // ₱300 per week late
+  },
+  
+  // Maximum late fee cap (optional)
+  maxLateFee: 5000,  // ₱5000 maximum late fee
+  
+  // Penalty multiplier after certain days
+  penaltyMultiplier: {
+    after7Days: 1.5,   // 1.5x fee after 7 days
+    after14Days: 2.0,  // 2x fee after 14 days
+    after30Days: 3.0,  // 3x fee after 30 days
+  }
+};
 
+// ====================================
+// MONITOR ACTIVE RENTALS
+// ====================================
+/**
+ * Check all active/ongoing rentals for late returns
+ * This should be run periodically (e.g., every hour via cron job)
+ */
+const monitorActiveRentals = async () => {
+  try {
+    console.log('🔍 Starting rental monitoring check...');
+    
+    const now = new Date();
+    const gracePeriod = new Date(now.getTime() + (VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000));
+    
+    // Find all active/ongoing rentals
+    const activeRentals = await Books.findAll({
+      where: {
+        status: {
+          [Op.in]: ['approved', 'ongoing', 'Approved to Rent']
+        }
+      }
+    });
 
+    console.log(`📊 Found ${activeRentals.length} active rentals to monitor`);
+
+    for (const rental of activeRentals) {
+      const returnDate = new Date(rental.returnDate);
+      const daysLate = calculateDaysLate(returnDate, now);
+      
+      // Check if rental is approaching due date (within 24 hours)
+      if (returnDate > now && returnDate <= gracePeriod) {
+        await sendDueDateReminder(rental, returnDate);
+      }
+      
+      // Check if rental is overdue
+      if (returnDate < now && daysLate > 0) {
+        const violationFee = calculateViolationFee(rental, daysLate);
+        await handleLateReturn(rental, daysLate, violationFee);
+      }
+    }
+
+    console.log('✅ Rental monitoring completed');
+    return { success: true, checked: activeRentals.length };
+
+  } catch (error) {
+    console.error('❌ Error monitoring rentals:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ====================================
+// CALCULATE LATE DAYS/HOURS
+// ====================================
+/**
+ * Calculate how late a rental is based on return date
+ */
+const calculateDaysLate = (returnDate, currentDate = new Date()) => {
+  const gracePeriodMs = VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000;
+  const returnWithGrace = new Date(returnDate.getTime() + gracePeriodMs);
+  
+  if (currentDate <= returnWithGrace) {
+    return 0; // Not late yet (within grace period)
+  }
+  
+  const msLate = currentDate - returnWithGrace;
+  const daysLate = Math.ceil(msLate / (1000 * 60 * 60 * 24));
+  
+  return Math.max(0, daysLate);
+};
+
+/**
+ * Calculate hours late for hourly rentals
+ */
+const calculateHoursLate = (returnDate, currentDate = new Date()) => {
+  const gracePeriodMs = VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000;
+  const returnWithGrace = new Date(returnDate.getTime() + gracePeriodMs);
+  
+  if (currentDate <= returnWithGrace) {
+    return 0;
+  }
+  
+  const msLate = currentDate - returnWithGrace;
+  const hoursLate = Math.ceil(msLate / (1000 * 60 * 60));
+  
+  return Math.max(0, hoursLate);
+};
+
+// ====================================
+// CALCULATE VIOLATION FEE
+// ====================================
+/**
+ * Calculate violation fee based on rental period type and days late
+ */
+const calculateViolationFee = (rental, daysLate = null) => {
+  const now = new Date();
+  const returnDate = new Date(rental.returnDate);
+  
+  // Calculate days late if not provided
+  if (daysLate === null) {
+    daysLate = calculateDaysLate(returnDate, now);
+  }
+  
+  if (daysLate <= 0) {
+    return 0; // No violation
+  }
+
+  let baseFee = 0;
+  const rentalPeriod = rental.rentalPeriod || 'Day';
+
+  // Calculate base fee based on rental period type
+  switch (rentalPeriod.toLowerCase()) {
+    case 'hour':
+      const hoursLate = calculateHoursLate(returnDate, now);
+      baseFee = hoursLate * VIOLATION_CONFIG.lateFees.perHour;
+      break;
+      
+    case 'week':
+      const weeksLate = Math.ceil(daysLate / 7);
+      baseFee = weeksLate * VIOLATION_CONFIG.lateFees.perWeek;
+      break;
+      
+    case 'day':
+    default:
+      baseFee = daysLate * VIOLATION_CONFIG.lateFees.perDay;
+      break;
+  }
+
+  // Apply penalty multipliers for extended lateness
+  let multiplier = 1.0;
+  if (daysLate >= 30) {
+    multiplier = VIOLATION_CONFIG.penaltyMultiplier.after30Days;
+  } else if (daysLate >= 14) {
+    multiplier = VIOLATION_CONFIG.penaltyMultiplier.after14Days;
+  } else if (daysLate >= 7) {
+    multiplier = VIOLATION_CONFIG.penaltyMultiplier.after7Days;
+  }
+
+  let totalFee = baseFee * multiplier;
+
+  // Apply maximum cap if configured
+  if (VIOLATION_CONFIG.maxLateFee && totalFee > VIOLATION_CONFIG.maxLateFee) {
+    totalFee = VIOLATION_CONFIG.maxLateFee;
+  }
+
+  return Math.round(totalFee * 100) / 100; // Round to 2 decimals
+};
+
+// ====================================
+// HANDLE LATE RETURN
+// ====================================
+/**
+ * Process a late return and update booking with violation fee
+ */
+const handleLateReturn = async (rental, daysLate, violationFee) => {
+  try {
+    // Update booking with late status and violation fee
+    await rental.update({
+      status: 'late',
+      daysLate: daysLate,
+      violationFee: violationFee,
+      lateNotificationSent: true,
+      lateDetectedAt: new Date()
+    });
+
+    // Send late notification email
+    await sendLateNotificationEmail(rental, daysLate, violationFee);
+
+    console.log(`⚠️ Booking ${rental.id} marked as LATE: ${daysLate} days, Fee: ₱${violationFee}`);
+
+    return {
+      success: true,
+      bookingId: rental.id,
+      daysLate,
+      violationFee
+    };
+
+  } catch (error) {
+    console.error('Error handling late return:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+// ====================================
+// SEND NOTIFICATIONS
+// ====================================
+/**
+ * Send email notification for late return
+ */
+const sendLateNotificationEmail = async (rental, daysLate, violationFee) => {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: rental.email.trim(),
+      subject: `🚨 OVERDUE: Late Return Fee - ${rental.product}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #dc3545; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 24px;">⚠️ EzRent - Late Return Notice</h1>
+          </div>
+          
+          <div style="padding: 30px; border: 1px solid #ddd; background-color: #fff;">
+            <h2 style="color: #dc3545; margin-top: 0;">OVERDUE RENTAL</h2>
+            
+            <p style="font-size: 16px; line-height: 1.6;">
+              Dear <strong>${rental.name}</strong>,
+            </p>
+            
+            <p style="font-size: 16px; line-height: 1.6;">
+              Your rental of <strong>${rental.product}</strong> was due on 
+              <strong>${new Date(rental.returnDate).toLocaleDateString()}</strong>.
+            </p>
+            
+            <div style="background-color: #f8d7da; padding: 20px; border-radius: 6px; border-left: 4px solid #dc3545; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #721c24;">Late Return Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold;">Days Late:</td>
+                  <td style="padding: 8px 0; color: #dc3545; font-weight: bold;">${daysLate} days</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Original Amount:</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">₱${rental.amount.toLocaleString()}</td>
+                </tr>
+                <tr style="background-color: #dc3545; color: white;">
+                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px;">Late Fee:</td>
+                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px;">₱${violationFee.toLocaleString()}</td>
+                </tr>
+                <tr style="background-color: #f8f9fa;">
+                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px;">Total Amount Due:</td>
+                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; color: #dc3545;">₱${(parseFloat(rental.amount) + violationFee).toLocaleString()}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin: 20px 0;">
+              <h4 style="margin-top: 0; color: #856404;">⚠️ URGENT ACTION REQUIRED</h4>
+              <p style="margin: 5px 0; font-size: 14px;">
+                Please return the item immediately to avoid additional late fees. 
+                Late fees continue to accumulate daily.
+              </p>
+            </div>
+            
+            <div style="background-color: #e7f3ff; padding: 15px; border-radius: 6px; margin: 20px 0;">
+              <h4 style="margin-top: 0;">Contact the Owner</h4>
+              <p style="margin: 5px 0;">
+                Please contact the owner immediately to arrange the return and payment of late fees.
+              </p>
+            </div>
+            
+            <p style="margin-top: 25px; font-size: 14px; color: #666;">
+              For questions, contact: <a href="mailto:ezrentofficialmail@gmail.com">ezrentofficialmail@gmail.com</a>
+            </p>
+          </div>
+          
+          <div style="background-color: #dc3545; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0; font-size: 14px; color: white;">
+              EzRent Company | Pinamalayan, Oriental Mindoro
+            </p>
+          </div>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Late notification sent to ${rental.email}`);
+
+  } catch (error) {
+    console.error('Error sending late notification:', error);
+  }
+};
+
+/**
+ * Send reminder before due date
+ */
+const sendDueDateReminder = async (rental, returnDate) => {
+  // Check if we've already sent a reminder in the last 12 hours
+  const twelveHoursAgo = new Date(Date.now() - (12 * 60 * 60 * 1000));
+  if (rental.lastReminderSent && new Date(rental.lastReminderSent) > twelveHoursAgo) {
+    return; // Don't spam reminders
+  }
+
+  try {
+    const hoursUntilDue = Math.floor((returnDate - new Date()) / (1000 * 60 * 60));
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: rental.email.trim(),
+      subject: `⏰ Reminder: Rental Due Soon - ${rental.product}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
+          <h2 style="color: #ffc107;">⏰ Rental Due Soon</h2>
+          <p>Dear <strong>${rental.name}</strong>,</p>
+          <p>Your rental of <strong>${rental.product}</strong> is due in approximately <strong>${hoursUntilDue} hours</strong>.</p>
+          <p style="background-color: #fff3cd; padding: 15px; border-radius: 6px;">
+            <strong>Due Date:</strong> ${returnDate.toLocaleString()}<br>
+            <strong>Grace Period:</strong> ${VIOLATION_CONFIG.gracePeriodHours} hours after due date<br>
+            <strong>Late Fee:</strong> ₱${VIOLATION_CONFIG.lateFees.perDay}/day if returned late
+          </p>
+          <p>Please arrange to return the item on time to avoid late fees.</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    
+    // Update last reminder sent time
+    await rental.update({ lastReminderSent: new Date() });
+    
+    console.log(`📧 Due date reminder sent for booking ${rental.id}`);
+
+  } catch (error) {
+    console.error('Error sending due date reminder:', error);
+  }
+};
+
+// ====================================
+// API ENDPOINTS
+// ====================================
+
+/**
+ * GET: Check rental status and calculate current violation fee
+ */
+const getRentalStatus = async (req, res) => {
+  try {
+    const { bookingId } = req.params;
+    
+    const booking = await Books.findByPk(bookingId);
+    
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: 'Booking not found'
+      });
+    }
+
+    const now = new Date();
+    const returnDate = new Date(booking.returnDate);
+    const daysLate = calculateDaysLate(returnDate, now);
+    const violationFee = calculateViolationFee(booking, daysLate);
+    
+    // Calculate time remaining or overdue
+    const msRemaining = returnDate - now;
+    const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
+    
+    const status = {
+      bookingId: booking.id,
+      product: booking.product,
+      status: booking.status,
+      returnDate: returnDate,
+      currentDate: now,
+      isLate: daysLate > 0,
+      daysLate: daysLate,
+      daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
+      gracePeriodHours: VIOLATION_CONFIG.gracePeriodHours,
+      originalAmount: parseFloat(booking.amount),
+      currentViolationFee: violationFee,
+      totalAmountDue: parseFloat(booking.amount) + violationFee,
+      rentalPeriod: booking.rentalPeriod
+    };
+
+    return res.status(200).json({
+      success: true,
+      data: status
+    });
+
+  } catch (error) {
+    console.error('Error getting rental status:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * POST: Manually trigger rental monitoring (for testing or manual runs)
+ */
+const triggerRentalMonitoring = async (req, res) => {
+  try {
+    const result = await monitorActiveRentals();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Rental monitoring completed',
+      data: result
+    });
+
+  } catch (error) {
+    console.error('Error triggering monitoring:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+/**
+ * GET: Get all late rentals with violation fees
+ */
+const getLateRentals = async (req, res) => {
+  try {
+    const lateRentals = await Books.findAll({
+      where: {
+        status: {
+          [Op.in]: ['late', 'overdue']
+        }
+      },
+      order: [['returnDate', 'ASC']]
+    });
+
+    const enrichedRentals = lateRentals.map(rental => {
+      const daysLate = calculateDaysLate(new Date(rental.returnDate));
+      const violationFee = calculateViolationFee(rental, daysLate);
+      
+      return {
+        ...rental.toJSON(),
+        daysLate,
+        violationFee,
+        totalAmountDue: parseFloat(rental.amount) + violationFee
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      count: enrichedRentals.length,
+      data: enrichedRentals
+    });
+
+  } catch (error) {
+    console.error('Error getting late rentals:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// ====================================
+// CRON JOB SETUP
+// ====================================
+/**
+ * Set up automatic monitoring (call this when server starts)
+ */
+const setupRentalMonitoring = () => {
+  console.log('🚀 Setting up automatic rental monitoring...');
+  
+  // Run every hour
+  const intervalMs = 60 * 60 * 1000; // 1 hour
+  
+  setInterval(async () => {
+    console.log('⏰ Running scheduled rental monitoring...');
+    await monitorActiveRentals();
+  }, intervalMs);
+  
+  // Run immediately on startup
+  monitorActiveRentals();
+  
+  console.log('✅ Rental monitoring scheduled (every hour)');
+};
+
+// ====================================
+// EXPORTS
+// ====================================
 
 export { 
   bookItem, 
@@ -2532,5 +3025,15 @@ export {
   getUserNotifications,
   markAsRead,
   getUnreadCount,
-  cleanupOldNotifications
+  cleanupOldNotifications,
+  monitorActiveRentals,
+  calculateDaysLate,
+  calculateHoursLate,
+  calculateViolationFee,
+  handleLateReturn,
+  getRentalStatus,
+  triggerRentalMonitoring,
+  getLateRentals,
+  setupRentalMonitoring,
+  VIOLATION_CONFIG
 };

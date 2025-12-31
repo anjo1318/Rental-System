@@ -12,7 +12,7 @@ import bookRouter from './routes/book.js';
 import uploadRouter from './routes/upload.js';
 import paymentRouter from './routes/payment.js';
 // ✨ Import the timer restoration function
-import { restoreActiveTimers } from './controllers/bookController.js';
+import { restoreActiveTimers, setupRentalMonitoring } from './controllers/bookController.js';
 import cors from 'cors';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -128,3 +128,5 @@ connectToDatabase()
   .catch(err => {
     console.error('Database connection failed:', err);
   });
+
+  setupRentalMonitoring();

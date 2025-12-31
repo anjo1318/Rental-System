@@ -17,7 +17,10 @@ import { approveBooking,
     getUserNotifications,
     markAsRead,
     getUnreadCount,
-    cleanupOldNotifications
+    cleanupOldNotifications,
+    getRentalStatus,
+    triggerRentalMonitoring,
+    getLateRentals
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -50,5 +53,14 @@ router.put('/terminate-booking/:id',terminateBooking);
 
 //for admin
 router.get("/fetch-bookings", fetchAllBooking);
+
+// Check specific rental status
+router.get('/rental-status/:bookingId', getRentalStatus);
+
+// Manually trigger monitoring (for testing)
+router.post('/monitor-rentals', triggerRentalMonitoring);
+
+// Get all late rentals
+router.get('/late-rentals', getLateRentals);
 
 export default router;

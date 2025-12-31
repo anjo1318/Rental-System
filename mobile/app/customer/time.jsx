@@ -34,25 +34,34 @@ export default function TimeDuration() {
   
   const [bookedItems, setBookedItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null);
   const [timers, setTimers] = useState({});
+  const [userId, setUserId] = useState("");
 
-  // Get user ID from AsyncStorage
   useEffect(() => {
-    console.log("This is time.jsx");
-    const getUserId = async () => {
-      try {
-        const id = await AsyncStorage.getItem("userId");
-        setUserId(id);
-        console.log("This is time.jsx user id", id);
-
-      } catch (error) {
-        console.error("Error getting user ID:", error);
-      }
-    };
-    getUserId();
-
+    loadUserData();
   }, []);
+
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log("From local storage", userData);
+        
+        const userIdValue = user.id || user.userId || user._id || "";
+        
+        if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
+          setUserId(userIdValue);
+        } else {
+          console.error("Invalid user ID found:", userIdValue);
+        }
+      } else {
+        console.error("No user data found in AsyncStorage");
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
 
   // Fetch booked items
   useEffect(() => {
