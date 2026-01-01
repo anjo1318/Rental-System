@@ -20,7 +20,8 @@ import { approveBooking,
     cleanupOldNotifications,
     getRentalStatus,
     triggerRentalMonitoring,
-    getLateRentals
+    getLateRentals,
+    confirmBooking
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -50,6 +51,8 @@ router.put('/approve-booking/:id', approveBooking);
 router.put('/reject-booking/:id',rejectBooking);
 router.put('/start-booking/:id',startBooking);
 router.put('/terminate-booking/:id',terminateBooking);
+router.put('/confirm-booking/:id', confirmBooking); //mark the booking as "ongoing" and subtract 1 in the quantity of that item
+
 
 //for admin
 router.get("/fetch-bookings", fetchAllBooking);

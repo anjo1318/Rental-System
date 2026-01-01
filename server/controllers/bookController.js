@@ -1,12 +1,9 @@
-import { response } from "express";
 import Books from "../models/Book.js";
 import Owner from "../models/Owner.js";
+import Item from '../models/Item.js'
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { Op } from "sequelize";
-import fetch from "node-fetch"; // if Node < 18, install: npm i node-fetch
-import Customer from "../models/Customer.js";
-
 
 dotenv.config();
 
@@ -1478,182 +1475,6 @@ const approveBooking = async (req, res) => {
   }
 }
 
-const startBooking = async (req, res) => {
-  try {
-    const {id} = req.params;
-
-    const booking = await Books.findOne({where:{id}});
-
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
-    }
-
-    await booking.update({status: "ongoing"});
-
-    // Extract all booking details from the database record
-    const {
-      name,
-      email,
-      product,
-      pricePerDay,
-      rentalPeriod,
-      paymentMethod,
-      pickUpDate,
-      returnDate,
-      category,
-      location,
-      phone,
-      address,
-      amount
-    } = booking;
-
-    // Format dates for display
-    const formattedPickupDate = new Date(pickUpDate).toLocaleDateString();
-    const formattedReturnDate = new Date(returnDate).toLocaleDateString();
-    const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
-
-    // Calculate total days and amount
-    const totalDays = Math.ceil((new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24));
-    const totalAmount = totalDays * Number(pricePerDay);
-
-    // Generate request number (you might want to use the booking ID or create a proper request number)
-    const requestNumber = booking.id;
-
-    // Prepare email options
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email.trim(),
-      subject: `Booking Started - ${product}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto;">
-          <div style="background-color: #28a745; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-            <h1 style="margin: 0; font-size: 24px;">EzRent</h1>
-            <p style="margin: 5px 0 0 0; font-size: 16px;">Booking Confirmation</p>
-          </div>
-          
-          <div style="padding: 30px; border: 1px solid #ddd; background-color: #fff;">
-            <h2 style="color: #333; margin-top: 0;">Dear ${name},</h2>
-            
-            <p style="font-size: 16px; line-height: 1.6;">
-              Great news! Your request to rent <strong>${product}</strong> has <strong>STARTED</strong>.
-            </p>
-            
-            <div style="background-color: #d4edda; padding: 15px; border-radius: 6px; border-left: 4px solid #28a745; margin: 20px 0;">
-              <p style="margin: 0; font-size: 14px; color: #155724;">
-                <strong>Status:</strong> Your booking is now <strong>ONGOING</strong>. 
-              </p>
-            </div>
-            
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #28a745;">Rent Details</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 40%;">Booking Number:</td>
-                  <td style="padding: 8px 0;">${requestNumber}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Item:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${product}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Category:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${category}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Location:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${location}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${rentalPeriod}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Duration:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${rentDuration} (${totalDays} days)</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Price Per Day:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">₱${Number(pricePerDay).toLocaleString()}</td>
-                </tr>
-                <tr style="background-color: #d4edda;">
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; border-top: 2px solid #28a745;">Total Amount:</td>
-                  <td style="padding: 12px 8px; font-weight: bold; font-size: 18px; color: #28a745; border-top: 2px solid #28a745;">₱${amount.toLocaleString()}</td>
-                </tr>
-              </table>
-            </div>
-
-            <div style="background-color: #e8f4f8; padding: 20px; border-radius: 6px; margin: 20px 0;">
-              <h3 style="margin-top: 0; color: #0093DD;">Customer Information</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; width: 30%;">Name:</td>
-                  <td style="padding: 8px 0;">${name}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Email:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${email}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Phone:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${phone}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Address:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${address}</td>
-                </tr>
-              </table>
-            </div>
-            
-            <div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; border-left: 4px solid #ffc107; margin-top: 15px;">
-              <p style="margin: 0; font-size: 14px;">
-                <strong>ⓘ Confidentiality Notice:</strong> This email and any attached documents are intended solely for the individual to whom they are addressed. If you are not the intended recipient, please notify us immediately and delete this message. Any unauthorized review, use, disclosure, or distribution is strictly prohibited.
-              </p>
-            </div>
-            
-            <p style="margin-top: 25px; font-size: 14px; color: #666;">
-              If you have any questions regarding your booking, please contact us at <a href="mailto:ezrentofficialmail@gmail.com">ezrentofficialmail@gmail.com</a>.
-            </p>
-          </div>
-          
-          <div style="background-color: #28a745; padding: 15px; text-align: center; border-radius: 0 0 8px 8px;">
-            <p style="margin: 0; font-size: 14px; color: white;">
-             EzRent Company<br>Pinamalayan, Oriental Mindoro<br>Email: ezrentofficialmail@gmail.com | Office Hours: Monday–Saturday, 8:00 AM–5:00 PM
-            </p>
-          </div>
-          
-          <div style="margin-top: 20px; padding: 15px; background-color: #d1ecf1; border-radius: 6px; border-left: 4px solid #17a2b8;">
-            <p style="margin: 0; font-size: 13px; color: #0c5460;">
-              <strong>Important:</strong> This is an automated email—please do not reply. Keep this confirmation for your records.
-            </p>
-          </div>
-        </div>
-      `
-    };
-
-    await transporter.sendMail(mailOptions);
-
-    return res.status(200).json({
-      success: true, 
-      message: "Booking approved successfully", 
-      booking: {
-        id: booking.id,
-        product: booking.product,
-        name: booking.name,
-        email: booking.email,
-        status: booking.status,
-        totalAmount: totalAmount
-      }
-    });
-
-  } catch(error) {
-    console.error('Error approving booking:', error);
-    return res.status(500).json({success:false, message:error.message});
-  }
-}
 
 const terminateBooking = async(req, res) => {
   try {
@@ -2399,7 +2220,6 @@ const markAsRead = async (req, res) => {
   }
 };
 
-
 const getUnreadCount = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -2460,7 +2280,6 @@ const cleanupOldNotifications = async (req, res) => {
   }
 };
 
-
 const addNotificationReadStatus = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.addColumn('bookings', 'isRead', {
@@ -2483,25 +2302,78 @@ const addNotificationReadStatus = {
 
 
 const confirmBooking = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    const { bookingId } = req.params;
-    
-    await Books.update(
-      { 
-        status: 'confirmed',
-        // Optional: mark as unread when status changes
-        isRead: false
+    const { id: bookingId } = req.params;
+
+    // 1. Get booking
+    const booking = await Books.findByPk(bookingId, { transaction });
+
+    if (!booking) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // 2. Get item
+    const item = await Item.findByPk(booking.itemId, { transaction });
+
+    if (!item) {
+      await transaction.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Item not found",
+      });
+    }
+
+    // 3. Check availability
+    if (item.availableQuantity <= 0) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Item is out of stock",
+      });
+    }
+
+    // 4. Update booking status
+    await booking.update(
+      {
+        status: "ongoing",
+        isRead: false,
       },
-      { where: { id: bookingId } }
+      { transaction }
     );
 
-    // Notification automatically appears in customer's notification list!
-    
-    res.json({ success: true, message: 'Booking confirmed' });
+    // 5. Decrement available quantity
+    await item.update(
+      {
+        availableQuantity: item.availableQuantity - 1,
+        availability: item.availableQuantity - 1 > 0, // optional auto-toggle
+      },
+      { transaction }
+    );
+
+    // 6. Commit transaction
+    await transaction.commit();
+
+    res.json({
+      success: true,
+      message: "Booking confirmed and item quantity updated",
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    await transaction.rollback();
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
+
+export default confirmBooking;
+
 
 // ====================================
 // CONFIGURATION
@@ -3000,7 +2872,6 @@ export {
   fetchBookRequest, 
   approveBooking, 
   rejectBooking, 
-  startBooking, 
   terminateBooking, 
   requestBooking,
   approveBookingRequest,
@@ -3024,5 +2895,6 @@ export {
   triggerRentalMonitoring,
   getLateRentals,
   setupRentalMonitoring,
-  VIOLATION_CONFIG
+  VIOLATION_CONFIG,
+  confirmBooking
 };

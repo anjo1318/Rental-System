@@ -165,66 +165,91 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
   };
 
   // ✅ Updated confirmRent for QRPh payment
-  const confirmRent = async () => {
-    if (loading) return;
-    setLoading(true);
+// ✅ Updated confirmRent for QRPh payment
+const confirmRent = async () => {
+  if (loading) return;
+  setLoading(true);
 
-    try {
-      if (bookingData?.paymentMethod === "QRPh") {
-        // GCash redirect payment
-        const response = await axios.post(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/payment/gcash`,
-          {
-            amount: parseFloat(bookingData.pricing.grandTotal) * 100,
-            description: `Rental for ${bookingData.itemDetails.title}`,
-            bookingData
-          }
-        );
-
-        const checkoutUrl = response.data.checkout_url || response.data.checkoutUrl;
-        console.log("Redirecting to PayMongo GCash:", checkoutUrl);
-        await Linking.openURL(checkoutUrl);
-
-      } else if (bookingData?.paymentMethod === "Gcash") {
-        // QRPh Payment - Generate QR Code
-        const response = await axios.post(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/payment/qrph`,
-          {
-            amount: parseFloat(bookingData.pricing.grandTotal) * 100,
-            description: `Rental for ${bookingData.itemDetails.title}`,
-            bookingData
-          }
-        );
-
-        if (response.data.success && response.data.qrCode) {
-          setQrCodeData(response.data.qrCode);
-          setPaymentIntentId(response.data.paymentIntentId);
-          setQrModalVisible(true);
-          // ✅ Auto-check will start via useEffect
-        } else {
-          alert("Failed to generate QR code");
-        }
-
-      } else {
-        // Cash Payment
-        const response = await axios.put(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
+  try {
+    if (bookingData?.paymentMethod === "QRPh") {
+      // GCash redirect payment
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/gcash`,
+        {
+          amount: parseFloat(bookingData.pricing.grandTotal) * 100,
+          description: `Rental for ${bookingData.itemDetails.title}`,
           bookingData
-        );
-
-        if (response.data.success) {
-          setModalVisible(true);
-        } else {
-          alert("Booking failed, please try again.");
         }
+      );
+
+      const checkoutUrl = response.data.checkout_url || response.data.checkoutUrl;
+      console.log("Redirecting to PayMongo GCash:", checkoutUrl);
+      await Linking.openURL(checkoutUrl);
+
+    } else if (bookingData?.paymentMethod === "Gcash") {
+      // QRPh Payment - Generate QR Code
+      console.log("🔍 Sending QRPh payment request...");
+      console.log("📦 BookingData being sent:", JSON.stringify(bookingData, null, 2));
+      
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/qrph`,
+        {
+          amount: parseFloat(bookingData.pricing.grandTotal) * 100,
+          description: `Rental for ${bookingData.itemDetails.title}`,
+          bookingData
+        }
+      );
+
+      console.log("✅ QRPh Response:", response.data);
+
+      if (response.data.success && response.data.qrCode) {
+        setQrCodeData(response.data.qrCode);
+        setPaymentIntentId(response.data.paymentIntentId);
+        setQrModalVisible(true);
+        // ✅ Auto-check will start via useEffect
+      } else {
+        alert("Failed to generate QR code");
       }
-    } catch (error) {
-      console.error("Booking/Payment error:", error.response?.data || error.message);
-      alert("Error processing your request. Please try again.");
-    } finally {
-      setLoading(false);
+
+    } else if (bookingData?.paymentMethod === "Cash on Delivery") {
+      // Cash Payment
+      console.log("🔍 Sending booking request for Cash on Delivery...");
+      console.log("📦 BookingData being sent:", JSON.stringify(bookingData, null, 2));
+      
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
+        bookingData
+      );
+
+      console.log("✅ Booking Response:", response.data);
+
+      if (response.data.success) {
+        setModalVisible(true);
+      } else {
+        alert("Booking failed, please try again.");
+      }
+    } else {
+      alert(`Unknown payment method: ${bookingData?.paymentMethod}`);
     }
-  };
+  } catch (error) {
+    // ✅ Enhanced error logging
+    console.error("❌ Booking/Payment error:");
+    console.error("Error message:", error.message);
+    console.error("Error response:", JSON.stringify(error.response?.data, null, 2));
+    console.error("Error status:", error.response?.status);
+    console.error("Full error object:", error);
+    
+    // Show detailed error to user
+    const errorMessage = error.response?.data?.error?.errors?.[0]?.detail 
+      || error.response?.data?.error?.message 
+      || error.response?.data?.message 
+      || "Error processing your request. Please try again.";
+    
+    alert(`Payment Error: ${errorMessage}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ✅ Updated Success Modal to show different messages
   <Modal
@@ -490,20 +515,8 @@ export default function RentingPaymentMethod({ bookingData, onContinue }) {
               <Text style={styles.instructionText}>1. Open your e-wallet app (GCash, Maya, etc.)</Text>
               <Text style={styles.instructionText}>2. Go to "Scan QR" or "Pay via QR"</Text>
               <Text style={styles.instructionText}>3. Scan the QR code above</Text>
-              <Text style={styles.instructionText}>4. Confirm the payment</Text>
+              <Text style={styles.instructionText}>4. After successful payment wait for the system to sync</Text>
             </View>
-
-            <TouchableOpacity
-              style={[styles.checkStatusBtn, checkingPayment && styles.disabledBtn]}
-              onPress={() => checkPaymentStatus(paymentIntentId)}
-              disabled={checkingPayment}
-            >
-              {checkingPayment ? (
-                <ActivityIndicator size="small" color="#FFF" />
-              ) : (
-                <Text style={styles.checkStatusText}>Check Payment Status</Text>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
       </Modal>

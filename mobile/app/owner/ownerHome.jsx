@@ -340,7 +340,7 @@ export default function OwnerHome() {
                 style={styles.addItemButton}
                 onPress={() => router.push("owner/ownerAddItem")}
               >
-                <Text style={styles.addItemButtonText}>Add our First Item</Text>
+                <Text style={styles.addItemButtonText}>Add Your First Item</Text>
               </Pressable>
             </View>
           )}

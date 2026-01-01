@@ -99,7 +99,7 @@ export default function ItemDetail() {
         },
         customerDetails: {
           customerId: customer.id,
-          fullName: customer.name,
+          fullName: customer.firstName + customer.lastName,
           email: customer.email,
           phone: customer.phone,
           location: fullAddress,

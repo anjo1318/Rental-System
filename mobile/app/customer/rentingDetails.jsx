@@ -93,7 +93,7 @@ export default function RentingDetails() {
         const user = JSON.parse(userData);
         console.log("From local storgae", userData);
         setUserId(user.id || "");
-        setFullName(user.name || "");
+        setFullName(`${user.firstName}  ${user.lastName}` || "");
         setEmailAddress(user.email || "");
         setPhoneNumber(user.phone|| "");
         setLocation(`${user.street}, ${user.barangay}, ${user.town}, ${user.province}` || "");

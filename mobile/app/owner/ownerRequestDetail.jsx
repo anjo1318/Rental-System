@@ -82,7 +82,7 @@ export default function ownerRequestDetail() {
 
   const handleStartBooking = async () => {
     try {
-        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/start-booking/${params.id}`);
+        const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/confirm-booking/${params.id}`);
         router.push("owner/ownerRequest");
         console.log("Successfully started the booking", response);
     } catch (error) {

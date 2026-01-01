@@ -1,49 +1,174 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 export default function RentingPaymentMethod({ bookingData, onBack, onContinue }) {
   const [currentStep, setCurrentStep] = useState(2);
   const [selectedMethod, setSelectedMethod] = useState(null);
+  const [deliveryInfo, setDeliveryInfo] = useState({
+    distanceKm: 0,
+    deliveryFee: 0,
+  });
+  const [customerBarangay, setCustomerBarangay] = useState("");
+  const [isCalculatingFee, setIsCalculatingFee] = useState(false);
+  
   const router = useRouter();
 
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
 
+  const loadUserData = async () => {
+    try {
+      const userData = await AsyncStorage.getItem("user");
+      if (userData) {
+        const user = JSON.parse(userData);
+        setCustomerBarangay(`${user.barangay}`);
+        console.log("From local storgae nandito ito sa rentingPyanmentMethod barangay", user.barangay);
+
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+    useEffect(() => {
+      loadUserData();
+    }, []);
+    
+    useEffect(() => {
+      if (!bookingData || !customerBarangay) return;
+    
+      const loadDeliveryFee = async () => {
+        setIsCalculatingFee(true);
+        const result = await calculateDeliveryFee();
+        setDeliveryInfo(result);
+        setIsCalculatingFee(false);
+      };
+    
+      loadDeliveryFee();
+    }, [bookingData, customerBarangay]);
+  
+  
+    const geocodeLocation = async ({ location }) => {
+      // Try multiple search strategies
+      const searchStrategies = [
+        `Barangay ${location}, Pinamalayan, Oriental Mindoro, Philippines`,
+        `${location}, Pinamalayan, Oriental Mindoro, Philippines`,
+        `Pinamalayan, Oriental Mindoro, Philippines`, // Fallback to town center
+      ];
+    
+      for (const address of searchStrategies) {
+        try {
+          const query = encodeURIComponent(address);
+          const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`;
+    
+          const res = await fetch(url, {
+            headers: { "User-Agent": "rental-app" },
+          });
+    
+          const data = await res.json();
+    
+          if (data && data.length > 0) {
+            console.log(`✅ Found location using: ${address}`);
+            return {
+              lat: parseFloat(data[0].lat),
+              lon: parseFloat(data[0].lon),
+            };
+          }
+        } catch (error) {
+          console.log(`❌ Failed to find: ${address}`);
+          continue;
+        }
+      }
+    
+      throw new Error(`Could not geocode any variation of: ${location}`);
+    };
+    
+    const getDistanceKm = async (from, to) => {
+      const url = `https://router.project-osrm.org/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=false`;
+    
+      const res = await fetch(url);
+      const data = await res.json();
+    
+      if (!data.routes?.length) {
+        throw new Error("Distance calculation failed");
+      }
+    
+      return data.routes[0].distance / 1000; // meters → km
+    };
+    
+    const calculateDeliveryFee = async () => {
+      try {
+        // ✅ TWO VARIABLES ONLY
+        const customerLocation = customerBarangay;
+        const itemLocation = bookingData?.itemDetails?.location;
+    
+        if (!customerLocation || !itemLocation) {
+          return { distanceKm: 0, deliveryFee: 0 };
+        }
+    
+        const customerCoords = await geocodeLocation({
+          location: customerLocation,
+        });
+    
+        const itemCoords = await geocodeLocation({
+          location: itemLocation,
+        });
+    
+        const distanceKm = await getDistanceKm(itemCoords, customerCoords);
+        const deliveryFee = distanceKm * 10;
+    
+        return {
+          distanceKm: distanceKm.toFixed(2),
+          deliveryFee: deliveryFee.toFixed(2),
+        };
+      } catch (error) {
+        console.error("Delivery fee error:", error.message);
+        return { distanceKm: 0, deliveryFee: 0 };
+      }
+    };
+    
   // ✅ Calculate pricing based on rental period
   const calculatePricing = () => {
     if (!bookingData?.itemDetails?.pricePerDay || !bookingData?.rentalDetails) {
-      return { rateLabel: "Rate Per Day", rate: 0, duration: 0, deliveryCharge: 5, grandTotal: 0 };
+      return {
+        rateLabel: "Rate Per Day",
+        rate: 0,
+        duration: 0,
+        deliveryCharge: deliveryInfo.deliveryFee,
+        grandTotal: deliveryInfo.deliveryFee,
+      };
     }
-
+  
     const { period, duration } = bookingData.rentalDetails;
     const basePrice = parseFloat(bookingData.itemDetails.pricePerDay);
-    const deliveryCharge = 5;
-
+  
     let rateLabel = "Rate Per Day";
     let rate = basePrice;
-
-    // Adjust rate based on period
+  
     if (period === "Hour") {
       rateLabel = "Rate Per Hour";
-      rate = basePrice / 24; // Assuming daily rate divided by 24 hours
+      rate = basePrice / 24;
     } else if (period === "Week") {
       rateLabel = "Rate Per Week";
-      rate = basePrice * 7; // Weekly rate
+      rate = basePrice * 7;
     }
-
+  
     const subtotal = rate * duration;
-    const grandTotal = subtotal + deliveryCharge;
-
+    const grandTotal = subtotal + Number(deliveryInfo.deliveryFee);
+  
     return {
       rateLabel,
       rate: rate.toFixed(2),
       duration,
-      deliveryCharge,
+      deliveryCharge: deliveryInfo.deliveryFee,
       grandTotal: grandTotal.toFixed(2),
       period,
     };
   };
+  
 
   // ✅ Format date/time based on period
   const formatDateTime = (date, period) => {
@@ -68,7 +193,13 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
     }
   };
 
-  const pricing = calculatePricing();
+
+   const pricing = calculatePricing();
+
+    console.log("Customer:", customerBarangay);
+    console.log("Item:", bookingData?.itemDetails?.location);
+    console.log("Delivery info:", deliveryInfo);
+
 
   const renderProgressStep = (stepNumber, stepName, isActive, isCompleted) => (
       <View style={styles.stepContainer} key={stepNumber}>
@@ -180,14 +311,18 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Delivery Charge</Text>
-            <Text style={styles.infoValue}>₱ {pricing.deliveryCharge}</Text>
+            <Text style={styles.infoValue}>
+              {isCalculatingFee ? "Calculating..." : `₱ ${pricing.deliveryCharge}`}
+            </Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.infoRow}>
             <Text style={styles.grandTotalLabel}>Grand Total</Text>
-            <Text style={styles.grandTotalValue}>₱ {pricing.grandTotal}</Text>
+            <Text style={styles.grandTotalValue}>
+              {isCalculatingFee ? "Calculating..." : `₱ ${pricing.grandTotal}`}
+            </Text>
           </View>
         </View>
 
@@ -234,7 +369,9 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
           disabled={!selectedMethod}
         >
 
-          <Text style={{ color: "#FFF", fontWeight: "700"}}>₱ {pricing.grandTotal}</Text>
+          <Text style={{ color: "#FFF", fontWeight: "700"}}>
+            {isCalculatingFee ? "Calculating..." : `₱ ${pricing.grandTotal}`}
+          </Text>
           <Text style={{ color: "#FFF", fontWeight: "700"}}>Continue</Text>
         </TouchableOpacity>
       </View>
