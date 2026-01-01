@@ -89,8 +89,12 @@ export default function ownerItem() {
   };
 
   const getFilteredBookedItems = () => {
-    return bookedItem.filter(item => item.status?.toLowerCase() !== "cart");
+    return bookedItem.filter(item => {
+      const status = item.status?.toLowerCase();
+      return status !== "cart" && status !== "ongoing";
+    });
   };
+  
 
 
   // Function to handle item press and navigate to detail screen

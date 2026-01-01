@@ -115,12 +115,9 @@ export default function ownerRequestDetail() {
     }
   }
 
-
-
-
-
   // Check if status is approved to show different buttons
   const isApproved = params.status?.toLowerCase() === "approved";
+  const isOngoing = params.status?.toLowerCase() === "ongoing";
   const isBookedStatus = params.status?.toLowerCase() === "booked";
 
 

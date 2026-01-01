@@ -1,141 +1,170 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   FlatList,
-  TextInput,
   Pressable,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
 export default function ownerTime() {
   const router = useRouter();
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [ongoingItems, setOngoingItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState(null);
-  const flatListRef = useRef();
+
+  /* LOAD OWNER */
+  useEffect(() => {
+    loadOwner();
+  }, []);
+
+  /* FETCH ONGOING BOOKINGS */
+  useEffect(() => {
+    if (ownerId) fetchOngoingBookings();
+  }, [ownerId]);
 
   const loadOwner = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        setOwnerId(user.id);
-      } else {
-        router.replace("owner/ownerLogin");
-      }
+      if (!userData) return router.replace("owner/ownerLogin");
+
+      const user = JSON.parse(userData);
+      setOwnerId(user.id);
     } catch (err) {
-      console.error("Error loading owner:", err);
+      console.error(err);
       router.replace("owner/ownerLogin");
     }
   };
+
+  const fetchOngoingBookings = async () => {
+    try {
+      setLoading(true);
+
+      const res = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-book/${ownerId}`
+      );
+
+      setOngoingItems(res.data.data || []);
+    } catch (err) {
+      console.error("Fetch error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* PARSE IMAGE */
+  const getImage = (itemImage) => {
+    try {
+      const parsed = JSON.parse(itemImage);
+      return parsed[0];
+    } catch {
+      return "https://via.placeholder.com/60";
+    }
+  };
+
+  /* RENDER ITEM */
+  const renderItem = ({ item }) => (
+    <View style={styles.card}>
+      <Image source={{ uri: getImage(item.itemImage) }} style={styles.image} />
+
+      <View style={styles.details}>
+        <Text style={styles.title}>{item.product}</Text>
+        <Text style={styles.sub}>Pickup: {item.pickUpDate.slice(0, 10)}</Text>
+        <Text style={styles.sub}>Return: {item.returnDate.slice(0, 10)}</Text>
+
+        <Text style={styles.status}>ONGOING</Text>
+      </View>
+    </View>
+  );
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={90}
     >
       {/* HEADER */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.replace("owner/ownerHome")} style={styles.backButton}>
+        <Pressable onPress={() => router.replace("owner/ownerHome")}>
           <Icon name="arrow-back" size={24} color="#FFF" />
         </Pressable>
-        <Text style={styles.headerTitle}>Owner Listing</Text>
+        <Text style={styles.headerTitle}>Ongoing Rentals</Text>
       </View>
 
-
+      {/* BODY */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#057474" style={{ marginTop: 40 }} />
+      ) : (
+        <FlatList
+          data={ongoingItems}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={{ padding: 16 }}
+          ListEmptyComponent={
+            <Text style={{ textAlign: "center", marginTop: 40 }}>
+              No ongoing rentals
+            </Text>
+          }
+        />
+      )}
     </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E6E1D6",
   },
-  loader: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    backgroundColor:"#007F7F",
+    gap: 12,
+    padding: 16,
+    backgroundColor: "#007F7F",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-  },
-  backButton: {
-    top: 8,
-    right: 90,
   },
   headerTitle: {
     fontSize: 18,
     color: "#FFF",
     fontWeight: "600",
-    top: 8,
-    textAlign: 'center',
-    right: 10,
   },
-  messageBubble: {
-    padding: 12,
-    borderRadius: 16,
-    marginBottom: 10,
-    maxWidth: "80%",
-  },
-  ownerMessage: {
-    backgroundColor: "#057474",
-    alignSelf: "flex-end",
-  },
-  userMessage: {
-    backgroundColor: "#FFF",
-    alignSelf: "flex-start",
-  },
-  messageText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  timestamp: {
-    fontSize: 10,
-    color: "#999",
-    marginTop: 4,
-    textAlign: "right",
-  },
-  inputContainer: {
+  card: {
     flexDirection: "row",
-    padding: 8,
     backgroundColor: "#FFF",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
   },
-  input: {
+  image: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  details: {
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginRight: 8,
-    fontSize: 14,
-    backgroundColor: "#F5F5F5",
   },
-  sendButton: {
-    backgroundColor: "#057474",
-    padding: 10,
-    borderRadius: 50,
-    justifyContent: "center",
-    alignItems: "center",
+  title: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  sub: {
+    fontSize: 12,
+    color: "#555",
+  },
+  status: {
+    marginTop: 6,
+    color: "#057474",
+    fontWeight: "700",
   },
 });

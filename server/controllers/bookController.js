@@ -1281,6 +1281,25 @@ const fetchBookRequest = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+const ongoingBook = async (req, res) => {
+  console.log("Using ongoingBook");
+
+  try {
+    const { id } = req.params;
+    console.log("Id of the incoming request:", id);
+
+    const response = await Books.findAll({
+      where: { ownerId: id, status: "ongoing" },
+      order: [["created_at", "DESC"]], 
+    });
+
+    return res.status(200).json({ success: true, data: response });
+
+  } catch (error) {
+    console.error("Error in ongoingBook:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 const approveBooking = async (req, res) => {
   try {
@@ -2897,5 +2916,6 @@ export {
   getLateRentals,
   setupRentalMonitoring,
   VIOLATION_CONFIG,
-  confirmBooking
+  confirmBooking,
+  ongoingBook
 };

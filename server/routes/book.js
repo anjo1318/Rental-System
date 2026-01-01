@@ -20,7 +20,8 @@ import { approveBooking,
     getRentalStatus,
     triggerRentalMonitoring,
     getLateRentals,
-    confirmBooking
+    confirmBooking,
+    ongoingBook
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -46,6 +47,7 @@ router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
 
 //for owners
 router.get("/book-request/:id", fetchBookRequest);
+router.get("/ongoing-book/:id", ongoingBook);
 router.put('/approve-booking/:id', approveBooking);
 router.put('/reject-booking/:id',rejectBooking);
 router.put('/terminate-booking/:id',terminateBooking);
