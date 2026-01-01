@@ -13,14 +13,12 @@ import {
   Alert,
   StatusBar,
 } from "react-native";
-import { useRouter } from "expo-router";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter, usePathname } from "expo-router";
+import MaterialIcon from "react-native-vector-icons/MaterialIcons";
+import FeatherIcon from "react-native-vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { usePathname } from "expo-router";
-
 
 const { width } = Dimensions.get("window");
-
 
 export default function OwnerHome() {
   const router = useRouter();
@@ -64,11 +62,37 @@ export default function OwnerHome() {
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
   const navigationItems = [
-  { name: "Dashboard", icon: "home", route: "/owner/ownerHome", isImage: false },
-  { name: "Listing", icon: "list-alt", route: "/owner/ownerListing", isImage: false },
-  { name: "Request", icon: require("../../assets/images/request.png"), route: "/owner/ownerRequest", isImage: true },
-  { name: "Time", icon: "schedule", route: "/owner/ownerTime", isImage: false },
-];
+    { 
+      name: "Home", 
+      icon: "home", 
+      iconType: "Feather", 
+      route: "/owner/ownerHome" 
+    },
+    { 
+      name: "Lists", 
+      icon: "list-alt", 
+      iconType: "Material", 
+      route: "/owner/ownerListing" 
+    },
+    { 
+      name: "Add New", 
+      icon: "add-circle", 
+      iconType: "Material", 
+      route: "/owner/ownerAddItem" 
+    },
+    { 
+      name: "Message", 
+      icon: "mail", 
+      iconType: "Material", 
+      route: "/owner/ownerMessage" 
+    },
+    { 
+      name: "Time", 
+      icon: "schedule", 
+      iconType: "Material", 
+      route: "/owner/ownerTime" 
+    },
+  ];
 
   // Fetch owner's items
   const fetchOwnerItems = async (userId) => {
@@ -212,13 +236,16 @@ export default function OwnerHome() {
 
   return (
     <>
-      <StatusBar barStyle="light-content"backgroundColor="#007F7F"
-        translucent={false}/>
+      <StatusBar barStyle="light-content" backgroundColor="#007F7F" translucent={false} />
 
-      <ScrollView style={styles.container} 
-      contentContainerStyle={{ paddingBottom: 80 }}showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
-          {/* Profile Section */}
-          <View style={styles.topBackground}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 80 }}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      >
+        {/* Profile Section */}
+        <View style={styles.topBackground}>
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
               <Image
@@ -238,7 +265,7 @@ export default function OwnerHome() {
             </Text>
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
-                <Icon name="notifications-none" size={24} color="#007F7F" />
+                <MaterialIcon name="notifications-none" size={24} color="#007F7F" />
                 <View style={styles.badge}>
                   <Text style={styles.badgeText}>2</Text>
                 </View>
@@ -247,157 +274,161 @@ export default function OwnerHome() {
           </View>
         </View>
 
-          {/* Stats */}
-          <View style={styles.statsContainer}>
-            <View style={[styles.statCard, { backgroundColor: "#3D7BFF", borderWidth: 1, borderColor: "white", right: -5 }]}>
-              <Text style={[styles.statLabel, { color: "white" }]}>Total Unit</Text>
-              <View style={styles.numberContainer}>
-                <Text style={[styles.statNumber, { color: "white" }]}>{stats.total}</Text>
-                <Image
-                  source={require("../../assets/images/total.png")}
-                  style={styles.lowerLeftIcon}
-                />
-              </View>
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: "#3D7BFF", borderWidth: 1, borderColor: "white", right: -5 },
+            ]}
+          >
+            <Text style={[styles.statLabel, { color: "white" }]}>Total Unit</Text>
+            <View style={styles.numberContainer}>
+              <Text style={[styles.statNumber, { color: "white" }]}>{stats.total}</Text>
+              <Image
+                source={require("../../assets/images/total.png")}
+                style={styles.lowerLeftIcon}
+              />
             </View>
+          </View>
 
-            <View style={[styles.statCard, { backgroundColor: "#00CA2C",borderWidth: 1, borderColor: "white", }]}>
-              <Text style={[styles.statLabel, { color: "white", }]}>Vacant Unit</Text>
-              <View style={styles.numberContainer}>
-                <Text style={[styles.statNumber, { color: "white" }]}>{stats.available}</Text>
-                <Image
-                  source={require("../../assets/images/occupied.png")}
-                  style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}
-                />
-              </View>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: "#00CA2C", borderWidth: 1, borderColor: "white" },
+            ]}
+          >
+            <Text style={[styles.statLabel, { color: "white" }]}>Vacant Unit</Text>
+            <View style={styles.numberContainer}>
+              <Text style={[styles.statNumber, { color: "white" }]}>{stats.available}</Text>
+              <Image
+                source={require("../../assets/images/occupied.png")}
+                style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}
+              />
             </View>
+          </View>
 
-            <View style={[styles.statCard, {backgroundColor: "#FF2125",borderWidth: 1, borderColor: "white", right: 5  }]}>
-              <Text style={[styles.statLabel, { color: "white" }]}>Occupied Unit</Text>
-              <View style={styles.numberContainer}>
-                <Text style={[styles.statNumber, { color: "white" }]}>{stats.rented}</Text>
-                <Image
-                  source={require("../../assets/images/vacant.png")}
-                  style={styles.lowerLeftIcon}
-                />
-              </View>
+          <View
+            style={[
+              styles.statCard,
+              { backgroundColor: "#FF2125", borderWidth: 1, borderColor: "white", right: 5 },
+            ]}
+          >
+            <Text style={[styles.statLabel, { color: "white" }]}>Occupied Unit</Text>
+            <View style={styles.numberContainer}>
+              <Text style={[styles.statNumber, { color: "white" }]}>{stats.rented}</Text>
+              <Image
+                source={require("../../assets/images/vacant.png")}
+                style={styles.lowerLeftIcon}
+              />
             </View>
+          </View>
         </View>
 
-          {/* Search */}
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
-            <TextInput
-              placeholder="Search your items.."
-              value={search}
-              onChangeText={setSearch}
-              style={styles.searchInput}
-              placeholderTextColor="#555"
-            />
-            <Icon name="tune" size={20} color="gray" style={styles.rightIcon} />
-          </View>
+        {/* Search */}
+        <View style={styles.searchContainer}>
+          <MaterialIcon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+          <TextInput
+            placeholder="Search your items.."
+            value={search}
+            onChangeText={setSearch}
+            style={styles.searchInput}
+            placeholderTextColor="#555"
+          />
+          <MaterialIcon name="tune" size={20} color="gray" style={styles.rightIcon} />
+        </View>
 
-          {/* Categories */}
-          <Text style={styles.sectionTitle}>Manage Your Items</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {categories.map((cat) => (
-              <Pressable
-                key={cat}
-                style={[styles.categoryButton, activeCategory === cat && styles.activeCategory]}
-                onPress={() => setActiveCategory(cat)}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    activeCategory === cat && styles.activeCategoryText,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* Items List */}
-          {items.length > 0 ? (
-            <FlatList
-              data={items}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderItem}
-              numColumns={2}
-              columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 16 }}
-              scrollEnabled={false}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            />
-          ) : (
-            <View style={styles.noItemsContainer}>
-              <Icon name="inventory" size={64} color="#ccc" />
-              <Text style={styles.noItemsText}>
-                {search || activeCategory !== "All"
-                  ? "No items match your search"
-                  : "You haven't added any items yet"}
-              </Text>
-              <Pressable
-                style={styles.addItemButton}
-                onPress={() => router.push("owner/ownerAddItem")}
-              >
-                <Text style={styles.addItemButtonText}>Add Your First Item</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Add Item Button */}
-          <View style={styles.addButtonContainer}>
+        {/* Categories */}
+        <Text style={styles.sectionTitle}>Manage Your Items</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {categories.map((cat) => (
             <Pressable
-              style={styles.addButton}
-              onPress={() => router.push("owner/ownerAddItem")}
+              key={cat}
+              style={[styles.categoryButton, activeCategory === cat && styles.activeCategory]}
+              onPress={() => setActiveCategory(cat)}
             >
-              <Icon name="add" size={24} color="#FFF" />
-              <Text style={styles.addButtonText}>Add New Item</Text>
+              <Text
+                style={[
+                  styles.categoryText,
+                  activeCategory === cat && styles.activeCategoryText,
+                ]}
+              >
+                {cat}
+              </Text>
             </Pressable>
-          </View>
+          ))}
+        </ScrollView>
 
-        {/* Bottom Nav */}
-<View style={styles.bottomNav}>
-  {navigationItems.map((navItem, index) => {
-    const isActive = pathname === navItem.route;
-
-    return (
-      <Pressable
-        key={index}
-        style={styles.navButton}
-        onPress={() => router.push(navItem.route)}
-      >
-        {navItem.isImage ? (
-          <Image
-            source={navItem.icon}
-            style={{
-              width: 24,
-              height: 24,
-              tintColor: isActive ? "#057474" : "#999",
-            }}
-            resizeMode="contain"
+        {/* Items List */}
+        {items.length > 0 ? (
+          <FlatList
+            data={items}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderItem}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 16 }}
+            scrollEnabled={false}
+            contentContainerStyle={{ paddingHorizontal: 16 }}
           />
         ) : (
-          <Icon
-            name={navItem.icon}
-            size={24}
-            color={isActive ? "#057474" : "#999"}
-          />
+          <View style={styles.noItemsContainer}>
+            <MaterialIcon name="inventory" size={64} color="#ccc" />
+            <Text style={styles.noItemsText}>
+              {search || activeCategory !== "All"
+                ? "No items match your search"
+                : "You haven't added any items yet"}
+            </Text>
+            <Pressable
+              style={styles.addItemButton}
+              onPress={() => router.push("owner/ownerAddItem")}
+            >
+              <Text style={styles.addItemButtonText}>Add Your First Item</Text>
+            </Pressable>
+          </View>
         )}
 
-        <Text
-          style={[
-            styles.navText,
-            { color: isActive ? "#057474" : "#999" },
-          ]}
-        >
-          {navItem.name}
-        </Text>
-      </Pressable>
-    );
-  })}
-</View>
+        {/* Bottom Nav */}
+        <View style={styles.bottomNav}>
+          {navigationItems.map((navItem, index) => {
+            const isActive = pathname === navItem.route;
+            const IconComponent = navItem.iconType === "Feather" ? FeatherIcon : MaterialIcon;
+            const isAddNew = navItem.name === "Add New";
 
+            if (isAddNew) {
+              return (
+                <Pressable
+                  key={index}
+                  style={styles.addNewButton}
+                  onPress={() => router.push(navItem.route)}
+                >
+                  <View style={styles.addNewCircle}>
+                    <MaterialIcon name="add" size={32} color="#FFF" />
+                  </View>
+                  <Text style={[styles.navText, { color: "#999" }]}>
+                    {navItem.name}
+                  </Text>
+                </Pressable>
+              );
+            }
+
+            return (
+              <Pressable
+                key={index}
+                style={styles.navButton}
+                onPress={() => router.push(navItem.route)}
+              >
+                <IconComponent
+                  name={navItem.icon}
+                  size={24}
+                  color={isActive ? "#057474" : "#999"}
+                />
+                <Text style={[styles.navText, { color: isActive ? "#057474" : "#999" }]}>
+                  {navItem.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </ScrollView>
     </>
   );
@@ -406,7 +437,7 @@ export default function OwnerHome() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#FFFFFF",  // everything under the top header/status bar = white
+    backgroundColor: "#FFFFFF",
   },
   container: {
     flex: 1,
@@ -416,38 +447,37 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // avatar left, bell right
+    justifyContent: "space-between",
     padding: 16,
     marginTop: 16,
   },
 
-  
   topBackground: {
-    backgroundColor:"#007F7F",
+    backgroundColor: "#007F7F",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
 
-
-  avatar: { 
-    width: width * 0.12, 
-    height: width * 0.12, 
-    borderRadius: width * 0.1 ,
+  avatar: {
+    width: width * 0.12,
+    height: width * 0.12,
+    borderRadius: width * 0.1,
     right: -5,
   },
-  
-  username: { 
-    marginLeft: width * 0.03, 
-    fontWeight: "bold", 
-    fontSize: width * 0.04 
+
+  username: {
+    marginLeft: width * 0.03,
+    fontWeight: "bold",
+    fontSize: width * 0.04,
+    color: "#FFF",
   },
 
   notificationWrapper: {
-    marginLeft: "auto", 
+    marginLeft: "auto",
     marginRight: 16,
     position: "relative",
-    width: width * 0.10,
-    height: width * 0.10,
+    width: width * 0.1,
+    height: width * 0.1,
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     alignItems: "center",
@@ -464,7 +494,7 @@ const styles = StyleSheet.create({
     width: 15,
     height: 15,
     justifyContent: "center",
-    alignItems : "center",
+    alignItems: "center",
   },
   badgeText: {
     color: "#007F7F",
@@ -474,70 +504,69 @@ const styles = StyleSheet.create({
     top: -1,
   },
 
-  
-statsContainer: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  marginHorizontal: 10,
-  marginTop: 20,
-  borderWidth: 2,
-  borderColor: "#00000040",
-  height: 195,
-  width: 330,
-  right: -10,
-  shadowColor: "white",   // translucent black
-  shadowOpacity: 0.5,
-  shadowRadius: 20,
-  borderRadius: 20,
-  left: 5,
-  top: 5,
-},
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginHorizontal: 10,
+    marginTop: 20,
+    borderWidth: 2,
+    borderColor: "#00000040",
+    height: 195,
+    width: 330,
+    right: -10,
+    shadowColor: "white",
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    borderRadius: 20,
+    left: 5,
+    top: 5,
+  },
 
-statCard: {
-  alignItems: "center",
-  paddingVertical: 40,
-  marginHorizontal: 4,           
-  backgroundColor: "#FFF",     
-  borderRadius: 4,
-  height: 170,
-  width: 98,
-  top: 12,
-  borderRadius: 20,
-},
+  statCard: {
+    alignItems: "center",
+    paddingVertical: 40,
+    marginHorizontal: 4,
+    backgroundColor: "#FFF",
+    borderRadius: 4,
+    height: 170,
+    width: 98,
+    top: 12,
+    borderRadius: 20,
+  },
 
-statNumber: {
-  fontSize: 35,
-  fontWeight: "bold",
-  color: "#057474",
-  marginBottom: 4,
-},
+  statNumber: {
+    fontSize: 35,
+    fontWeight: "bold",
+    color: "#057474",
+    marginBottom: 4,
+  },
 
-statLabel: {
-  fontSize: 15    ,
-  color: "#666",
-  textAlign: "center",
-},
-numberRow: {
-  position: "relative",
-  alignItems: "flex-start",
-},
-statIcon: {
-  width: 20,
-  height: 20,
-  marginLeft: 4,
-},
-numberContainer: {
-  position: "relative",
-  alignItems: "flex-start",
-},
+  statLabel: {
+    fontSize: 15,
+    color: "#666",
+    textAlign: "center",
+  },
+  numberRow: {
+    position: "relative",
+    alignItems: "flex-start",
+  },
+  statIcon: {
+    width: 20,
+    height: 20,
+    marginLeft: 4,
+  },
+  numberContainer: {
+    position: "relative",
+    alignItems: "flex-start",
+  },
 
-lowerLeftIcon: {
-  position: "absolute",
-  bottom: 5, // pushes icon slightly below the number
-  left: -25,   // moves icon slightly to the left
-  width: 20,
-  height: 17,
-},
+  lowerLeftIcon: {
+    position: "absolute",
+    bottom: 5,
+    left: -25,
+    width: 20,
+    height: 17,
+  },
 
   searchContainer: {
     flexDirection: "row",
@@ -574,7 +603,7 @@ lowerLeftIcon: {
     paddingHorizontal: 16,
     marginTop: 15,
   },
-  
+
   categoryButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
@@ -666,8 +695,7 @@ lowerLeftIcon: {
     backgroundColor: "#057474",
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 20, 
-
+    borderRadius: 20,
   },
   addItemButtonText: {
     color: "#FFF",
@@ -710,6 +738,7 @@ lowerLeftIcon: {
     justifyContent: "space-around",
     borderTopWidth: 1,
     borderTopColor: "#00000040",
+    alignItems: "center",
   },
   navButton: {
     alignItems: "center",
@@ -718,5 +747,26 @@ lowerLeftIcon: {
   navText: {
     fontSize: 10,
     marginTop: 4,
+  },
+  addNewButton: {
+    alignItems: "center",
+    flex: 1,
+    position: "relative",
+    top: -20,
+  },
+  addNewCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#057474",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: "#FFF",
   },
 });
