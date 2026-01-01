@@ -47,88 +47,79 @@ const verify = (req, res) => {
 };
 
 const mobileUserLogin = async (req, res) => {
-  console.log("Trying to login using mobileUserLogin");
-  
+  console.log('Trying to login using mobileUserLogin');
+
   try {
-    const { email, password, expoPushToken } = req.body;
-    console.log("Login attempt for email:", email);
+    const { email, password, pushToken, platform } = req.body;
 
     // Validate input
     if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email and password are required' 
+      return res.status(400).json({
+        success: false,
+        error: 'Email and password are required',
       });
     }
 
-    // Find customer by emailAddress (matches your model field)
-    const customer = await Customer.findOne({ 
-      where: { emailAddress: email } 
+    // Find customer
+    const customer = await Customer.findOne({
+      where: { emailAddress: email },
     });
 
     if (!customer) {
-      console.log(`Customer not found: ${email}`);
-      return res.status(404).json({ 
-        success: false, 
-        error: 'Customer not found' 
+      return res.status(404).json({
+        success: false,
+        error: 'Customer not found',
       });
     }
 
-    // Check verification status
+    // Check verification
     if (!customer.isVerified) {
-      console.log(`Login blocked for unverified user: ${customer.emailAddress}`);
       return res.status(403).json({
         success: false,
-        error: 'Your account is not yet verified. Please wait for approval.'
+        error: 'Your account is not yet verified. Please wait for approval.',
       });
     }
 
-    // Check if account is active
+    // Check active status
     if (!customer.isActive) {
-      console.log(`Login blocked for inactive user: ${customer.emailAddress}`);
       return res.status(403).json({
         success: false,
-        error: 'Your account has been deactivated. Please contact support.'
+        error: 'Your account has been deactivated. Please contact support.',
       });
     }
 
     // Verify password
     const isMatch = await bcrypt.compare(password, customer.password);
     if (!isMatch) {
-      console.log(`Invalid password attempt for: ${customer.emailAddress}`);
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Invalid password' 
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid password',
       });
     }
 
-    // Update Expo push token if provided (only if different)
-    if (expoPushToken && expoPushToken !== customer.expoPushToken) {
-      try {
-        await customer.update({ expoPushToken });
-        console.log(`Updated Expo token for ${customer.emailAddress}`);
-      } catch (tokenError) {
-        console.error('Error updating Expo token:', tokenError);
-        // Don't fail login if token update fails
-      }
+    // 🔔 SAVE / UPDATE PUSH TOKEN (OPTIONAL BUT RECOMMENDED)
+    if (pushToken && platform) {
+      await PushToken.upsert({
+        customerId: customer.id,
+        token: pushToken,
+        platform,
+      });
     }
 
-    // Generate JWT token
+    // Generate JWT
     const token = jwt.sign(
       { id: customer.id, role: 'customer' },
       process.env.JWT_KEY,
       { expiresIn: '10d' }
     );
 
-    console.log(`${customer.emailAddress} successfully logged in`);
-
-    // Send response with user data
+    // Success
     return res.status(200).json({
       success: true,
       token,
       user: {
         id: customer.id,
-        name: `${customer.firstName} ${customer.lastName}`,
+        role: 'customer',
         firstName: customer.firstName,
         middleName: customer.middleName,
         lastName: customer.lastName,
@@ -143,20 +134,13 @@ const mobileUserLogin = async (req, res) => {
         province: customer.province,
         country: customer.country,
         zipCode: customer.zipCode,
-        role: 'customer',
       },
     });
-    
   } catch (error) {
-    console.error('Login Error:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    });
-    
-    return res.status(500).json({ 
-      success: false, 
-      error: 'An error occurred during login. Please try again later.' 
+    console.error('Login Error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'An error occurred during login. Please try again later.',
     });
   }
 };

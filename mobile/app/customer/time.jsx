@@ -79,7 +79,7 @@ export default function TimeDuration() {
       }
   
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/api/book/booked-items/${userId}`
       );
   
       console.log("API response:", response.data);

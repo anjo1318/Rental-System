@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../database/database.js';
+import UserPushToken from '../models/UserPushToken.js';
 
 const Customer = sequelize.define('Customer', {
   id: {
@@ -72,9 +73,6 @@ const Customer = sequelize.define('Customer', {
       len: [6, 255]
     }
   },
-
-
-
 
   country: {
     type: DataTypes.STRING,
@@ -192,5 +190,9 @@ const Customer = sequelize.define('Customer', {
     }
   ]
 });
+
+Customer.hasMany(UserPushToken, { foreignKey: 'userId' });
+UserPushToken.belongsTo(Customer, { foreignKey: 'userId' });
+
 
 export default Customer;

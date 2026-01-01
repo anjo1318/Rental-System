@@ -19,6 +19,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerPushToken } from "./utils/registerPushToken";
 
 const { width, height } = Dimensions.get("window");
 
@@ -83,21 +84,25 @@ export default function Login() {
       Alert.alert("Error", "Please enter both email and password.");
       return;
     }
-
+  
     try {
       setLoading(true);
+  
       const response = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/user-login`,
-        { email, password }
+        {
+          email,
+          password,
+          pushToken,          
+          platform: Platform.OS,
+        }
       );
-
+  
       if (response.data.success) {
         const { token, user } = response.data;
-
-        // Build a complete user object
+  
         const userData = {
           id: user.id,
-          name: user.name,
           firstName: user.firstName,
           middleName: user.middleName,
           lastName: user.lastName,
@@ -107,41 +112,38 @@ export default function Login() {
           gender: user.gender,
           houseNumber: user.houseNumber,
           street: user.street,
-          barangay: user.barangay, 
-          town: user.town, 
+          barangay: user.barangay,
+          town: user.town,
           province: user.province,
           country: user.country,
           zipCode: user.zipCode,
           role: user.role,
         };
-
-        console.log("after login", userData);
-
+  
         // Save token & user info
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
-
+  
         router.push("customer/home");
-      } 
-      else {
+      } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
     } catch (error) {
       console.error("Login error:", error);
-      
-      const errorMessage = error.response?.data?.error;
-      
-      // Handle email verification error specifically - show modal instead of alert
+  
       if (error.response?.status === 403) {
         setShowVerificationModal(true);
       } else {
-        Alert.alert("Error", errorMessage || "Something went wrong.");
+        Alert.alert(
+          "Error",
+          error.response?.data?.error || "Something went wrong."
+        );
       }
     } finally {
       setLoading(false);
     }
   };
-
+  
   return (
     <View style={styles.safe}>
       <StatusBar

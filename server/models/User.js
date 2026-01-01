@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../database/db.js';
+import UserPushToken from './UserPushToken.js';
 
 const User = sequelize.define('User', {
   id: {
@@ -29,13 +30,10 @@ const User = sequelize.define('User', {
     defaultValue: DataTypes.NOW
   }
   
-  
 }, {
   tableName: 'user',
   timestamps: true  
 });
-
-
 
 
 export default User;
