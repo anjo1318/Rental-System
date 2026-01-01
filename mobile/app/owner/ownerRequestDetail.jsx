@@ -80,7 +80,7 @@ export default function ownerRequestDetail() {
     }
   }
 
-  const handleStartBooking = async () => {
+  const handleConfirmBooking = async () => {
     try {
         const response = await axios.put(`${process.env.EXPO_PUBLIC_API_URL}/api/book/confirm-booking/${params.id}`);
         router.push("owner/ownerRequest");
@@ -415,12 +415,12 @@ export default function ownerRequestDetail() {
               <Pressable 
                 style={[styles.modalButton, styles.cancelAction]} 
                 onPress={() => setShowStartModal(false)}
-              >
+              >Ito yung id nung item
                 <Text style={styles.modalButtonText}>No</Text>
               </Pressable>
               <Pressable 
                 style={[styles.modalButton, { backgroundColor: "#057474" }]} 
-                onPress={handleStartBooking}
+                onPress={handleConfirmBooking}
               >
                 <Text style={[styles.modalButtonText, { color: "#fff" }]}>
                   Yes, Start

@@ -4,6 +4,7 @@ import Item from '../models/Item.js'
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { Op } from "sequelize";
+import sequelize from '../database/database.js'
 
 dotenv.config();
 
