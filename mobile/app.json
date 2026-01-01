@@ -36,6 +36,9 @@
         "projectId": "8d33fbdf-e0f6-4c11-9e23-5b11ee9e307f"
       }
     },
-    "owner": "anjo13"
+    "owner": "anjo13",
+    "android": {
+      "package": "com.anthony08.mobile"
+    }
   }
 }
