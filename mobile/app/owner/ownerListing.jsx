@@ -8,15 +8,36 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
-  Image
+  Image,
+  Pressable,
+  Dimensions
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
+import MaterialIcon from "react-native-vector-icons/MaterialIcons";
+import FeatherIcon from "react-native-vector-icons/Feather";
+import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useRouter, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
+import { RFValue } from "react-native-responsive-fontsize";
+
+
+const { width, height } = Dimensions.get("window");
+
+// Responsive values
+const HEADER_HEIGHT = height * 0.11;
+const PADDING_H = width * 0.05;
+const PADDING_V = height * 0.02;
+const MARGIN_TOP = height * 0.01;
+const ICON_BOX = width * 0.1;
+const ICON_SIZE = width * 0.06;
+const TITLE_FONT = RFValue(16);
+
 
 export default function OwnerListing() {
   const router = useRouter();
+  const pathname = usePathname();
+
   const [ownerId, setOwnerId] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +110,40 @@ export default function OwnerListing() {
       router.replace("owner/ownerLogin");
     }
   };
+
+  const navigationItems = [
+    { 
+      name: "Home", 
+      icon: "home", 
+      iconType: "Feather", 
+      route: "/owner/ownerHome" 
+    },
+    { 
+      name: "Lists", 
+      icon: "format-list-bulleted", // MaterialIcons alternative
+      iconType: "Material", 
+      route: "/owner/ownerListing" 
+    },
+    { 
+      name: "Add New", 
+      icon: "add-circle", 
+      iconType: "Material", 
+      route: "/owner/ownerAddItem" 
+    },
+    { 
+      name: "Message", 
+      icon: "message-text-outline", 
+      iconType: "MaterialCommunity", 
+      route: "/owner/ownerMessage" 
+    },
+    { 
+      name: "Time", 
+      icon: "clock-outline", 
+      iconType: "MaterialCommunity", 
+      route: "/owner/ownerTime" 
+    },
+  ];
+
 
   const fetchOwnerItems = async (ownerIdParam = null) => {
     try {
@@ -402,6 +457,7 @@ export default function OwnerListing() {
       </View>
 
       {/* Search */}
+      {/* 
       <View style={styles.searchContainer}>
         <Icon name="search" size={20} color="#666" />
         <TextInput
@@ -421,6 +477,7 @@ export default function OwnerListing() {
           </TouchableOpacity>
         )}
       </View>
+      */}
 
       {/* Items List */}
       <FlatList
@@ -456,7 +513,54 @@ export default function OwnerListing() {
           </View>
         }
       />
-    </View>
+
+        {/* Bottom Nav */}
+        <View style={styles.bottomNav}>
+          {navigationItems.map((navItem, index) => {
+            const isActive = pathname === navItem.route;
+            const IconComponent = 
+            navItem.iconType === "Feather" ? FeatherIcon :
+            navItem.iconType === "MaterialCommunity" ? MaterialCommunityIcon :
+            MaterialIcon;            
+            const isAddNew = navItem.name === "Add New";
+
+            if (isAddNew) {
+              return (
+                <Pressable
+                  key={index}
+                  style={styles.addNewButton}
+                  onPress={() => router.push(navItem.route)}
+                >
+                  <View style={styles.addNewCircle}>
+                    <MaterialIcon name="add" size={32} color="#656565" />
+                  </View>
+                  <Text style={[styles.navText, { color: "#999" }]}>
+                    {navItem.name}
+                  </Text>
+                </Pressable>
+              );
+            }
+
+            return (
+              <Pressable
+                key={index}
+                style={styles.navButton}
+                onPress={() => router.push(navItem.route)}
+              >
+                <IconComponent
+                  name={navItem.icon}
+                  size={24}
+                  color={isActive ? "#057474" : "#999"}
+                />
+                <Text style={[styles.navText, { color: isActive ? "#057474" : "#999" }]}>
+                  {navItem.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+  
   );
 }
 
@@ -533,7 +637,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     padding: 16,
-    paddingTop: 0
+    paddingTop: 20
   },
   card: { 
     backgroundColor: "#FFF", 
@@ -694,5 +798,52 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '700'
-  }
+  },
+  /* Bottom Nav */
+  bottomNav: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    justifyContent: "space-around",
+    borderTopWidth: 1,
+    borderTopColor: "#00000040",
+    alignItems: "center",
+  },
+  addNewCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#656565",
+  },
+  addNewButton: {
+    alignItems: "center",
+    flex: 1,
+    position: "relative",
+    top: -20,
+  },
+  navButton: {
+    alignItems: "center",
+    flex: 1,
+    zIndex: 10,
+  },
+
+  navText: {
+    fontWeight: "bold",
+    fontSize: width * 0.03,
+    marginTop: height * 0.005,
+  },
 });

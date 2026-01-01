@@ -16,6 +16,7 @@ import {
 import { useRouter, usePathname } from "expo-router";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import FeatherIcon from "react-native-vector-icons/Feather";
+import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
@@ -70,7 +71,7 @@ export default function OwnerHome() {
     },
     { 
       name: "Lists", 
-      icon: "list-alt", 
+      icon: "format-list-bulleted", // MaterialIcons alternative
       iconType: "Material", 
       route: "/owner/ownerListing" 
     },
@@ -82,18 +83,17 @@ export default function OwnerHome() {
     },
     { 
       name: "Message", 
-      icon: "mail", 
-      iconType: "Material", 
+      icon: "message-text-outline", 
+      iconType: "MaterialCommunity", 
       route: "/owner/ownerMessage" 
     },
     { 
       name: "Time", 
-      icon: "schedule", 
-      iconType: "Material", 
+      icon: "clock-outline", 
+      iconType: "MaterialCommunity", 
       route: "/owner/ownerTime" 
     },
   ];
-
   // Fetch owner's items
   const fetchOwnerItems = async (userId) => {
     if (!userId) {
@@ -391,7 +391,10 @@ export default function OwnerHome() {
         <View style={styles.bottomNav}>
           {navigationItems.map((navItem, index) => {
             const isActive = pathname === navItem.route;
-            const IconComponent = navItem.iconType === "Feather" ? FeatherIcon : MaterialIcon;
+            const IconComponent = 
+            navItem.iconType === "Feather" ? FeatherIcon :
+            navItem.iconType === "MaterialCommunity" ? MaterialCommunityIcon :
+            MaterialIcon;            
             const isAddNew = navItem.name === "Add New";
 
             if (isAddNew) {
@@ -402,7 +405,7 @@ export default function OwnerHome() {
                   onPress={() => router.push(navItem.route)}
                 >
                   <View style={styles.addNewCircle}>
-                    <MaterialIcon name="add" size={32} color="#FFF" />
+                    <MaterialIcon name="add" size={32} color="#656565" />
                   </View>
                   <Text style={[styles.navText, { color: "#999" }]}>
                     {navItem.name}
@@ -758,7 +761,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: "#057474",
+    backgroundColor: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -766,7 +769,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    borderWidth: 4,
-    borderColor: "#FFF",
+    borderWidth: 2,
+    borderColor: "#656565",
   },
 });

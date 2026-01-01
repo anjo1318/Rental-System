@@ -13,7 +13,10 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import FeatherIcon from "react-native-vector-icons/Feather";
+import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useRouter, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
@@ -83,6 +86,39 @@ export default function ownerTime() {
 
     return () => clearInterval(interval);
   }, [bookedItems]);
+
+  const navigationItems = [
+    { 
+      name: "Home", 
+      icon: "home", 
+      iconType: "Feather", 
+      route: "/owner/ownerHome" 
+    },
+    { 
+      name: "Lists", 
+      icon: "format-list-bulleted", // MaterialIcons alternative
+      iconType: "Material", 
+      route: "/owner/ownerListing" 
+    },
+    { 
+      name: "Add New", 
+      icon: "add-circle", 
+      iconType: "Material", 
+      route: "/owner/ownerAddItem" 
+    },
+    { 
+      name: "Message", 
+      icon: "message-text-outline", 
+      iconType: "MaterialCommunity", 
+      route: "/owner/ownerMessage" 
+    },
+    { 
+      name: "Time", 
+      icon: "clock-outline", 
+      iconType: "MaterialCommunity", 
+      route: "/owner/ownerTime" 
+    },
+  ];
 
   const loadOwner = async () => {
     try {
@@ -161,7 +197,8 @@ export default function ownerTime() {
         {/* Timer - Always show for ongoing items */}
         {timer.expired ? (
           <View style={styles.expiredContainer}>
-            <Icon name="access-time" size={40} color="#FF5252" />
+            <MaterialIcons name="access-time" size={40} color="#FF5252" />
+
             <Text style={styles.expiredText}>Rental Period Ended</Text>
           </View>
         ) : (
@@ -210,7 +247,7 @@ export default function ownerTime() {
 
         {/* Payment Method */}
         <View style={styles.paymentRow}>
-          <Icon name="payment" size={16} color="#666" />
+          <MaterialIcons name="payment" size={16} color="#666" />
           <Text style={styles.paymentText}>{item.paymentMethod}</Text>
         </View>
       </View>
@@ -218,6 +255,7 @@ export default function ownerTime() {
   };
 
   return (
+
     <View style={styles.container}>
       {/* Status bar */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
@@ -237,7 +275,7 @@ export default function ownerTime() {
           <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
             <View style={[styles.iconBox, { width: ICON_BOX }]}>
               <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-                <Icon name="arrow-back" size={ICON_SIZE} color="#fff" />
+                <Ionicons name="arrow-back" size={ICON_SIZE} color="#fff" />
               </Pressable>
             </View>
 
@@ -263,7 +301,7 @@ export default function ownerTime() {
           </View>
         ) : bookedItems.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Icon name="schedule" size={60} color="#ccc" />
+            <MaterialIcons name="schedule" size={60} color="#ccc" />
             <Text style={styles.emptyText}>No ongoing rentals</Text>
             <Text style={styles.emptySubtext}>Your active rental timers will appear here</Text>
           </View>
@@ -271,41 +309,53 @@ export default function ownerTime() {
           bookedItems.map(renderBookingCard)
         )}
       </ScrollView>
+      
+        {/* Bottom Nav */}
+        <View style={styles.bottomNav}>
+          {navigationItems.map((navItem, index) => {
+            const isActive = pathname === navItem.route;
+            const IconComponent = 
+            navItem.iconType === "Feather" ? FeatherIcon :
+            navItem.iconType === "MaterialCommunity" ? MaterialCommunityIcon :
+            MaterialIcons;            
+            const isAddNew = navItem.name === "Add New";
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "/owner/ownerHome" },
-          { name: "Book", icon: "shopping-cart", route: "/owner/book" },
-          { name: "Message", icon: "mail", route: "/owner/message" },
-          { name: "Time", icon: "schedule", route: "/owner/time" },
-        ].map((navItem, index) => {
-          const isActive = pathname === navItem.route;
+            if (isAddNew) {
+              return (
+                <Pressable
+                  key={index}
+                  style={styles.addNewButton}
+                  onPress={() => router.push(navItem.route)}
+                >
+                  <View style={styles.addNewCircle}>
+                    <MaterialIcons name="add" size={32} color="#656565" />
+                  </View>
+                  <Text style={[styles.navText, { color: "#999" }]}>
+                    {navItem.name}
+                  </Text>
+                </Pressable>
+              );
+            }
 
-          return (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              onPress={() => router.push(navItem.route)}
-            >
-              <Icon
-                name={navItem.icon}
-                size={24}
-                color={isActive ? "#057474" : "#999"}
-              />
-              <Text
-                style={[
-                  styles.navText,
-                  { color: isActive ? "#057474" : "#999" },
-                ]}
+            return (
+              <Pressable
+                key={index}
+                style={styles.navButton}
+                onPress={() => router.push(navItem.route)}
               >
-                {navItem.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
+                <IconComponent
+                  name={navItem.icon}
+                  size={24}
+                  color={isActive ? "#057474" : "#999"}
+                />
+                <Text style={[styles.navText, { color: isActive ? "#057474" : "#999" }]}>
+                  {navItem.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        </View>
   );
 }
 
@@ -560,17 +610,61 @@ const styles = StyleSheet.create({
   },
 
   /* Bottom Nav */
-  bottomNav: {
+
+  addButton: {
+    backgroundColor: "#057474",
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  addButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  bottomNav: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    justifyContent: "space-around",
+    borderTopWidth: 1,
+    borderTopColor: "#00000040",
+    alignItems: "center",
+  },
+
+  addNewButton: {
+    alignItems: "center",
+    flex: 1,
+    position: "relative",
+    top: -20,
+  },
+  addNewCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#656565",
   },
 
   navButton: {
