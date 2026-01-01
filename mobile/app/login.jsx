@@ -174,7 +174,7 @@ export default function Login() {
         {/* Header wrapper */}
         <View style={styles.headerWrapper}>
           <Image
-            source={require("./assets/images/header.png")}
+            source={require("../assets/images/header.png")}
             style={styles.headerImage}
             resizeMode="cover"
           />
@@ -190,7 +190,7 @@ export default function Login() {
         {/* Logo (Animated scale) */}
         <View style={styles.middle}>
           <Animated.Image
-            source={require("./assets/images/logo.png")}
+            source={require("../assets/images/logo.png")}
             style={[styles.logo, { transform: [{ scale: logoScale }] }]}
             resizeMode="contain"
           />
