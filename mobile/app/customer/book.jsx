@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 const { width, height } = Dimensions.get("window");
 
 // ✅ Responsive constants (bounded so they don't blow up on tablets or collapse on small screens)
@@ -211,6 +212,7 @@ export default function BookedItem() {
 
   return (
     <View style={styles.container}>
+
       <StatusBar barStyle="dark-content" backgroundColor="#057474" translucent={false} />
 
       {/* Header */}

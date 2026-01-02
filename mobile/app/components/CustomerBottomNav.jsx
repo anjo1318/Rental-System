@@ -1,38 +1,36 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
-import { useRouter, usePathname } from "expo-router";
+import { useRouter, useSegments } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const { width, height } = Dimensions.get("window");
 
-export default function CustomerBottomNav({ role = "customer" }) {
+export default function CustomerBottomNav() {
   const router = useRouter();
-  const pathname = usePathname();
+  const segments = useSegments(); 
+  // Example: ["customer", "message"]
 
-  const navItems = {
-    customer: [
-      { name: "Home", icon: "home", route: "/customer/home" },
-      { name: "Book", icon: "shopping-cart", route: "/customer/book" },
-      { name: "Message", icon: "mail", route: "/customer/message" },
-      { name: "Time", icon: "schedule", route: "/customer/time" },
-    ],
-  };
+  const currentRoute = `/${segments.join("/")}`;
 
-  const currentNavItems = navItems[role] || navItems.customer;
+  const navItems = [
+    { name: "Home", icon: "home", route: "/customer/home" },
+    { name: "Book", icon: "shopping-cart", route: "/customer/book" },
+    { name: "Message", icon: "mail", route: "/customer/message" },
+    { name: "Time", icon: "schedule", route: "/customer/time" },
+  ];
 
   return (
     <View style={styles.bottomNav}>
-      {currentNavItems.map((navItem, index) => {
-        const isActive = pathname.startsWith(navItem.route);
+      {navItems.map((navItem) => {
+        const isActive = currentRoute === navItem.route;
 
         return (
           <Pressable
-            key={index}
+            key={navItem.route}
             style={styles.navButton}
-            hitSlop={10}
             onPress={() => {
-              if (!pathname.startsWith(navItem.route)) {
-                router.replace(navItem.route);
+              if (!isActive) {
+                router.replace(navItem.route); // ✅ This prevents stacking
               }
             }}
           >
@@ -55,6 +53,7 @@ export default function CustomerBottomNav({ role = "customer" }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
     

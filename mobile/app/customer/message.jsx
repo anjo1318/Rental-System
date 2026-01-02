@@ -12,6 +12,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import { usePathname } from "expo-router";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -30,13 +31,15 @@ export default function Messages() {
   const messages = [
     { id: 1, name: "Kenneth Senorin", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "Today" },
     { id: 2, name: "John Michael Sevilla", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "Friday" },
-    { id: 3, name: "John Jori Noverario", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
+    { id: 3, name: "John Jori", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
     { id: 4, name: "John Jori Noverario", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
     { id: 5, name: "John Jori Noverario", text: "Good morning Ma'am/Sir, I have a concern about ...", date: "8/29" },
   ];
 
   return (
     <View style={styles.container}>
+      <CustomerBottomNav/>
+
       {/* Status bar */}
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
 
@@ -87,40 +90,6 @@ export default function Messages() {
           </Pressable>
         ))}
       </ScrollView>
-
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "/customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "/customer/book" },
-          { name: "Message", icon: "mail", route: "/customer/message" },
-          { name: "Time", icon: "schedule", route: "/customer/time" },
-        ].map((navItem, index) => {
-          const isActive = pathname === navItem.route;
-
-          return (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              onPress={() => router.push(navItem.route)}
-            >
-              <Icon
-                name={navItem.icon}
-                size={24}
-                color={isActive ? "#057474" : "#999"}
-              />
-              <Text
-                style={[
-                  styles.navText,
-                  { color: isActive ? "#057474" : "#999" },
-                ]}
-              >
-                {navItem.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
     </View>
   );
 }

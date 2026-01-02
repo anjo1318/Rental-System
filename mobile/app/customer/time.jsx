@@ -16,6 +16,7 @@ import { RFValue } from "react-native-responsive-fontsize";
 import { usePathname } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -179,7 +180,8 @@ export default function TimeDuration() {
 
     return (
       <View key={item.id} style={styles.card}>
-        {/* Device info */}
+
+        {/* Device info */}z
         <View style={styles.deviceRow}>
         <Image
           source={{
@@ -260,6 +262,8 @@ export default function TimeDuration() {
 
   return (
     <View style={styles.container}>
+        <CustomerBottomNav/>
+
       {/* Status bar */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
@@ -313,39 +317,6 @@ export default function TimeDuration() {
         )}
       </ScrollView>
 
-      {/* Bottom Nav */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "/customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "/customer/book" },
-          { name: "Message", icon: "mail", route: "/customer/message" },
-          { name: "Time", icon: "schedule", route: "/customer/time" },
-        ].map((navItem, index) => {
-          const isActive = pathname === navItem.route;
-
-          return (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              onPress={() => router.push(navItem.route)}
-            >
-              <Icon
-                name={navItem.icon}
-                size={24}
-                color={isActive ? "#057474" : "#999"}
-              />
-              <Text
-                style={[
-                  styles.navText,
-                  { color: isActive ? "#057474" : "#999" },
-                ]}
-              >
-                {navItem.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
     </View>
   );
 }
