@@ -134,41 +134,51 @@ export default function Home() {
               style={styles.avatar}
             />
           </Pressable >
-           <Text style={styles.username}>
-  {currentUser
-    ? `${currentUser.firstName} ${currentUser.lastName}`
-    : ''}
-</Text>
+          <View style={styles.userInfo}>
+              <Text style={styles.username}>
+                {currentUser?.firstName} {currentUser?.lastName}
+              </Text>
 
-            <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("customer/notifications")}>
-              <Icon name="notifications-none" size={24} color="#007F7F" />
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>2</Text>
-              </View>
-            </Pressable>
-           </View>
-
+              <Text style={styles.email}>
+                {currentUser?.email || currentUser?.emailAddress}
+              </Text>
             </View>
-            {/* 🔹 Search Bar (Clickable) */}
-            <Pressable onPress={() => router.push('/customer/tapsearchbar')}>
-              <View style={styles.searchContainer}>
-                <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
-                <TextInput
-                  placeholder="Search your devices.."
-                  value={search}
-                  editable={false}
-                  style={styles.searchInput}
-                  placeholderTextColor="#555"
-                />
-                <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
-  <Icon
+
+
+
+  <View style={styles.notificationWrapper}>
+  <Pressable onPress={() => router.push("customer/notifications")}>
+    <Icon name="notifications-none" size={24} color="#007F7F" />
+    <View style={styles.badge}>
+      <Text style={styles.badgeText}>2</Text>
+    </View>
+  </Pressable>
+  </View>
+  
+
+  </View>
+  {/* 🔹 Search Bar (Clickable) */}
+  <Pressable onPress={() => router.push('/customer/tapsearchbar')}>
+
+  
+    <View style={styles.searchContainer}>
+      <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+      <TextInput
+        placeholder="Search your devices.."
+        value={search}
+        editable={false}
+        style={styles.searchInput}
+        placeholderTextColor="#555"
+      />
+      <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
+<Icon
     name="tune"
     size={20}
     color="gray"
     style={styles.filterIcon}
   />
 </Pressable>
+
               </View>
             </Pressable>
           </View>
@@ -181,7 +191,7 @@ export default function Home() {
           
 
           {/* 🔹 Featured Devices */}
-          <View style={styles.featuredSection}>
+          {/* <View style={styles.featuredSection}>
             <Text style={styles.sectionTitle}>Featured Devices</Text>
           </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -211,7 +221,7 @@ export default function Home() {
                             </View>
                           );
                         })}
-          </ScrollView>
+          </ScrollView> */}
 
           {/* 🔹 Recommendations */}
           <Text style={styles.sectionTitle}>Our Recommendations</Text>
@@ -401,10 +411,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between", // avatar left, bell right
     padding: 16,
-    marginTop: 16,
+    marginTop: 1,
 
   },
-
+  email: {
+    fontSize: 13,
+    color: "#e0f2f2",
+    marginTop: 2,     // ⬅️ moves it DOWN under the name
+    marginLeft: 13
+  },
+  
     topBackground: {
     backgroundColor:"#007F7F",
     paddingTop: 10,
@@ -415,15 +431,18 @@ const styles = StyleSheet.create({
   },
 
   avatar: { 
-    width: width * 0.1, 
-    height: width * 0.1, 
-    borderRadius: width * 0.05 
+    width: width * 0.2, 
+    height: width * 0.2, 
+    borderRadius: width * 0.1,
+    borderColor:"#e0f2f2",
+    borderWidth: 2,        
   },
   
   username: { 
     marginLeft: width * 0.03, 
     fontWeight: "bold", 
-    fontSize: width * 0.04 
+    fontSize: width * 0.04 ,
+    color: "#e0f2f2",
   },
 
   notificationWrapper: {
