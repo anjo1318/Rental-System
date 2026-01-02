@@ -232,9 +232,10 @@ export default function ownerTime() {
 
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Duration:</Text>
+          <MaterialIcons name="payment" size={16} color="#666" />
+            <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
             <Text style={styles.detailValue}>
-              {item.rentalDuration || "N/A"} {item.rentalPeriod || ""}
+               
             </Text>
           </View>
           <View style={styles.detailItem}>
@@ -246,8 +247,8 @@ export default function ownerTime() {
         </View>
 
         <View style={styles.paymentRow}>
-          <MaterialIcons name="payment" size={16} color="#666" />
-          <Text style={styles.paymentText}>{item.paymentMethod}</Text>
+
+          <Text style={styles.paymentText}>{item.address}</Text>
         </View>
       </View>
     );
