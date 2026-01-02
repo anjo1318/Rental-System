@@ -18,6 +18,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import { usePathname } from "expo-router";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -43,7 +44,7 @@ export default function Home() {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}c`
+          `${process.env.EXPO_PUBLIC_API_URL}/api/item`
         );
         if (response.data.success) {
           setItems(Array.isArray(response.data.data) ? response.data.data : []);
@@ -122,6 +123,7 @@ export default function Home() {
         backgroundColor="#057474" 
         translucent={false}
       />
+      <CustomerBottomNav/>
 
       <ScrollView style={styles.container} 
       contentContainerStyle={{ paddingBottom: 80 }}
@@ -325,41 +327,6 @@ export default function Home() {
             scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
-
-<View style={styles.bottomNav}>
-  {[
-    { name: "Home", icon: "home", route: "/customer/home" },
-    { name: "Book", icon: "shopping-cart", route: "/customer/book" },
-    { name: "Message", icon: "mail", route: "/customer/message" },
-    { name: "Time", icon: "schedule", route: "/customer/time" },
-  ].map((navItem, index) => {
-    const isActive = pathname === navItem.route;
-
-    return (
-      <Pressable
-        key={index}
-        style={styles.navButton}
-        hitSlop={10}
-        onPress={() => router.push(navItem.route)}
-      >
-        <Icon
-          name={navItem.icon}
-          size={24}
-          color={isActive ? "#057474" : "#999"}   // ✅ green / gray
-        />
-        <Text
-          style={[
-            styles.navText,
-            { color: isActive ? "#057474" : "#999" }, // ✅ text too
-          ]}
-        >
-          {navItem.name}
-        </Text>
-      </Pressable>
-    );
-  })}
-</View>
-
       </ScrollView>
       {showFilter && (
   <Filter onClose={() => setShowFilter(false)} />

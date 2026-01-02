@@ -42,23 +42,24 @@ export default function Login() {
   const [hidden, setHidden] = useState(true);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [pushToken, setPushToken] = useState("");
-  const [platform, setPlatform] = useState("");
 
   useEffect(() => {
     async function setupPush() {
-      const token = await registerPushToken();
-      if (token) {
-        setPushToken(token);
-        setPlatform(Platform.OS);
+      try {
+        const token = await registerPushToken();
+        if (token) {
+          setPushToken(token);
+          console.log('✅ Push token registered:', token);
+        }
+      } catch (error) {
+        console.log('⚠️ Push token registration failed (non-critical):', error);
+        // Continue without push token - it's not critical for login
       }
     }
     setupPush();
   }, []);
 
-  // animated value for moving the whole screen up/down
   const translateY = useRef(new Animated.Value(0)).current;
-
-  // derived animated value for logo scale (smaller when moved up)
   const logoScale = translateY.interpolate({
     inputRange: [-height, 0],
     outputRange: [0.75, 1],
@@ -102,64 +103,137 @@ export default function Login() {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Error", "Please enter a valid email address.");
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('🔄 Attempting login for:', email);
+      console.log('📡 API URL:', process.env.EXPO_PUBLIC_API_URL);
+
+      // Prepare login payload
+      const loginPayload = {
+        email: email.trim().toLowerCase(),
+        password: password,
+      };
+
+      // Only add push token if available
+      if (pushToken) {
+        loginPayload.pushToken = pushToken;
+        loginPayload.platform = Platform.OS;
+      }
+
       const response = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/user-login`,
+        loginPayload,
         {
-          email,
-          password,
-          pushToken,
-          platform: Platform.OS,
+          timeout: 10000, // 10 second timeout
+          headers: {
+            'Content-Type': 'application/json',
+          }
         }
       );
 
+      console.log('✅ Login response:', response.data);
+
       if (response.data.success) {
         const { token, user } = response.data;
+
+        // Map the response fields to match what home.jsx expects
         const userData = {
           id: user.id,
-          firstName: user.firstName,
-          middleName: user.middleName,
-          lastName: user.lastName,
-          email: user.emailAddress,
-          phone: user.phoneNumber,
-          birthday: user.birthday,
-          gender: user.gender,
-          houseNumber: user.houseNumber,
-          street: user.street,
-          barangay: user.barangay,
-          town: user.town,
-          province: user.province,
-          country: user.country,
-          zipCode: user.zipCode,
+          // Handle both possible field name formats
+          firstName: user.firstName || user.firstname,
+          middleName: user.middleName || user.middlename || "",
+          lastName: user.lastName || user.lastname,
+          email: user.emailAddress || user.email,
+          phone: user.phoneNumber || user.phone,
+          birthday: user.birthday || "",
+          gender: user.gender || "",
+          houseNumber: user.houseNumber || user.housenumber || "",
+          street: user.street || "",
+          barangay: user.barangay || "",
+          town: user.town || "",
+          province: user.province || "",
+          country: user.country || "",
+          zipCode: user.zipCode || user.zipcode || "",
           role: user.role,
+          // Add any additional fields that might be in the response
+          address: user.address || "",
+          bio: user.bio || null,
+          gcashQR: user.gcashQR || "N/A",
+          isVerified: user.isVerified || false,
+          profileImage: user.profileImage || null,
+          loginTime: new Date().toISOString(),
         };
 
+        // Save to AsyncStorage
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
+        
+        console.log('✅ User data saved to AsyncStorage:', userData);
 
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Login Successful",
-            body: `Welcome back, ${user.firstName}!`,
-            data: { userId: user.id },
-          },
-          trigger: null,
-        });
+        // Send notification
+        try {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Login Successful",
+              body: `Welcome back, ${userData.firstName}!`,
+              data: { userId: user.id },
+            },
+            trigger: null,
+          });
+        } catch (notifError) {
+          console.log('⚠️ Notification error (non-critical):', notifError);
+        }
 
-        router.push("customer/home");
+        // Navigate based on role
+        if (userData.role === 'customer') {
+          router.replace("customer/home");
+        } else if (userData.role === 'owner') {
+          router.replace("owner/home"); // Adjust path as needed
+        } else {
+          router.replace("customer/home"); // Default
+        }
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      if (error.response?.status === 403) {
-        setShowVerificationModal(true);
-      } else {
+      console.error("❌ Login error:", error);
+
+      if (error.response) {
+        // Server responded with error
+        console.error("Server error:", error.response.data);
+        
+        if (error.response.status === 403) {
+          setShowVerificationModal(true);
+        } else if (error.response.status === 401) {
+          Alert.alert("Error", "Invalid email or password.");
+        } else {
+          Alert.alert(
+            "Login Failed",
+            error.response.data?.error || "Please check your credentials and try again."
+          );
+        }
+      } else if (error.request) {
+        // Request made but no response
+        console.error("Network error - no response:", error.request);
         Alert.alert(
-          "Error",
-          error.response?.data?.error || "Something went wrong."
+          "Network Error",
+          "Cannot connect to server. Please check:\n\n" +
+          "1. Your internet connection\n" +
+          "2. The server is running\n" +
+          "3. API URL is correct\n\n" +
+          `API URL: ${process.env.EXPO_PUBLIC_API_URL}`
         );
+      } else {
+        // Something else happened
+        console.error("Error:", error.message);
+        Alert.alert("Error", "Something went wrong. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -167,127 +241,130 @@ export default function Login() {
   };
 
   return (
-    <View style={styles.safe}>
-      <StatusBar barStyle="light-content" />
+    <KeyboardAvoidingView
+      style={styles.safe}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#057474" />
       
       <Animated.View style={[styles.animatedWrap, { transform: [{ translateY }] }]}>
-        {/* Header wrapper */}
-        <View style={styles.headerWrapper}>
-          <Image
-            source={require("../assets/images/header.png")}
-            style={styles.headerImage}
-            resizeMode="cover"
-          />
-          <Pressable
-            onPress={() => router.push("/")}
-            style={styles.backButton}
-          >
-            <Ionicons name="chevron-back" size={28} color="#fff" />
-          </Pressable>
-          <Text style={styles.loginText}>Login</Text>
-        </View>
-
-        {/* Logo (Animated scale) */}
-        <View style={styles.middle}>
-          <Animated.Image
-            source={require("../assets/images/logo.png")}
-            style={[styles.logo, { transform: [{ scale: logoScale }] }]}
-            resizeMode="contain"
-          />
-        </View>
-
-        {/* Form container */}
         <ScrollView
-          contentContainerStyle={styles.container}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor="#999"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          {/* Header */}
+          <View style={styles.headerWrapper}>
+            {/* <Image
+              source={require("./assets/images/bg.png")}
+              style={styles.headerImage}
+              resizeMode="cover"
+            /> */}
+            <Pressable onPress={() => router.push("/")} style={styles.backButton}>
+              <Ionicons name="arrow-back" size={28} color="#fff" />
+            </Pressable>
+            <Text style={styles.loginText}>Login</Text>
+          </View>
 
-          <View style={styles.passwordWrapper}>
+          {/* Logo */}
+          <View style={styles.middle}>
+            {/* <Animated.Image
+              source={require("./assets/images/logo1.png")}
+              style={[styles.logo, { transform: [{ scale: logoScale }] }]}
+              resizeMode="contain"
+            /> */}
+          </View>
+
+          {/* Form */}
+          <View style={styles.container}>
             <TextInput
-              style={styles.inputPassword}
-              placeholder="Password"
-              placeholderTextColor="#999"
-              secureTextEntry={hidden}
-              value={password}
-              onChangeText={setPassword}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              style={styles.input}
+              keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
+              placeholderTextColor="#999"
             />
-            <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
-              <Ionicons
-                name={hidden ? "eye-off" : "eye"}
-                size={24}
-                color="#666"
+
+            <View style={styles.passwordWrapper}>
+              <TextInput
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={hidden}
+                style={styles.inputPassword}
+                autoCapitalize="none"
+                placeholderTextColor="#999"
               />
-            </Pressable>
-          </View>
+              <Pressable onPress={() => setHidden(!hidden)} style={styles.eyeIcon}>
+                <Ionicons 
+                  name={hidden ? "eye-off-outline" : "eye-outline"} 
+                  size={22} 
+                  color="#666" 
+                />
+              </Pressable>
+            </View>
 
-          <View style={styles.row}>
+            <View style={styles.row}>
+              <Pressable
+                style={styles.checkboxContainer}
+                onPress={() => setRememberMe(!rememberMe)}
+              >
+                <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                  {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+                </View>
+                <Text style={styles.checkboxText}>Remember Me</Text>
+              </Pressable>
+
+              <Pressable onPress={() => router.push("/reset_pass")}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+              </Pressable>
+            </View>
+
             <Pressable
-              style={styles.checkboxContainer}
-              onPress={() => setRememberMe(!rememberMe)}
+              style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+              onPress={handleLogin}
+              disabled={loading}
             >
-              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-              </View>
-              <Text style={styles.checkboxText}>Remember Me</Text>
+              <Text style={styles.buttonText}>
+                {loading ? "Logging in..." : "Login"}
+              </Text>
             </Pressable>
 
-            <Pressable onPress={() => router.push("/reset_pass")}>
-              <Text style={styles.forgotText}>Forgot Password?</Text>
-            </Pressable>
-          </View>
+            <View style={styles.signupRow}>
+              <Text style={styles.signupText}>Don't have an account? </Text>
+              <Pressable onPress={() => router.push("/signup/person_info")}>
+                <Text style={styles.signupLink}>Sign Up</Text>
+              </Pressable>
+            </View>
 
-          <Pressable
-            style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-            onPress={handleLogin}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? "Logging in..." : "Login"}
-            </Text>
-          </Pressable>
-
-          <View style={styles.signupRow}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <Pressable onPress={() => router.push("/signup/person_info")}>
-              <Text style={styles.signupLink}>Sign Up</Text>
-            </Pressable>
-          </View>
-
-          <View style={styles.termsRow}>
-            <Pressable onPress={() => router.push("/terms")}>
-              <Text style={styles.termsLink}>Terms</Text>
-            </Pressable>
+            <View style={styles.termsRow}>
+              <Pressable onPress={() => router.push("/terms")}>
+                <Text style={styles.termsLink}>Terms</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </Animated.View>
 
       {/* Verification Modal */}
       <Modal
-        animationType="fade"
-        transparent={true}
         visible={showVerificationModal}
+        transparent
+        animationType="fade"
         onRequestClose={() => setShowVerificationModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Account Not Verified</Text>
-              <Text style={styles.modalMessage}>
-                Your account is not yet verified. Please wait for the approval.
-                Thank you for your patience.
-              </Text>
             </View>
+            <Text style={styles.modalMessage}>
+              Your account is not yet verified. Please wait for the approval.
+              Thank you for your patience.
+            </Text>
             <Pressable
               style={styles.modalButton}
               onPress={() => setShowVerificationModal(false)}
@@ -297,7 +374,7 @@ export default function Login() {
           </View>
         </View>
       </Modal>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -305,6 +382,9 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#fff"
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   animatedWrap: {
     flex: 1,
@@ -379,7 +459,8 @@ const styles = StyleSheet.create({
     color: "#000"
   },
   eyeIcon: {
-    marginLeft: 10
+    marginLeft: 10,
+    padding: 5,
   },
   row: {
     flexDirection: "row",
@@ -470,10 +551,7 @@ const styles = StyleSheet.create({
     padding: 30,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 5,
