@@ -43,7 +43,7 @@ export default function Home() {
     const fetchItems = async () => {
       try {
         const response = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/item`
+          `${process.env.EXPO_PUBLIC_API_URL}c`
         );
         if (response.data.success) {
           setItems(Array.isArray(response.data.data) ? response.data.data : []);
