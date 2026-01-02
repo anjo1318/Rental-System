@@ -218,19 +218,14 @@ export default function BookedItem() {
         <View style={styles.topBackground}>
         <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <Pressable
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.replace("/customer/home");
-                }
-              }}
-              hitSlop={10}
-              style={styles.iconPress}
-            >
-              <Icon name="arrow-back" size={24} color="#ccc"/>
-            </Pressable>
+          <Pressable
+            onPress={() => router.replace("/customer/home")}
+            hitSlop={10}
+            style={styles.iconPress}
+          >
+            <Icon name="arrow-back" size={24} color="#ccc" />
+          </Pressable>
+
           </View>
 
           <Text

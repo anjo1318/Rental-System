@@ -9,14 +9,13 @@ export default function CustomerBottomNav({ role = "customer" }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Define navigation items based on role
   const navItems = {
     customer: [
       { name: "Home", icon: "home", route: "/customer/home" },
       { name: "Book", icon: "shopping-cart", route: "/customer/book" },
       { name: "Message", icon: "mail", route: "/customer/message" },
       { name: "Time", icon: "schedule", route: "/customer/time" },
-    ]
+    ],
   };
 
   const currentNavItems = navItems[role] || navItems.customer;
@@ -24,15 +23,18 @@ export default function CustomerBottomNav({ role = "customer" }) {
   return (
     <View style={styles.bottomNav}>
       {currentNavItems.map((navItem, index) => {
-        const isActive = pathname === navItem.route;
+        const isActive = pathname.startsWith(navItem.route);
 
         return (
           <Pressable
             key={index}
             style={styles.navButton}
             hitSlop={10}
-            onPress={() => router.replace(navItem.route)}
-
+            onPress={() => {
+              if (!pathname.startsWith(navItem.route)) {
+                router.replace(navItem.route);
+              }
+            }}
           >
             <Icon
               name={navItem.icon}
