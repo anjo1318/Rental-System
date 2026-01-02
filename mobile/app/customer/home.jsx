@@ -142,7 +142,7 @@ export default function Home() {
               <Text style={styles.email}>
                 {currentUser?.email || currentUser?.emailAddress}
               </Text>
-            </View>
+          </View>
 
 
 

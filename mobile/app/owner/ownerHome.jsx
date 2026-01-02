@@ -206,13 +206,6 @@ export default function OwnerHome() {
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#007F7F" translucent={false} />
-
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 100 }}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
-      >
         {/* Profile Section */}
         <View style={styles.topBackground}>
           <View style={styles.profileContainer}>
@@ -227,11 +220,16 @@ export default function OwnerHome() {
                 style={styles.avatar}
               />
             </Pressable>
-            <Text style={styles.username}>
-              {currentUser
-                ? `${currentUser.firstName} ${currentUser.lastName}`
-                : "Loading..."}
-            </Text>
+            <View style={styles.userInfo}>
+              <Text style={styles.username}>
+                {currentUser?.firstName} {currentUser?.lastName}
+              </Text>
+
+              <Text style={styles.email}>
+                {currentUser?.email || currentUser?.emailAddress}
+              </Text>
+          </View>
+           
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
                 <MaterialIcon name="notifications-none" size={24} color="#007F7F" />
@@ -242,6 +240,13 @@ export default function OwnerHome() {
             </View>
           </View>
         </View>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled={true}
+      >
+
 
         {/* Stats */}
         <View style={styles.statsContainer}>
@@ -365,6 +370,19 @@ export default function OwnerHome() {
 }
 
 const styles = StyleSheet.create({
+    
+  username: { 
+    marginLeft: width * 0.03, 
+    fontWeight: "bold", 
+    fontSize: width * 0.04 ,
+    color: "#e0f2f2",
+  },
+  email: {
+    fontSize: 13,
+    color: "#e0f2f2",
+    marginTop: 2,     // ⬅️ moves it DOWN under the name
+    marginLeft: 13
+  },
   screen: {
     flex: 1,
     backgroundColor: "#FFFFFF",
@@ -388,11 +406,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
 
-  avatar: {
-    width: width * 0.12,
-    height: width * 0.12,
+  avatar: { 
+    width: width * 0.2, 
+    height: width * 0.2, 
     borderRadius: width * 0.1,
-    right: -5,
+    borderColor:"#e0f2f2",
+    borderWidth: 2,        
   },
 
   username: {
