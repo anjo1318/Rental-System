@@ -157,7 +157,7 @@ export default function ProductList() {
           </View>
 
           {/* 🔹 Featured Devices */}
-          <View style={styles.featuredSection}>
+          {/* <View style={styles.featuredSection}>
             <Text style={styles.sectionTitle}>Featured Devices</Text>
           </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -187,7 +187,7 @@ export default function ProductList() {
                             </View>
                           );
                         })}
-          </ScrollView>
+          </ScrollView> */}
 
           {/* 🔹 Recommendations */}
           <Text style={styles.sectionTitle}>Our Recommendations</Text>

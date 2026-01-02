@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import OwnerBottomNav from '../components/OwnerBottomNav';
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -26,6 +28,7 @@ export default function ProfileHeader() {
 
   return (
     <View style={styles.container}>
+    <OwnerBottomNav/>
       {/* Status bar */}
       <StatusBar
         barStyle="light-content"

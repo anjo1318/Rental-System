@@ -1,7 +1,8 @@
 import React from "react";
 import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
 import { useRouter, usePathname } from "expo-router";
-import Icon from "react-native-vector-icons/MaterialIcons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 
 const { width, height } = Dimensions.get("window");
 
@@ -9,45 +10,88 @@ export default function OwnerBottomNav({ role = "owner" }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const navItems = {
-    owner: [
-      { name: "Home", icon: "home", route: "/owner/home" },
-      { name: "Items", icon: "inventory", route: "/owner/items" },
-      { name: "Bookings", icon: "event", route: "/owner/bookings" },
-      { name: "Messages", icon: "mail", route: "/owner/messages" },
-    ],
-  };
+  const navItems = [
+    { name: "Home", icon: "home", type: "material", route: "/owner/ownerHome" },
+    {
+      name: "Lists",
+      icon: "format-list-bulleted",
+      type: "material",
+      route: "/owner/ownerListing",
+    },
+    {
+      name: "Add New",
+      icon: "plus",
+      type: "community",
+      route: "/owner/ownerAddItem",
+      special: true,
+    },
+    {
+      name: "Message",
+      icon: "message-text-outline",
+      type: "community",
+      route: "/owner/ownerMessages",
+    },
+    {
+      name: "Time",
+      icon: "clock-outline",
+      type: "community",
+      route: "/owner/ownerTime",
+    },
+  ];
 
-  const currentNavItems = navItems[role] || navItems.owner;
+  const renderIcon = (item, isActive, size = 24) => {
+    const color = isActive ? "#057474" : "#999";
+
+    return item.type === "community" ? (
+      <MaterialCommunityIcons name={item.icon} size={size} color={color} />
+    ) : (
+      <MaterialIcons name={item.icon} size={size} color={color} />
+    );
+  };
 
   return (
     <View style={styles.bottomNav}>
-      {currentNavItems.map((navItem, index) => {
-        const isActive = pathname.startsWith(navItem.route);
+      {navItems.map((item, index) => {
+        const isActive = pathname.startsWith(item.route);
 
+        // FLOATING ADD BUTTON
+        if (item.special) {
+          return (
+            <Pressable
+              key={index}
+              style={styles.addNewButton}
+              onPress={() => router.replace(item.route)}
+            >
+              <View style={styles.addNewCircle}>
+                <MaterialCommunityIcons
+                  name={item.icon}
+                  size={32}
+                  color="#057474"
+                />
+              </View>
+              <Text style={styles.navText}>{item.name}</Text>
+            </Pressable>
+          );
+        }
+
+        // NORMAL TABS
         return (
           <Pressable
             key={index}
             style={styles.navButton}
             hitSlop={10}
             onPress={() => {
-              if (!pathname.startsWith(navItem.route)) {
-                router.replace(navItem.route);
-              }
+              if (!isActive) router.replace(item.route);
             }}
           >
-            <Icon
-              name={navItem.icon}
-              size={24}
-              color={isActive ? "#057474" : "#999"}
-            />
+            {renderIcon(item, isActive)}
             <Text
               style={[
                 styles.navText,
                 { color: isActive ? "#057474" : "#999" },
               ]}
             >
-              {navItem.name}
+              {item.name}
             </Text>
           </Pressable>
         );
@@ -55,6 +99,7 @@ export default function OwnerBottomNav({ role = "owner" }) {
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   bottomNav: {
@@ -64,14 +109,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#00000040",
-
+  
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 1000,
-    elevation: 10,
+  
+    zIndex: 999,
+    elevation: 20,
   },
+  
 
   navButton: {
     alignItems: "center",
@@ -83,5 +130,23 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: Math.min(width * 0.03, 13),
     marginTop: height * 0.004,
+  },
+
+  addNewButton: {
+    alignItems: "center",
+    flex: 1,
+    top: -20,
+  },
+
+  addNewCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#057474",
   },
 });

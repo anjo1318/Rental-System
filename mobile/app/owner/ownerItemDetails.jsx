@@ -15,6 +15,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import OwnerItemImages from "./ownerItemImages";
+
 export default function OwnerItemDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams(); // get item id from params

@@ -20,6 +20,8 @@ import { useRouter, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
 import { RFValue } from "react-native-responsive-fontsize";
+import OwnerBottomNav from '../components/OwnerBottomNav';
+
 
 
 const { width, height } = Dimensions.get("window");
@@ -110,40 +112,6 @@ export default function OwnerListing() {
       router.replace("owner/ownerLogin");
     }
   };
-
-  const navigationItems = [
-    { 
-      name: "Home", 
-      icon: "home", 
-      iconType: "Feather", 
-      route: "/owner/ownerHome" 
-    },
-    { 
-      name: "Lists", 
-      icon: "format-list-bulleted", // MaterialIcons alternative
-      iconType: "Material", 
-      route: "/owner/ownerListing" 
-    },
-    { 
-      name: "Add New", 
-      icon: "add-circle", 
-      iconType: "Material", 
-      route: "/owner/ownerAddItem" 
-    },
-    { 
-      name: "Message", 
-      icon: "message-text-outline", 
-      iconType: "MaterialCommunity", 
-      route: "/owner/ownerMessage" 
-    },
-    { 
-      name: "Time", 
-      icon: "clock-outline", 
-      iconType: "MaterialCommunity", 
-      route: "/owner/ownerTime" 
-    },
-  ];
-
 
   const fetchOwnerItems = async (ownerIdParam = null) => {
     try {
@@ -514,51 +482,7 @@ export default function OwnerListing() {
         }
       />
 
-        {/* Bottom Nav */}
-        <View style={styles.bottomNav}>
-          {navigationItems.map((navItem, index) => {
-            const isActive = pathname === navItem.route;
-            const IconComponent = 
-            navItem.iconType === "Feather" ? FeatherIcon :
-            navItem.iconType === "MaterialCommunity" ? MaterialCommunityIcon :
-            MaterialIcon;            
-            const isAddNew = navItem.name === "Add New";
-
-            if (isAddNew) {
-              return (
-                <Pressable
-                  key={index}
-                  style={styles.addNewButton}
-                  onPress={() => router.push(navItem.route)}
-                >
-                  <View style={styles.addNewCircle}>
-                    <MaterialIcon name="add" size={32} color="#656565" />
-                  </View>
-                  <Text style={[styles.navText, { color: "#999" }]}>
-                    {navItem.name}
-                  </Text>
-                </Pressable>
-              );
-            }
-
-            return (
-              <Pressable
-                key={index}
-                style={styles.navButton}
-                onPress={() => router.push(navItem.route)}
-              >
-                <IconComponent
-                  name={navItem.icon}
-                  size={24}
-                  color={isActive ? "#057474" : "#999"}
-                />
-                <Text style={[styles.navText, { color: isActive ? "#057474" : "#999" }]}>
-                  {navItem.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+       <OwnerBottomNav/>
       </View>
   
   );
