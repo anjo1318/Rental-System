@@ -22,7 +22,8 @@ import { approveBooking,
     getLateRentals,
     ongoingBook,
     bookedItemForApproval,
-    startBookedItem
+    startBookedItem,
+    ongoingBookAndForApproval
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -49,8 +50,10 @@ router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
 //for owners
 router.get("/book-request/:id", fetchBookRequest);
 router.get("/ongoing-book/:id", ongoingBook);
+router.get("/ongoing-for-approval/:id", ongoingBookAndForApproval);
 router.get("/booked-item-approval/:id", bookedItemForApproval);
-router.put('/start-booked-item/:id', startBookedItem);
+
+router.put('/start-rent/:id', startBookedItem);
 router.put('/approve-booking/:id', approveBooking);
 router.put('/reject-booking/:id',rejectBooking);
 router.put('/terminate-booking/:id',terminateBooking);

@@ -12,6 +12,7 @@ import {
   ScrollView,
   StatusBar,
   Dimensions,
+  Alert,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -26,7 +27,6 @@ import OwnerBottomNav from '../components/OwnerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
-// Responsive values
 const HEADER_HEIGHT = height * 0.11;
 const PADDING_H = width * 0.05;
 const PADDING_V = height * 0.02;
@@ -42,18 +42,16 @@ export default function ownerTime() {
   const [loading, setLoading] = useState(true);
   const [ownerId, setOwnerId] = useState(null);
   const [timers, setTimers] = useState({});
+  const [startingRent, setStartingRent] = useState({});
 
-  /* LOAD OWNER */
   useEffect(() => {
     loadOwner();
   }, []);
 
-  /* FETCH ONGOING BOOKINGS */
   useEffect(() => {
-    if (ownerId) fetchOngoingBookings();
+    if (ownerId) fetchOngoingAndForApproval();
   }, [ownerId]);
 
-  /* TIMER EFFECT */
   useEffect(() => {
     if (bookedItems.length === 0) return;
 
@@ -62,24 +60,26 @@ export default function ownerTime() {
       const newTimers = {};
 
       bookedItems.forEach((item) => {
-        const returnDate = new Date(item.returnDate);
-        const diff = returnDate - now;
+        if (item.status === 'ongoing') {
+          const returnDate = new Date(item.returnDate);
+          const diff = returnDate - now;
 
-        if (diff <= 0) {
-          newTimers[item.id] = {
-            days: 0,
-            hours: 0,
-            minutes: 0,
-            seconds: 0,
-            expired: true,
-          };
-        } else {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+          if (diff <= 0) {
+            newTimers[item.id] = {
+              days: 0,
+              hours: 0,
+              minutes: 0,
+              seconds: 0,
+              expired: true,
+            };
+          } else {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-          newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
+            newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
+          }
         }
       });
 
@@ -102,12 +102,12 @@ export default function ownerTime() {
     }
   };
 
-  const fetchOngoingBookings = async () => {
+  const fetchOngoingAndForApproval = async () => {
     try {
       setLoading(true);
 
       const res = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-book/${ownerId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval/${ownerId}`
       );
 
       setBookedItems(res.data.data || []);
@@ -118,7 +118,24 @@ export default function ownerTime() {
     }
   };
 
-  /* PARSE IMAGE */
+  const handleStartRent = async (itemId) => {
+    try {
+      setStartingRent(prev => ({ ...prev, [itemId]: true }));
+
+      const res = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/start-rent/${itemId}`
+      );
+
+      Alert.alert("Success", "Rental has been started!");
+      fetchOngoingAndForApproval();
+    } catch (error) {
+      console.error("Start rent error:", error);
+      Alert.alert("Error", "Failed to start rental. Please try again.");
+    } finally {
+      setStartingRent(prev => ({ ...prev, [itemId]: false }));
+    }
+  };
+
   const getImageUrl = (itemImage) => {
     try {
       const parsed = JSON.parse(itemImage);
@@ -128,7 +145,6 @@ export default function ownerTime() {
     }
   };
 
-  /* FORMAT DATE */
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -138,13 +154,13 @@ export default function ownerTime() {
     });
   };
 
-  // Render booking card
   const renderBookingCard = (item) => {
     const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
+    const isBooked = item.status === 'booked';
+    const isOngoing = item.status === 'ongoing';
 
     return (
       <View key={item.id} style={styles.card}>
-        {/* Device info */}
         <View style={styles.deviceRow}>
           <Image
             source={{
@@ -157,36 +173,52 @@ export default function ownerTime() {
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{item.product}</Text>
             <Text style={styles.categoryText}>{item.category}</Text>
-            <View style={styles.statusOngoing}>
-              <Text style={styles.statusText}>Ongoing</Text>
+            <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
+              <Text style={styles.statusText}>{isBooked ? 'For Approval' : 'Ongoing'}</Text>
             </View>
           </View>
         </View>
 
-        {/* Timer - Always show for ongoing items */}
-        {timer.expired ? (
-          <View style={styles.expiredContainer}>
-            <MaterialIcons name="access-time" size={40} color="#FF5252" />
-
-            <Text style={styles.expiredText}>Rental Period Ended</Text>
-          </View>
-        ) : (
-          <View style={styles.timerRow}>
-            {[
-              { value: String(timer.days).padStart(2, "0"), label: "Days" },
-              { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
-              { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
-              { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
-            ].map((timeItem, index) => (
-              <View key={index} style={styles.timeBox}>
-                <Text style={styles.timeValue}>{timeItem.value}</Text>
-                <Text style={styles.timeLabel}>{timeItem.label}</Text>
-              </View>
-            ))}
-          </View>
+        {isBooked && (
+          <Pressable
+            style={[styles.startButton, startingRent[item.id] && styles.startButtonDisabled]}
+            onPress={() => handleStartRent(item.id)}
+            disabled={startingRent[item.id]}
+          >
+            {startingRent[item.id] ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <>
+                <MaterialIcons name="play-arrow" size={20} color="#fff" />
+                <Text style={styles.startButtonText}>Start Rent</Text>
+              </>
+            )}
+          </Pressable>
         )}
 
-        {/* Dates */}
+        {isOngoing && (
+          timer.expired ? (
+            <View style={styles.expiredContainer}>
+              <MaterialIcons name="access-time" size={40} color="#FF5252" />
+              <Text style={styles.expiredText}>Rental Period Ended</Text>
+            </View>
+          ) : (
+            <View style={styles.timerRow}>
+              {[
+                { value: String(timer.days).padStart(2, "0"), label: "Days" },
+                { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
+                { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
+                { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
+              ].map((timeItem, index) => (
+                <View key={index} style={styles.timeBox}>
+                  <Text style={styles.timeValue}>{timeItem.value}</Text>
+                  <Text style={styles.timeLabel}>{timeItem.label}</Text>
+                </View>
+              ))}
+            </View>
+          )
+        )}
+
         <View style={styles.dateRow}>
           <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Start Date:</Text>
@@ -198,7 +230,6 @@ export default function ownerTime() {
           </View>
         </View>
 
-        {/* Rental Details */}
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Duration:</Text>
@@ -214,7 +245,6 @@ export default function ownerTime() {
           </View>
         </View>
 
-        {/* Payment Method */}
         <View style={styles.paymentRow}>
           <MaterialIcons name="payment" size={16} color="#666" />
           <Text style={styles.paymentText}>{item.paymentMethod}</Text>
@@ -224,13 +254,10 @@ export default function ownerTime() {
   };
 
   return (
-
     <View style={styles.container}>
-      {/* Status bar */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
       <OwnerBottomNav/>
 
-      {/* Header */}
       <View
         style={[
           styles.headerWrapper,
@@ -258,7 +285,6 @@ export default function ownerTime() {
         </View>
       </View>
 
-      {/* Content */}
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentWrapper}
@@ -279,8 +305,7 @@ export default function ownerTime() {
           bookedItems.map(renderBookingCard)
         )}
       </ScrollView>
-    
-        </View>
+    </View>
   );
 }
 
@@ -290,7 +315,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E1D6",
   },
 
-  /* Header */
   headerWrapper: {
     width: "100%",
     backgroundColor: "#007F7F",
@@ -331,7 +355,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
 
-  /* Content */
   scrollView: {
     flex: 1,
   },
@@ -417,6 +440,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
+  statusBooked: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    backgroundColor: "#FF9800",
+  },
+
   statusOngoing: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -429,6 +460,28 @@ const styles = StyleSheet.create({
     fontSize: RFValue(10),
     fontWeight: "600",
     color: "#fff",
+  },
+
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+
+  startButtonDisabled: {
+    backgroundColor: "#A5D6A7",
+  },
+
+  startButtonText: {
+    color: "#fff",
+    fontSize: RFValue(13),
+    fontWeight: "600",
+    marginLeft: 8,
   },
 
   timerRow: {
@@ -533,8 +586,6 @@ const styles = StyleSheet.create({
     color: "#666",
     marginLeft: 6,
   },
-
-  /* Bottom Nav */
 
   addButton: {
     backgroundColor: "#057474",

@@ -1297,6 +1297,7 @@ const fetchBookRequest = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 const ongoingBook = async (req, res) => {
   console.log("Using ongoingBook");
 
@@ -1316,6 +1317,30 @@ const ongoingBook = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+const ongoingBookAndForApproval = async (req, res) => {
+  console.log("Using ongoingBookAndForApproval");
+
+  try {
+    const { id } = req.params;
+
+    const response = await Books.findAll({
+      where: {
+        ownerId: id,
+        status: {
+          [Op.in]: ["ongoing", "booked"]
+        }
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error("Error in ongoingBookAndForApproval:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 const bookedItemForApproval = async (req, res) => {
   console.log("Using bookedItemForApproval");
@@ -2953,5 +2978,6 @@ export {
   VIOLATION_CONFIG,
   ongoingBook,
   bookedItemForApproval,
-  startBookedItem
+  startBookedItem,
+  ongoingBookAndForApproval
 };
