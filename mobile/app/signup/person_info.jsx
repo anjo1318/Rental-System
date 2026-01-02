@@ -682,7 +682,7 @@ export default function PersonalInfo() {
 
       </View>
 
-      <View style={styles.pickerContainer}>
+      <View style={[styles.pickerContainer, { top: 50, width: "84%", alignSelf: "center"  }]}>
         {!role && (
           <Text style={styles.pickerOverlayText}>
             Registration Role *
@@ -884,7 +884,7 @@ export default function PersonalInfo() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <KeyboardAwareScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.05 }}
           enableOnAndroid={true}
           keyboardShouldPersistTaps="handled"
           enableAutomaticScroll={true}

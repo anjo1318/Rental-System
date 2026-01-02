@@ -138,7 +138,7 @@ export default function Review() {
     <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#057474" />
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.1 }}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.05 }}
       >
         {/* Header section remains the same */}
         <View style={styles.headerWrapper}>
@@ -379,7 +379,8 @@ const styles = StyleSheet.create({
     fontSize: width * 0.05,
     fontWeight: "700",
     color: "#000",
-    marginBottom: height * 0.015,
+    marginBottom: height * 0.02,
+    top: 10,
   },
   infoText: {
     fontSize: width * 0.038,
