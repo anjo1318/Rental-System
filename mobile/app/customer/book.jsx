@@ -5,25 +5,19 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 const { width, height } = Dimensions.get("window");
 
-// ✅ Responsive constants (bounded so they don't blow up on tablets or collapse on small screens)
 const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110);
-const ICON_BOX = Math.max(40, width * 0.1);
-const ICON_SIZE = Math.max(20, width * 0.07);
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const BADGE_SIZE = Math.max(12, Math.round(width * 0.045));
-const PADDING_H = Math.min(Math.max(12, width * 0.02), 28);
-const MARGIN_TOP = Math.min(Math.round(height * 0.02), 20);
+const ICON_SIZE = 24;
+const TITLE_FONT = 18;
+const PADDING_H = 16;
 
 export default function BookedItem() {
   const router = useRouter();
-  const [bookRequest, setBookRequest] = useState([]);
   const [bookedItem, setBookedItem] = useState([]);
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [selectedItemId, setSelectedItemId] = useState(null); // Track selected item
+  const [selectedItemId, setSelectedItemId] = useState(null);
 
   useEffect(() => {
     loadUserData();
@@ -32,7 +26,6 @@ export default function BookedItem() {
   useEffect(() => {
     if (userId) {
       fetchBookedItems();
-      console.log("ownerRequest.jsx to");
     }
   }, [userId]);
 
@@ -41,17 +34,11 @@ export default function BookedItem() {
       const userData = await AsyncStorage.getItem("user");
       if (userData) {
         const user = JSON.parse(userData);
-        console.log("From local storage", userData);
-        
         const userIdValue = user.id || user.userId || user._id || "";
         
         if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
           setUserId(userIdValue);
-        } else {
-          console.error("Invalid user ID found:", userIdValue);
         }
-      } else {
-        console.error("No user data found in AsyncStorage");
       }
     } catch (error) {
       console.error("Error loading user data:", error);
@@ -60,21 +47,16 @@ export default function BookedItem() {
 
   const fetchBookedItems = async () => {
     if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
-      console.error("Cannot fetch booked items: Invalid user ID:", userId);
       return;
     }
 
     try {
       setLoading(true);
-      console.log("Fetching booked items for user ID:", userId);
-      
       const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
 
       if (response.data.success) {
-        console.log("Booked items response:", response.data.data);
         setBookedItem(response.data.data || []);
       } else {
-        console.log("API returned success: false", response.data);
         setBookedItem([]);
       }
     } catch (error) {
@@ -85,62 +67,19 @@ export default function BookedItem() {
     }
   };
 
-  const handleItemPress = (item) => {
-    try {
-      router.push({
-        pathname: "customer/bookedProductDetail",
-        params: {
-          id: item.id,
-          product: item.product || "",
-          category: item.category || "",
-          status: item.status || "",
-          pricePerDay: item.pricePerDay || "",
-          rentalPeriod: item.rentalPeriod || "",
-          paymentMethod: item.paymentMethod || "",
-          pickUpDate: item.pickUpDate || "",
-          returnDate: item.returnDate || "",
-          itemImage: item.itemImage || "",
-          name: item.customerName || item.name || "",
-          email: item.customerEmail || item.email || "",
-          phone: item.customerPhone || item.phone || "",
-          address: item.customerAddress || item.address || "",
-          gender: item.customerGender || item.gender || "",
-        }
-      });
-    } catch (error) {
-      console.error("Navigation error:", error);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-    } catch (error) {
-      return dateString;
-    }
-  };
-
   const handleDelete = async () => {
     if (!selectedItemId) {
       alert("Please select an item to delete");
       return;
     }
-
-    console.log("Delete button pressed for item ID:", selectedItemId);
     
     try {
-      // Use DELETE method and pass only the ID
       const response = await axios.delete(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book/delete/${selectedItemId}`
       );
       
       if (response.data.success) {
         alert("Booking deleted successfully!");
-        
-        // Clear selection and refresh the list
         setSelectedItemId(null);
         fetchBookedItems();
       } else {
@@ -152,127 +91,75 @@ export default function BookedItem() {
     }
   };
 
-  // ✅ Handle proceed to renting - redirect to rentingDetails with selected item
   const handleProceed = () => {
-      if (!selectedItemId) {
-        alert("Please select an item first");
-        return;
-      }
-
-      const selectedItem = bookedItem.find(item => item.id === selectedItemId);
-      
-      if (!selectedItem) {
-        alert("Selected item not found");
-        return;
-      }
-
-      // Check if item is in "Booked" status
-      if (selectedItem.status?.toLowerCase() === "booked") {
-        alert("Cannot proceed. Item is still in Booked status. Please request for rent first.");
-        return;
-      }
-
-      // Navigate to rentingDetails with the item ID
-      router.push({
-        pathname: "customer/rentingDetails",
-        params: {
-          itemId: selectedItem.itemId || selectedItem.id,
-          // You can pass additional params if needed
-          fromBookedItems: "true"
-        }
-      });
-    };
-
-  const handleRequestRent = async (itemId) => {
-    try {
-      console.log("Requesting rent for item ID:", itemId);
-      
-      const response = await axios.put(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/request/${itemId}`
-      );
-      
-      console.log("Request successful:", response.data);
-      
-      if (response.data.success) {
-        alert("Rental request sent successfully!");
-        fetchBookedItems();
-      } else {
-        alert("Failed to send rental request: " + response.data.message);
-      }
-    } catch (error) {
-      console.error("Error in handleRequestRent:", error);
-      alert("Error sending rental request: " + (error.response?.data?.message || error.message));
+    if (!selectedItemId) {
+      alert("Please select an item first");
+      return;
     }
+
+    const selectedItem = bookedItem.find(item => item.id === selectedItemId);
+    
+    if (!selectedItem) {
+      alert("Selected item not found");
+      return;
+    }
+
+    if (selectedItem.status?.toLowerCase() === "booked") {
+      alert("Cannot proceed. Item is still in Booked status. Please request for rent first.");
+      return;
+    }
+
+    router.push({
+      pathname: "customer/rentingDetails",
+      params: {
+        itemId: selectedItem.itemId || selectedItem.id,
+        fromBookedItems: "true"
+      }
+    });
   };
 
-  // ✅ Handle radio button selection
   const handleRadioSelect = (itemId) => {
     setSelectedItemId(itemId);
   };
 
+  const getImageUrl = (imageString) => {
+    try {
+      if (typeof imageString === "string" && imageString.startsWith("http")) {
+        return imageString.replace(/^http:\/\//, "https://");
+      }
+      const imageArray = JSON.parse(imageString);
+      if (Array.isArray(imageArray) && imageArray.length > 0) {
+        return imageArray[0].replace(/^http:\/\//, "https://");
+      }
+      return "https://via.placeholder.com/80x80?text=No+Image";
+    } catch (error) {
+      return "https://via.placeholder.com/80x80?text=No+Image";
+    }
+  };
+
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#007F7F" translucent={false} />
 
-      <StatusBar barStyle="dark-content" backgroundColor="#057474" translucent={false} />
-
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, paddingTop: MARGIN_TOP }]}>
-        <View style={styles.topBackground}>
-        <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-          <Pressable
-            onPress={() => router.replace("/customer/home")}
-            hitSlop={10}
-            style={styles.iconPress}
-          >
-            <Icon name="arrow-back" size={24} color="#ccc" />
+      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
+        <View style={styles.headerContent}>
+          <Pressable onPress={() => router.replace("/customer/home")} hitSlop={10}>
+            <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
           </Pressable>
 
-          </View>
+          <Text style={styles.headerTitle}>Booked Item</Text>
 
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[styles.pageName, { fontSize: TITLE_FONT }]}
-          >
-            Booked Item
-          </Text>
-
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <View
-              style={[
-                styles.notificationWrapper,
-                {
-                  width: ICON_BOX * 0.8,
-                  height: ICON_BOX * 0.8,
-                  borderRadius: (ICON_BOX * 0.8) / 2,
-                },
-              ]}
-            >
-              <Icon name="notifications-none" size={Math.round(ICON_SIZE * 0.9)} color="#ccc" />
-              <View
-                style={[
-                  styles.badge,
-                  {
-                    width: BADGE_SIZE,
-                    height: BADGE_SIZE,
-                    borderRadius: BADGE_SIZE / 2,
-                    right: -BADGE_SIZE * 0.25,
-                    top: -BADGE_SIZE * 0.25,
-                  },
-                ]}
-              >
-                <Text style={[styles.badgeText, { fontSize: BADGE_SIZE * 0.45 }]}>2</Text>
-              </View>
-            </View>
-          </View>
-        </View>
+          <Pressable hitSlop={10}>
+            <Icon name="notifications-none" size={ICON_SIZE} color="#FFF" />
+          </Pressable>
         </View>
       </View>
 
-      {/* Body */}
       <View style={styles.bodyWrapper}>
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {loading ? (
             <View style={styles.loadingContainer}>
               <Text style={styles.loadingText}>Loading...</Text>
@@ -285,102 +172,57 @@ export default function BookedItem() {
             </View>
           ) : (
             bookedItem.map((item) => (
-              <Pressable 
-                key={item.id} 
-                style={({ pressed }) => [
-                  styles.notificationCard,
-                  pressed && styles.pressedCard
-                ]}
-                onPress={() => handleItemPress(item)}
-              >
-                {/* ✅ Radio Button */}
-                <Pressable
-                  style={styles.radioContainer}
-                  onPress={(e) => {
-                    e.stopPropagation(); // Prevent card press
-                    handleRadioSelect(item.id);
-                  }}
-                >
-                  <View style={[
-                    styles.radioOuter,
-                    selectedItemId === item.id && styles.radioOuterSelected
-                  ]}>
-                    {selectedItemId === item.id && (
-                      <View style={styles.radioInner} />
-                    )}
-                  </View>
-                </Pressable>
-                  {/* Left: item image */}
-                  <View style={styles.imageWrapper}>
+              <View key={item.id} style={styles.card}>
+                <View style={styles.cardHeader}>
+                  <View style={styles.ownerInfo}>
                     <Image
-                      source={{ 
-                        uri: (() => {
-                          try {
-                            // Parse the JSON string to get the array
-                            const imageArray = JSON.parse(item.itemImage);
-                            // Get the first image URL and convert to https
-                            const url = Array.isArray(imageArray) && imageArray.length > 0
-                              ? imageArray[0].replace(/^http:\/\//, "https://")
-                              : 'https://via.placeholder.com/50x50?text=No+Image';
-                            return url;
-                          } catch (error) {
-                            console.log('Image parse error:', error);
-                            return 'https://via.placeholder.com/50x50?text=No+Image';
-                          }
-                        })()
-                      }}
-                      style={styles.itemImage}
+                      source={{ uri: getImageUrl(item.ownerProfileImage) }}
+                      style={styles.ownerAvatar}
                       resizeMode="cover"
-                      onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
                     />
+                    <Text style={styles.ownerName}>{item.ownerFirstName || "Owner"} {item.ownerLastName || "Owner"}</Text>
                   </View>
-
-                {/* Center: details */}
-                <View style={styles.detailsWrapper}>
-                  <Text style={styles.productName} numberOfLines={1}>
-                    {item.product || 'Unknown Product'}
-                  </Text>
-
-                  <Text style={styles.productName} numberOfLines={1}>
-                   ₱ {item.pricePerDay || 'Unknown Product'}
-                  </Text>
-                  
-                  {/* <Text>
-                    • Pickup: {formatDate(item.pickUpDate)}
-                  </Text> */}
-
-                  {/* <Text 
-                    style={[
-                      styles.statusText,
-                      item.status?.toLowerCase() === "pending" && { color: "#D4A017" },
-                      (item.status?.toLowerCase() === "approved" || item.status?.toLowerCase() === "ongoing") && { color: "#057474" },
-                      (item.status?.toLowerCase() === "rejected" || item.status?.toLowerCase() === "terminated" || item.status?.toLowerCase() === "cancelled") && { color: "#D40004" },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {item.status || 'Unknown'} 
-                  </Text> */}
-                  
-                
                 </View>
 
-                {/* Right: date and chevron */}
-                {/* <View style={styles.dateWrapper}>
-                  <Text style={styles.dateText}>
-                    {formatDate(item.pickUpDate)}
-                  </Text>
-                  <Icon name="chevron-right" size={20} color="#666" style={styles.chevronIcon} />
-                </View> */}
-              </Pressable>
+                <View style={styles.cardBody}>
+                  <Pressable
+                    style={styles.checkboxContainer}
+                    onPress={() => handleRadioSelect(item.id)}
+                  >
+                    <View style={[
+                      styles.checkbox,
+                      selectedItemId === item.id && styles.checkboxSelected
+                    ]}>
+                      {selectedItemId === item.id && (
+                        <Icon name="check" size={14} color="#007F7F" />
+                      )}
+                    </View>
+                  </Pressable>
+
+                  <Image
+                    source={{ uri: getImageUrl(item.itemImage) }}
+                    style={styles.productImage}
+                    resizeMode="cover"
+                  />
+
+                  <View style={styles.productInfo}>
+                    <Text style={styles.productName} numberOfLines={2}>
+                      {item.product || 'Unknown Product'}
+                    </Text>
+                    <Text style={styles.productPrice}>
+                      ₱ {item.pricePerDay || '0'}
+                    </Text>
+                  </View>
+                </View>
+              </View>
             ))
           )}
         </ScrollView>
 
-        {/* Bottom buttons - only show if there are items */}
         {bookedItem.length > 0 && (
           <View style={styles.bottomContainer}>
             <Pressable 
-              style={[styles.button, styles.deleteButton, { flex: 0, width: "30%" }]}
+              style={styles.deleteButton}
               onPress={handleDelete}
             >
               <Text style={styles.deleteText}>Delete</Text>
@@ -388,9 +230,7 @@ export default function BookedItem() {
 
             <Pressable 
               style={[
-                styles.button, 
-                styles.proceedButton, 
-                { flex: 0, width: "60%" },
+                styles.proceedButton,
                 !selectedItemId && styles.disabledButton
               ]}
               onPress={handleProceed}
@@ -408,86 +248,37 @@ export default function BookedItem() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#E8E8E8",
   },
 
   headerWrapper: {
     width: "100%",
     backgroundColor: "#007F7F",
-    borderBottomWidth: 2,
-    borderBottomColor: "#007F7F",
     justifyContent: "center",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-
+    paddingHorizontal: PADDING_H,
   },
 
-  profileContainer: {
+  headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    height: "100%",
   },
 
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-    right: 5,
-  },
-
-  iconPress: {
-    padding: width * 0.015,
-    borderRadius: 6,
-  },
-
-  pageName: {
+  headerTitle: {
+    fontSize: TITLE_FONT,
     fontWeight: "600",
-    color: "#ccc",
-    textAlign: "center",
-    flex: 1,
-    paddingHorizontal: 6,
-    right: 6,
-  },
-
-  notificationWrapper: {
-    position: "relative",
-    borderWidth: 1.5,
-    borderColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badge: {
-    position: "absolute",
-    backgroundColor: "#007F7F",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
-
-  },
-
-  badgeText: {
-    color: "white",
-    fontWeight: "bold",
-  },
-
-   topBackground: {
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    color: "#FFF",
   },
 
   bodyWrapper: {
     flex: 1,
     paddingHorizontal: 16,
-    paddingBottom: 30,
-    justifyContent: "space-between",
+    paddingTop: 16,
   },
 
   scrollContent: {
     flexGrow: 1,
-    paddingTop: 16,
+    paddingBottom: 100,
   },
 
   loadingContainer: {
@@ -515,145 +306,145 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  bottomContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
+  card: {
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#007F7F",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
-  button: {
-    flex: 1,
-    paddingVertical: 12,
-    marginHorizontal: 5,
-    borderRadius: 8,
+  cardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+
+  ownerInfo: {
+    flexDirection: "row",
     alignItems: "center",
   },
 
-  deleteButton: {
+  ownerAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    marginRight: 8,
+    backgroundColor: "#E0E0E0",
+  },
+
+  ownerName: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
+  },
+
+  cardBody: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+  },
+
+  checkboxContainer: {
+    marginRight: 12,
+    padding: 4,
+  },
+
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: "#CCC",
     backgroundColor: "#FFF",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  checkboxSelected: {
+    borderColor: "#007F7F",
+    backgroundColor: "#E8F5F5",
+  },
+
+  productImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: "#F0F0F0",
+  },
+
+  productInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+
+  productName: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 4,
+  },
+
+  productPrice: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#333",
+  },
+
+  bottomContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: "row",
+    backgroundColor: "#FFF",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+    gap: 12,
+  },
+
+  deleteButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    borderWidth: 1.5,
     borderColor: "#D40004",
-    borderWidth: 0.7,
-    borderRadius: 10,
   },
 
   proceedButton: {
-    backgroundColor: "#057474",
-    borderRadius: 10,
+    flex: 2,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    backgroundColor: "#007F7F",
   },
 
   disabledButton: {
-    backgroundColor: "#888",
-    opacity: 0.5,
+    backgroundColor: "#B0B0B0",
+    opacity: 0.6,
   },
 
   deleteText: {
     color: "#D40004",
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   proceedText: {
     color: "#FFF",
-    fontSize: 13,
-  },
-
-  notificationCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#DAD6C7",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-
-  pressedCard: {
-    backgroundColor: "#C5C0B1",
-    transform: [{ scale: 0.98 }],
-  },
-
-  // ✅ Radio button styles
-  radioContainer: {
-    marginRight: 10,
-    padding: 5,
-  },
-
-  radioOuter: {
-    width: 22,
-    height: 22,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: "#666",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#FFF",
-  },
-
-  radioOuterSelected: {
-    borderColor: "#057474",
-  },
-
-  radioInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#057474",
-  },
-
-  imageWrapper: {
-    width: 50,
-    height: 50,
-    borderRadius: 5,
-    overflow: "hidden",
-    marginRight: 10,
-  },
-
-  itemImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-
-  detailsWrapper: {
-    flex: 1,
-  },
-
-  productName: {
+    fontSize: 14,
     fontWeight: "600",
-    fontSize: 16,
-    color: "#000",
   },
-
-  statusText: {
-    fontSize: 13,
-    color: "#555",
-    marginTop: 2,
-  },
-
-  dateWrapper: {
-    width: 80,
-    alignItems: "flex-end",
-  },
-
-  dateText: {
-    fontSize: 12,
-    color: "#333",
-  },
-
-  chevronIcon: {
-    marginTop: 2,
-  },
-
-  requestButton: {
-    marginTop: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    backgroundColor: "#057474",
-    borderRadius: 6,
-    alignSelf: "flex-start",
-  },
-
-  requestButtonText: {
-    color: "#FFF",
-    fontSize: 12,
-    fontWeight: "500",
-  }
 });

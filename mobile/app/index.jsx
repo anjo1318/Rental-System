@@ -299,10 +299,10 @@ export default function Index() {
       {/* 🔹 Bottom Nav - Fixed at bottom */}
       <View style={styles.bottomNav}>
         {[
-          { name: "Home", icon: "home", route: "/customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "/customer/book" },
-          { name: "Message", icon: "mail", route: "/customer/message" },
-          { name: "Time", icon: "schedule", route: "/customer/time" },
+          { name: "Home", icon: "home", route: "/customer/loginInterface" },
+          { name: "Book", icon: "shopping-cart", route: "/customer/loginInterface" },
+          { name: "Message", icon: "mail", route: "/customer/loginInterface" },
+          { name: "Time", icon: "schedule", route: "/customer/loginInterface" },
         ].map((navItem, index) => {
           const isActive = pathname === navItem.route;
 
@@ -311,7 +311,7 @@ export default function Index() {
               key={index}
               style={styles.navButton}
               hitSlop={10}
-              onPress={() => router.push(navItem.route)}
+              onPress={() => router.replace(navItem.route)}
             >
               <Icon
                 name={navItem.icon}
@@ -474,12 +474,9 @@ const styles = StyleSheet.create({
   categoryButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
-    backgroundColor: "#FFF",
     borderRadius: 20,
     marginRight: 10,
     marginLeft: 16,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
     marginBottom: 20,
   },
 
@@ -490,7 +487,8 @@ const styles = StyleSheet.create({
 
   categoryText: {
     fontSize: 14,
-    color: "#666",
+    fontWeight: "600",
+    color: "#333",
   },
 
   activeCategoryText: {
@@ -498,22 +496,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // ✅ MATCHING OWNERHOME CARD STYLES
   card: {
-    width: (width - 48) / 2,
+    width: (width - 39) / 2,
     backgroundColor: "#FFF",
+    borderWidth: 1,
+    borderColor:"#057474",
     borderRadius: 12,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3,
+    elevation: 10,
   },
 
   upperHalf: {
     height: 120,
-    position: "relative",
   },
 
   itemImage: {
