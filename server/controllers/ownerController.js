@@ -396,22 +396,23 @@ const deleteOwnerItem = async (req, res) => {
   }
 };
 
+
 // Authentication middleware
-const authenticateToken = (req, res, next) => {
+export const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
-
+  
   if (!token) {
     return res.status(401).json({ 
       success: false, 
       error: 'Access token required' 
     });
   }
-
+  
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.JWT_KEY);
     req.user = decoded;
-    console.log(`🔐 Authenticated user:`, decoded.id);
+    console.log('🔐 Authenticated user:', decoded.id); // Fixed: was using template literal incorrectly
     next();
   } catch (error) {
     return res.status(403).json({ 
@@ -428,6 +429,5 @@ export {
   getOwnerItems,
   createOwnerItem,
   updateOwnerItem,
-  deleteOwnerItem,
-  authenticateToken 
+  deleteOwnerItem 
 };

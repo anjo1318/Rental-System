@@ -223,52 +223,114 @@ export default function ItemDetail() {
         </TouchableOpacity>
 
         {/* Chat Button - Commented Out */}
-        {/* <TouchableOpacity
+
+        <TouchableOpacity
           style={[styles.bookButton, styles.chatButton]}
           onPress={async () => {
             try {
               const token = await AsyncStorage.getItem("token");
+              const userData = await AsyncStorage.getItem("user");
               
-              if (!token) {
+              if (!token || !userData) {
                 Alert.alert("Authentication Required", "Please login to chat", [
                   { text: "OK", onPress: () => router.push("/auth/login") }
                 ]);
                 return;
               }
 
-              let existingChatId = null;
+              const user = JSON.parse(userData);
 
-              // Check if chat already exists for this item and user
-              const res = await axios.get(
-                `${API_URL}/api/chat/check/${item.id}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
+              console.log("🔍 Starting chat flow for item:", item.id);
+              console.log("👤 Current user ID:", user.id);
+              console.log("🏠 Item owner ID:", item.ownerId);
 
-              if (res.data.success && res.data.chatId) {
-                existingChatId = res.data.chatId;
+              let chatIdToUse = null;
+
+              // Step 1: Check if chat already exists
+              try {
+                const checkUrl = `${API_URL}/api/chat/check/${item.id}`;
+                console.log("🔍 Checking URL:", checkUrl);
+                
+                const checkRes = await axios.get(checkUrl, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+
+                console.log("📝 Check response:", checkRes.data);
+
+                if (checkRes.data.success && checkRes.data.exists && checkRes.data.chatId) {
+                  chatIdToUse = checkRes.data.chatId;
+                  console.log("✅ Found existing chat ID:", chatIdToUse);
+                }
+              } catch (checkError) {
+                console.log("ℹ️ No existing chat found:", checkError.message);
               }
 
-              // Generate chatId if none exists
-              const chatId = existingChatId || uuidv4();
+              // Step 2: Create new chat if needed
+              if (!chatIdToUse) {
+                console.log("📝 Creating new chat...");
+                
+                try {
+                  const createUrl = `${API_URL}/api/chat/get-or-create`;
+                  console.log("📝 Create URL:", createUrl);
+                  
+                  const createPayload = {
+                    itemId: item.id,
+                    customerId: user.id,
+                    ownerId: item.ownerId,
+                  };
+                  console.log("📝 Create payload:", JSON.stringify(createPayload));
 
-              console.log("Navigating to chat with:", {
-                chatId,
-                itemId: item.id,
-                ownerId: item.ownerId
-              });
+                  const createRes = await axios.post(
+                    createUrl,
+                    createPayload,
+                    {
+                      headers: { 
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      }
+                    }
+                  );
 
-              // Navigate to ChatScreen with chatId
-              router.push(`/customer/chat?id=${chatId}&itemId=${item.id}`);
+                  console.log("✅ Create response:", createRes.data);
+
+                  if (createRes.data && createRes.data.id) {
+                    chatIdToUse = createRes.data.id;
+                    console.log("✅ New chat created with ID:", chatIdToUse);
+                  } else {
+                    throw new Error("No chat ID in response");
+                  }
+                } catch (createError) {
+                  console.error("❌ Create error:", createError.response?.data || createError.message);
+                  console.error("❌ Create error status:", createError.response?.status);
+                  console.error("❌ Create error URL:", createError.config?.url);
+                  
+                  Alert.alert(
+                    "Error", 
+                    createError.response?.data?.message || "Failed to create chat. Please try again."
+                  );
+                  return;
+                }
+              }
+
+              // Step 3: Navigate with valid chatId
+              if (chatIdToUse && chatIdToUse !== 'undefined') {
+                const navUrl = `/customer/chat?id=${chatIdToUse}&itemId=${item.id}`;
+                console.log("🔗 Navigating to:", navUrl);
+                router.push(navUrl);
+              } else {
+                console.error("❌ Invalid chatId:", chatIdToUse);
+                Alert.alert("Error", "Failed to initialize chat");
+              }
             } catch (err) {
-              console.error("❌ Chat error:", err.response?.data || err.message);
-              Alert.alert("Error", "Failed to start chat");
+              console.error("❌ Unexpected chat error:", err);
+              Alert.alert("Error", "An unexpected error occurred. Please try again.");
             }
           }}
           activeOpacity={0.8}
         >
           <Icon name="chat" size={20} color="#FFF" />
-          <Text style={styles.bookButtonText}>Chat with Owner</Text>
-        </TouchableOpacity> */}
+          <Text style={styles.bookButtonText}>Chat Now</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );

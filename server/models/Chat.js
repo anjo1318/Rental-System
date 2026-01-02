@@ -4,7 +4,8 @@ import sequelize from "../database/database.js";
 
 const Chat = sequelize.define("Chat", {
   id: {
-    type: DataTypes.STRING, // UUID
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true,
   },
   itemId: {
@@ -19,11 +20,10 @@ const Chat = sequelize.define("Chat", {
     type: DataTypes.INTEGER,
     allowNull: false,
   },
-  // Optional: add a status or lastMessage column
-  status: {
-    type: DataTypes.ENUM("active", "closed"),
-    defaultValue: "active",
-  },
-});
+},
+{
+  timestamps: true
+}
+);
 
 export default Chat;

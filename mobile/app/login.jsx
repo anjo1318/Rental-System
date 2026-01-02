@@ -138,14 +138,14 @@ export default function Login() {
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
 
-        await Notifications.scheduleNotificationAsync({
-          content: {
-            title: "Login Successful",
-            body: `Welcome back, ${user.firstName}!`,
-            data: { userId: user.id },
-          },
-          trigger: null,
-        });
+        // await Notifications.scheduleNotificationAsync({
+        //   content: {
+        //     title: "Login Successful",
+        //     body: `Welcome back, ${user.firstName}!`,
+        //     data: { userId: user.id },
+        //   },
+        //   trigger: null,
+        // });
 
         router.push("customer/home");
       } else {

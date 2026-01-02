@@ -1,12 +1,19 @@
 import express from "express";
-import { getMessages, postMessage } from "../controllers/chatController.js";
+import { getOrCreateChat, checkChatExists, getUserChats, getChatById } from '../controllers/chatController.js';
+import {authenticateToken} from '../controllers/ownerController.js';
 
 const router = express.Router();
 
-// // Get all messages for a chat
-// router.get("/:id", getMessages);
+// Create or get existing chat
+router.post("/get-or-create", authenticateToken, getOrCreateChat);
 
-// // Send a message
-// router.post("/", postMessage);
+// Check if chat exists for an item (IMPORTANT: This route must come before /:id routes)
+router.get("/check/:itemId", authenticateToken, checkChatExists);
+
+// Get all chats for current user
+router.get("/user-chats", authenticateToken, getUserChats);
+
+// Get specific chat by ID - ADD THIS
+router.get("/:id", authenticateToken, getChatById);
 
 export default router;
