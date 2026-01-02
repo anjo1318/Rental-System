@@ -310,29 +310,46 @@ export default function BookedItem() {
                     )}
                   </View>
                 </Pressable>
-
-                {/* Left: item image */}
-                <View style={styles.imageWrapper}>
-                  <Image
-                    source={{ 
-                      uri: item.itemImage || 'https://via.placeholder.com/50x50?text=No+Image'
-                    }}
-                    style={styles.itemImage}
-                    defaultSource={{ uri: 'https://via.placeholder.com/50x50?text=No+Image' }}
-                  />
-                </View>
+                  {/* Left: item image */}
+                  <View style={styles.imageWrapper}>
+                    <Image
+                      source={{ 
+                        uri: (() => {
+                          try {
+                            // Parse the JSON string to get the array
+                            const imageArray = JSON.parse(item.itemImage);
+                            // Get the first image URL and convert to https
+                            const url = Array.isArray(imageArray) && imageArray.length > 0
+                              ? imageArray[0].replace(/^http:\/\//, "https://")
+                              : 'https://via.placeholder.com/50x50?text=No+Image';
+                            return url;
+                          } catch (error) {
+                            console.log('Image parse error:', error);
+                            return 'https://via.placeholder.com/50x50?text=No+Image';
+                          }
+                        })()
+                      }}
+                      style={styles.itemImage}
+                      resizeMode="cover"
+                      onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+                    />
+                  </View>
 
                 {/* Center: details */}
                 <View style={styles.detailsWrapper}>
                   <Text style={styles.productName} numberOfLines={1}>
                     {item.product || 'Unknown Product'}
                   </Text>
-                  
-                  <Text>
-                    • Pickup: {formatDate(item.pickUpDate)}
-                  </Text>
 
-                  <Text 
+                  <Text style={styles.productName} numberOfLines={1}>
+                   ₱ {item.pricePerDay || 'Unknown Product'}
+                  </Text>
+                  
+                  {/* <Text>
+                    • Pickup: {formatDate(item.pickUpDate)}
+                  </Text> */}
+
+                  {/* <Text 
                     style={[
                       styles.statusText,
                       item.status?.toLowerCase() === "pending" && { color: "#D4A017" },
@@ -342,18 +359,18 @@ export default function BookedItem() {
                     numberOfLines={1}
                   >
                     {item.status || 'Unknown'} 
-                  </Text>
+                  </Text> */}
                   
                 
                 </View>
 
                 {/* Right: date and chevron */}
-                <View style={styles.dateWrapper}>
+                {/* <View style={styles.dateWrapper}>
                   <Text style={styles.dateText}>
                     {formatDate(item.pickUpDate)}
                   </Text>
                   <Icon name="chevron-right" size={20} color="#666" style={styles.chevronIcon} />
-                </View>
+                </View> */}
               </Pressable>
             ))
           )}
@@ -562,7 +579,7 @@ const styles = StyleSheet.create({
   radioOuter: {
     width: 22,
     height: 22,
-    borderRadius: 11,
+    borderRadius: 5,
     borderWidth: 2,
     borderColor: "#666",
     justifyContent: "center",
@@ -584,7 +601,7 @@ const styles = StyleSheet.create({
   imageWrapper: {
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 5,
     overflow: "hidden",
     marginRight: 10,
   },

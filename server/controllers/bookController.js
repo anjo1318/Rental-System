@@ -394,23 +394,39 @@ const bookNotification = async (req, res) => {
   }
 };
 
-
-
 const bookedItems = async (req, res) => {
   const { id } = req.params; // this will be the customerId coming from the mobile 
+  console.log("Incoming data", req.params);
+  console.log("Ito yung specific na booking item para sa time tas sa right side ay yung id nung user", req.params);
   
-  console.log("Incoming data",req.params);
-  console.log("Ito yung specific na booking item para sa time tas sa right side ay yung id nung user",req.params);
-
   try {
-    const response = await Books.findAll({
-      where: { customerId: id }, // ✅ find all bookings for this customer
+    const bookings = await Books.findAll({
+      where: { customerId: id },
       order: [["created_at", "DESC"]]
     });
 
-    return res.status(200).json({ success: true, data: response });
+    // ✅ Fetch owner profile images for each booking
+    const bookingsWithOwnerImages = await Promise.all(
+      bookings.map(async (booking) => {
+        const bookingData = booking.toJSON();
+        
+        // Fetch owner's profileImage
+        const owner = await Owner.findByPk(booking.ownerId, {
+          attributes: ['profileImage', 'firstName', 'lastName']
+        });
+        
+        // Add owner data to booking
+        bookingData.ownerProfileImage = owner?.profileImage || null;
+        bookingData.ownerFirstName = owner?.firstName || null;
+        bookingData.ownerLastName = owner?.lastName || null;
+        
+        return bookingData;
+      })
+    );
+
+    return res.status(200).json({ success: true, data: bookingsWithOwnerImages });
   } catch (error) {
-    console.error("Notification fetch error:", error);
+    console.error("Booking fetch error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };

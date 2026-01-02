@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between", // avatar left, bell right
     padding: 16,
-    marginTop: 1,
+    marginTop: 20,
 
   },
   email: {
