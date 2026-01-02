@@ -89,7 +89,7 @@ export default function AddressInfo() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           >
         <KeyboardAwareScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.05 }}
           enableOnAndroid={true}
           keyboardShouldPersistTaps="handled"
           enableAutomaticScroll={true} // scrolls input into view automatically

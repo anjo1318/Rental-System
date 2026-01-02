@@ -70,7 +70,7 @@ export default function IdUpload() {
               behavior={Platform.OS === "ios" ? "padding" : "height"}
               >
         <KeyboardAwareScrollView
-          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.2 }}
+          contentContainerStyle={{ flexGrow: 1, paddingBottom: height * 0.05 }}
           enableOnAndroid={true}
           keyboardShouldPersistTaps="handled"
           enableAutomaticScroll={true} // scrolls input into view automatically
@@ -192,7 +192,7 @@ export default function IdUpload() {
           {/* ID Verification Section */}
           <Text style={styles.sub5Text}>ID Verification</Text>
           <Text style={styles.sub6Text}>
-            Only JPEG, JPG and PNG files with max size of 4mb.
+            Only JPE, JPG and PNG files with max size of 4mb.
           </Text>
 
          <View style={styles.pickerContainer}>
