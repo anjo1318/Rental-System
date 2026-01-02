@@ -125,10 +125,7 @@ export default function Home() {
       />
       <CustomerBottomNav/>
 
-      <ScrollView style={styles.container} 
-      contentContainerStyle={{ paddingBottom: 80 }}
-      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
-        <View style={styles.topBackground}>
+      <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>
@@ -176,6 +173,11 @@ export default function Home() {
             </Pressable>
           </View>
 
+
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+      
           
 
           {/* 🔹 Featured Devices */}
