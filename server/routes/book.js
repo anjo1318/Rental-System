@@ -20,8 +20,9 @@ import { approveBooking,
     getRentalStatus,
     triggerRentalMonitoring,
     getLateRentals,
-    confirmBooking,
-    ongoingBook
+    ongoingBook,
+    bookedItemForApproval,
+    startBookedItem
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -48,10 +49,11 @@ router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
 //for owners
 router.get("/book-request/:id", fetchBookRequest);
 router.get("/ongoing-book/:id", ongoingBook);
+router.get("/booked-item-approval/:id", bookedItemForApproval);
+router.put('/start-booked-item/:id', startBookedItem);
 router.put('/approve-booking/:id', approveBooking);
 router.put('/reject-booking/:id',rejectBooking);
 router.put('/terminate-booking/:id',terminateBooking);
-router.put('/confirm-booking/:id', confirmBooking); //mark the booking as "ongoing" and subtract 1 in the quantity of that item
 
 //for admin
 router.get("/fetch-bookings", fetchAllBooking);

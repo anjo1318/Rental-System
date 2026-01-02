@@ -263,7 +263,7 @@ const confirmRent = async () => {
       <Icon name="check-circle" size={60} color="#4CAF50" />
       <Text style={styles.modalText}>
         {paymentCompleted 
-          ? "Payment successful! Your booking is confirmed."
+          ? "Your booking is confirmed. Please wait for the product to be delivered"
           : bookingData?.paymentMethod === "Cash" 
             ? "Request sent, please wait for the reply."
             : "Booking confirmed!"}

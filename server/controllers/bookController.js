@@ -1317,6 +1317,27 @@ const ongoingBook = async (req, res) => {
   }
 };
 
+const bookedItemForApproval = async (req, res) => {
+  console.log("Using bookedItemForApproval");
+
+  try {
+    const { id } = req.params;
+    console.log("Id of the incoming request:", id);
+
+    const response = await Books.findAll({
+      where: { ownerId: id, status: "booked" },
+      order: [["created_at", "DESC"]], 
+    });
+
+    return res.status(200).json({ success: true, data: response });
+
+  } catch (error) {
+    console.error("Error in bookedItemForApproval:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 const approveBooking = async (req, res) => {
   try {
     const {id} = req.params;
@@ -2337,7 +2358,7 @@ const addNotificationReadStatus = {
 };
 
 
-const confirmBooking = async (req, res) => {
+const startBookedItem = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
@@ -2407,8 +2428,6 @@ const confirmBooking = async (req, res) => {
     });
   }
 };
-
-export default confirmBooking;
 
 
 // ====================================
@@ -2932,6 +2951,7 @@ export {
   getLateRentals,
   setupRentalMonitoring,
   VIOLATION_CONFIG,
-  confirmBooking,
-  ongoingBook
+  ongoingBook,
+  bookedItemForApproval,
+  startBookedItem
 };
