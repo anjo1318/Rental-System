@@ -225,7 +225,7 @@ export default function IdUpload() {
             placeholderTextColor="#888"
             value={idNumber}
             onChangeText={setIdNumber}
-            keyboardType="phone-pad"
+            keyboardType="default"
             autoCapitalize="none"
             onFocus={() => setFocusField("idNumber")}
             onBlur={() => setFocusField("")}

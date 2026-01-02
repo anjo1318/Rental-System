@@ -655,7 +655,7 @@ export default function PersonalInfo() {
           style={{ color: zipCode ? "#000" : "transparent", width: "100%" }}
         >
           <Picker.Item label="Select ZIP code " value="" color="#888" /> 
-          <Picker.Item label="5101" value="5101" />
+          <Picker.Item label="5208" value="5208" />
 
         </Picker>
       </View>

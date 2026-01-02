@@ -97,7 +97,7 @@ export default function ownerProfile() {
           onPress: async () => {
             try {
               await AsyncStorage.removeItem('user');
-              router.replace('owner/ownerLogin');
+              router.replace('customer/loginInterface');
             } catch (error) {
               console.error('Error logging out:', error);
               Alert.alert("Error", "Failed to log out. Please try again.");
@@ -174,7 +174,7 @@ export default function ownerProfile() {
 
             <View style={styles.nameContainer}>
               <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
-              <Text style={styles.gmail}>{currentUser.emailAddress}</Text>
+              <Text style={styles.gmail}>{currentUser.email}</Text>
             </View>
           </Pressable>
 
