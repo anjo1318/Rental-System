@@ -152,7 +152,7 @@ export default function Messages() {
           >
             <View style={[styles.iconBox, { width: ICON_BOX }]}>
               <Pressable onPress={handleBackPress} hitSlop={10} style={styles.iconPress}>
-                <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
+                <Icon name="arrow-back" size={ICON_SIZE} color="#ffffff" />
               </Pressable>
             </View>
 
@@ -231,7 +231,7 @@ export default function Messages() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#E6E1D6" 
+    backgroundColor: "#ffffff" 
   },
 
   headerWrapper: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
 
   topBackground: {
-    backgroundColor: "#007F7F",
+    backgroundColor: "FFF",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    color: "#888",
+    color: "#FFF",
     fontSize: 16,
   },
 
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
 
   messageItem: {
     flexDirection: "row",
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#ffffff",
     padding: 20,
   },
 
@@ -343,7 +343,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: height * 0.015,
-    backgroundColor: "#fff",
+    backgroundColor: "##ffffff",
     borderTopWidth: 1,
     borderTopColor: "#00000040",
     position: "absolute",

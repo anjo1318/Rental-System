@@ -31,32 +31,49 @@ export default function ProfileHeader() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  console.log("📱 Owner Messages Component Rendered");
+
   useEffect(() => {
+    console.log("🔄 useEffect triggered - Starting to fetch chats");
+
     const fetchChats = async () => {
       try {
+        console.log("🔑 Attempting to retrieve token from AsyncStorage");
         const token = await AsyncStorage.getItem("token");
         
         if (!token) {
-          console.error("No token found");
+          console.error("❌ No token found");
           setLoading(false);
           return;
         }
 
-        const res = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+        console.log("✅ Token retrieved successfully");
+        const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`;
+        console.log("📡 Making API request to:", apiUrl);
+
+        const res = await axios.get(apiUrl, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
-        );
+        });
+
+        console.log("📥 API Response status:", res.status);
+        console.log("📦 API Response data:", JSON.stringify(res.data, null, 2));
 
         if (res.data.success) {
+          console.log("✅ Chats fetched successfully");
+          console.log("💬 Number of chats:", res.data.data.length);
           setChats(res.data.data);
         }
       } catch (err) {
-        console.error("Error fetching chats:", err);
+        console.error("❌ Error fetching chats:", err);
+        console.error("❌ Error message:", err.message);
+        if (err.response) {
+          console.error("❌ Response status:", err.response.status);
+          console.error("❌ Response data:", err.response.data);
+        }
       } finally {
+        console.log("🏁 Fetch complete, setting loading to false");
         setLoading(false);
       }
     };
@@ -65,6 +82,7 @@ export default function ProfileHeader() {
   }, []);
 
   const formatDate = (dateString) => {
+    console.log("📅 Formatting date:", dateString);
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);
@@ -76,14 +94,38 @@ export default function ProfileHeader() {
     const compareDate = new Date(date);
     compareDate.setHours(0, 0, 0, 0);
 
+    let formattedDate;
     if (compareDate.getTime() === today.getTime()) {
-      return "Today";
+      formattedDate = "Today";
     } else if (compareDate.getTime() === yesterday.getTime()) {
-      return "Yesterday";
+      formattedDate = "Yesterday";
     } else {
-      return `${date.getMonth() + 1}/${date.getDate()}`;
+      formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
     }
+    
+    console.log("📅 Formatted date result:", formattedDate);
+    return formattedDate;
   };
+
+  const handleChatPress = (chat) => {
+    console.log("💬 Chat pressed:", {
+      chatId: chat.id,
+      itemId: chat.itemId,
+      otherUser: chat.otherUserName,
+    });
+    console.log("🔗 Navigating to:", `/owner/ownerChat?id=${chat.id}&itemId=${chat.itemId}`);
+    router.push(`/owner/ownerChat?id=${chat.id}&itemId=${chat.itemId}`);
+  };
+
+  const handleBackPress = () => {
+    console.log("⬅️ Back button pressed");
+    router.back();
+  };
+
+  console.log("🎨 Rendering UI with:", {
+    loading,
+    chatsCount: chats.length,
+  });
 
   return (
     <View style={styles.container}>
@@ -102,7 +144,7 @@ export default function ProfileHeader() {
           {/* Left: back button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable
-              onPress={() => router.back()}
+              onPress={handleBackPress}
               hitSlop={10}
               style={styles.iconPress}
             >
@@ -129,35 +171,61 @@ export default function ProfileHeader() {
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#057474" />
+            {console.log("⏳ Showing loading indicator")}
           </View>
         ) : chats.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No messages yet</Text>
+            {console.log("📭 Showing empty state")}
           </View>
         ) : (
           <ScrollView contentContainerStyle={styles.scrollContent}>
-            {chats.map((chat) => (
-              <Pressable
-                key={chat.id}
-                style={styles.messageItem}
-                onPress={() => router.push(`/owner/ownerChat?id=${chat.id}&itemId=${chat.itemId}`)}
-              >
-                <View style={styles.bottomDivider} />
-                <Image
-                  source={{ uri: "https://i.pravatar.cc/150?img=3" }}
-                  style={styles.avatar}
-                />
-                <View style={styles.messageContent}>
-                  <View style={styles.messageHeader}>
-                    <Text style={styles.sender}>Chat #{chat.id}</Text>
-                    <Text style={styles.date}>{formatDate(chat.updatedAt)}</Text>
+            {console.log("📜 Rendering chat list")}
+            {chats.map((chat) => {
+              console.log("💬 Rendering chat item:", {
+                id: chat.id,
+                otherUser: chat.otherUserName,
+                hasLastMessage: !!chat.lastMessage,
+                hasImage: !!chat.otherUserImage
+              });
+              
+              return (
+                <Pressable
+                  key={chat.id}
+                  style={styles.messageItem}
+                  onPress={() => handleChatPress(chat)}
+                >
+                  <View style={styles.bottomDivider} />
+                  <Image
+                    source={{ 
+                      uri: chat.otherUserImage 
+                        ? chat.otherUserImage 
+                        : "https://i.pravatar.cc/150?img=3" 
+                    }}
+                    style={styles.avatar}
+                  />
+                  <View style={styles.messageContent}>
+                    <View style={styles.messageHeader}>
+                      <Text style={styles.sender}>
+                        {chat.otherUserName || `Chat #${chat.id}`}
+                      </Text>
+                      <Text style={styles.date}>
+                        {chat.lastMessage 
+                          ? formatDate(chat.lastMessage.createdAt)
+                          : formatDate(chat.updatedAt)
+                        }
+                      </Text>
+                    </View>
+                    <Text style={styles.preview} numberOfLines={1}>
+                      {chat.lastMessage 
+                        ? chat.lastMessage.text 
+                        : `Item ID: ${chat.itemId}`
+                      }
+                    </Text>
                   </View>
-                  <Text style={styles.preview} numberOfLines={1}>
-                    Item ID: {chat.itemId}
-                  </Text>
-                </View>
-              </Pressable>
-            ))}
+                </Pressable>
+              );
+            })}
           </ScrollView>
         )}
       </View>
@@ -168,7 +236,7 @@ export default function ProfileHeader() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#FFF",
   },
 
   headerWrapper: {
@@ -232,7 +300,7 @@ const styles = StyleSheet.create({
 
   messageItem: {
     flexDirection: "row",
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#FFF",
     padding: 20,
   },
 

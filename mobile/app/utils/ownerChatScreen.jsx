@@ -10,6 +10,7 @@ import {
   Platform,
   Alert,
   Dimensions,
+  Image,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -26,35 +27,74 @@ export default function OwnerChatScreen({ BottomNav }) {
   const [userId, setUserId] = useState(null);
   const [token, setToken] = useState(null);
   const [userName, setUserName] = useState("");
+  const [chatDetails, setChatDetails] = useState(null);
   const flatListRef = useRef(null);
+
+  console.log("💬 Owner ChatScreen - Chat ID:", id);
 
   // Get user ID and token from storage
   useEffect(() => {
     const getUserData = async () => {
       try {
+        console.log("🔑 Getting user data from AsyncStorage");
         const userStr = await AsyncStorage.getItem("user");
         const storedToken = await AsyncStorage.getItem("token");
         
         if (userStr) {
           const user = JSON.parse(userStr);
+          console.log("👤 User data:", user);
           setUserId(user.id);
           setUserName(`${user.firstName} ${user.lastName}`);
         }
         if (storedToken) {
+          console.log("✅ Token retrieved");
           setToken(storedToken);
         }
       } catch (err) {
-        console.error("Error getting user data:", err);
+        console.error("❌ Error getting user data:", err);
       }
     };
     getUserData();
   }, []);
 
+  // Fetch chat details (to get other user's info)
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const fetchChatDetails = async () => {
+      try {
+        console.log("📡 Fetching chat details for chat ID:", id);
+        const res = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        if (res.data.success) {
+          console.log("✅ Chat details fetched");
+          // Find the specific chat
+          const currentChat = res.data.data.find(chat => chat.id === parseInt(id));
+          console.log("💬 Current chat details:", currentChat);
+          setChatDetails(currentChat);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching chat details:", err);
+      }
+    };
+
+    fetchChatDetails();
+  }, [id, userId, token]);
+
+  // Fetch messages
   useEffect(() => {
     if (!userId || !token) return;
 
     const fetchMessages = async () => {
       try {
+        console.log("📡 Fetching messages for chat ID:", id);
         const res = await axios.get(
           `${process.env.EXPO_PUBLIC_API_URL}/api/message/${id}`,
           {
@@ -63,9 +103,10 @@ export default function OwnerChatScreen({ BottomNav }) {
             }
           }
         );
+        console.log("✅ Messages fetched:", res.data.length, "messages");
         setMessages(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("❌ Error fetching messages:", err);
         Alert.alert("Error", "Failed to fetch messages");
       }
     };
@@ -74,6 +115,8 @@ export default function OwnerChatScreen({ BottomNav }) {
 
   const handleSend = async () => {
     if (!input.trim() || !userId || !token) return;
+    
+    console.log("📤 Sending message:", input);
     
     try {
       const res = await axios.post(
@@ -91,6 +134,7 @@ export default function OwnerChatScreen({ BottomNav }) {
       );
       
       if (res.data.success) {
+        console.log("✅ Message sent successfully");
         setMessages((prev) => [...prev, res.data.data]);
         setInput("");
         setTimeout(() => {
@@ -98,7 +142,7 @@ export default function OwnerChatScreen({ BottomNav }) {
         }, 100);
       }
     } catch (err) {
-      console.error(err);
+      console.error("❌ Error sending message:", err);
       Alert.alert("Error", "Failed to send message");
     }
   };
@@ -133,10 +177,19 @@ export default function OwnerChatScreen({ BottomNav }) {
         </Pressable>
         
         <View style={styles.headerCenter}>
-          <View style={styles.avatar}>
-            <Icon name="person" size={24} color="#666" />
-          </View>
-          <Text style={styles.headerName}>Kenneth Senorin</Text>
+          {chatDetails?.otherUserImage ? (
+            <Image
+              source={{ uri: chatDetails.otherUserImage }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <Icon name="person" size={24} color="#666" />
+            </View>
+          )}
+          <Text style={styles.headerName}>
+            {chatDetails?.otherUserName || "Loading..."}
+          </Text>
         </View>
         
         <View style={styles.headerRight} />
@@ -150,6 +203,7 @@ export default function OwnerChatScreen({ BottomNav }) {
         renderItem={renderMessage}
         contentContainerStyle={styles.messagesList}
         style={styles.messagesContainer}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
       />
       
       {/* Input */}
@@ -172,7 +226,7 @@ export default function OwnerChatScreen({ BottomNav }) {
           />
           
           <Pressable onPress={handleSend} style={styles.sendButton}>
-            <Icon name="send" size={24} color="#4A90E2" />
+            <Icon name="send" size={24} color="#03A3A3" />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -217,6 +271,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
 
+  avatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 8,
+    backgroundColor: "#E0E0E0",
+  },
+
   headerName: {
     fontSize: 16,
     fontWeight: "600",
@@ -254,7 +316,7 @@ const styles = StyleSheet.create({
   },
 
   ownMessage: {
-    backgroundColor: "#5DADE2",
+    backgroundColor: "#03A3A3",
     borderBottomRightRadius: 4,
   },
 
