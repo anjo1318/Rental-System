@@ -41,10 +41,11 @@ export default function LoginInterface() {
 
         {/* Buttons section */}
         <View style={styles.bottom}>
-          <Text style={styles.prompt}>
+          <Text style={styles.prompt} onPress={() => router.push("/customer/draft")}>
             How do you prefer to use this application
+            
           </Text>
-    
+    x
 
           <Pressable
             style={({ pressed }) => [

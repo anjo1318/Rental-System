@@ -1006,7 +1006,7 @@ const styles = StyleSheet.create({
   },
   subText: {
     position: "absolute",
-    top: height * 0.08,
+    top: height * 0.06,
     left: width * 0.1,
     fontSize: width * 0.04,
     fontWeight: "200",
