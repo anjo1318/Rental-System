@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
     flex: 1.1,
     flexDirection: "column",
     justifyContent: "space-between", // pushes elements apart
-    paddingHorizontal: 8,
+    paddingHorizontal: 5,
     paddingTop: 8,
     paddingBottom: 10,
   },
@@ -556,12 +556,10 @@ const styles = StyleSheet.create({
   title: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    marginBottom: 8,
   },
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 2,
   },
   ratingValue: {
     fontSize: width * 0.035,
@@ -576,7 +574,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",   // ✅ center icon with multi-line text
     marginLeft: -8,
-    marginTop: 10,
   },
 
   iconContainer: {

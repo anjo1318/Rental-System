@@ -80,7 +80,7 @@ export default function TimeDuration() {
       }
   
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/api/book/booked-items/${userId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`
       );
   
       console.log("API response:", response.data);
@@ -181,7 +181,7 @@ export default function TimeDuration() {
     return (
       <View key={item.id} style={styles.card}>
 
-        {/* Device info */}z
+        {/* Device info */}
         <View style={styles.deviceRow}>
         <Image
           source={{
@@ -244,7 +244,7 @@ export default function TimeDuration() {
             <Text style={styles.detailValue}>
               {item.rentalDuration} {item.rentalPeriod}(s)
             </Text>
-          </View>
+          </View> 
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Total:</Text>
             <Text style={styles.detailValue}>₱{parseFloat(item.grandTotal).toFixed(2)}</Text>
