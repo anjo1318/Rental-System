@@ -109,6 +109,7 @@ export const getUserChats = async (req, res) => {
 
     console.log("🔍 Fetching chats for user:", userId);
     
+    // Fetch chats without associations
     const chats = await Chat.findAll({
       where: {
         [Op.or]: [
@@ -116,27 +117,25 @@ export const getUserChats = async (req, res) => {
           { ownerId: userId }
         ]
       },
-      include: [
-        {
-          model: Customer,
-          as: 'customer',
-          attributes: ['id', 'firstName', 'middleName', 'lastName', 'emailAddress']
-        },
-        {
-          model: Owner,
-          as: 'owner',
-          attributes: ['id', 'firstName', 'middleName', 'lastName', 'email']
-        }
-      ],
       order: [["updatedAt", "DESC"]],
     });
 
     console.log("💬 Found", chats.length, "chats");
 
-    // For each chat, get the last message
+    // For each chat, manually fetch customer, owner, and last message
     const chatsWithDetails = await Promise.all(
       chats.map(async (chat) => {
         console.log("🔍 Processing chat ID:", chat.id);
+        
+        // Manually fetch customer
+        const customer = await Customer.findByPk(chat.customerId, {
+          attributes: ['id', 'firstName', 'middleName', 'lastName', 'emailAddress']
+        });
+
+        // Manually fetch owner
+        const owner = await Owner.findByPk(chat.ownerId, {
+          attributes: ['id', 'firstName', 'middleName', 'lastName', 'email']
+        });
         
         // Get the last message for this chat
         const lastMessage = await Message.findOne({
@@ -153,13 +152,13 @@ export const getUserChats = async (req, res) => {
         
         if (chat.customerId === userId) {
           // Current user is customer, show owner's info
-          otherUser = chat.owner;
+          otherUser = owner;
           if (otherUser) {
             otherUserName = `${otherUser.firstName} ${otherUser.middleName ? otherUser.middleName + ' ' : ''}${otherUser.lastName}`.trim();
           }
         } else {
           // Current user is owner, show customer's info
-          otherUser = chat.customer;
+          otherUser = customer;
           if (otherUser) {
             otherUserName = `${otherUser.firstName} ${otherUser.middleName ? otherUser.middleName + ' ' : ''}${otherUser.lastName}`.trim();
           }
