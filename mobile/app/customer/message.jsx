@@ -181,7 +181,8 @@ export default function Messages() {
             console.log("💬 Rendering chat item:", {
               id: chat.id,
               otherUser: chat.otherUserName,
-              hasLastMessage: !!chat.lastMessage
+              hasLastMessage: !!chat.lastMessage,
+              hasImage: !!chat.otherUserImage
             });
             
             return (
@@ -192,7 +193,11 @@ export default function Messages() {
               >
                 <View style={styles.bottomDivider} />
                 <Image
-                  source={{ uri: "https://i.pravatar.cc/150?img=3" }}
+                  source={{ 
+                    uri: chat.otherUserImage 
+                      ? chat.otherUserImage 
+                      : "https://i.pravatar.cc/150?img=3" 
+                  }}
                   style={styles.avatar}
                 />
                 <View style={styles.messageContent}>

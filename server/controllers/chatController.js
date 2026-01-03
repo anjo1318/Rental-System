@@ -4,6 +4,7 @@ import Customer from '../models/Customer.js';
 import Owner from '../models/Owner.js';
 import Message from '../models/Message.js';
 
+
 export const getOrCreateChat = async (req, res) => {
   try {
     const { itemId, customerId, ownerId } = req.body;
@@ -90,6 +91,8 @@ export const checkChatExists = async (req, res) => {
   }
 };
 
+
+
 export const getUserChats = async (req, res) => {
   try {
     console.log("📥 getUserChats - Request received");
@@ -129,12 +132,12 @@ export const getUserChats = async (req, res) => {
         
         // Manually fetch customer
         const customer = await Customer.findByPk(chat.customerId, {
-          attributes: ['id', 'firstName', 'middleName', 'lastName', 'emailAddress']
+          attributes: ['id', 'firstName', 'middleName', 'lastName', 'emailAddress', 'selfie', 'idPhoto']
         });
 
         // Manually fetch owner
         const owner = await Owner.findByPk(chat.ownerId, {
-          attributes: ['id', 'firstName', 'middleName', 'lastName', 'email']
+          attributes: ['id', 'firstName', 'middleName', 'lastName', 'email', 'profileImage']
         });
         
         // Get the last message for this chat
@@ -149,22 +152,27 @@ export const getUserChats = async (req, res) => {
         // Determine the other user (not the current user)
         let otherUser = null;
         let otherUserName = '';
+        let otherUserImage = null;
         
         if (chat.customerId === userId) {
           // Current user is customer, show owner's info
           otherUser = owner;
           if (otherUser) {
             otherUserName = `${otherUser.firstName} ${otherUser.middleName ? otherUser.middleName + ' ' : ''}${otherUser.lastName}`.trim();
+            otherUserImage = otherUser.profileImage;
           }
         } else {
           // Current user is owner, show customer's info
           otherUser = customer;
           if (otherUser) {
             otherUserName = `${otherUser.firstName} ${otherUser.middleName ? otherUser.middleName + ' ' : ''}${otherUser.lastName}`.trim();
+            // Prefer selfie, fallback to idPhoto
+            otherUserImage = otherUser.selfie || otherUser.idPhoto;
           }
         }
 
         console.log("👤 Other user name:", otherUserName);
+        console.log("🖼️ Other user image:", otherUserImage);
 
         return {
           id: chat.id,
@@ -175,6 +183,7 @@ export const getUserChats = async (req, res) => {
           updatedAt: chat.updatedAt,
           otherUserName: otherUserName || 'Unknown User',
           otherUserId: otherUser?.id || null,
+          otherUserImage: otherUserImage || null,
           lastMessage: lastMessage ? {
             text: lastMessage.content,
             createdAt: lastMessage.createdAt,
