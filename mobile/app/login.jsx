@@ -255,11 +255,14 @@ export default function Login() {
         >
           {/* Header */}
           <View style={styles.headerWrapper}>
-            {/* <Image
-              source={require("./assets/images/bg.png")}
-              style={styles.headerImage}
-              resizeMode="cover"
-            /> */}
+          <Animated.Image
+                // header graphic (keeps in place relative to the wrapper)
+                source={require("../assets/images/header.png")}
+                style={styles.headerImage}
+                resizeMode="cover"
+                accessible
+                accessibilityLabel="Top banner"
+              />
             <Pressable onPress={() => router.push("/")} style={styles.backButton}>
               <Ionicons name="arrow-back" size={28} color="#fff" />
             </Pressable>
@@ -268,11 +271,16 @@ export default function Login() {
 
           {/* Logo */}
           <View style={styles.middle}>
-            {/* <Animated.Image
-              source={require("./assets/images/logo1.png")}
-              style={[styles.logo, { transform: [{ scale: logoScale }] }]}
-              resizeMode="contain"
-            /> */}
+            <Animated.Image
+                  source={require("../assets/images/app_logo.png")}
+                  style={[
+                    styles.logo,
+                    { transform: [{ scale: logoScale }] }, // scale down while moving up
+                  ]}
+                  resizeMode="contain"
+                  accessible
+                  accessibilityLabel="App logo"
+                />
           </View>
 
           {/* Form */}

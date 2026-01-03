@@ -134,6 +134,7 @@ const mobileUserLogin = async (req, res) => {
         province: customer.province,
         country: customer.country,
         zipCode: customer.zipCode,
+        profileImage: customer.idPhoto,
       },
     });
   } catch (error) {

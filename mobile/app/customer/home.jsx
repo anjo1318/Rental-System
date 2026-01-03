@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import { usePathname } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get("window");
 
@@ -37,8 +38,46 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const pathname = usePathname();
 
+  // 🔒 Check authentication every time screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      checkAuth();
+    }, [])
+  );
+
+  const checkAuth = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      const token = await AsyncStorage.getItem('token');
+      
+      if (!userData || !token) {
+        console.log('❌ No authentication found, redirecting to login');
+        router.replace('/login');
+        return;
+      }
+
+      const user = JSON.parse(userData);
+      
+      // 🚫 Block if role is owner (this is customer home)
+      if (user.role === 'owner') {
+        console.log('🚫 Owner trying to access customer home, clearing and redirecting');
+        await AsyncStorage.multiRemove(['token', 'user', 'isLoggedIn']);
+        router.replace('/login');
+        return;
+      }
+
+      setCurrentUser(user);
+      setOwnerId(user.id);
+      setIsAuthenticated(true);
+      console.log('✅ User authenticated:', user);
+    } catch (error) {
+      console.error('Error checking authentication:', error);
+      router.replace('/login');
+    }
+  };
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -58,39 +97,26 @@ export default function Home() {
         setLoading(false);
       }
     };
-    fetchItems();
-  }, []);
-
-  useEffect(()=>{
-    loadUserData();
-  },[]);
-
-  const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        setCurrentUser(user);
-        setOwnerId(user.id);
-        console.log('✅ User loaded from storage in home.jsx:', user);
-        return user.id;
-      } else {
-        console.log('❌ No user data found, redirecting to login');
-        router.replace('/login'); // Redirect to login if no user data
-        return null;
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      router.replace('/login');
-      return null;
+    
+    if (isAuthenticated) {
+      fetchItems();
     }
-  };
+  }, [isAuthenticated]);
 
   const handleNavigation = (route) => {
     // 🚫 Prevent navigating to the same "home"
     if (route === "customer/home") return;
     router.push(`/${route}`);
   };
+
+  // 🔒 Don't render anything until authentication is verified
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#007F7F" />
+      </View>
+    );
+  }
 
   if (loading) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
   if (error)
@@ -129,10 +155,15 @@ export default function Home() {
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>
-            <Image
-              source={{ uri: "https://i.pravatar.cc/150?img=3" }}
-              style={styles.avatar}
-            />
+           <Image
+                source={{
+                  uri:
+                    currentUser?.profileImage && currentUser.profileImage !== "N/A"
+                      ? currentUser.profileImage
+                      : "https://i.pravatar.cc/150?img=3",
+                }}
+                style={styles.avatar}
+              />
           </Pressable >
           <View style={styles.userInfo}>
               <Text style={styles.username}>

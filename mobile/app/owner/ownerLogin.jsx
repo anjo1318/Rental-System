@@ -94,7 +94,16 @@ export default function ownerLogin() {
         }
 
         if (parsedUser && parsedUser.firstName) {
-          console.log("✅ Found valid login, redirecting to dashboard");
+          // 🚫 Check if role is customer - silently remove and stay on page
+          if (parsedUser.role === 'customer') {
+            console.log("🚫 Customer data detected, silently removing...");
+            await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
+            // Don't show alert, don't redirect - just stay on login page
+            return;
+          }
+
+          // ✅ Role is owner, allow access
+          console.log("✅ Found valid owner login, redirecting to dashboard");
           router.replace("/owner/ownerHome");
         } else {
           console.log("⚠️ User data invalid, clearing storage");
@@ -146,6 +155,16 @@ export default function ownerLogin() {
       if (response.data.success) {
         const { token, user } = response.data;
         
+        // 🚫 Double check: if API returns customer role, silently block and clear fields
+        if (user.role === 'customer') {
+          console.log("🚫 Customer account detected, blocking access silently");
+          // Clear the input fields
+          setEmail("");
+          setPassword("");
+          setLoading(false);
+          return;
+        }
+
         // Store user session data with all available fields
         const userDataToStore = {
           id: user.id,
@@ -183,7 +202,7 @@ export default function ownerLogin() {
           await AsyncStorage.multiRemove(['savedEmail', 'savedPassword', 'rememberMe']);
         }
 
-        console.log('✅ User logged in and data stored successfully');
+        console.log('✅ Owner logged in and data stored successfully');
         
         // Navigate to owner dashboard
         router.replace('/owner/ownerHome');
