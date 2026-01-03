@@ -18,7 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
-export default function ChatScreen({ BottomNav }) {
+export default function OwnerChatScreen({ BottomNav }) {
   const { id } = useLocalSearchParams(); // chatId
   const router = useRouter();
   const [messages, setMessages] = useState([]);

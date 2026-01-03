@@ -1,4 +1,5 @@
-import ChatScreen from "../utils/chatScreen";
+import OwnerChatScreen from '../utils/ownerChatScreen';
+
 export default function OwnerChat() {
-  return <ChatScreen sender="owner" />;
+  return <OwnerChatScreen />;
 }
