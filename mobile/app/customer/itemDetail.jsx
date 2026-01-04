@@ -184,21 +184,101 @@ export default function ItemDetail() {
       <ItemImages images={item.itemImages} />
 
       {/* Item Info */}
-      <View style={styles.infoContainer}>
+      <View style={styles.titleContainer}>
+        <Text style={styles.price}>₱{item.pricePerDay}</Text>
+        <Text style={styles.titleLabel}> per hour</Text>
+      </View>
         <Text style={styles.title}>{item.title}</Text>
+
+        <View style={styles.container}>
+      
+      {/* Text + Verified */}
+      <View style={styles.textContainer}>
+        {/* Avatar */}
+      <Image
+        source={{ uri: "https://via.placeholder.com/50" }} // replace with your profile image URL
+        style={styles.avatar}
+      />
+
+        <Text style={styles.greetingText}>
+          Hello kenneth{" "}
+          <Icon name="check-circle" size={18} color="#3498db" />
+        </Text>
+      </View>
+    </View>
         
         <View style={styles.categoryRow}>
           <Icon name="category" size={16} color="#666" />
           <Text style={styles.category}>{item.category}</Text>
         </View>
         
-        <View style={styles.priceRow}>
-          <Text style={styles.price}>₱{item.pricePerDay}</Text>
-          <Text style={styles.priceUnit}>/ day</Text>
+     {/* Specifications */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Specification</Text>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Processor:</Text>
+          <Text style={styles.specValue}>Intel Core i7 (10th Gen)</Text>
         </View>
-        
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Graphics:</Text>
+          <Text style={styles.specValue}>NVIDIA GeForce RTX 3060 6GB GDDR6</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Memory:</Text>
+          <Text style={styles.specValue}>16GB DDR4 RAM</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Storage:</Text>
+          <Text style={styles.specValue}>512GB SSD</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Display:</Text>
+          <Text style={styles.specValue}>15.6" Full HD (1920x1080) IPS, 144Hz refresh rate</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Operating System:</Text>
+          <Text style={styles.specValue}>Windows 11 Home (Activated)</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Keyboard:</Text>
+          <Text style={styles.specValue}>RGB backlit gaming keyboard</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Connectivity:</Text>
+          <Text style={styles.specValue}>Wi-Fi 6, Bluetooth 5.0, HDMI, USB 3.2 ports</Text>
+        </View>
+        <View style={styles.specItem}>
+          <Text style={styles.specKey}>Battery:</Text>
+          <Text style={styles.specValue}>Good battery health, lasts 3–5 hours</Text>
+        </View>
+      </View>
+
+      {/* Description */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Description (actual condition)</Text>
         <Text style={styles.description}>{item.description}</Text>
       </View>
+
+      {/* Review */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Review(1)</Text>
+        <View style={styles.reviewContainer}>
+          <Text style={styles.reviewerName}>Mr.Kennth</Text>
+          <View style={styles.stars}>
+            <Icon name="star" size={16} color="#FFD700" />
+            <Icon name="star" size={16} color="#FFD700" />
+            <Icon name="star" size={16} color="#FFD700" />
+            <Icon name="star" size={16} color="#FFD700" />
+            <Icon name="star-border" size={16} color="#FFD700" />
+          </View>
+          <Text style={styles.reviewText}>
+            Okay naman sya maganda at maayos ang takbo ng Acer Predator Helios 300 mabilis, malinis, at parang brand new pa rin gamitin; walang lag at perfect para sa gaming at school works, highly recommended!
+          </Text>
+        </View>
+      </View>
+        
+        
+      
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
@@ -418,11 +498,39 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
   },
   title: { 
+    flexDirection: "row",
     fontSize: 24, 
     fontWeight: "700", 
     color: "#333",
     marginBottom: 12
   },
+  titleContainer: {
+  flexDirection: "row", // makes children side by side
+  alignItems: "center", // vertical alignment
+  marginBottom: 12,
+},
+titleLabel: {
+  fontSize: 24,
+  fontWeight: "700",
+  color: "#333",
+},
+avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#ccc",
+  },
+  textContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  greetingText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#333",
+    marginLeft: 10,
+  },
+
   categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,6 +562,47 @@ const styles = StyleSheet.create({
     fontSize: 16, 
     color: "#333",
     lineHeight: 24
+  },
+
+  section: {
+    marginBottom: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 8,
+    color: "#333",
+  },
+  specItem: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  specKey: {
+    fontWeight: "600",
+    width: 130,
+    color: "#555",
+  },
+  specValue: {
+    flex: 1,
+    color: "#333",
+  },
+  reviewContainer: {
+    backgroundColor: "#f9f9f9",
+    padding: 10,
+    borderRadius: 8,
+  },
+  reviewerName: {
+    fontWeight: "700",
+    marginBottom: 4,
+    color: "#333",
+  },
+  stars: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  reviewText: {
+    fontSize: 14,
+    color: "#444",
   },
   actionContainer: {
     flexDirection: "row",
