@@ -10,7 +10,7 @@ import { FolderPen } from "lucide-react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import RentingPaymenxtMethod from "./rentingPaymentMethod";
+import RentingPaymentMethod from "./rentingPaymentMethod";
 import ConfirmationScreen from "./confirmationScreen";
 
 
@@ -939,17 +939,16 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
+    
   },
   headerWrapper: {
     backgroundColor: "#FFF",
     paddingHorizontal: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    borderBottomWidth: 2,
+    borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   profileContainer: {
     flexDirection: "row",

@@ -528,8 +528,7 @@ const styles = StyleSheet.create({
     right: 0,
     paddingHorizontal: 1,
     paddingVertical: 1,
-    alignItems: "flex-start",
-    borderRadius: 20, // No rounding for full-width badge
+    alignItems: "center",
   },
 
   availabilityText: {

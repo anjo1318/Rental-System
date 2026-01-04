@@ -142,6 +142,7 @@ export default function BookedItem() {
       <StatusBar barStyle="light-content" backgroundColor="#007F7F" translucent={false} />
 
       <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
+        
         <View style={styles.headerContent}>
           <Pressable onPress={() => router.replace("/customer/home")} hitSlop={10}>
             <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
@@ -256,18 +257,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#007F7F",
     justifyContent: "center",
     paddingHorizontal: PADDING_H,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
 
   headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    top: 10,
   },
 
   headerTitle: {
     fontSize: TITLE_FONT,
     fontWeight: "600",
     color: "#FFF",
+    
   },
 
   bodyWrapper: {

@@ -369,10 +369,15 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
           disabled={!selectedMethod}
         >
 
-          <Text style={{ color: "#FFF", fontWeight: "700"}}>
-            {isCalculatingFee ? "Calculating..." : `₱ ${pricing.grandTotal}`}
-          </Text>
-          <Text style={{ color: "#FFF", fontWeight: "700"}}>Continue</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={{ color: "#FFF", fontWeight: "700" }}>
+              {isCalculatingFee ? "Calculating..." : `₱ ${pricing.grandTotal}`}
+            </Text>
+
+            <Text style={{ color: "#FFF", fontWeight: "700" }}>
+              Continue
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
    </View>
@@ -388,12 +393,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingHorizontal: 16,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    borderBottomWidth: 2,
+    borderBottomWidth: 1,
     borderBottomColor: "#ccc",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   profileContainer: {
     flexDirection: "row",
