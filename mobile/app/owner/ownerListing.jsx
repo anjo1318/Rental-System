@@ -137,15 +137,55 @@ export default function OwnerListing() {
 
       if (response.data.success) {
         setItems(
-          response.data.data.map((item) => ({
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            category: item.category || 'Uncategorized',
-            pricePerDay: item.pricePerDay.toString(),
-            itemImage: item.itemImage || "https://via.placeholder.com/150",
-            isAvailable: item.availability,
-          }))
+          response.data.data.map((item) => {
+            // Get the first image from itemImages array
+            let imageUrl = "https://via.placeholder.com/150";
+            
+            try {
+              if (item.itemImages && item.itemImages.length > 0) {
+                let firstImage = item.itemImages[0];
+                
+                // If it's a JSON string, parse it first
+                if (typeof firstImage === 'string') {
+                  try {
+                    firstImage = JSON.parse(firstImage);
+                  } catch (e) {
+                    // If JSON.parse fails, it might already be a plain URL string
+                    console.log('Not JSON, treating as plain string');
+                  }
+                }
+                
+                // If after parsing it's an array, get the first element
+                if (Array.isArray(firstImage) && firstImage.length > 0) {
+                  imageUrl = firstImage[0];
+                } 
+                // If it's an object with imageUrl property
+                else if (typeof firstImage === 'object' && firstImage !== null && firstImage.imageUrl) {
+                  imageUrl = firstImage.imageUrl;
+                } 
+                // If it's a plain string URL
+                else if (typeof firstImage === 'string') {
+                  imageUrl = firstImage;
+                }
+              } else if (item.itemImage) {
+                imageUrl = item.itemImage;
+              }
+            } catch (error) {
+              console.error('Error parsing image for', item.title, error);
+            }
+            
+            console.log('Item:', item.title, 'Final Image URL:', imageUrl);
+            
+            return {
+              id: item.id,
+              title: item.title,
+              description: item.description,
+              category: item.category || 'Uncategorized',
+              pricePerDay: item.pricePerDay.toString(),
+              itemImage: imageUrl,
+              isAvailable: item.availability,
+            };
+          })
         );
       } else {
         setItems([]);
@@ -319,46 +359,47 @@ export default function OwnerListing() {
 
   const renderItem = ({ item }) => (
     <View style={styles.card}>
-      <TouchableOpacity activeOpacity={0.9} style={styles.imageContainer}>
-        <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
-      </TouchableOpacity>
-      
-      <View style={styles.itemInfo}>
-        <Text style={styles.title}>{item.title}</Text>
-        {item.description && (
-          <Text style={styles.description} numberOfLines={2}>
-            {item.description}
-          </Text>
-        )}
-        <Text style={styles.category}>{item.category}</Text>
-        <Text style={styles.price}>₱{item.pricePerDay}/day</Text>
+      {/* Horizontal Layout */}
+      <View style={styles.cardContent}>
+        {/* Image on Left */}
+        <TouchableOpacity activeOpacity={0.9} style={styles.imageContainer}>
+          <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
+        </TouchableOpacity>
         
-        <View style={styles.availabilityContainer}>
-          <Text style={[
-            styles.availabilityText,
-            { color: item.isAvailable ? '#4CAF50' : '#FF5722' }
-          ]}>
-            {item.isAvailable ? 'Available' : 'Not Available'}
-          </Text>
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={() => {
-              console.log("Toggle availability pressed for item:", item.id);
-              toggleAvailability(item.id, item.isAvailable);
-              onRefresh();
-            }}
-            style={[
-              styles.toggleButton,
-              { backgroundColor: item.isAvailable ? '#FF5722' : '#4CAF50' }
-            ]}
-          >
-            <Text style={styles.toggleButtonText}>
-              {item.isAvailable ? 'Mark Unavailable' : 'Mark Available'}
+        {/* Content on Right */}
+        <View style={styles.itemInfo}>
+          {/* Title and Badges Row */}
+          <View style={styles.headerRow}>
+            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+            <View style={styles.badgeContainer}>
+              {/* Available Badge */}
+              <View style={[
+                styles.availabilityBadge,
+                { backgroundColor: item.isAvailable ? '#4CAF50' : '#E0E0E0' }
+              ]}>
+                <Text style={[
+                  styles.badgeText,
+                  { color: item.isAvailable ? '#FFF' : '#666' }
+                ]}>
+                  {item.isAvailable ? 'Available' : 'Unavailable'}
+                </Text>
+              </View>
+            </View>
+          </View>
+          
+          {/* Category */}
+          <Text style={styles.category}>{item.category}</Text>
+          
+          {/* Description */}
+          {item.description && (
+            <Text style={styles.description} numberOfLines={2}>
+              {item.description}
             </Text>
-          </TouchableOpacity>
+          )}
         </View>
       </View>
 
+      {/* Action Buttons */}
       <View style={styles.actions}>
         <TouchableOpacity 
           activeOpacity={0.7}
@@ -368,8 +409,8 @@ export default function OwnerListing() {
           }} 
           style={[styles.actionButton, styles.editButton]}
         >
-          <Icon name="edit" size={18} color="#FFF" />
-          <Text style={[styles.actionText, styles.actionTextWhite]}>Edit</Text>
+          <Icon name="edit" size={16} color="#FFF" />
+          <Text style={styles.actionText}>Edit</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -381,8 +422,8 @@ export default function OwnerListing() {
           }} 
           style={[styles.actionButton, styles.deleteButton]}
         >
-          <Icon name="delete" size={18} color="#FFF" />
-          <Text style={[styles.actionText, styles.actionTextWhite]}>Delete</Text>
+          <Icon name="delete" size={16} color="#FFF" />
+          <Text style={styles.actionText}>Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -423,29 +464,6 @@ export default function OwnerListing() {
           <Icon name="add" size={28} color="#FFF" />
         </TouchableOpacity>
       </View>
-
-      {/* Search */}
-      {/* 
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color="#666" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search items by name or category..."
-          value={search}
-          onChangeText={setSearch}
-          placeholderTextColor="#999"
-        />
-        {search.length > 0 && (
-          <TouchableOpacity 
-            activeOpacity={0.7}
-            onPress={() => setSearch("")} 
-            style={styles.clearButton}
-          >
-            <Icon name="clear" size={20} color="#666" />
-          </TouchableOpacity>
-        )}
-      </View>
-      */}
 
       {/* Items List */}
       <FlatList
@@ -531,151 +549,110 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     marginRight: 10,
   },
-  searchContainer: { 
-    flexDirection: "row", 
-    backgroundColor: "#FFF", 
-    margin: 16, 
-    borderRadius: 12, 
-    paddingHorizontal: 16, 
-    alignItems: "center",
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    minHeight: 52
-  },
-  searchInput: { 
-    flex: 1, 
-    height: 48,
-    marginLeft: 12,
-    fontSize: 16
-  },
-  clearButton: {
-    padding: 8,
-    borderRadius: 20,
-    minWidth: 36,
-    minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
   listContainer: {
     padding: 16,
     paddingTop: 20
   },
+  
+  // CARD STYLES - UPDATED TO MATCH IMAGE
   card: { 
     backgroundColor: "#FFF", 
-    borderRadius: 16, 
-    padding: 16, 
-    marginBottom: 16,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  imageContainer: {
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 16
-  },
-  itemImage: { 
-    width: "100%", 
-    height: 180, 
-    borderRadius: 12
-  },
-  itemInfo: {
-    marginBottom: 16
-  },
-  title: { 
-    fontSize: 20, 
-    fontWeight: "700", 
-    color: "#333",
-    marginBottom: 6
-  },
-  description: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 8,
-    lineHeight: 20
-  },
-  category: { 
-    fontSize: 14, 
-    color: "#057474",
-    fontWeight: "600",
-    marginBottom: 6,
-    textTransform: 'capitalize'
-  },
-  price: { 
-    fontSize: 22, 
-    fontWeight: "800", 
-    color: "#057474",
-    marginBottom: 12
-  },
-  availabilityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderRadius: 12, 
+    padding: 12, 
     marginBottom: 12,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f0f0f0'
-  },
-  availabilityText: {
-    fontSize: 14,
-    fontWeight: '700'
-  },
-  toggleButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    minHeight: 40,
-    minWidth: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
-  toggleButtonText: {
-    color: '#FFF',
+  cardContent: {
+    flexDirection: 'row',
+    marginBottom: 12
+  },
+  imageContainer: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginRight: 12
+  },
+  itemImage: { 
+    width: 90, 
+    height: 90, 
+    borderRadius: 8
+  },
+  itemInfo: {
+    flex: 1,
+    justifyContent: 'flex-start'
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 4
+  },
+  title: { 
+    fontSize: 16, 
+    fontWeight: "700", 
+    color: "#000",
+    flex: 1,
+    marginRight: 8
+  },
+  badgeContainer: {
+    flexDirection: 'row',
+    gap: 4
+  },
+  availabilityBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    minWidth: 80,
+    alignItems: 'center'
+  },
+  badgeText: {
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  category: { 
+    fontSize: 12, 
+    color: "#666",
+    fontWeight: "400",
+    marginBottom: 4
+  },
+  description: {
     fontSize: 12,
-    fontWeight: '700'
+    color: "#666",
+    lineHeight: 16
   },
   actions: { 
     flexDirection: "row", 
     justifyContent: "space-between",
-    gap: 12
+    gap: 8
   },
   actionButton: { 
     flexDirection: "row", 
     alignItems: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
     flex: 1,
     justifyContent: 'center',
-    minHeight: 48,
-    elevation: 3,
+    minHeight: 40,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
   editButton: {
-    backgroundColor: '#057474'
+    backgroundColor: '#007F7F'
   },
   deleteButton: {
-    backgroundColor: '#FF5722'
+    backgroundColor: '#FF5252'
   },
   actionText: { 
-    marginLeft: 8, 
-    fontSize: 16,
-    fontWeight: '700'
-  },
-  actionTextWhite: {
+    marginLeft: 6, 
+    fontSize: 14,
+    fontWeight: '600',
     color: '#FFF'
   },
   loadingText: {
@@ -764,7 +741,6 @@ const styles = StyleSheet.create({
     flex: 1,
     zIndex: 10,
   },
-
   navText: {
     fontWeight: "bold",
     fontSize: width * 0.03,
