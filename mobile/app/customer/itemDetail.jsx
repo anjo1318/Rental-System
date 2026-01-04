@@ -18,13 +18,29 @@ import ItemImages from "./itemImages";
 
 export default function ItemDetail() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // get item id from params
+  const { id } = useLocalSearchParams();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
-  
+  const [customer, setCustomer] = useState(null);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+  useEffect(() => {
+    const loadCustomer = async () => {
+      try {
+        const userData = await AsyncStorage.getItem("user");
+        if (userData) {
+          const user = JSON.parse(userData);
+          setCustomer(user);
+        }
+      } catch (err) {
+        console.error("Error loading customer:", err);
+      }
+    };
+
+    loadCustomer();
+  }, []);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -70,7 +86,6 @@ export default function ItemDetail() {
 
       const customer = JSON.parse(userData);
 
-      // Build full address
       const fullAddress = [
         customer.houseNumber,
         customer.street,
@@ -81,7 +96,6 @@ export default function ItemDetail() {
         customer.zipCode
       ].filter(Boolean).join(", ");
 
-      // Calculate dates
       const pickupDate = new Date().toISOString().split('T')[0];
       const returnDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -121,9 +135,7 @@ export default function ItemDetail() {
       );
 
       console.log("Response data:", response.data);
-      router.push("/customer/book") 
-
-     
+      router.push("/customer/book");
 
     } catch (error) {
       console.error("❌ Booking error:", error.message);
@@ -146,7 +158,6 @@ export default function ItemDetail() {
     }
   };
 
-  // Loading state
   if (loading) {
     return (
       <View style={styles.center}>
@@ -156,7 +167,6 @@ export default function ItemDetail() {
     );
   }
 
-  // Item not found
   if (!item) {
     return (
       <View style={styles.center}>
@@ -170,140 +180,138 @@ export default function ItemDetail() {
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={22} color="#FFF" />
+          <Icon name="arrow-back" size={24} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Gadget Details</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Item Images */}
-      <ItemImages images={item.itemImages} />
+      <ScrollView 
+        style={styles.scrollContent} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContainer}
+      >
+        {/* Item Images */}
+        <ItemImages images={item.itemImages} />
 
-      {/* Item Info */}
-      <View style={styles.titleContainer}>
-        <Text style={styles.price}>₱{item.pricePerDay}</Text>
-        <Text style={styles.titleLabel}> per hour</Text>
-      </View>
-        <Text style={styles.title}>{item.title}</Text>
-
-        <View style={styles.container}>
-      
-      {/* Text + Verified */}
-      <View style={styles.textContainer}>
-        {/* Avatar */}
-      <Image
-        source={{ uri: "https://via.placeholder.com/50" }} // replace with your profile image URL
-        style={styles.avatar}
-      />
-
-        <Text style={styles.greetingText}>
-          Hello kenneth{" "}
-          <Icon name="check-circle" size={18} color="#3498db" />
-        </Text>
-      </View>
-    </View>
-        
-        <View style={styles.categoryRow}>
-          <Icon name="category" size={16} color="#666" />
-          <Text style={styles.category}>{item.category}</Text>
-        </View>
-        
-     {/* Specifications */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Specification</Text>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Processor:</Text>
-          <Text style={styles.specValue}>Intel Core i7 (10th Gen)</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Graphics:</Text>
-          <Text style={styles.specValue}>NVIDIA GeForce RTX 3060 6GB GDDR6</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Memory:</Text>
-          <Text style={styles.specValue}>16GB DDR4 RAM</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Storage:</Text>
-          <Text style={styles.specValue}>512GB SSD</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Display:</Text>
-          <Text style={styles.specValue}>15.6" Full HD (1920x1080) IPS, 144Hz refresh rate</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Operating System:</Text>
-          <Text style={styles.specValue}>Windows 11 Home (Activated)</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Keyboard:</Text>
-          <Text style={styles.specValue}>RGB backlit gaming keyboard</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Connectivity:</Text>
-          <Text style={styles.specValue}>Wi-Fi 6, Bluetooth 5.0, HDMI, USB 3.2 ports</Text>
-        </View>
-        <View style={styles.specItem}>
-          <Text style={styles.specKey}>Battery:</Text>
-          <Text style={styles.specValue}>Good battery health, lasts 3–5 hours</Text>
-        </View>
-      </View>
-
-      {/* Description */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Description (actual condition)</Text>
-        <Text style={styles.description}>{item.description}</Text>
-      </View>
-
-      {/* Review */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Review(1)</Text>
-        <View style={styles.reviewContainer}>
-          <Text style={styles.reviewerName}>Mr.Kennth</Text>
-          <View style={styles.stars}>
-            <Icon name="star" size={16} color="#FFD700" />
-            <Icon name="star" size={16} color="#FFD700" />
-            <Icon name="star" size={16} color="#FFD700" />
-            <Icon name="star" size={16} color="#FFD700" />
-            <Icon name="star-border" size={16} color="#FFD700" />
+        {/* Price and Title Section */}
+        <View style={styles.infoSection}>
+          <View style={styles.priceRow}>
+            <Icon name="attach-money" size={20} color="#057474" />
+            <Text style={styles.price}>{item.pricePerDay}</Text>
+            <Text style={styles.priceUnit}>per hour</Text>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.rating}>5.0</Text>
+              <Icon name="star" size={16} color="#FFD700" />
+            </View>
           </View>
-          <Text style={styles.reviewText}>
-            Okay naman sya maganda at maayos ang takbo ng Acer Predator Helios 300 mabilis, malinis, at parang brand new pa rin gamitin; walang lag at perfect para sa gaming at school works, highly recommended!
-          </Text>
-        </View>
-      </View>
-        
-        
-      
 
-      {/* Action Buttons */}
+          <Text style={styles.title}>{item.title}</Text>
+
+          {/* Owner Info */}
+          <View style={styles.ownerContainer}>
+            <Image
+              source={{ uri: "https://via.placeholder.com/40" }}
+              style={styles.avatar}
+            />
+            <Text style={styles.ownerText}>
+              Hello {customer?.firstName || 'User'}{" "}
+              <Icon name="verified" size={16} color="#3498db" />
+            </Text>
+          </View>
+
+          {/* Brand */}
+          <View style={styles.detailRow}>
+            <Text style={styles.detailLabel}>Brand</Text>
+            <Text style={styles.detailValue}>Acer</Text>
+          </View>
+        </View>
+
+        {/* Specifications */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Specification</Text>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Processor:</Text>
+            <Text style={styles.specValue}>Intel Core i7 (10th Gen)</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Graphics:</Text>
+            <Text style={styles.specValue}>NVIDIA GeForce RTX 3060 6GB GDDR6</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Memory:</Text>
+            <Text style={styles.specValue}>16GB DDR4 RAM</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Storage:</Text>
+            <Text style={styles.specValue}>512GB SSD</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Display:</Text>
+            <Text style={styles.specValue}>15.6" Full HD (1920x1080) IPS, 144Hz refresh rate</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Operating System:</Text>
+            <Text style={styles.specValue}>Windows 11 Home (Activated)</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Keyboard:</Text>
+            <Text style={styles.specValue}>RGB backlit gaming keyboard</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Connectivity:</Text>
+            <Text style={styles.specValue}>Wi-Fi 6, Bluetooth 5.0, HDMI, USB 3.2 ports</Text>
+          </View>
+          <View style={styles.specItem}>
+            <Text style={styles.specKey}>Battery:</Text>
+            <Text style={styles.specValue}>Good battery health, lasts 3–5 hours</Text>
+          </View>
+        </View>
+
+        {/* Description */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Description (actual condition)</Text>
+          <Text style={styles.description}>{item.description}</Text>
+        </View>
+
+        {/* Reviews */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Review(1)</Text>
+          <View style={styles.reviewCard}>
+            <View style={styles.reviewHeader}>
+              <Image
+                source={{ uri: "https://via.placeholder.com/40" }}
+                style={styles.reviewAvatar}
+              />
+              <View style={styles.reviewHeaderText}>
+                <Text style={styles.reviewerName}>Mr.Kenneth</Text>
+                <View style={styles.stars}>
+                  <Icon name="star" size={14} color="#FFD700" />
+                  <Icon name="star" size={14} color="#FFD700" />
+                  <Icon name="star" size={14} color="#FFD700" />
+                  <Icon name="star" size={14} color="#FFD700" />
+                  <Icon name="star-border" size={14} color="#FFD700" />
+                </View>
+              </View>
+            </View>
+            <Text style={styles.reviewText}>
+              Okay naman sya maganda at maayos ang takbo ng Acer Predator Helios 300 mabilis, malinis, at parang brand new pa rin gamitin; walang lag at perfect para sa gaming at school works, highly recommended!
+            </Text>
+          </View>
+        </View>
+
+        {/* Bottom spacing for fixed buttons */}
+        <View style={styles.bottomSpacer} />
+      </ScrollView>
+
+      {/* Fixed Action Buttons */}
       <View style={styles.actionContainer}>
         <TouchableOpacity 
-          style={[styles.chatButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]} 
-          onPress={handleBooking}
-          disabled={!item.availability || isBooking}
-          activeOpacity={0.8}
-        >
-          {isBooking ? (
-            <>
-              <ActivityIndicator size="small" color="#FFF" />
-              <Text style={styles.chatButtonText}>Processing...</Text>
-            </>
-          ) : (
-            <>
-              <Icon name="chat" size={20} color="#057474" />
-              <Text style={styles.chatButtonText}>Chat Now</Text>
-            </>
-          )}
-        </TouchableOpacity>
-
-       <TouchableOpacity
-            style={[styles.bookButton, styles.chatButton, { backgroundColor: "#057474" }]}
-
+          style={styles.chatButton}
           onPress={async () => {
             try {
               const token = await AsyncStorage.getItem("token");
@@ -324,7 +332,6 @@ export default function ItemDetail() {
 
               let chatIdToUse = null;
 
-              // Step 1: Check if chat already exists
               try {
                 const checkUrl = `${API_URL}/api/chat/check/${item.id}`;
                 console.log("🔍 Checking URL:", checkUrl);
@@ -343,7 +350,6 @@ export default function ItemDetail() {
                 console.log("ℹ️ No existing chat found:", checkError.message);
               }
 
-              // Step 2: Create new chat if needed
               if (!chatIdToUse) {
                 console.log("📝 Creating new chat...");
                 
@@ -390,7 +396,6 @@ export default function ItemDetail() {
                 }
               }
 
-              // Step 3: Navigate with valid chatId
               if (chatIdToUse && chatIdToUse !== 'undefined') {
                 const navUrl = `/customer/chat?id=${chatIdToUse}&itemId=${item.id}`;
                 console.log("🔗 Navigating to:", navUrl);
@@ -406,24 +411,40 @@ export default function ItemDetail() {
           }}
           activeOpacity={0.8}
         >
+          <Icon name="chat-bubble-outline" size={20} color="#057474" />
+          <Text style={styles.chatButtonText}>Chat Now</Text>
+        </TouchableOpacity>
 
-          <Text style={styles.bookButtonText}>Book Now</Text>
+        <TouchableOpacity
+          style={[styles.bookButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]}
+          onPress={handleBooking}
+          disabled={!item.availability || isBooking}
+          activeOpacity={0.8}
+        >
+          {isBooking ? (
+            <>
+              <ActivityIndicator size="small" color="#FFF" />
+              <Text style={styles.bookButtonText}>Processing...</Text>
+            </>
+          ) : (
+            <Text style={styles.bookButtonText}>Book Now</Text>
+          )}
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#E6E1D6" 
+    backgroundColor: "#F5F5F5" 
   },
   center: { 
     flex: 1, 
     justifyContent: "center", 
     alignItems: "center",
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#F5F5F5",
     padding: 20
   },
   header: {
@@ -434,237 +455,228 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    
   },
   backButton: {
     padding: 8,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    top: 7,
   },
   headerTitle: {
-    fontSize: 17,
+    fontSize: 18,
     color: "#FFF",
     fontWeight: "600",
     flex: 1,
     textAlign: 'center',
-    top: 7,
   },
   headerSpacer: {
     width: 40
   },
-  imageContainer: {
-    position: 'relative',
-    margin: 16,
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  scrollContent: {
+    flex: 1,
   },
-  image: { 
-    width: "100%", 
-    height: 280, 
-    resizeMode: 'cover'
+  scrollContainer: {
+    paddingBottom: 100,
   },
-  availabilityBadge: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  availabilityText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600'
-  },
-  infoContainer: { 
+  infoSection: {
     backgroundColor: '#FFF',
-    margin: 16,
-    marginTop: 0,
-    padding: 20,
-    borderRadius: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-  },
-  title: { 
-    flexDirection: "row",
-    fontSize: 24, 
-    fontWeight: "700", 
-    color: "#333",
-    marginBottom: 12
-  },
-  titleContainer: {
-  flexDirection: "row", // makes children side by side
-  alignItems: "center", // vertical alignment
-  marginBottom: 12,
-},
-titleLabel: {
-  fontSize: 24,
-  fontWeight: "700",
-  color: "#333",
-},
-avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#ccc",
-  },
-  textContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  greetingText: {
-    fontSize: 16,
-    fontWeight: "500",
-    color: "#333",
-    marginLeft: 10,
-  },
-
-  categoryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12
-  },
-  category: { 
-    fontSize: 14, 
-    color: "#666",
-    marginLeft: 6,
-    textTransform: 'capitalize'
+    padding: 16,
+    marginBottom: 2,
   },
   priceRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 16
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  price: { 
-    fontSize: 28, 
-    fontWeight: "800", 
-    color: "#057474"
+  price: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#057474',
+    marginLeft: 4,
   },
   priceUnit: {
-    fontSize: 16,
-    color: "#666",
+    fontSize: 14,
+    color: '#666',
     marginLeft: 4,
-    fontWeight: '500'
   },
-  description: { 
-    fontSize: 16, 
-    color: "#333",
-    lineHeight: 24
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-
-  section: {
-    marginBottom: 20,
+  rating: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginRight: 4,
   },
-  sectionTitle: {
+  title: {
     fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-    color: "#333",
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
   },
-  specItem: {
-    flexDirection: "row",
+  ownerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E0E0E0',
+    marginRight: 8,
+  },
+  ownerText: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  detailRow: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
+  },
+  detailLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
     marginBottom: 4,
   },
+  detailValue: {
+    fontSize: 14,
+    color: '#666',
+  },
+  section: {
+    backgroundColor: '#FFF',
+    padding: 16,
+    marginBottom: 2,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    marginBottom: 12,
+  },
+  specItem: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
   specKey: {
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#555',
     width: 130,
-    color: "#555",
   },
   specValue: {
     flex: 1,
-    color: "#333",
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
   },
-  reviewContainer: {
-    backgroundColor: "#f9f9f9",
-    padding: 10,
-    borderRadius: 8,
+  description: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 22,
+  },
+  reviewCard: {
+    backgroundColor: '#F9F9F9',
+    padding: 12,
+    borderRadius: 12,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  reviewAvatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E0E0E0',
+    marginRight: 8,
+  },
+  reviewHeaderText: {
+    flex: 1,
   },
   reviewerName: {
-    fontWeight: "700",
-    marginBottom: 4,
-    color: "#333",
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
   },
   stars: {
-    flexDirection: "row",
-    marginBottom: 4,
+    flexDirection: 'row',
+    gap: 2,
   },
   reviewText: {
-    fontSize: 14,
-    color: "#444",
+    fontSize: 13,
+    color: '#555',
+    lineHeight: 20,
+  },
+  bottomSpacer: {
+    height: 20,
   },
   actionContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    position: 'absolute',
     bottom: 0,
-    top: 100,          // ⬅ stick to very bottom
     left: 0,
     right: 0,
+    flexDirection: 'row',
+    backgroundColor: '#FFF',
     paddingHorizontal: 16,
-    paddingBottom: 20,  // safe spacing from edge
+    paddingVertical: 12,
     gap: 12,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderTopWidth: 1,
+    borderTopColor: '#F0F0F0',
   },
-
+  chatButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#FFF',
+    borderWidth: 2,
+    borderColor: '#057474',
+  },
+  chatButtonText: {
+    color: '#057474',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
   bookButton: {
-    flex: 1, 
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 16,
-    borderRadius: 25,
-    backgroundColor: "#000",
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    minHeight: 52
+    paddingVertical: 14,
+    borderRadius: 12,
+    backgroundColor: '#057474',
   },
-    bookButtonText: { 
-    color: "#fff", 
-    fontSize: 16, 
-    fontWeight: "600",
-    marginLeft: 8
+  bookButtonText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '600',
+    marginLeft: 6,
   },
-
-    chatButton: {
-    flex: 1, 
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 25,
-    backgroundColor: "#fff",
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    minHeight: 52
-  },
-
- 
   disabledButton: {
-    backgroundColor: "#ccc",
-    opacity: 0.6
-  },
-
-   chatButtonText: { 
-    color: "#057474", 
-    fontSize: 16, 
-    fontWeight: "600",
-    marginLeft: 8
+    backgroundColor: '#CCC',
+    opacity: 0.6,
   },
   loadingText: {
     marginTop: 16,
