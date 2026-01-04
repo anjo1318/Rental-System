@@ -127,31 +127,52 @@ export default function Home() {
       contentContainerStyle={{ paddingBottom: 80 }}
       showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
         <View style={styles.topBackground}>
-          {/* 🔹 Profile Section */}
-          <View style={styles.profileContainer}>
-            </View>
-            {/* 🔹 Search Bar (Clickable) */}
-            <Pressable onPress={() => router.push('/customer/tap_searchbar')}>
-              <View style={styles.searchContainer}>
-                <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
-                <TextInput
-                  placeholder="Search your devices.."
-                  value={search}
-                  editable={false}
-                  style={styles.searchInput}
-                  placeholderTextColor="#555"
-                />
-                <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
-  <Icon
-    name="tune"
-    size={20}
-    color="gray"
-    style={styles.filterIcon}
-  />
-</Pressable>
-              </View>
-            </Pressable>
-          </View>
+  {/* 🔹 Profile Section */}
+  <View style={styles.profileContainer}></View>
+
+  {/* 🔹 Search Row */}
+  <View style={styles.searchRow}>
+
+    {/* 🔙 Back Button (OUTSIDE container) */}
+    <Pressable onPress={() => router.back()} hitSlop={10}>
+      <Icon
+        name="arrow-back"
+        size={25}
+        color="white"
+        style={styles.backIcon}
+      />
+    </Pressable>
+
+    {/* 🔹 Search Bar (Clickable) */}
+    <Pressable
+      style={{ flex: 1 }}
+      onPress={() => router.push('/customer/tap_searchbar')}
+    >
+      <View style={styles.searchContainer}>
+        <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+
+        <TextInput
+          placeholder="Search your devices.."
+          value={search}
+          editable={false}
+          style={styles.searchInput}
+          placeholderTextColor="#555"
+        />
+
+        <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
+          <Icon
+            name="tune"
+            size={20}
+            color="gray"
+            style={styles.filterIcon}
+          />
+        </Pressable>
+      </View>
+    </Pressable>
+
+  </View>
+</View>
+
 
           {/* 🔹 Recommendations */}
           <Text style={styles.sectionTitle}>Searched Result</Text>
@@ -411,6 +432,16 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: "bold",
   },
+
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  backIcon: {
+    padding: 6,
+  },
+
 
   searchContainer: {
     flexDirection: "row",

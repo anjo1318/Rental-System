@@ -174,9 +174,9 @@ export default function ItemDetail() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FFF" />
+          <Icon name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Item Details</Text>
+        <Text style={styles.headerTitle}>Gadget Details</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -202,9 +202,8 @@ export default function ItemDetail() {
 
       {/* Action Buttons */}
       <View style={styles.actionContainer}>
-        {/* Book Now Button */}
         <TouchableOpacity 
-          style={[styles.bookButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]} 
+          style={[styles.chatButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]} 
           onPress={handleBooking}
           disabled={!item.availability || isBooking}
           activeOpacity={0.8}
@@ -212,20 +211,19 @@ export default function ItemDetail() {
           {isBooking ? (
             <>
               <ActivityIndicator size="small" color="#FFF" />
-              <Text style={styles.bookButtonText}>Processing...</Text>
+              <Text style={styles.chatButtonText}>Processing...</Text>
             </>
           ) : (
             <>
-              <Icon name="book" size={20} color="#FFF" />
-              <Text style={styles.bookButtonText}>Book Now</Text>
+              <Icon name="chat" size={20} color="#057474" />
+              <Text style={styles.chatButtonText}>Chat Now</Text>
             </>
           )}
         </TouchableOpacity>
 
-        {/* Chat Button - Commented Out */}
+       <TouchableOpacity
+            style={[styles.bookButton, styles.chatButton, { backgroundColor: "#057474" }]}
 
-        <TouchableOpacity
-          style={[styles.bookButton, styles.chatButton]}
           onPress={async () => {
             try {
               const token = await AsyncStorage.getItem("token");
@@ -328,8 +326,8 @@ export default function ItemDetail() {
           }}
           activeOpacity={0.8}
         >
-          <Icon name="chat" size={20} color="#FFF" />
-          <Text style={styles.bookButtonText}>Chat Now</Text>
+
+          <Text style={styles.bookButtonText}>Book Now</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -356,26 +354,24 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    
   },
   backButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    minWidth: 40,
-    minHeight: 40,
     justifyContent: 'center',
-    alignItems: 'center'
+    alignItems: 'center',
+    top: 7,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 17,
     color: "#FFF",
     fontWeight: "600",
     flex: 1,
-    textAlign: 'center'
+    textAlign: 'center',
+    top: 7,
   },
   headerSpacer: {
     width: 40
@@ -460,17 +456,25 @@ const styles = StyleSheet.create({
     lineHeight: 24
   },
   actionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    bottom: 0,
+    top: 100,          // ⬅ stick to very bottom
+    left: 0,
+    right: 0,
     paddingHorizontal: 16,
-    paddingBottom: 20,
-    gap: 12
+    paddingBottom: 20,  // safe spacing from edge
+    gap: 12,
   },
+
   bookButton: {
+    flex: 1, 
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
     borderRadius: 25,
-    backgroundColor: "#057474",
+    backgroundColor: "#000",
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -478,15 +482,37 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     minHeight: 52
   },
-  chatButton: {
-    backgroundColor: "#FF6B6B"
+    bookButtonText: { 
+    color: "#fff", 
+    fontSize: 16, 
+    fontWeight: "600",
+    marginLeft: 8
   },
+
+    chatButton: {
+    flex: 1, 
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 25,
+    backgroundColor: "#fff",
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    minHeight: 52
+  },
+
+ 
   disabledButton: {
     backgroundColor: "#ccc",
     opacity: 0.6
   },
-  bookButtonText: { 
-    color: "#FFF", 
+
+   chatButtonText: { 
+    color: "#057474", 
     fontSize: 16, 
     fontWeight: "600",
     marginLeft: 8
