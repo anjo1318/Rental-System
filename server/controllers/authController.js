@@ -1,3 +1,5 @@
+// authController.js - Updated forgotPassword function
+
 import jwt from 'jsonwebtoken';
 import Admin from '../models/Admin.js';
 import Customer from '../models/Customer.js';
@@ -5,6 +7,11 @@ import Owner from '../models/Owner.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+
+// Store reset tokens temporarily (in production, consider using Redis or a database table)
+const resetTokens = new Map();
+
+
 
 
 
@@ -205,19 +212,24 @@ const mobileOwnerLogin = async (req, res) => {
   }
 };
 
-// Assuming you have a User model - adjust import based on your setup
-// import User from '../models/User.js';
-
-// Store reset tokens temporarily (in production, use Redis or database)
-const resetTokens = new Map();
-
 // Configure email transporter
 const transporter = nodemailer.createTransport({
-  service: 'gmail', // or your email service
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: process.env.SMTP_PORT || 587,
+  secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.EMAIL_USER, // your email
-    pass: process.env.EMAIL_PASSWORD, // your email password or app password
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, // Changed from EMAIL_PASSWORD to EMAIL_PASS
   },
+});
+
+// Test email connection on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email transporter error:', error);
+  } else {
+    console.log('✅ Email server is ready to send messages');
+  }
 });
 
 const forgotPassword = async (req, res) => {
@@ -232,9 +244,56 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Check if user exists in database
-    // Replace this with your actual database query
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please enter a valid email address',
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase();
+    let user = null;
+    let userType = null;
+    let userEmail = null;
+
+    // Check if user is a Customer
+    const customer = await Customer.findOne({ 
+      where: { emailAddress: normalizedEmail } 
+    });
+
+    if (customer) {
+      user = customer;
+      userType = 'customer';
+      userEmail = customer.emailAddress;
+    }
+
+    // If not found as Customer, check Owner
+    if (!user) {
+      const owner = await Owner.findOne({ 
+        where: { email: normalizedEmail } 
+      });
+
+      if (owner) {
+        user = owner;
+        userType = 'owner';
+        userEmail = owner.email;
+      }
+    }
+
+    // If not found as Owner, check Admin
+    if (!user) {
+      const admin = await Admin.findOne({ 
+        where: { email: normalizedEmail } 
+      });
+
+      if (admin) {
+        user = admin;
+        userType = 'admin';
+        userEmail = admin.email;
+      }
+    }
 
     if (!user) {
       // Don't reveal if user exists or not for security
@@ -248,51 +307,118 @@ const forgotPassword = async (req, res) => {
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenExpiry = Date.now() + 3600000; // 1 hour from now
 
-    // Store token with expiry (in production, store in database)
-    resetTokens.set(email.toLowerCase(), {
+    // Store token with expiry and user info
+    resetTokens.set(normalizedEmail, {
       token: resetToken,
       expiry: resetTokenExpiry,
-      userId: user._id,
+      userId: user.id,
+      userType: userType, // Store user type to know which table to update
     });
 
-    // Create reset URL
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${email}`;
+    // Create reset URL - adjust based on your mobile app deep linking
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+    // Get user's name for personalization
+    let userName = 'User';
+    if (userType === 'customer') {
+      userName = user.firstName || 'User';
+    } else if (userType === 'owner') {
+      userName = user.firstName || 'User';
+    } else if (userType === 'admin') {
+      userName = user.name || 'Admin';
+    }
 
     // Email content
     const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: 'Password Reset Request',
+      from: `"Rental System" <${process.env.EMAIL_USER}>`,
+      to: userEmail,
+      subject: 'Password Reset Request - Rental System',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #057474;">Password Reset Request</h2>
-          <p>Hello,</p>
-          <p>We received a request to reset your password. Click the button below to reset it:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
-               style="background-color: #057474; 
-                      color: white; 
-                      padding: 12px 30px; 
-                      text-decoration: none; 
-                      border-radius: 5px;
-                      display: inline-block;">
-              Reset Password
-            </a>
-          </div>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="color: #057474; word-break: break-all;">${resetUrl}</p>
-          <p>This link will expire in 1 hour.</p>
-          <p>If you didn't request a password reset, please ignore this email.</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
-          <p style="color: #888; font-size: 12px;">
-            This is an automated email, please do not reply.
-          </p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+          <table role="presentation" style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color: #057474; padding: 30px; text-align: center;">
+                      <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Password Reset Request</h1>
+                    </td>
+                  </tr>
+                  
+                  <!-- Content -->
+                  <tr>
+                    <td style="padding: 40px 30px;">
+                      <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Hello ${userName},
+                      </p>
+                      <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        We received a request to reset your password for your Rental System account. Click the button below to reset it:
+                      </p>
+                      
+                      <!-- Button -->
+                      <table role="presentation" style="margin: 30px 0;">
+                        <tr>
+                          <td align="center">
+                            <a href="${resetUrl}" 
+                               style="background-color: #057474; 
+                                      color: #ffffff; 
+                                      padding: 15px 40px; 
+                                      text-decoration: none; 
+                                      border-radius: 25px;
+                                      display: inline-block;
+                                      font-size: 16px;
+                                      font-weight: 600;">
+                              Reset Password
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                      
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0;">
+                        Or copy and paste this link into your browser:
+                      </p>
+                      <p style="color: #057474; font-size: 14px; word-break: break-all; background-color: #f9f9f9; padding: 10px; border-radius: 5px;">
+                        ${resetUrl}
+                      </p>
+                      
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 20px 0 10px 0;">
+                        <strong>This link will expire in 1 hour.</strong>
+                      </p>
+                      <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 0;">
+                        If you didn't request a password reset, please ignore this email or contact support if you have concerns.
+                      </p>
+                    </td>
+                  </tr>
+                  
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color: #f9f9f9; padding: 20px 30px; border-top: 1px solid #e0e0e0;">
+                      <p style="color: #888888; font-size: 12px; line-height: 1.6; margin: 0; text-align: center;">
+                        This is an automated email, please do not reply.<br>
+                        © ${new Date().getFullYear()} Rental System. All rights reserved.
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
       `,
     };
 
     // Send email
     await transporter.sendMail(mailOptions);
+
+    console.log(`✅ Password reset email sent to: ${userEmail} (${userType})`);
 
     res.status(200).json({
       success: true,
@@ -300,7 +426,7 @@ const forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Forgot password error:', error);
+    console.error('❌ Forgot password error:', error);
     res.status(500).json({
       success: false,
       error: 'An error occurred while processing your request. Please try again later.',
@@ -308,7 +434,7 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-// Additional function to verify reset token (for the reset password page)
+// Verify reset token validity
 const verifyResetToken = async (req, res) => {
   try {
     const { token, email } = req.query;
@@ -340,7 +466,7 @@ const verifyResetToken = async (req, res) => {
       resetTokens.delete(email.toLowerCase());
       return res.status(400).json({
         success: false,
-        error: 'Reset link has expired',
+        error: 'Reset link has expired. Please request a new one.',
       });
     }
 
@@ -350,7 +476,7 @@ const verifyResetToken = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Verify reset token error:', error);
+    console.error('❌ Verify reset token error:', error);
     res.status(500).json({
       success: false,
       error: 'An error occurred',
@@ -358,11 +484,12 @@ const verifyResetToken = async (req, res) => {
   }
 };
 
-// Function to actually reset the password
+// Actually reset the password
 const resetPassword = async (req, res) => {
   try {
     const { token, email, newPassword } = req.body;
 
+    // Validate inputs
     if (!token || !email || !newPassword) {
       return res.status(400).json({
         success: false,
@@ -377,7 +504,8 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const storedToken = resetTokens.get(email.toLowerCase());
+    const normalizedEmail = email.toLowerCase();
+    const storedToken = resetTokens.get(normalizedEmail);
 
     if (!storedToken || storedToken.token !== token) {
       return res.status(400).json({
@@ -387,16 +515,24 @@ const resetPassword = async (req, res) => {
     }
 
     if (Date.now() > storedToken.expiry) {
-      resetTokens.delete(email.toLowerCase());
+      resetTokens.delete(normalizedEmail);
       return res.status(400).json({
         success: false,
-        error: 'Reset link has expired',
+        error: 'Reset link has expired. Please request a new one.',
       });
     }
 
-    // Update user password in database
-    // Replace with your actual password hashing and database update
-    const user = await User.findById(storedToken.userId);
+    // Find user based on userType
+    let user = null;
+    const { userType, userId } = storedToken;
+
+    if (userType === 'customer') {
+      user = await Customer.findOne({ where: { id: userId } });
+    } else if (userType === 'owner') {
+      user = await Owner.findOne({ where: { id: userId } });
+    } else if (userType === 'admin') {
+      user = await Admin.findOne({ where: { id: userId } });
+    }
     
     if (!user) {
       return res.status(404).json({
@@ -405,28 +541,43 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    // Hash password (assuming you have bcrypt)
-    const bcrypt = require('bcrypt');
+    // Hash password (using bcryptjs which you already have)
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
-    await user.save();
+    
+    // Update user password using Sequelize
+    await user.update({ 
+      password: hashedPassword 
+    });
 
     // Remove used token
-    resetTokens.delete(email.toLowerCase());
+    resetTokens.delete(normalizedEmail);
+
+    console.log(`✅ Password reset successful for: ${email} (${userType})`);
 
     res.status(200).json({
       success: true,
-      message: 'Password reset successful',
+      message: 'Password reset successful. You can now login with your new password.',
     });
 
   } catch (error) {
-    console.error('Reset password error:', error);
+    console.error('❌ Reset password error:', error);
     res.status(500).json({
       success: false,
       error: 'An error occurred while resetting password',
     });
   }
 };
+
+// Clean up expired tokens periodically (optional but recommended)
+setInterval(() => {
+  const now = Date.now();
+  for (const [email, data] of resetTokens.entries()) {
+    if (now > data.expiry) {
+      resetTokens.delete(email);
+      console.log(`🧹 Cleaned up expired token for: ${email}`);
+    }
+  }
+}, 3600000); // Run every hour
 
 export { 
   login, 
@@ -437,4 +588,3 @@ export {
   verifyResetToken,
   resetPassword
 };
-

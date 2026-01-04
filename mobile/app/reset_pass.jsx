@@ -100,6 +100,37 @@ export default function ResetPass() {
     }
   };
 
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      Alert.alert("Error", "Please enter your email address.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/auth/forgot-password`,
+        { email }
+      );
+
+      if (response.data.success) {
+        Alert.alert(
+          "Success", 
+          "Password reset link sent! Please check your email.",
+          [{ text: "OK", onPress: () => router.push("/login") }]
+        );
+      } else {
+        Alert.alert("Error", response.data.error || "Failed to send reset link.");
+      }
+    } catch (error) {
+      console.error("Reset password error:", error);
+      Alert.alert("Error", error.response?.data?.error || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#007F7F" />
