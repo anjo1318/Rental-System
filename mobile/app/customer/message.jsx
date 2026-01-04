@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { usePathname, useRouter } from "expo-router";
+
 import {
   View,
   Text,
@@ -11,8 +13,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { usePathname } from "expo-router";
+import {  } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,64 +30,71 @@ const MARGIN_TOP = Math.round(height * 0.02);
 
 export default function Messages() {
   const router = useRouter();
-  const pathname = usePathname();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   console.log("📱 Messages Component Rendered");
-  console.log("📍 Current pathname:", pathname);
+
+  console.log("🔄 useEffect triggered - Starting to fetch chats");
+
+  const fetchChats = async () => {
+    try {
+      console.log("🔑 Attempting to retrieve token from AsyncStorage");
+      const token = await AsyncStorage.getItem("token");
+      
+      if (!token) {
+        console.error("❌ No token found in AsyncStorage");
+        setLoading(false);
+        return;
+      }
+
+      console.log("✅ Token retrieved successfully");
+      console.log("🔗 API URL:", process.env.EXPO_PUBLIC_API_URL);
+      
+      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`;
+      console.log("📡 Making API request to:", apiUrl);
+
+      const res = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      console.log("📥 API Response status:", res.status);
+      console.log("📦 API Response data:", JSON.stringify(res.data, null, 2));
+
+      if (res.data.success) {
+        console.log("✅ Chats fetched successfully");
+        console.log("💬 Number of chats:", res.data.data.length);
+        setChats(res.data.data);
+      } else {
+        console.warn("⚠️ API returned success: false");
+      }
+    } catch (err) {
+      console.error("❌ Error fetching chats:", err);
+      console.error("❌ Error message:", err.message);
+      if (err.response) {
+        console.error("❌ Response status:", err.response.status);
+        console.error("❌ Response data:", err.response.data);
+      }
+    } finally {
+      console.log("🏁 Fetch complete, setting loading to false");
+      setLoading(false);
+    }
+  };
+
+
+
+  const pathname = usePathname();
 
   useEffect(() => {
-    console.log("🔄 useEffect triggered - Starting to fetch chats");
-
-    const fetchChats = async () => {
-      try {
-        console.log("🔑 Attempting to retrieve token from AsyncStorage");
-        const token = await AsyncStorage.getItem("token");
-        
-        if (!token) {
-          console.error("❌ No token found in AsyncStorage");
-          setLoading(false);
-          return;
-        }
-
-        console.log("✅ Token retrieved successfully");
-        console.log("🔗 API URL:", process.env.EXPO_PUBLIC_API_URL);
-        
-        const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`;
-        console.log("📡 Making API request to:", apiUrl);
-
-        const res = await axios.get(apiUrl, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
-
-        console.log("📥 API Response status:", res.status);
-        console.log("📦 API Response data:", JSON.stringify(res.data, null, 2));
-
-        if (res.data.success) {
-          console.log("✅ Chats fetched successfully");
-          console.log("💬 Number of chats:", res.data.data.length);
-          setChats(res.data.data);
-        } else {
-          console.warn("⚠️ API returned success: false");
-        }
-      } catch (err) {
-        console.error("❌ Error fetching chats:", err);
-        console.error("❌ Error message:", err.message);
-        if (err.response) {
-          console.error("❌ Response status:", err.response.status);
-          console.error("❌ Response data:", err.response.data);
-        }
-      } finally {
-        console.log("🏁 Fetch complete, setting loading to false");
-        setLoading(false);
-      }
-    };
-
+    console.log("🔁 Route changed — refreshing data");
+    setLoading(true);
     fetchChats();
-  }, []);
+  }, [pathname]);
+
+  console.log("📍 Current pathname:", pathname);
+
 
   const formatDate = (dateString) => {
     console.log("📅 Formatting date:", dateString);
