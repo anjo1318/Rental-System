@@ -34,6 +34,42 @@ export default function Index() {
   const [OWNER_ID, setOwnerId] = useState(null);
   const pathname = usePathname();
 
+  // ✅ Check for existing user and auto-route on mount
+  useEffect(() => {
+    checkUserAndRoute();
+  }, []);
+
+  const checkUserAndRoute = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log('✅ User found in home.jsx:', user);
+        
+        // Auto-route based on user role
+        if (user.role === 'customer') {
+          console.log('🔄 Customer detected, staying on customer/home');
+
+          setCurrentUser(user);
+          setOwnerId(user.id);
+          router.replace('/customer/home');
+
+        } else if (user.role === 'owner') {
+          console.log('🔄 Owner detected, routing to owner/ownerHome');
+          router.replace('/owner/ownerHome');
+          return; // Exit early
+        } else {
+          console.log('⚠️ Unknown user role:', user.role);
+        }
+      } else {
+        console.log('ℹ️ No user data found, showing guest interface');
+      }
+    } catch (error) {
+      console.error('❌ Error checking user data:', error);
+    }
+  };
+
   useEffect(() => {
     const fetchItems = async () => {
       try {
@@ -54,27 +90,6 @@ export default function Index() {
     };
     fetchItems();
   }, []);
-
-  useEffect(()=>{
-    loadUserData();
-  },[]);
-
-  const loadUserData = async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        setCurrentUser(user);
-        setOwnerId(user.id);
-        console.log('✅ User loaded from storage in home.jsx:', user);
-        return user.id;
-      } else {
-          console.log('ℹ️ Guest user allowed on first.jsx');
-        }
-      } catch (error) {
-        console.error('Error loading user data:', error);
-      }
-  };
 
   const handleNavigation = (route) => {
     // 🚫 Prevent navigating to the same "home"
@@ -299,19 +314,26 @@ export default function Index() {
       {/* 🔹 Bottom Nav - Fixed at bottom */}
       <View style={styles.bottomNav}>
         {[
-          { name: "Home", icon: "home", route: "/customer/loginInterface" },
+          { name: "Home", icon: "home", route: "/customer/home" },
           { name: "Book", icon: "shopping-cart", route: "/customer/loginInterface" },
           { name: "Message", icon: "mail", route: "/customer/loginInterface" },
           { name: "Time", icon: "schedule", route: "/customer/loginInterface" },
         ].map((navItem, index) => {
-          const isActive = pathname === navItem.route;
+          // Compare with current pathname
+          const isActive = pathname === navItem.route || (pathname === "/" && navItem.route === "/customer/home");
 
           return (
             <Pressable
               key={index}
               style={styles.navButton}
               hitSlop={10}
-              onPress={() => router.replace(navItem.route)}
+              onPress={() => {
+                // Prevent navigation if already on the same page
+                if (pathname === navItem.route) return;
+                
+                // Use push instead of replace to maintain navigation stack
+                router.push(navItem.route);
+              }}
             >
               <Icon
                 name={navItem.icon}

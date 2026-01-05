@@ -14,7 +14,7 @@ import {
   Keyboard,
   Animated,
   Modal,
-  Image,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -42,6 +42,40 @@ export default function Login() {
   const [hidden, setHidden] = useState(true);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [pushToken, setPushToken] = useState("");
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // ✅ Check if user is already logged in
+  useEffect(() => {
+    checkAuthAndRoute();
+  }, []);
+
+  const checkAuthAndRoute = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log('✅ User already logged in, redirecting:', user);
+        
+        // Route based on user role
+        if (user.role === 'customer') {
+          router.replace('/customer/home');
+        } else if (user.role === 'owner') {
+          router.replace('/owner/ownerHome');
+        } else {
+          // Unknown role, stay on login page
+          setIsCheckingAuth(false);
+        }
+      } else {
+        // No user data, show login form
+        console.log('ℹ️ No user data found, showing login form');
+        setIsCheckingAuth(false);
+      }
+    } catch (error) {
+      console.error('❌ Error checking auth:', error);
+      setIsCheckingAuth(false);
+    }
+  };
 
   useEffect(() => {
     async function setupPush() {
@@ -53,11 +87,13 @@ export default function Login() {
         }
       } catch (error) {
         console.log('⚠️ Push token registration failed (non-critical):', error);
-        // Continue without push token - it's not critical for login
       }
     }
-    setupPush();
-  }, []);
+    
+    if (!isCheckingAuth) {
+      setupPush();
+    }
+  }, [isCheckingAuth]);
 
   const translateY = useRef(new Animated.Value(0)).current;
   const logoScale = translateY.interpolate({
@@ -103,7 +139,6 @@ export default function Login() {
       return;
     }
 
-    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       Alert.alert("Error", "Please enter a valid email address.");
@@ -115,13 +150,11 @@ export default function Login() {
       console.log('🔄 Attempting login for:', email);
       console.log('📡 API URL:', process.env.EXPO_PUBLIC_API_URL);
 
-      // Prepare login payload
       const loginPayload = {
         email: email.trim().toLowerCase(),
         password: password,
       };
 
-      // Only add push token if available
       if (pushToken) {
         loginPayload.pushToken = pushToken;
         loginPayload.platform = Platform.OS;
@@ -131,7 +164,7 @@ export default function Login() {
         `${process.env.EXPO_PUBLIC_API_URL}/api/auth/mobile/user-login`,
         loginPayload,
         {
-          timeout: 10000, // 10 second timeout
+          timeout: 10000,
           headers: {
             'Content-Type': 'application/json',
           }
@@ -143,10 +176,8 @@ export default function Login() {
       if (response.data.success) {
         const { token, user } = response.data;
 
-        // Map the response fields to match what home.jsx expects
         const userData = {
           id: user.id,
-          // Handle both possible field name formats
           firstName: user.firstName || user.firstname,
           middleName: user.middleName || user.middlename || "",
           lastName: user.lastName || user.lastname,
@@ -162,7 +193,6 @@ export default function Login() {
           country: user.country || "",
           zipCode: user.zipCode || user.zipcode || "",
           role: user.role,
-          // Add any additional fields that might be in the response
           address: user.address || "",
           bio: user.bio || null,
           gcashQR: user.gcashQR || "N/A",
@@ -171,13 +201,11 @@ export default function Login() {
           loginTime: new Date().toISOString(),
         };
 
-        // Save to AsyncStorage
         await AsyncStorage.setItem("token", token);
         await AsyncStorage.setItem("user", JSON.stringify(userData));
         
         console.log('✅ User data saved to AsyncStorage:', userData);
 
-        // Send notification
         try {
           await Notifications.scheduleNotificationAsync({
             content: {
@@ -191,13 +219,13 @@ export default function Login() {
           console.log('⚠️ Notification error (non-critical):', notifError);
         }
 
-        // Navigate based on role
+        // Navigate based on role using replace to prevent back navigation
         if (userData.role === 'customer') {
-          router.replace("customer/home");
+          router.replace("/customer/home");
         } else if (userData.role === 'owner') {
-          router.replace("owner/home"); // Adjust path as needed
+          router.replace("/owner/ownerHome");
         } else {
-          router.replace("customer/home"); // Default
+          router.replace("/customer/home");
         }
       } else {
         Alert.alert("Error", response.data.error || "Login failed.");
@@ -206,7 +234,6 @@ export default function Login() {
       console.error("❌ Login error:", error);
 
       if (error.response) {
-        // Server responded with error
         console.error("Server error:", error.response.data);
         
         if (error.response.status === 403) {
@@ -220,7 +247,6 @@ export default function Login() {
           );
         }
       } else if (error.request) {
-        // Request made but no response
         console.error("Network error - no response:", error.request);
         Alert.alert(
           "Network Error",
@@ -231,7 +257,6 @@ export default function Login() {
           `API URL: ${process.env.EXPO_PUBLIC_API_URL}`
         );
       } else {
-        // Something else happened
         console.error("Error:", error.message);
         Alert.alert("Error", "Something went wrong. Please try again.");
       }
@@ -239,6 +264,17 @@ export default function Login() {
       setLoading(false);
     }
   };
+
+  // Show loading while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#057474" />
+        <ActivityIndicator size="large" color="#057474" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <KeyboardAvoidingView
@@ -255,14 +291,13 @@ export default function Login() {
         >
           {/* Header */}
           <View style={styles.headerWrapper}>
-          <Animated.Image
-                // header graphic (keeps in place relative to the wrapper)
-                source={require("../assets/images/header.png")}
-                style={styles.headerImage}
-                resizeMode="cover"
-                accessible
-                accessibilityLabel="Top banner"
-              />
+            <Animated.Image
+              source={require("../assets/images/header.png")}
+              style={styles.headerImage}
+              resizeMode="cover"
+              accessible
+              accessibilityLabel="Top banner"
+            />
             <Pressable onPress={() => router.push("/")} style={styles.backButton}>
               <Ionicons name="arrow-back" size={28} color="#fff" />
             </Pressable>
@@ -272,15 +307,15 @@ export default function Login() {
           {/* Logo */}
           <View style={styles.middle}>
             <Animated.Image
-                  source={require("../assets/images/app_logo.png")}
-                  style={[
-                    styles.logo,
-                    { transform: [{ scale: logoScale }] }, // scale down while moving up
-                  ]}
-                  resizeMode="contain"
-                  accessible
-                  accessibilityLabel="App logo"
-                />
+              source={require("../assets/images/app_logo.png")}
+              style={[
+                styles.logo,
+                { transform: [{ scale: logoScale }] },
+              ]}
+              resizeMode="contain"
+              accessible
+              accessibilityLabel="App logo"
+            />
           </View>
 
           {/* Form */}
@@ -390,6 +425,18 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#fff"
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#057474",
+    fontWeight: "500",
   },
   scrollContent: {
     flexGrow: 1,

@@ -1,24 +1,88 @@
-import React from "react";
-import {View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,
+import React, { useEffect } from "react";
+import {
+  View,
+  Image,
+  Text,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  StatusBar,
+  ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, usePathname } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width, height } = Dimensions.get("window");
 
 export default function LoginInterface() {
   const router = useRouter();
+  const pathname = usePathname();
+  const [isChecking, setIsChecking] = React.useState(true);
+
+  useEffect(() => {
+    checkUserAndRoute();
+  }, [pathname]);
+
+  const checkUserAndRoute = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      
+      if (userData) {
+        const user = JSON.parse(userData);
+        console.log('✅ User found in LoginInterface:', user);
+        
+        // Route based on user role - use replace to prevent back navigation
+        if (user.role === 'customer') {
+          console.log('🔄 Routing customer to customer/home...');
+          // Check if not already on customer home to avoid loop
+          if (pathname !== '/customer/home') {
+            router.replace('/customer/home');
+          }
+        } else if (user.role === 'owner') {
+          console.log('🔄 Routing owner to owner/ownerHome...');
+          // Check if not already on owner home to avoid loop
+          if (pathname !== '/owner/ownerHome') {
+            router.replace('/owner/ownerHome');
+          }
+        } else {
+          // Unknown role, stay on this page
+          console.log('⚠️ Unknown user role:', user.role);
+          setIsChecking(false);
+        }
+      } else {
+        // No user data, show login interface
+        console.log('ℹ️ No user data found, showing login options');
+        setIsChecking(false);
+      }
+    } catch (error) {
+      console.error('❌ Error checking user data:', error);
+      setIsChecking(false);
+    }
+  };
+
+  // Show loading indicator while checking
+  if (isChecking) {
+    return (
+      <View style={[styles.safe, styles.centerContent]}>
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor="#007F7F"
+          translucent={false}
+        />
+        <ActivityIndicator size="large" color="#057474" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <>
-      {/* Status bar settings */}
       <StatusBar
-        barStyle="light-content"        // White icons/text
-        backgroundColor="#007F7F"       // Android status bar color
-        translucent={false}             // Keep layout unaffected
+        barStyle="light-content"
+        backgroundColor="#007F7F"
+        translucent={false}
       />
-
       <View style={styles.safe}>
-        {/* Header image */}
         <Image
           source={require("../../assets/images/header.png")}
           style={styles.headerImage}
@@ -26,8 +90,7 @@ export default function LoginInterface() {
           accessible
           accessibilityLabel="Top banner"
         />
-
-        {/* Logo section */}
+        
         <View style={styles.middle}>
           <Image
             source={require("../../assets/images/logo.png")}
@@ -37,15 +100,14 @@ export default function LoginInterface() {
             accessibilityLabel="App logo"
           />
         </View>
-
-        {/* Buttons section */}
+        
         <View style={styles.bottom}>
           <Pressable onPress={() => router.push('/first')}>
-          <Text style={styles.prompt}>
-            How do you prefer to use this application
-          </Text>
+            <Text style={styles.prompt}>
+              How do you prefer to use this application
+            </Text>
           </Pressable>
-
+          
           <Pressable
             style={({ pressed }) => [
               styles.button,
@@ -59,7 +121,7 @@ export default function LoginInterface() {
               Customer
             </Text>
           </Pressable>
-
+          
           <Pressable
             style={({ pressed }) => [
               styles.button,
@@ -81,6 +143,16 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#ffffff",
+  },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#057474",
+    fontWeight: "500",
   },
   headerImage: {
     width: "100%",

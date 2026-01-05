@@ -45,7 +45,7 @@ export default function LoginInterface() {
             How do you prefer to use this application
             
           </Text>
-    x
+
 
           <Pressable
             style={({ pressed }) => [
