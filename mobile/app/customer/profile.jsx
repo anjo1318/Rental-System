@@ -13,7 +13,6 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 const { width, height } = Dimensions.get("window");
 
 // 📏 Responsive constants
@@ -136,6 +135,8 @@ export default function Profile() {
         ]}
       >
         <View style={styles.topBackground}>
+
+          
         <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
             <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
@@ -184,7 +185,7 @@ export default function Profile() {
       </View>
 
       {/* General Section */}
-      <View>
+      <View style={styles.historyContainer}>
         <Text style={styles.generalText}>General</Text>
         <Pressable style={styles.historyRow} onPress={() => router.push("customer/history")}>
           <View style={styles.historyPhotoWrapper}>
@@ -198,7 +199,7 @@ export default function Profile() {
         </Pressable>
       </View>    
 
-      <View>
+      <View style={styles.notifContainer}>
         <Pressable style={styles.notifRow} onPress={() => router.push("customer/notifications")}>
           <View style={styles.notifPhotoWrapper}>
             <Image
@@ -212,7 +213,7 @@ export default function Profile() {
       </View>    
 
       {/* Support Section */}
-      <View>
+      <View style={styles.settingsContainer}>
         <Text style={styles.supportText}>Support</Text>
         <Pressable style={styles.settingsRow} onPress={() => router.push("customer/settings")}>
           <View style={styles.settingsPhotoWrapper}>
@@ -226,7 +227,7 @@ export default function Profile() {
         </Pressable>
       </View>    
 
-      <View>
+      <View style={styles.privacyContainer}>
         <Pressable style={styles.privacyRow} onPress={() => router.push("customer/privacy")}>
           <View style={styles.privacyPhotoWrapper}>
             <Image
@@ -239,7 +240,7 @@ export default function Profile() {
         </Pressable>
       </View>    
 
-      <View>
+      <View style={styles.chatContainer}>
         <Pressable style={styles.chatRow} onPress={() => router.push("customer/chat")}>
           <View style={styles.chatPhotoWrapper}>
             <Image
@@ -255,14 +256,8 @@ export default function Profile() {
       {/* Logout Section */}
       <View style={styles.outContainer}>
         <Pressable style={styles.outRow} onPress={handleLogout}>
-          <View style={styles.outPhotoWrapper}>
-            <Image
-              source={require("../../assets/images/logout.png")}
-              style={styles.outAvatar}
-            />
-          </View>
           <Text style={styles.outText}>Log out</Text>
-          <Icon name="arrow-forward-ios" style={styles.outArrowIcon} />
+      
         </Pressable>
       </View>    
 
@@ -280,7 +275,7 @@ export default function Profile() {
             hitSlop={10}
             onPress={() => handleNavigation(navItem.route)}
           >
-            <Icon name={navItem.icon} size={24} color="#fff" />
+            <Icon name={navItem.icon} size={24} color="#656565" />
             <Text style={styles.navText}>{navItem.name}</Text>
           </Pressable>
         ))}
@@ -416,7 +411,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 6,
   },
-
   editText: {
     marginLeft: 4,
     fontSize: width * 0.030,
@@ -425,9 +419,15 @@ const styles = StyleSheet.create({
 
   generalText: {
     marginLeft: 13,
-    fontSize: width * 0.05,
+    fontSize: width * 0.045,
     fontWeight: "700",
     color: "#000",
+    marginBottom: 10,
+  },
+
+  historyContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 15,
   },
 
   historyPhotoWrapper: {
@@ -436,38 +436,51 @@ const styles = StyleSheet.create({
     height: width * 0.09,
     overflow: "visible",
     marginLeft: 10,
-    marginTop: 12,
+
+
   },
 
   historyAvatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: (width * 0.15) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
+    width: "70%",
+    height: "70%",
+    marginLeft: 5,
+    marginTop: 5,
   },
 
   historyRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#CFE7E6", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   historyText: {
     marginLeft: 10,
     fontSize: width * 0.037,
     color: "#313131",
-    marginTop: 10,
     fontWeight: "600",
+    
   },
 
   historyArrowIcon: {
     fontSize: 15,
     color: "#7e7e7e",
-    marginLeft: 170,
-    marginTop: 10,
+    marginLeft: 155,
+  },
+
+
+  notifContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 15,
   },
 
   notifPhotoWrapper: {
@@ -476,46 +489,56 @@ const styles = StyleSheet.create({
     height: width * 0.09,
     overflow: "visible",
     marginLeft: 10,
-    marginTop: 12,
   },
 
   notifAvatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: (width * 0.15) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
+    width: "70%",
+    height: "75%",
+    marginLeft: 5,
+    marginTop: 5,
   },
 
   notifRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#CFE7E6", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   notifText: {
     marginLeft: 10,
     fontSize: width * 0.037,
     color: "#313131",
-    marginTop: 10,
     fontWeight: "600",
   },
 
   notifArrowIcon: {
     fontSize: 15,
     color: "#7e7e7e",
-    marginLeft: 183,
-    marginTop: 10,
+    marginLeft: 168,
   },
 
   supportText: {
     marginLeft: 13,
-    fontSize: width * 0.05,
+    fontSize: width * 0.045,
     fontWeight: "700",
     color: "#000",
     marginTop: 15,
+    marginBottom: 10,
+  },
+
+  settingsContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 15,
   },
 
   settingsPhotoWrapper: {
@@ -524,122 +547,155 @@ const styles = StyleSheet.create({
     height: width * 0.09,
     overflow: "visible",
     marginLeft: 10,
-    marginTop: 12,
   },
 
   settingsAvatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: (width * 0.15) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
+    width: "72%",
+    height: "75%",
+    marginLeft: 5,
+    marginTop: 5,
   },
 
-  settingsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
+settingsRow: {
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 8,
+  paddingVertical: 8,
+  borderRadius: 15,
+  borderWidth: 1,
+  borderColor: "#CFE7E6", 
+  backgroundColor: "#FFFFFF",
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 1 },
+  shadowOpacity: 0.15,
+  shadowRadius: 4,
+  elevation: 3,
+},
+
+
 
   settingsText: {
     marginLeft: 10,
     fontSize: width * 0.037,
     color: "#313131",
-    marginTop: 10,
     fontWeight: "600",
   },
 
   settingsArrowIcon: {
     fontSize: 15,
     color: "#7e7e7e",
-    marginLeft: 210,
-    marginTop: 10,
+    marginLeft: 195,
+    marginTop: 5,
   },
 
+  privacyContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 15,
+  },
   privacyPhotoWrapper: {
     position: "relative",
     width: width * 0.09,
     height: width * 0.09,
     overflow: "visible",
     marginLeft: 10,
-    marginTop: 12,
   },
 
   privacyAvatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: (width * 0.15) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
+    width: "70%",
+    height: "75%",
+    marginLeft: 5,
+    marginTop: 5,
   },
 
   privacyRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#CFE7E6", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   privacyText: {
     marginLeft: 10,
     fontSize: width * 0.037,
     color: "#313131",
-    marginTop: 10,
     fontWeight: "600",
   },
 
   privacyArrowIcon: {
     fontSize: 15,
     color: "#7e7e7e",
-    marginLeft: 174,
-    marginTop: 10,
+    marginLeft: 159,
+    marginTop: 5,
   },
 
+  chatContainer: {
+    marginBottom: 15,
+    paddingHorizontal: 15,
+  },
   chatPhotoWrapper: {
     position: "relative",
     width: width * 0.09,
     height: width * 0.09,
     overflow: "visible",
     marginLeft: 10,
-    marginTop: 12,
   },
 
   chatAvatar: {
-    width: "100%",
-    height: "100%",
-    borderRadius: (width * 0.15) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
+    width: "70%",
+    height: "75%",
+    marginLeft: 5,
+    marginTop: 5,
   },
 
   chatRow: {
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#CFE7E6", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
 
   chatText: {
     marginLeft: 10,
     fontSize: width * 0.037,
     color: "#313131",
-    marginTop: 10,
     fontWeight: "600",
   },
 
   chatArrowIcon: {
     fontSize: 15,
     color: "#7e7e7e",
-    marginLeft: 156,
-    marginTop: 10,
+    marginLeft: 141,
+    marginTop: 5,
   },
 
   outContainer: {
-    marginTop: 200
+    width: "92%",
+    marginTop: 105,
+    alignSelf: "center",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#057474", 
   },
 
   outPhotoWrapper: {
@@ -672,6 +728,7 @@ const styles = StyleSheet.create({
     color: "#313131",
     marginTop: 1,
     fontWeight: "600",
+    
   },
 
   outArrowIcon: {
@@ -691,15 +748,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: height * 0.015,
-    backgroundColor: "#057474",
+    backgroundColor: "#fff",
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
+    borderTopWidth: 1,
+    borderTopColor: "#00000040",
   },
     
   navText: {
-    color: "#fff",
+    color: "#656565",
     fontWeight: "bold",
     fontSize: width * 0.03,
     marginTop: height * 0.005,

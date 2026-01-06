@@ -169,7 +169,7 @@ export default function Notifications() {
     <View style={styles.container}>
       <StatusBar
         barStyle="dark-content"
-        backgroundColor="#FFF"
+        backgroundColor="#057474"
         translucent={false}
       />
 
@@ -182,7 +182,7 @@ export default function Notifications() {
               hitSlop={10}
               style={styles.iconPress}
             >
-              <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
+              <Icon name="arrow-back" size={ICON_SIZE} color="#fff" />
             </Pressable>
           </View>
 
@@ -277,7 +277,7 @@ export default function Notifications() {
             hitSlop={10}
             onPress={() => handleNavigation(navItem.route)}
           >
-            <Icon name={navItem.icon} size={24} color="#fff" />
+            <Icon name={navItem.icon} size={24} color="#656565" />
             <Text style={styles.navText}>{navItem.name}</Text>
           </Pressable>
         ))}
@@ -293,10 +293,12 @@ const styles = StyleSheet.create({
   },
   headerWrapper: {
     width: "100%",
-    backgroundColor: "#FFF",
+    backgroundColor: "#057474",
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
     justifyContent: "center",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   profileContainer: {
     flexDirection: "row",
@@ -312,7 +314,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   pageName: {
-    color: "#000",
+    color: "#fff",
     textAlign: "center",
     flex: 1,
     fontWeight: "600",
@@ -396,9 +398,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 12,
-    backgroundColor: "#057474",
+    backgroundColor: "#fff",
     borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    borderTopColor: "#00000040",
     position: "absolute",
     bottom: 0,
     left: 0,
@@ -409,7 +411,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   navText: {
-    color: "#fff",
+    color: "#656565",
     fontSize: 12,
     marginTop: 2,
   },
