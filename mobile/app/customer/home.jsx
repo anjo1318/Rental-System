@@ -219,8 +219,6 @@ export default function Home() {
       contentContainerStyle={{ paddingBottom: 80 }}
       showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
       
-          
-
           {/* 🔹 Featured Devices */}
           {/* <View style={styles.featuredSection}>
             <Text style={styles.sectionTitle}>Featured Devices</Text>
