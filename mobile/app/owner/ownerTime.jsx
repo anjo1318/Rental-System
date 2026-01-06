@@ -30,7 +30,7 @@ const { width, height } = Dimensions.get("window");
 const HEADER_HEIGHT = height * 0.11;
 const PADDING_H = width * 0.05;
 const PADDING_V = height * 0.02;
-const MARGIN_TOP = height * 0.01;
+const MARGIN_TOP = height * 0.04;
 const ICON_BOX = width * 0.1;
 const ICON_SIZE = width * 0.06;
 const TITLE_FONT = RFValue(16);
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   },
 
   iconPress: {
-    padding: width * 0.015,
+    padding: width * 0.001,
     borderRadius: 6,
   },
 

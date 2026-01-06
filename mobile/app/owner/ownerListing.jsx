@@ -523,6 +523,7 @@ const styles = StyleSheet.create({
     backgroundColor:"#007F7F",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    marginTop: 30
   },
   backButton: { 
     padding: 12,
