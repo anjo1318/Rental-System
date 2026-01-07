@@ -170,7 +170,7 @@ const scheduleRentalEndNotification = async (item) => {
       // Schedule new notification
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
-          title: "⏰ Rental Period Ended!",
+          title: "Rental Period Ended!",
           body: `Your rental for "${item.product}" has ended. Please return it to the owner.`,
           data: { 
             itemId: item.id, 
@@ -191,7 +191,7 @@ const scheduleRentalEndNotification = async (item) => {
       if (oneHourBefore > now) {
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: "⏳ Rental Ending Soon",
+            title: "Rental Ending Soon",
             body: `Your rental for "${item.product}" ends in 1 hour!`,
             data: { 
               itemId: item.id, 
