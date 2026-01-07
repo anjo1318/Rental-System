@@ -52,10 +52,9 @@ export default function BookedItem() {
   
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer${userId}`);
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${userId}`);
   
       if (response.data.success) {
-        // ✅ Filter to only show items with "pending" status
         const pendingItems = (response.data.data || []).filter(
           item => item.status?.toLowerCase() === "pending"
         );

@@ -257,23 +257,21 @@ export default function ownerTime() {
               <Text style={[styles.expiredText, { color: "#4CAF50" }]}>Rental Period Ended</Text>
             </View>
             
-            {/* Return Item Button - Only show if not yet returned (still in Books table) */}
-            {item.status === 'ongoing' && (
-              <Pressable
-                style={[styles.returnButton, returningItem[item.id] && styles.returnButtonDisabled]}
-                onPress={() => handleReturnItem(item.id)}
-                disabled={returningItem[item.id]}
-              >
-                {returningItem[item.id] ? (
-                  <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                  <>
-                    <MaterialIcons name="assignment-return" size={20} color="#fff" />
-                    <Text style={styles.returnButtonText}>Item Retreived</Text>
-                  </>
-                )}
-              </Pressable>
-            )}
+            {/* Return Item Button - Show whenever status is Done */}
+            <Pressable
+              style={[styles.returnButton, returningItem[item.id] && styles.returnButtonDisabled]}
+              onPress={() => handleReturnItem(item.id)}
+              disabled={returningItem[item.id]}
+            >
+              {returningItem[item.id] ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <>
+                  <MaterialIcons name="assignment-return" size={20} color="#fff" />
+                  <Text style={styles.returnButtonText}>Return Item</Text>
+                </>
+              )}
+            </Pressable>
           </>
         )}
   
