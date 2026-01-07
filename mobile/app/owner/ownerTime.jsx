@@ -141,10 +141,19 @@ export default function ownerTime() {
     try {
       setReturningItem(prev => ({ ...prev, [bookingId]: true }));
   
+      console.log('Sending return request for bookingId:', bookingId);
+  
       const response = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/api/return/item-returned`,
-        { bookingId }
+        { bookingId },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
       );
+  
+      console.log('Return response:', response.data);
   
       if (response.data.success) {
         Alert.alert(
@@ -159,11 +168,19 @@ export default function ownerTime() {
         );
       }
     } catch (error) {
-      console.error("Return item error:", error);
-      Alert.alert(
-        "Error", 
-        error.response?.data?.message || "Failed to return item. Please try again."
-      );
+      console.error("Return item error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        bookingId: bookingId
+      });
+      
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          "Failed to return item. Please try again.";
+      
+      Alert.alert("Error", errorMessage);
     } finally {
       setReturningItem(prev => ({ ...prev, [bookingId]: false }));
     }
@@ -191,9 +208,11 @@ export default function ownerTime() {
     const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
     const isBooked = item.status === 'booked';
     
-    // Check if rental period has ended - treat expired ongoing items as done in frontend
+    // Important: Only show "done" UI for expired ongoing items
+    // The database status is still 'ongoing', which is correct for the backend
     const isOngoing = item.status === 'ongoing' && !timer.expired;
-    const isDone = item.status === 'done' || (item.status === 'ongoing' && timer.expired);
+    const isDone = item.status === 'ongoing' && timer.expired; // Only expired ongoing items
+    const isActuallyDone = item.status === 'done'; // Truly completed items
   
     return (
       <View key={item.id} style={styles.card}>
@@ -209,14 +228,19 @@ export default function ownerTime() {
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{item.product}</Text>
             <Text style={styles.categoryText}>{item.category}</Text>
-            <View style={isBooked ? styles.statusBooked : isDone ? styles.statusDone : styles.statusOngoing}>
+            <View style={
+              isBooked ? styles.statusBooked : 
+              (isDone || isActuallyDone) ? styles.statusDone : 
+              styles.statusOngoing
+            }>
               <Text style={styles.statusText}>
-                {isBooked ? 'For Approval' : isDone ? 'Done' : 'Ongoing'}
+                {isBooked ? 'For Approval' : (isDone || isActuallyDone) ? 'Done' : 'Ongoing'}
               </Text>
             </View>
           </View>
         </View>
   
+        {/* Start Rent Button - Only for booked items */}
         {isBooked && (
           <Pressable
             style={[styles.startButton, startingRent[item.id] && styles.startButtonDisabled]}
@@ -234,6 +258,7 @@ export default function ownerTime() {
           </Pressable>
         )}
   
+        {/* Timer - Only for active ongoing items */}
         {isOngoing && (
           <View style={styles.timerRow}>
             {[
@@ -250,6 +275,7 @@ export default function ownerTime() {
           </View>
         )}
   
+        {/* Expired Message & Return Button - Only for expired ongoing items */}
         {isDone && (
           <>
             <View style={[styles.expiredContainer, { backgroundColor: "#E8F5E9" }]}>
@@ -257,10 +283,12 @@ export default function ownerTime() {
               <Text style={[styles.expiredText, { color: "#4CAF50" }]}>Rental Period Ended</Text>
             </View>
             
-            {/* Return Item Button - Show whenever status is Done */}
             <Pressable
               style={[styles.returnButton, returningItem[item.id] && styles.returnButtonDisabled]}
-              onPress={() => handleReturnItem(item.id)}
+              onPress={() => {
+                console.log('Attempting to return item:', item.id, 'with status:', item.status);
+                handleReturnItem(item.id);
+              }}
               disabled={returningItem[item.id]}
             >
               {returningItem[item.id] ? (
@@ -268,11 +296,19 @@ export default function ownerTime() {
               ) : (
                 <>
                   <MaterialIcons name="assignment-return" size={20} color="#fff" />
-                  <Text style={styles.returnButtonText}>Retreive Item</Text>
+                  <Text style={styles.returnButtonText}>Retrieve Item</Text>
                 </>
               )}
             </Pressable>
           </>
+        )}
+  
+        {/* Already completed items - just show the status */}
+        {isActuallyDone && (
+          <View style={[styles.expiredContainer, { backgroundColor: "#E3F2FD" }]}>
+            <MaterialIcons name="done-all" size={40} color="#2196F3" />
+            <Text style={[styles.expiredText, { color: "#2196F3" }]}>Item Already Returned</Text>
+          </View>
         )}
   
         <View style={styles.dateRow}>

@@ -1,3 +1,5 @@
+// returnController.js - FIXED VERSION
+
 import Book from '../models/Book.js';
 import Item from '../models/Item.js';
 import History from '../models/History.js';
@@ -34,7 +36,7 @@ export const itemReturned = async (req, res) => {
       });
     }
 
-    // Find the item and increment available quantity
+    // Find the item
     const item = await Item.findOne({
       where: { id: booking.itemId }
     });
@@ -46,8 +48,31 @@ export const itemReturned = async (req, res) => {
       });
     }
 
-    // Increment the available quantity
-    await item.increment('availableQuantity', { by: 1 });
+    // FIXED: Check constraint before incrementing
+    // Ensure availableQuantity doesn't exceed totalQuantity
+    const newAvailableQuantity = (item.availableQuantity || 0) + 1;
+    
+    if (newAvailableQuantity > item.quantity) {
+      console.error('Constraint violation prevented:', {
+        itemId: item.id,
+        currentAvailable: item.availableQuantity,
+        totalQuantity: item.quantity,
+        attemptedNew: newAvailableQuantity
+      });
+      
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot return item: available quantity would exceed total quantity'
+      });
+    }
+
+    // Safely update the available quantity
+    await item.update({
+      availableQuantity: newAvailableQuantity
+    });
+
+    // Reload to get updated value
+    await item.reload();
 
     // Create history record from booking data
     const historyData = {
@@ -103,13 +128,19 @@ export const itemReturned = async (req, res) => {
 
   } catch (error) {
     console.error('Error in itemReturned:', error);
+    
+    // More detailed error response
     return res.status(500).json({
       success: false,
       message: 'Failed to process item return',
-      error: error.message
+      error: error.message,
+      details: error.name === 'SequelizeDatabaseError' ? 
+        'Database constraint violation. Please check item quantities.' : 
+        error.message
     });
   }
 };
+
 
 export const notifyCustomer = async (req, res) => {
   try {
