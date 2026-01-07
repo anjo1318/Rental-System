@@ -9,6 +9,7 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -17,7 +18,16 @@ import axios from "axios";
 
 export default function ReviewProduct() {
   const router = useRouter();
-  const { itemId, ownerId, customerId, productName } = useLocalSearchParams();
+  const params = useLocalSearchParams();
+  
+  // Destructure with fallbacks
+  const { 
+    itemId = '', 
+    ownerId = '', 
+    customerId = '', 
+    productName = 'Product',
+    productImage = '' 
+  } = params;
   
   const [rating, setRating] = useState(0);
   const [description, setDescription] = useState("");
@@ -26,6 +36,14 @@ export default function ReviewProduct() {
   const [lastName, setLastName] = useState("");
 
   useEffect(() => {
+    // Debug: Log received parameters
+    console.log('ReviewProduct received params:', {
+      itemId,
+      ownerId,
+      customerId,
+      productName,
+      productImage
+    });
     loadUserData();
   }, []);
 
@@ -36,9 +54,21 @@ export default function ReviewProduct() {
         const user = JSON.parse(userData);
         setFirstName(user.firstName || "");
         setLastName(user.lastName || "");
+        console.log('User data loaded:', { firstName: user.firstName, lastName: user.lastName });
       }
     } catch (error) {
       console.error("Error loading user data:", error);
+    }
+  };
+
+  const getImageUrl = (imageData) => {
+    if (!imageData) return "https://via.placeholder.com/150";
+    
+    try {
+      const parsed = JSON.parse(imageData);
+      return parsed[0] || "https://via.placeholder.com/150";
+    } catch {
+      return imageData || "https://via.placeholder.com/150";
     }
   };
 
@@ -53,21 +83,34 @@ export default function ReviewProduct() {
       return;
     }
 
+    // Validate required parameters
+    if (!itemId || !ownerId || !customerId) {
+      Alert.alert("Error", "Missing required information. Please try again.");
+      console.error('Missing params:', { itemId, ownerId, customerId });
+      return;
+    }
+
     try {
       setLoading(true);
       
+      const reviewData = {
+        itemId: parseInt(itemId),
+        customerId: parseInt(customerId),
+        ownerId: parseInt(ownerId),
+        firstName,
+        lastName,
+        description: description.trim(),
+        starRating: rating,
+      };
+
+      console.log('Submitting review with:', reviewData);
+
       const response = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/review/review-product`,
-        {
-          itemId: parseInt(itemId),
-          customerId: parseInt(customerId),
-          ownerId: parseInt(ownerId),
-          firstName,
-          lastName,
-          description: description.trim(),
-          starRating: rating,
-        }
+        reviewData
       );
+
+      console.log('Review response:', response.data);
 
       if (response.data.success) {
         Alert.alert(
@@ -83,6 +126,7 @@ export default function ReviewProduct() {
       }
     } catch (error) {
       console.error("Error submitting review:", error);
+      console.error("Error response:", error.response?.data);
       Alert.alert(
         "Error",
         error.response?.data?.message || "Failed to submit review. Please try again."
@@ -132,11 +176,28 @@ export default function ReviewProduct() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        {/* Product Name */}
-        <View style={styles.productNameContainer}>
-          <Text style={styles.productNameLabel}>Reviewing:</Text>
-          <Text style={styles.productName}>{productName || "Product"}</Text>
+        {/* Product Info with Image */}
+        <View style={styles.productInfoContainer}>
+          <Image
+            source={{ uri: getImageUrl(productImage) }}
+            style={styles.productImage}
+            resizeMode="cover"
+            onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+          />
+          <View style={styles.productTextContainer}>
+            <Text style={styles.productNameLabel}>Reviewing:</Text>
+            <Text style={styles.productName}>{productName || "Product"}</Text>
+          </View>
         </View>
+
+        {/* Debug Info - Remove this after testing */}
+        {__DEV__ && (
+          <View style={styles.debugContainer}>
+            <Text style={styles.debugText}>
+              ItemID: {itemId || 'Missing'} | OwnerID: {ownerId || 'Missing'} | CustomerID: {customerId || 'Missing'}
+            </Text>
+          </View>
+        )}
 
         {/* Star Rating */}
         <View style={styles.section}>
@@ -235,12 +296,23 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 40,
   },
-  productNameContainer: {
+  productInfoContainer: {
     backgroundColor: "#FFF",
     padding: 16,
     borderRadius: 12,
     marginBottom: 24,
     elevation: 2,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  productImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    marginRight: 16,
+  },
+  productTextContainer: {
+    flex: 1,
   },
   productNameLabel: {
     fontSize: 12,
@@ -251,6 +323,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#000",
+  },
+  debugContainer: {
+    backgroundColor: "#FFF3CD",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#FFC107",
+  },
+  debugText: {
+    fontSize: 11,
+    color: "#856404",
+    fontFamily: "monospace",
   },
   section: {
     backgroundColor: "#FFF",

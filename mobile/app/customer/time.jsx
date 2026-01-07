@@ -192,21 +192,31 @@ export default function TimeDuration() {
           
           {/* Add Action Buttons */}
           <View style={styles.actionButtonsContainer}>
-            <Pressable 
-              style={styles.reviewButton}
-              onPress={() => router.push({
-                pathname: "customer/reviewProduct",
+          <Pressable 
+            style={styles.reviewButton}
+            onPress={() => {
+              console.log('Navigating with params:', {
+                itemId: String(item.itemId),
+                ownerId: String(item.ownerId),
+                customerId: String(ownerId),
+                productName: item.product,
+                productImage: item.itemImage
+              });
+              router.push({
+                pathname: "/customer/reviewProducts",
                 params: {
-                  itemId: item.itemId,
-                  ownerId: item.ownerId,
-                  customerId: ownerId,
-                  productName: item.product
+                  itemId: String(item.itemId),
+                  ownerId: String(item.ownerId),
+                  customerId: String(ownerId),
+                  productName: item.product,
+                  productImage: item.itemImage  // Add this line
                 }
-              })}
-            >
-              <MaterialIcons name="rate-review" size={20} color="#fff" />
-              <Text style={styles.reviewButtonText}>Write Review</Text>
-            </Pressable>
+              });
+            }}
+          >
+            <MaterialIcons name="rate-review" size={20} color="#fff" />
+            <Text style={styles.reviewButtonText}>Write Review</Text>
+          </Pressable>
 
             <Pressable 
               style={styles.rentAgainButton}
