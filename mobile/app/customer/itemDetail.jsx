@@ -185,7 +185,7 @@ export default function ItemDetail() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FFF" />
+          <Icon name="arrow-back" size={22} color="#FFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Gadget Details</Text>
         <View style={styles.headerSpacer} />
@@ -469,19 +469,24 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+
   },
   backButton: {
     padding: 8,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    top: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 16,
     color: "#FFF",
     fontWeight: "600",
     flex: 1,
     textAlign: 'center',
+    top: 8,
   },
   headerSpacer: {
     width: 40

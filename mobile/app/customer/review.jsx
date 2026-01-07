@@ -1,6 +1,7 @@
-import React from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity,} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter } from "expo-router";
 
 const reviews = [
   {
@@ -16,8 +17,6 @@ const reviews = [
     rating: 4,
     comment:
       "The Phone 13 Pro delivers powerful performance, stunning visuals with its ProMotion display, and excellent camera features in a sleek, durable design.",
-  },
-  {
     id: 3,
     name: "Kenneth",
     rating: 4,
@@ -27,14 +26,25 @@ const reviews = [
 ];
 
 export default function Reviews() {
+  const router = useRouter();
+
   return (
-    <ScrollView>
+     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerText}>5.0 ⭐ Reviews (108+)</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Icon name="arrow-back" size={22} color="#FFF" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Reviews</Text>
+        <View style={styles.headerSpacer} />
       </View>
 
+      <ScrollView>
       {/* Reviews */}
+      <View style={styles.titleRow}>
+      <Text style={styles.titleText}>5.0 ⭐ </Text>
+      <Text style={styles.titleText2}> Reviews (108+)</Text>
+      </View>
       {reviews.map((item) => (
         <View key={item.id} style={styles.reviewCard}>
           <View style={styles.row}>
@@ -45,7 +55,7 @@ export default function Reviews() {
             <View style={styles.content}>
               <View style={styles.nameRow}>
                 <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.verified}>Verified</Text>
+                <Text style={styles.date}>Yesterday</Text>
               </View>
 
               <View style={styles.stars}>
@@ -65,31 +75,70 @@ export default function Reviews() {
         </View>
       ))}
     </ScrollView>
+    </View>
   );
 }
 
 
 const styles = StyleSheet.create({
-  header: {
+  container: { 
+    flex: 1, 
+    backgroundColor: "#F5F5F5" 
+  },
+ header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#057474",
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  headerText: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: "#333",
-  },
+    elevation: 4,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
 
+  },
+    backButton: {
+    padding: 8,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    top: 8,
+  },
+  headerTitle: {
+    fontSize: 16,
+    color: "#FFF",
+    fontWeight: "600",
+    flex: 1,
+    textAlign: 'center',
+    top: 8,
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 5,
+    padding: 20,
+  },
+  titleText: {
+    fontSize: 12,
+  },
+   titleText2: {
+    fontSize: 14,
+    fontWeight: 700,
+  },
   reviewCard: {
     backgroundColor: "#FFF",
     marginHorizontal: 16,
     marginBottom: 12,
-    padding: 14,
+    padding: 20,
     borderRadius: 14,
-
+    borderWidth: 1,
+    borderColor: "#05747480", 
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 4,
     elevation: 3,
   },
@@ -124,7 +173,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
 
-  verified: {
+  date: {
     fontSize: 12,
     color: "#888",
   },
@@ -135,8 +184,13 @@ const styles = StyleSheet.create({
   },
 
   comment: {
+    width: "290",
     fontSize: 13,
     color: "#555",
-    lineHeight: 18,
+    lineHeight: 20,
+    textAlign: "justify",
+    right: 40,
+    top: 5,
+    
   },
 });
