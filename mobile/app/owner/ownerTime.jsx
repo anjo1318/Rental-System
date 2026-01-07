@@ -43,6 +43,7 @@ export default function ownerTime() {
   const [ownerId, setOwnerId] = useState(null);
   const [timers, setTimers] = useState({});
   const [startingRent, setStartingRent] = useState({});
+  const [returningItem, setReturningItem] = useState({});
 
   useEffect(() => {
     loadOwner();
@@ -136,6 +137,38 @@ export default function ownerTime() {
     }
   };
 
+  const handleReturnItem = async (bookingId) => {
+    try {
+      setReturningItem(prev => ({ ...prev, [bookingId]: true }));
+  
+      const response = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/return/item-returned`,
+        { bookingId }
+      );
+  
+      if (response.data.success) {
+        Alert.alert(
+          "Success", 
+          "Item returned successfully!",
+          [
+            {
+              text: "OK",
+              onPress: () => fetchOngoingAndForApproval()
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error("Return item error:", error);
+      Alert.alert(
+        "Error", 
+        error.response?.data?.message || "Failed to return item. Please try again."
+      );
+    } finally {
+      setReturningItem(prev => ({ ...prev, [bookingId]: false }));
+    }
+  };
+
   const getImageUrl = (itemImage) => {
     try {
       const parsed = JSON.parse(itemImage);
@@ -157,8 +190,11 @@ export default function ownerTime() {
   const renderBookingCard = (item) => {
     const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
     const isBooked = item.status === 'booked';
-    const isOngoing = item.status === 'ongoing';
-
+    
+    // Check if rental period has ended - treat expired ongoing items as done in frontend
+    const isOngoing = item.status === 'ongoing' && !timer.expired;
+    const isDone = item.status === 'done' || (item.status === 'ongoing' && timer.expired);
+  
     return (
       <View key={item.id} style={styles.card}>
         <View style={styles.deviceRow}>
@@ -169,16 +205,18 @@ export default function ownerTime() {
             style={styles.deviceImage}
             onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
           />
-
+  
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{item.product}</Text>
             <Text style={styles.categoryText}>{item.category}</Text>
-            <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
-              <Text style={styles.statusText}>{isBooked ? 'For Approval' : 'Ongoing'}</Text>
+            <View style={isBooked ? styles.statusBooked : isDone ? styles.statusDone : styles.statusOngoing}>
+              <Text style={styles.statusText}>
+                {isBooked ? 'For Approval' : isDone ? 'Done' : 'Ongoing'}
+              </Text>
             </View>
           </View>
         </View>
-
+  
         {isBooked && (
           <Pressable
             style={[styles.startButton, startingRent[item.id] && styles.startButtonDisabled]}
@@ -195,30 +233,50 @@ export default function ownerTime() {
             )}
           </Pressable>
         )}
-
+  
         {isOngoing && (
-          timer.expired ? (
-            <View style={styles.expiredContainer}>
-              <MaterialIcons name="access-time" size={40} color="#FF5252" />
-              <Text style={styles.expiredText}>Rental Period Ended</Text>
-            </View>
-          ) : (
-            <View style={styles.timerRow}>
-              {[
-                { value: String(timer.days).padStart(2, "0"), label: "Days" },
-                { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
-                { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
-                { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
-              ].map((timeItem, index) => (
-                <View key={index} style={styles.timeBox}>
-                  <Text style={styles.timeValue}>{timeItem.value}</Text>
-                  <Text style={styles.timeLabel}>{timeItem.label}</Text>
-                </View>
-              ))}
-            </View>
-          )
+          <View style={styles.timerRow}>
+            {[
+              { value: String(timer.days).padStart(2, "0"), label: "Days" },
+              { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
+              { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
+              { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
+            ].map((timeItem, index) => (
+              <View key={index} style={styles.timeBox}>
+                <Text style={styles.timeValue}>{timeItem.value}</Text>
+                <Text style={styles.timeLabel}>{timeItem.label}</Text>
+              </View>
+            ))}
+          </View>
         )}
-
+  
+        {isDone && (
+          <>
+            <View style={[styles.expiredContainer, { backgroundColor: "#E8F5E9" }]}>
+              <MaterialIcons name="check-circle" size={40} color="#4CAF50" />
+              <Text style={[styles.expiredText, { color: "#4CAF50" }]}>Rental Period Ended</Text>
+            </View>
+            
+            {/* Return Item Button - Only show if not yet returned (still in Books table) */}
+            {item.status === 'ongoing' && (
+              <Pressable
+                style={[styles.returnButton, returningItem[item.id] && styles.returnButtonDisabled]}
+                onPress={() => handleReturnItem(item.id)}
+                disabled={returningItem[item.id]}
+              >
+                {returningItem[item.id] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <MaterialIcons name="assignment-return" size={20} color="#fff" />
+                    <Text style={styles.returnButtonText}>Item Retreived</Text>
+                  </>
+                )}
+              </Pressable>
+            )}
+          </>
+        )}
+  
         <View style={styles.dateRow}>
           <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Start Date:</Text>
@@ -229,14 +287,11 @@ export default function ownerTime() {
             <Text style={styles.dateText}>{formatDate(item.returnDate)}</Text>
           </View>
         </View>
-
+  
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-          <MaterialIcons name="payment" size={16} color="#666" />
+            <MaterialIcons name="payment" size={16} color="#666" />
             <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
-            <Text style={styles.detailValue}>
-               
-            </Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Total:</Text>
@@ -245,9 +300,8 @@ export default function ownerTime() {
             </Text>
           </View>
         </View>
-
+  
         <View style={styles.paymentRow}>
-
           <Text style={styles.paymentText}>{item.address}</Text>
         </View>
       </View>
@@ -654,5 +708,55 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: width * 0.03,
     marginTop: height * 0.005,
+    returnButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#4CAF50",
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+      marginTop: 12,
+    },
+    
+    returnButtonDisabled: {
+      backgroundColor: "#A5D6A7",
+    },
+    
+    returnButtonText: {
+      color: "#fff",
+      fontSize: RFValue(13),
+      fontWeight: "600",
+      marginLeft: 8,
+    },
+  },
+  statusDone: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    backgroundColor: "#4CAF50",
+  },
+  
+  returnButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF5722",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  
+  returnButtonDisabled: {
+    backgroundColor: "#FFAB91",
+  },
+  
+  returnButtonText: {
+    color: "#fff",
+    fontSize: RFValue(13),
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
