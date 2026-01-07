@@ -202,7 +202,7 @@ export default function ItemDetail() {
         {/* Price and Title Section */}
         <View style={styles.infoSection}>
           <View style={styles.priceRow}>
-            <Icon name="attach-money" size={20} color="#057474" />
+            <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
             <Text style={styles.price}>{item.pricePerDay}</Text>
             <Text style={styles.priceUnit}>per hour</Text>
             <View style={styles.ratingContainer}>

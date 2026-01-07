@@ -24,6 +24,35 @@ import axios from "axios";
 import { RFValue } from "react-native-responsive-fontsize";
 import OwnerBottomNav from '../components/OwnerBottomNav';
 import CustomerBottomNav from '../components/CustomerBottomNav';
+import * as Notifications from 'expo-notifications';
+import { Vibration } from 'react-native';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,  // ✅ New
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
+
+const sendRentalEndedNotification = async (productName) => {
+  try {
+    // Vibrate the phone
+    Vibration.vibrate([0, 500, 200, 500]); // Pattern: wait 0ms, vibrate 500ms, wait 200ms, vibrate 500ms
+
+    // Send notification
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Rental Period Ended",
+        body: `Your rental period for ${productName} has ended. Please return the item to the owner.`,
+        sound: true,
+      },
+      trigger: null,
+    });
+  } catch (error) {
+    console.error("Error sending notification:", error);
+  }
+};
 
 
 const { width, height } = Dimensions.get("window");
@@ -44,51 +73,154 @@ export default function TimeDuration() {
   const [ownerId, setOwnerId] = useState(null);
   const [timers, setTimers] = useState({});
   const [startingRent, setStartingRent] = useState({});
+  const [notifiedItems, setNotifiedItems] = useState(new Set());
 
-  useEffect(() => {
-    loadOwner();
-  }, []);
 
-  useEffect(() => {
-    if (ownerId) fetchOngoingAndForApproval();
-  }, [ownerId]);
+// 1. Timer with immediate notifications
+useEffect(() => {
+  if (bookedItems.length === 0) return;
 
-  useEffect(() => {
-    if (bookedItems.length === 0) return;
+  const interval = setInterval(() => {
+    const now = new Date();
+    const newTimers = {};
 
-    const interval = setInterval(() => {
-      const now = new Date();
-      const newTimers = {};
+    bookedItems.forEach((item) => {
+      if (item.status === 'ongoing') {
+        const returnDate = new Date(item.returnDate);
+        const diff = returnDate - now;
 
-      bookedItems.forEach((item) => {
-        if (item.status === 'ongoing') {
-          const returnDate = new Date(item.returnDate);
-          const diff = returnDate - now;
+        if (diff <= 0) {
+          newTimers[item.id] = {
+            days: 0,
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            expired: true,
+          };
 
-          if (diff <= 0) {
-            newTimers[item.id] = {
-              days: 0,
-              hours: 0,
-              minutes: 0,
-              seconds: 0,
-              expired: true,
-            };
-          } else {
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-            newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
+          if (!notifiedItems.has(item.id)) {
+            sendRentalEndedNotification(item.product);
+            setNotifiedItems(prev => new Set([...prev, item.id]));
           }
+        } else {
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
         }
+      }
+    });
+
+    setTimers(newTimers);
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [bookedItems, notifiedItems]);
+
+// 2. Request permissions
+useEffect(() => {
+  const requestNotificationPermissions = async () => {
+    const { status } = await Notifications.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        'Notifications Disabled',
+        'Please enable notifications to receive rental reminders.'
+      );
+    }
+  };
+
+  requestNotificationPermissions();
+}, []);
+
+// 3. Load owner
+useEffect(() => {
+  loadOwner();
+}, []);
+
+// 4. Fetch when owner loads
+useEffect(() => {
+  if (ownerId) fetchOngoingAndForApproval();
+}, [ownerId]);
+
+
+  // Schedule notification for when rental ends
+const scheduleRentalEndNotification = async (item) => {
+  try {
+    const returnDate = new Date(item.returnDate);
+    const now = new Date();
+    
+    // Only schedule if return date is in the future
+    if (returnDate > now) {
+      // Cancel any existing notification for this item
+      const existingId = await AsyncStorage.getItem(`notification_${item.id}`);
+      if (existingId) {
+        await Notifications.cancelScheduledNotificationAsync(existingId);
+      }
+
+      // Schedule new notification
+      const notificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "⏰ Rental Period Ended!",
+          body: `Your rental for "${item.product}" has ended. Please return it to the owner.`,
+          data: { 
+            itemId: item.id, 
+            type: 'rental_ended',
+            product: item.product 
+          },
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+          badge: 1,
+        },
+        trigger: {
+          date: returnDate,
+        },
       });
 
-      setTimers(newTimers);
-    }, 1000);
+      // Also schedule a reminder 1 hour before
+      const oneHourBefore = new Date(returnDate.getTime() - (60 * 60 * 1000));
+      if (oneHourBefore > now) {
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: "⏳ Rental Ending Soon",
+            body: `Your rental for "${item.product}" ends in 1 hour!`,
+            data: { 
+              itemId: item.id, 
+              type: 'rental_reminder',
+              product: item.product 
+            },
+            sound: true,
+          },
+          trigger: {
+            date: oneHourBefore,
+          },
+        });
+      }
 
-    return () => clearInterval(interval);
-  }, [bookedItems]);
+      // Store notification ID
+      await AsyncStorage.setItem(`notification_${item.id}`, notificationId);
+      console.log('Scheduled notifications for:', item.product);
+    }
+  } catch (error) {
+    console.error("Error scheduling notification:", error);
+  }
+};
+
+// Cancel scheduled notification
+const cancelScheduledNotification = async (itemId) => {
+  try {
+    const notificationId = await AsyncStorage.getItem(`notification_${itemId}`);
+    if (notificationId) {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+      await AsyncStorage.removeItem(`notification_${itemId}`);
+      console.log('Cancelled notification for item:', itemId);
+    }
+  } catch (error) {
+    console.error("Error canceling notification:", error);
+  }
+};
+
 
   const loadOwner = async () => {
     try {
@@ -106,12 +238,25 @@ export default function TimeDuration() {
   const fetchOngoingAndForApproval = async () => {
     try {
       setLoading(true);
-
+  
       const res = await axios.get(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${ownerId}`
       );
-
-      setBookedItems(res.data.data || []);
+  
+      const items = res.data.data || [];
+      setBookedItems(items);
+      console.log("API response of ongoing-for-approval-customer",items);
+  
+      // ADD THESE LINES:
+      // Schedule notifications for all ongoing rentals
+      for (const item of items) {
+        if (item.status === 'ongoing') {
+          await scheduleRentalEndNotification(item);
+        } else {
+          // Cancel notifications for non-ongoing items
+          await cancelScheduledNotification(item.id);
+        }
+      }
     } catch (err) {
       console.error("Fetch error:", err);
     } finally {
@@ -119,23 +264,7 @@ export default function TimeDuration() {
     }
   };
 
-  const handleStartRent = async (itemId) => {
-    try {
-      setStartingRent(prev => ({ ...prev, [itemId]: true }));
 
-      const res = await axios.put(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/start-rent/${itemId}`
-      );
-
-      Alert.alert("Success", "Rental has been started!");
-      fetchOngoingAndForApproval();
-    } catch (error) {
-      console.error("Start rent error:", error);
-      Alert.alert("Error", "Failed to start rental. Please try again.");
-    } finally {
-      setStartingRent(prev => ({ ...prev, [itemId]: false }));
-    }
-  };
 
   const getImageUrl = (itemImage) => {
     try {
