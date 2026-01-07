@@ -18,7 +18,7 @@ import axios from "axios";
 
 const { width } = Dimensions.get("window");
 
-export default function RentingPaymentMethod({ bookingData, onContinue }) {
+export default function ConfirmationScreen({ bookingData, onBack, onContinue }) {
   const [currentStep, setCurrentStep] = useState(3);
   const [selectedMethod, setSelectedMethod] = useState(
     bookingData?.paymentMethod || null
@@ -291,7 +291,16 @@ const confirmRent = async () => {
       {/* Header */}
       <View style={styles.headerWrapper}>
         <View style={styles.profileContainer}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity 
+            onPress={() => {
+              if (onBack) {
+                onBack();
+              } else {
+                router.back();
+              }
+            }} 
+            style={styles.backButton}
+          >
             <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <Text style={styles.pageName}>Renting Details</Text>
@@ -329,17 +338,7 @@ const confirmRent = async () => {
           </View>
         </View>
 
-        {/* Product Image */}
-        <View style={{ alignItems: "center", marginBottom: 15 }}>
-          {bookingData?.itemDetails?.itemImage ? (
-            <Image
-              source={{ uri: bookingData.itemDetails.itemImage }}
-              style={styles.productImage}
-            />
-          ) : (
-            <Text style={{ color: "#888" }}>No image available</Text>
-          )}
-        </View>
+
 
         {/* Rental Summary */}
         <View style={styles.summaryCard}>
@@ -456,12 +455,18 @@ const confirmRent = async () => {
         )}
 
         <View style={styles.actions}>
-          <TouchableOpacity 
-            onPress={() => router.back()} 
-            style={styles.backBtn}
-          >
-            <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
-          </TouchableOpacity>
+        <TouchableOpacity 
+          onPress={() => {
+            if (onBack) {
+              onBack(); // Call the onBack callback passed from parent
+            } else {
+              router.back();
+            }
+          }} 
+          style={styles.backBtn}
+        >
+          <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
+        </TouchableOpacity>
           
           <TouchableOpacity
             onPress={confirmRent}

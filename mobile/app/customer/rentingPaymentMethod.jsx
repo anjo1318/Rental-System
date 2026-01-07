@@ -141,31 +141,54 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         grandTotal: deliveryInfo.deliveryFee,
       };
     }
-  
-    const { period, duration } = bookingData.rentalDetails;
+
+    const { period, duration, pickupDate, returnDate } = bookingData.rentalDetails;
     const basePrice = parseFloat(bookingData.itemDetails.pricePerDay);
-  
+
     let rateLabel = "Rate Per Day";
     let rate = basePrice;
-  
-    if (period === "Hour") {
+    let actualDuration = duration;
+    let isSameDayRental = false;
+
+    // ✅ Check if same day rental for "Day" period
+    if (period === "Day") {
+      const pickup = new Date(pickupDate);
+      const returnD = new Date(returnDate);
+      const pickupDay = new Date(pickup.getFullYear(), pickup.getMonth(), pickup.getDate());
+      const returnDay = new Date(returnD.getFullYear(), returnD.getMonth(), returnD.getDate());
+      
+      if (pickupDay.getTime() === returnDay.getTime()) {
+        // Same day - treat as hourly
+        isSameDayRental = true;
+        rateLabel = "Rate Per Hour";
+        rate = basePrice / 24;
+        actualDuration = duration; // duration is already in hours from calculateRentalDuration
+      } else {
+        rateLabel = "Rate Per Day";
+        rate = basePrice;
+        actualDuration = duration;
+      }
+    } else if (period === "Hour") {
       rateLabel = "Rate Per Hour";
       rate = basePrice / 24;
+      actualDuration = duration;
     } else if (period === "Week") {
       rateLabel = "Rate Per Week";
       rate = basePrice * 7;
+      actualDuration = duration;
     }
-  
-    const subtotal = rate * duration;
+
+    const subtotal = rate * actualDuration;
     const grandTotal = subtotal + Number(deliveryInfo.deliveryFee);
-  
+
     return {
       rateLabel,
       rate: rate.toFixed(2),
-      duration,
+      duration: actualDuration,
       deliveryCharge: deliveryInfo.deliveryFee,
       grandTotal: grandTotal.toFixed(2),
-      period,
+      period: isSameDayRental ? "Hour" : period, // Display as hours if same day
+      isSameDayRental,
     };
   };
   
@@ -303,11 +326,17 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
           </View>
 
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Rental Duration</Text>
-            <Text style={styles.infoValue}>
-              {pricing.duration} {pricing.period === "Hour" ? "hours" : pricing.period === "Week" ? "weeks" : "days"}
-            </Text>
-          </View>
+          <Text style={styles.infoLabel}>Rental Duration</Text>
+          <Text style={styles.infoValue}>
+            {pricing.duration} {
+              pricing.isSameDayRental || pricing.period === "Hour" 
+                ? "hours" 
+                : pricing.period === "Week" 
+                ? "weeks" 
+                : "days"
+            }
+          </Text>
+        </View>
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Delivery Charge</Text>

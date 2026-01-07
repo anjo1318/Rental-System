@@ -17,13 +17,11 @@ import ConfirmationScreen from "./confirmationScreen";
 const { width, height } = Dimensions.get("window");
 
 
-export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
-  const [startTime, setStartTime] = useState(new Date());
-  const [endTime, setEndTime] = useState(new Date());
-  const [selectedDates, setSelectedDates] = useState([]);
+export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initialDate, mode = "date" }) {
+  const [selectedTime, setSelectedTime] = useState(initialDate || new Date());
+  const [selectedDate, setSelectedDate] = useState(initialDate || new Date());
   const [showTimeModal, setShowTimeModal] = useState(false);
-  const [activeTimeType, setActiveTimeType] = useState("start");
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(initialDate || new Date());
 
   // Generate time slots every 30 minutes
   const generateTimeSlots = () => {
@@ -39,11 +37,13 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
   };
   const timeSlots = generateTimeSlots();
 
-  // Toggle calendar date selection
-  const toggleDate = (day) => {
-    setSelectedDates((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
+  // Select a specific date
+  const selectDate = (day) => {
+    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    // Copy time from selectedTime to preserve it
+    newDate.setHours(selectedTime.getHours());
+    newDate.setMinutes(selectedTime.getMinutes());
+    setSelectedDate(newDate);
   };
 
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
@@ -55,10 +55,15 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
   const firstDayIndex = getFirstDayOfMonth(year, month);
 
   const today = new Date();
-  today.setDate(1); // normalize to first day
   const isAtCurrentMonth =
     currentMonth.getFullYear() === today.getFullYear() &&
     currentMonth.getMonth() === today.getMonth();
+
+  const isPastDate = (day) => {
+    const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return checkDate < todayMidnight;
+  };
 
   return (
     <>
@@ -68,40 +73,18 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
             {/* Time Section */}
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>Time</Text>
-              <View style={styles.timeRow}>
-                {/* Start Time */}
-                <TouchableOpacity
-                  style={styles.timeBoxActive}
-                  onPress={() => {
-                    setActiveTimeType("start");
-                    setShowTimeModal(true);
-                  }}
-                >
-                  <Icon name="access-time" size={16} color="#FFF" />
-                  <Text style={styles.timeTextActive}>
-                    {startTime.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </Text>
-                </TouchableOpacity>
-                {/* End Time */}
-                <TouchableOpacity
-                  style={styles.timeBox}
-                  onPress={() => {
-                    setActiveTimeType("end");
-                    setShowTimeModal(true);
-                  }}
-                >
-                  <Icon name="access-time" size={16} color="#057474" />
-                  <Text style={styles.timeText}>
-                    {endTime.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                style={styles.timeBoxActive}
+                onPress={() => setShowTimeModal(true)}
+              >
+                <Icon name="access-time" size={16} color="#FFF" />
+                <Text style={styles.timeTextActive}>
+                  {selectedTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </TouchableOpacity>
             </View>
 
             {/* Month Navigation */}
@@ -113,7 +96,6 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
                   const prev = new Date(currentMonth);
                   prev.setMonth(currentMonth.getMonth() - 1);
                   setCurrentMonth(prev);
-                  setSelectedDates([]);
                 }}
               >
                 <Icon
@@ -135,7 +117,6 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
                   const next = new Date(currentMonth);
                   next.setMonth(currentMonth.getMonth() + 1);
                   setCurrentMonth(next);
-                  setSelectedDates([]);
                 }}
               >
                 <Icon name="chevron-right" size={24} />
@@ -158,15 +139,29 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
               ))}
               {[...Array(daysInMonth)].map((_, i) => {
                 const day = i + 1;
-                const isSelected = selectedDates.includes(day);
+                const isSelected = 
+                  selectedDate.getDate() === day &&
+                  selectedDate.getMonth() === currentMonth.getMonth() &&
+                  selectedDate.getFullYear() === currentMonth.getFullYear();
+                const isDisabled = isPastDate(day);
+                
                 return (
                   <TouchableOpacity
                     key={day}
-                    style={[styles.dayCell, isSelected && styles.daySelected]}
-                    onPress={() => toggleDate(day)}
+                    style={[
+                      styles.dayCell,
+                      isSelected && styles.daySelected,
+                      isDisabled && styles.dayDisabled
+                    ]}
+                    onPress={() => !isDisabled && selectDate(day)}
+                    disabled={isDisabled}
                   >
                     <Text
-                      style={[styles.dayText, isSelected && styles.dayTextSelected]}
+                      style={[
+                        styles.dayText,
+                        isSelected && styles.dayTextSelected,
+                        isDisabled && styles.dayTextDisabled
+                      ]}
                     >
                       {day}
                     </Text>
@@ -184,15 +179,15 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.doneBtn}
-                onPress={() =>
-                  onDone &&
-                  onDone(
-                    activeDateType === "start" ? startTime : endTime
-                  )
-                }
-              >
+            <TouchableOpacity
+              style={styles.doneBtn}
+              onPress={() => {
+                const finalDateTime = new Date(selectedDate);
+                finalDateTime.setHours(selectedTime.getHours());
+                finalDateTime.setMinutes(selectedTime.getMinutes());
+                onDone && onDone(finalDateTime);
+              }}
+            >
                 <Text style={styles.doneText}>Done</Text>
               </TouchableOpacity>
             </View>
@@ -216,16 +211,18 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone }) {
                   minute: "2-digit",
                 });
                 return (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.timeOption}
-                    onPress={() => {
-                      activeTimeType === "start"
-                        ? setStartTime(time)
-                        : setEndTime(time);
-                      setShowTimeModal(false);
-                    }}
-                  >
+                <TouchableOpacity
+                  key={index}
+                  style={styles.timeOption}
+                  onPress={() => {
+                    setSelectedTime(time);
+                    const updatedDate = new Date(selectedDate);
+                    updatedDate.setHours(time.getHours());
+                    updatedDate.setMinutes(time.getMinutes());
+                    setSelectedDate(updatedDate);
+                    setShowTimeModal(false);
+                  }}
+                >
                     <Text style={styles.timeOptionText}>{label}</Text>
                   </TouchableOpacity>
                 );
@@ -359,18 +356,27 @@ export default function RentingDetails() {
     }
   };
 
-  // ✅ Calculate rental duration based on period type
   const calculateRentalDuration = () => {
+    const diffMs = returnDate - pickupDate;
+    
     if (rentalPeriod === "Hour") {
-      const diffMs = returnDate - pickupDate;
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       return diffHours;
     } else if (rentalPeriod === "Day") {
-      const diffMs = returnDate - pickupDate;
-      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      return diffDays;
+      // ✅ Check if same day rental
+      const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
+      const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+      
+      if (pickupDay.getTime() === returnDay.getTime()) {
+        // Same day - calculate hours
+        const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+        return diffHours;
+      } else {
+        // Different days - calculate days
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        return diffDays;
+      }
     } else if (rentalPeriod === "Week") {
-      const diffMs = returnDate - pickupDate;
       const diffWeeks = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7));
       return diffWeeks;
     }
@@ -645,11 +651,12 @@ const proceedWithBooking = (imageUrl) => {
         />
 
         ) : currentStep === 3 ? (
-        // ✅ Confirmation screen takes full screen
-        <ConfirmationScreen 
+          // ✅ Confirmation screen takes full screen
+          <ConfirmationScreen 
             bookingData={bookingData}
+            onBack={() => setCurrentStep(2)} // ✅ Add this line
             onContinue={() => console.log("Done!")} 
-        />
+          />
         ) : (
         // ✅ Step 1 → Renting Details (form + progress bar)
         <>
@@ -970,19 +977,28 @@ const proceedWithBooking = (imageUrl) => {
             </KeyboardAvoidingView>
         </>
         )}
-  <DateTimePickerModalUI
-  visible={showDateTimeModal}
-  initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
-  onCancel={() => setShowDateTimeModal(false)}
-  onDone={(selectedDate) => {
-    if (activeDateType === "pickup") {
-      setPickupDate(selectedDate);
-    } else {
-      setReturnDate(selectedDate);
-    }
-    setShowDateTimeModal(false);
-  }}
-/>
+        <DateTimePickerModalUI
+          visible={showDateTimeModal}
+          initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
+          onCancel={() => setShowDateTimeModal(false)}
+          onDone={(selectedDate) => {
+            if (activeDateType === "pickup") {
+              setPickupDate(selectedDate);
+              if (returnDate < selectedDate) {
+                const newReturn = new Date(selectedDate);
+                newReturn.setHours(newReturn.getHours() + 1);
+                setReturnDate(newReturn);
+              }
+            } else {
+              if (selectedDate < pickupDate) {
+                Alert.alert("Invalid Date", "Return date cannot be before pickup date");
+                return;
+              }
+              setReturnDate(selectedDate);
+            }
+            setShowDateTimeModal(false);
+          }}
+        />
 
 
     </View>
@@ -1075,6 +1091,8 @@ const styles = StyleSheet.create({
   daySelected: { backgroundColor: "#057474" },
   dayText: { color: "#333" },
   dayTextSelected: { color: "#FFF", fontWeight: "600" },
+  dayDisabled: { opacity: 0.3 },
+  dayTextDisabled: { color: "#ccc" },
   actionRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
   cancelBtn: { borderWidth: 1, borderColor: "#057474", paddingVertical: 10, paddingHorizontal: 24, borderRadius: 20 },
   cancelText: { color: "#057474", fontWeight: "600" },

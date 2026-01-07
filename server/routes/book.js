@@ -23,7 +23,8 @@ import { approveBooking,
     ongoingBook,
     bookedItemForApproval,
     startBookedItem,
-    ongoingBookAndForApproval
+    ongoingBookAndForApproval,
+    ongoingBookAndForApprovalCustomer
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -46,6 +47,8 @@ router.put('/notification/:notificationId/read', markAsRead);
 router.get('/notification/:userId/unread-count', getUnreadCount);
 
 router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
+router.get("/ongoing-for-approval-customer/:id", ongoingBookAndForApprovalCustomer);
+
 
 //for owners
 router.get("/book-request/:id", fetchBookRequest);

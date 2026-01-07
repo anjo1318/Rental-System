@@ -1341,6 +1341,29 @@ const ongoingBookAndForApproval = async (req, res) => {
   }
 };
 
+const ongoingBookAndForApprovalCustomer = async (req, res) => {
+  console.log("Using ongoingBookAndForApprovalCustomer");
+
+  try {
+    const { id } = req.params;
+
+    const response = await Books.findAll({
+      where: {
+        customerId: id,
+        status: {
+          [Op.in]: ["ongoing", "booked"]
+        }
+      },
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({ success: true, data: response });
+  } catch (error) {
+    console.error("Error in ongoingBookAndForApprovalCustomer:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 const bookedItemForApproval = async (req, res) => {
   console.log("Using bookedItemForApproval");
@@ -2979,5 +3002,6 @@ export {
   ongoingBook,
   bookedItemForApproval,
   startBookedItem,
-  ongoingBookAndForApproval
+  ongoingBookAndForApproval,
+  ongoingBookAndForApprovalCustomer
 };

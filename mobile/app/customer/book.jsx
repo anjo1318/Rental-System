@@ -41,7 +41,7 @@ export default function BookedItem() {
         }
       }
     } catch (error) {
-      console.error("Error loading user data:", error);
+    console.error("Error loading user data:", error);
     }
   };
 
@@ -49,13 +49,17 @@ export default function BookedItem() {
     if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
       return;
     }
-
+  
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
-
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer${userId}`);
+  
       if (response.data.success) {
-        setBookedItem(response.data.data || []);
+        // ✅ Filter to only show items with "pending" status
+        const pendingItems = (response.data.data || []).filter(
+          item => item.status?.toLowerCase() === "pending"
+        );
+        setBookedItem(pendingItems);
       } else {
         setBookedItem([]);
       }
