@@ -190,15 +190,7 @@ export default function ReviewProduct() {
           </View>
         </View>
 
-        {/* Debug Info - Remove this after testing */}
-        {__DEV__ && (
-          <View style={styles.debugContainer}>
-            <Text style={styles.debugText}>
-              ItemID: {itemId || 'Missing'} | OwnerID: {ownerId || 'Missing'} | CustomerID: {customerId || 'Missing'}
-            </Text>
-          </View>
-        )}
-
+       
         {/* Star Rating */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>How was your experience?</Text>
