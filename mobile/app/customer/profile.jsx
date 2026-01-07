@@ -289,7 +289,7 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: "#007F7F",
   },
 
   loadingContainer: {

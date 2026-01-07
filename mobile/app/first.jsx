@@ -81,7 +81,7 @@ export default function LoginInterface() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#007F7F",
+    backgroundColor: "#fff",
   },
   headerImage: {
     width: "100%",
