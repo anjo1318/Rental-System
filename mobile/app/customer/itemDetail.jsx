@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Alert,
+  Pressable,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -279,30 +280,43 @@ export default function ItemDetail() {
         </View>
 
         {/* Reviews */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Review(1)</Text>
-          <View style={styles.reviewCard}>
-            <View style={styles.reviewHeader}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/40" }}
-                style={styles.reviewAvatar}
-              />
-              <View style={styles.reviewHeaderText}>
-                <Text style={styles.reviewerName}>Mr.Kenneth</Text>
-                <View style={styles.stars}>
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star-border" size={14} color="#FFD700" />
-                </View>
-              </View>
-            </View>
-            <Text style={styles.reviewText}>
-              Okay naman sya maganda at maayos ang takbo ng Acer Predator Helios 300 mabilis, malinis, at parang brand new pa rin gamitin; walang lag at perfect para sa gaming at school works, highly recommended!
-            </Text>
-          </View>
+
+<View style={styles.section}>
+  <Text style={styles.sectionTitle}>Review (1)</Text>
+
+  <Pressable
+  style={({ pressed }) => [
+    styles.reviewCard,
+    pressed && { opacity: 0.85 },
+  ]}
+  onPress={() => router.push("/customer/review")}
+>
+    <View style={styles.reviewHeader}>
+      <Image
+        source={{ uri: "https://via.placeholder.com/40" }}
+        style={styles.reviewAvatar}
+      />
+      <View style={styles.reviewHeaderText}>
+        <Text style={styles.reviewerName}>Mr. Kenneth</Text>
+
+        <View style={styles.stars}>
+          <Icon name="star" size={14} color="#FFD700" />
+          <Icon name="star" size={14} color="#FFD700" />
+          <Icon name="star" size={14} color="#FFD700" />
+          <Icon name="star" size={14} color="#FFD700" />
+          <Icon name="star-border" size={14} color="#FFD700" />
         </View>
+      </View>
+    </View>
+
+    <Text style={styles.reviewText}>
+      Okay naman sya maganda at maayos ang takbo ng Acer Predator Helios 300 mabilis,
+      malinis, at parang brand new pa rin gamitin; walang lag at perfect para sa gaming
+      at school works, highly recommended!
+    </Text>
+  </Pressable>
+</View>
+
 
         {/* Bottom spacing for fixed buttons */}
         <View style={styles.bottomSpacer} />
