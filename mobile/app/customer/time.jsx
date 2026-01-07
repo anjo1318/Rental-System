@@ -2,230 +2,257 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  Dimensions,
+  FlatList,
   Pressable,
-  StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  ActivityIndicator,
   Image,
   ScrollView,
-  ActivityIndicator,
+  StatusBar,
+  Dimensions,
+  Alert,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import { RFValue } from "react-native-responsive-fontsize";
-import { usePathname } from "expo-router";
-import axios from "axios";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import FeatherIcon from "react-native-vector-icons/Feather";
+import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useRouter, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { RFValue } from "react-native-responsive-fontsize";
+import OwnerBottomNav from '../components/OwnerBottomNav';
 import CustomerBottomNav from '../components/CustomerBottomNav';
+
 
 const { width, height } = Dimensions.get("window");
 
-// 📏 Responsive constants
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.025);
-const PADDING_V = Math.min(Math.round(height * 0.0), 8);
+const HEADER_HEIGHT = height * 0.11;
+const PADDING_H = width * 0.05;
+const PADDING_V = height * 0.02;
+const MARGIN_TOP = height * 0.04;
+const ICON_BOX = width * 0.1;
+const ICON_SIZE = width * 0.06;
+const TITLE_FONT = RFValue(16);
 
 export default function TimeDuration() {
   const router = useRouter();
   const pathname = usePathname();
-  
   const [bookedItems, setBookedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [ownerId, setOwnerId] = useState(null);
   const [timers, setTimers] = useState({});
-  const [userId, setUserId] = useState("");
+  const [startingRent, setStartingRent] = useState({});
 
   useEffect(() => {
-    loadUserData();
+    loadOwner();
   }, []);
 
-  const loadUserData = async () => {
+  useEffect(() => {
+    if (ownerId) fetchOngoingAndForApproval();
+  }, [ownerId]);
+
+  useEffect(() => {
+    if (bookedItems.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newTimers = {};
+
+      bookedItems.forEach((item) => {
+        if (item.status === 'ongoing') {
+          const returnDate = new Date(item.returnDate);
+          const diff = returnDate - now;
+
+          if (diff <= 0) {
+            newTimers[item.id] = {
+              days: 0,
+              hours: 0,
+              minutes: 0,
+              seconds: 0,
+              expired: true,
+            };
+          } else {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
+          }
+        }
+      });
+
+      setTimers(newTimers);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [bookedItems]);
+
+  const loadOwner = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
-      if (userData) {
-        const user = JSON.parse(userData);
-        console.log("From local storage", userData);
-        
-        const userIdValue = user.id || user.userId || user._id || "";
-        
-        if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
-          setUserId(userIdValue);
-        } else {
-          console.error("Invalid user ID found:", userIdValue);
-        }
-      } else {
-        console.error("No user data found in AsyncStorage");
-      }
-    } catch (error) {
-      console.error("Error loading user data:", error);
+      if (!userData) return router.replace("customer/login");
+
+      const user = JSON.parse(userData);
+      setOwnerId(user.id);
+    } catch (err) {
+      console.error(err);
+      router.replace("customer/login");
     }
   };
 
-  // Fetch booked items
-  useEffect(() => {
-    if (userId) {
-      fetchBookedItems();
-    }
-  }, [userId]);
-
-  const fetchBookedItems = async () => {
+  const fetchOngoingAndForApproval = async () => {
     try {
       setLoading(true);
-  
-      if (!process.env.EXPO_PUBLIC_API_URL) {
-        throw new Error("API URL is missing");
-      }
-  
-      const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`
+
+      const res = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${ownerId}`
       );
-  
-      console.log("API response:", response.data);
-  
-      if (response.data?.success) {
-        const ongoingItems = (response.data.data || []).filter(
-          item => item.status === "ongoing"
-        );
-        setBookedItems(ongoingItems);
-      } else {
-        setBookedItems([]);
-      }
-    } catch (error) {
-      console.error("Fetch error:", error.message);
-      setBookedItems([]);
+
+      setBookedItems(res.data.data || []);
+    } catch (err) {
+      console.error("Fetch error:", err);
     } finally {
       setLoading(false);
     }
   };
-  
 
-  // Calculate time remaining for each booking
-  const calculateTimeRemaining = (returnDate) => {
-    const now = new Date().getTime();
-    const returnTime = new Date(returnDate).getTime();
-    const difference = returnTime - now;
+  const handleStartRent = async (itemId) => {
+    try {
+      setStartingRent(prev => ({ ...prev, [itemId]: true }));
 
-    if (difference <= 0) {
-      return { days: 0, hours: 0, minutes: 0, seconds: 0, expired: true };
+      const res = await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/start-rent/${itemId}`
+      );
+
+      Alert.alert("Success", "Rental has been started!");
+      fetchOngoingAndForApproval();
+    } catch (error) {
+      console.error("Start rent error:", error);
+      Alert.alert("Error", "Failed to start rental. Please try again.");
+    } finally {
+      setStartingRent(prev => ({ ...prev, [itemId]: false }));
     }
-
-    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-    return { days, hours, minutes, seconds, expired: false };
   };
 
-  // Update timers every second
-  useEffect(() => {
-    if (bookedItems.length === 0) return;
-  
-    const interval = setInterval(() => {
-      const newTimers = {};
-      bookedItems.forEach(item => {
-        newTimers[item.id] = calculateTimeRemaining(item.returnDate);
-      });
-      setTimers(newTimers);
-    }, 1000);
-  
-    return () => clearInterval(interval);
-  }, [bookedItems]);
-  
+  const getImageUrl = (itemImage) => {
+    try {
+      const parsed = JSON.parse(itemImage);
+      return parsed[0];
+    } catch {
+      return "https://via.placeholder.com/150";
+    }
+  };
 
-  // Format date for display
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
-  // Parse image URL
-  const getImageUrl = (itemImage) => {
-    try {
-      let url = itemImage;
-  
-      if (typeof itemImage === "string") {
-        const parsed = JSON.parse(itemImage);
-        url = Array.isArray(parsed) ? parsed[0] : itemImage;
-      }
-  
-      // 🔥 Fix broken protocol
-      if (url && url.startsWith("ttp")) {
-        url = "h" + url;
-      }
-  
-      // 🔒 Force https
-      if (url && url.startsWith("http://")) {
-        url = url.replace("http://", "https://");
-      }
-  
-      return url;
-    } catch {
-      return null;
-    }
-  };
-  
-
-  // Render booking card
   const renderBookingCard = (item) => {
     const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
+    const isBooked = item.status === 'booked';
+    const isOngoing = item.status === 'ongoing';
 
     return (
       <View key={item.id} style={styles.card}>
-
-        {/* Device info */}
         <View style={styles.deviceRow}>
-        <Image
-          source={{
-            uri: getImageUrl(item.itemImage) ||
-              "https://via.placeholder.com/150",
-          }}
-          style={styles.deviceImage}
-          onError={(e) =>
-            console.log("Image load error:", e.nativeEvent.error)
-          }
-        />
+          <Image
+            source={{
+              uri: getImageUrl(item.itemImage) || "https://via.placeholder.com/150",
+            }}
+            style={styles.deviceImage}
+            onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+          />
 
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{item.product}</Text>
             <Text style={styles.categoryText}>{item.category}</Text>
-            <View style={styles.statusOngoing}>
-              <Text style={styles.statusText}>Ongoing</Text>
+            <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
+              <Text style={styles.statusText}>{isBooked ? 'Out for Delivery' : 'Ongoing'}</Text>
             </View>
           </View>
         </View>
 
-        {/* Timer - Always show for ongoing items */}
-        {timer.expired ? (
+       
+
+    {isOngoing && (
+      timer.expired ? (
+        <>
           <View style={styles.expiredContainer}>
-            <Icon name="access-time" size={40} color="#FF5252" />
+            <MaterialIcons name="access-time" size={40} color="#FF5252" />
             <Text style={styles.expiredText}>Rental Period Ended</Text>
           </View>
-        ) : (
-          <View style={styles.timerRow}>
-            {[
-              { value: String(timer.days).padStart(2, '0'), label: "Days" },
-              { value: String(timer.hours).padStart(2, '0'), label: "Hours" },
-              { value: String(timer.minutes).padStart(2, '0'), label: "Minutes" },
-              { value: String(timer.seconds).padStart(2, '0'), label: "Seconds" },
-            ].map((timeItem, index) => (
-              <View key={index} style={styles.timeBox}>
-                <Text style={styles.timeValue}>{timeItem.value}</Text>
-                <Text style={styles.timeLabel}>{timeItem.label}</Text>
-              </View>
-            ))}
+          
+          {/* Add Action Buttons */}
+          <View style={styles.actionButtonsContainer}>
+          <Pressable 
+            style={styles.reviewButton}
+            onPress={() => {
+              console.log('Navigating with params:', {
+                itemId: String(item.itemId),
+                ownerId: String(item.ownerId),
+                customerId: String(ownerId),
+                productName: item.product,
+                productImage: item.itemImage
+              });
+              router.push({
+                pathname: "/customer/reviewProducts",
+                params: {
+                  itemId: String(item.itemId),
+                  ownerId: String(item.ownerId),
+                  customerId: String(ownerId),
+                  productName: item.product,
+                  productImage: item.itemImage  // Add this line
+                }
+              });
+            }}
+          >
+            <MaterialIcons name="rate-review" size={20} color="#fff" />
+            <Text style={styles.reviewButtonText}>Write Review</Text>
+          </Pressable>
+
+            <Pressable 
+              style={styles.rentAgainButton}
+              onPress={() => {
+                // Navigate to product details or booking page to rent again
+                router.push({
+                  pathname: "customer/productDetails", // or wherever you handle new bookings
+                  params: {
+                    itemId: item.itemId,
+                  }
+                });
+              }}
+            >
+              <MaterialIcons name="refresh" size={20} color="#057474" />
+              <Text style={styles.rentAgainButtonText}>Rent Again</Text>
+            </Pressable>
           </View>
+        </>
+      ) : (
+
+            <View style={styles.timerRow}>
+              {[
+                { value: String(timer.days).padStart(2, "0"), label: "Days" },
+                { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
+                { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
+                { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
+              ].map((timeItem, index) => (
+                <View key={index} style={styles.timeBox}>
+                  <Text style={styles.timeValue}>{timeItem.value}</Text>
+                  <Text style={styles.timeLabel}>{timeItem.label}</Text>
+                </View>
+              ))}
+            </View>
+          )
         )}
 
-        {/* Dates */}
         <View style={styles.dateRow}>
           <View style={styles.dateItem}>
             <Text style={styles.dateLabel}>Start Date:</Text>
@@ -237,24 +264,25 @@ export default function TimeDuration() {
           </View>
         </View>
 
-        {/* Rental Details */}
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Duration:</Text>
+          <MaterialIcons name="payment" size={16} color="#666" />
+            <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
             <Text style={styles.detailValue}>
-              {item.rentalDuration} {item.rentalPeriod}(s)
+               
             </Text>
-          </View> 
+          </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Total:</Text>
-            <Text style={styles.detailValue}>₱{parseFloat(item.grandTotal).toFixed(2)}</Text>
+            <Text style={styles.detailValue}>
+              ₱{item.grandTotal ? parseFloat(item.grandTotal).toFixed(2) : item.amount}
+            </Text>
           </View>
         </View>
 
-        {/* Payment Method */}
         <View style={styles.paymentRow}>
-          <Icon name="payment" size={16} color="#666" />
-          <Text style={styles.paymentText}>{item.paymentMethod}</Text>
+
+          <Text style={styles.paymentText}>{item.address}</Text>
         </View>
       </View>
     );
@@ -262,12 +290,9 @@ export default function TimeDuration() {
 
   return (
     <View style={styles.container}>
-        <CustomerBottomNav/>
-
-      {/* Status bar */}
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+      <CustomerBottomNav/>
 
-      {/* Header */}
       <View
         style={[
           styles.headerWrapper,
@@ -282,7 +307,7 @@ export default function TimeDuration() {
           <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
             <View style={[styles.iconBox, { width: ICON_BOX }]}>
               <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-                <Icon name="arrow-back" size={ICON_SIZE} color="#fff" />
+                <Ionicons name="arrow-back" size={ICON_SIZE} color="#fff" />
               </Pressable>
             </View>
 
@@ -295,8 +320,7 @@ export default function TimeDuration() {
         </View>
       </View>
 
-      {/* Content */}
-      <ScrollView 
+      <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentWrapper}
         showsVerticalScrollIndicator={false}
@@ -308,7 +332,7 @@ export default function TimeDuration() {
           </View>
         ) : bookedItems.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Icon name="schedule" size={60} color="#ccc" />
+            <MaterialIcons name="schedule" size={60} color="#ccc" />
             <Text style={styles.emptyText}>No ongoing rentals</Text>
             <Text style={styles.emptySubtext}>Your active rental timers will appear here</Text>
           </View>
@@ -316,7 +340,6 @@ export default function TimeDuration() {
           bookedItems.map(renderBookingCard)
         )}
       </ScrollView>
-
     </View>
   );
 }
@@ -327,7 +350,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E1D6",
   },
 
-  /* Header */
   headerWrapper: {
     width: "100%",
     backgroundColor: "#007F7F",
@@ -350,7 +372,7 @@ const styles = StyleSheet.create({
   },
 
   iconPress: {
-    padding: width * 0.015,
+    padding: width * 0.001,
     borderRadius: 6,
   },
 
@@ -368,7 +390,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
 
-  /* Content */
   scrollView: {
     flex: 1,
   },
@@ -454,6 +475,14 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
 
+  statusBooked: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    backgroundColor: "#FF9800",
+  },
+
   statusOngoing: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -466,6 +495,28 @@ const styles = StyleSheet.create({
     fontSize: RFValue(10),
     fontWeight: "600",
     color: "#fff",
+  },
+
+  startButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+
+  startButtonDisabled: {
+    backgroundColor: "#A5D6A7",
+  },
+
+  startButtonText: {
+    color: "#fff",
+    fontSize: RFValue(13),
+    fontWeight: "600",
+    marginLeft: 8,
   },
 
   timerRow: {
@@ -571,18 +622,60 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  /* Bottom Nav */
-  bottomNav: {
+  addButton: {
+    backgroundColor: "#057474",
     flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  addButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+  bottomNav: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    justifyContent: "space-around",
+    borderTopWidth: 1,
+    borderTopColor: "#00000040",
+    alignItems: "center",
+  },
+
+  addNewButton: {
+    alignItems: "center",
+    flex: 1,
+    position: "relative",
+    top: -20,
+  },
+  addNewCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#656565",
   },
 
   navButton: {
@@ -595,5 +688,46 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: width * 0.03,
     marginTop: height * 0.005,
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    gap: 12,
+    marginTop: 12,
+  },
+  
+  reviewButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  
+  reviewButtonText: {
+    color: "#fff",
+    fontSize: RFValue(12),
+    fontWeight: "600",
+  },
+  
+  rentAgainButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#057474",
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 6,
+  },
+  
+  rentAgainButtonText: {
+    color: "#057474",
+    fontSize: RFValue(12),
+    fontWeight: "600",
   },
 });

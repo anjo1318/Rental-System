@@ -12,6 +12,7 @@ import messageRouter from './routes/message.js';
 import bookRouter from './routes/book.js';
 import uploadRouter from './routes/upload.js';
 import paymentRouter from './routes/payment.js';
+import reviewRouter from './routes/review.js';
 // ✨ Import the timer restoration function
 import { restoreActiveTimers, setupRentalMonitoring } from './controllers/bookController.js';
 import cors from 'cors';
@@ -92,6 +93,7 @@ app.use('/api/message', messageRouter);
 app.use('/api/book', bookRouter);
 app.use('/api/upload', uploadRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/review', reviewRouter);
 
 // ------------------ 404 Handler ------------------
 
