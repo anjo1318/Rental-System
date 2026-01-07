@@ -11,6 +11,7 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  RefreshControl
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -32,6 +33,13 @@ export default function ProfileHeader() {
   const router = useRouter();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchChats();
+    setRefreshing(false);
+  };
 
   console.log("📱 Owner Messages Component Rendered");
 
@@ -188,7 +196,17 @@ export default function ProfileHeader() {
             {console.log("📭 Showing empty state")}
           </View>
         ) : (
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView 
+            contentContainerStyle={styles.scrollContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#007F7F"]}      // Android
+                tintColor="#007F7F"       // iOS
+              />
+            }
+          >
             {console.log("📜 Rendering chat list")}
             {chats.map((chat) => {
               console.log("💬 Rendering chat item:", {

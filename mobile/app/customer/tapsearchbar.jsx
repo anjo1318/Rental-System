@@ -11,6 +11,7 @@ import {
   StatusBar,
   StyleSheet,
   Dimensions,
+  RefreshControl
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
@@ -42,32 +43,44 @@ export default function Home() {
   const [filterLocation, setFilterLocation] = useState("");
   const [filterPrice, setFilterPrice] = useState(3000);
   const pathname = usePathname();
+  const [refreshing, setRefreshing] = useState(false);
+
+
+
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchItems();
+    setRefreshing(false);
+  };
 
 
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/item`
-        );
-        if (response.data.success) {
-          setItems(Array.isArray(response.data.data) ? response.data.data : []);
-        }
-        else {
-          setError("Failed to fetch items");
-        }
-      } catch (err) {
-        setError(err.message || "Error fetching data");
-      } finally {
-        setLoading(false);
-      }
-    };
+
     fetchItems();
   }, []);
 
   useEffect(()=>{
     loadUserData();
   },[]);
+
+  const fetchItems = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/item`
+      );
+      if (response.data.success) {
+        setItems(Array.isArray(response.data.data) ? response.data.data : []);
+      }
+      else {
+        setError("Failed to fetch items");
+      }
+    } catch (err) {
+      setError(err.message || "Error fetching data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadUserData = async () => {
     try {
@@ -149,7 +162,7 @@ export default function Home() {
       <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
 
       <TextInput
-        placeholder="Search devices.."
+        placeholder="Search  your devices.."
         value={search}
         onChangeText={setSearch}  // ✅ Now updates search state
         style={styles.searchInput}
@@ -182,14 +195,23 @@ export default function Home() {
 
       <ScrollView style={styles.container} 
       contentContainerStyle={{ paddingBottom: 80 }}
-      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} 
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#007F7F"]}      // Android
+          tintColor="#007F7F"       // iOS
+        />
+      }
+      >
 
 
 
           {/* 🔹 Results header with count */}
           <View style={styles.resultsHeader}>
             <Text style={styles.sectionTitle}>
-              {search ? `Search Results (${filteredItems.length})` : 'All Items'}
+              {search ? `Search Results (${filteredItems.length})` : 'Searched Result'}
             </Text>
             {search && filteredItems.length === 0 && (
               <Text style={styles.noResults}>No items found for "{search}"</Text>
@@ -198,87 +220,98 @@ export default function Home() {
 
           {/* 🔹 Items Grid */}
           <FlatList
-            data={filteredItems}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-            <Pressable 
-              onPress={() => router.push({ pathname: '/customer/itemDetail', params: { id: item.id } })}
+  data={filteredItems}
+  keyExtractor={(item) => item.id.toString()}
+  numColumns={2}
+  columnWrapperStyle={{
+    justifyContent: "space-between",
+    marginBottom: 16,
+  }}
+  scrollEnabled={false}
+  contentContainerStyle={{ paddingHorizontal: 16 }}
+  renderItem={({ item }) => {
+    const isAvailable = Number(item.availableQuantity) > 0;
+
+    return (
+      <Pressable
+        disabled={!isAvailable}
+        style={{ opacity: isAvailable ? 1 : 0.5 }}
+        onPress={() =>
+          router.push({
+            pathname: "/customer/itemDetail",
+            params: { id: item.id },
+          })
+        }
+      >
+        <View style={styles.card}>
+          {/* 🔹 IMAGE + BADGE */}
+          <View style={styles.upperHalf}>
+            <Image
+              source={{
+                uri:
+                  item.itemImages && item.itemImages.length > 0
+                    ? (() => {
+                        try {
+                          const imgs = JSON.parse(item.itemImages[0]);
+                          let url =
+                            Array.isArray(imgs) && imgs.length > 0
+                              ? imgs[0]
+                              : "https://via.placeholder.com/150";
+                          return url
+                            .replace(/^http:\/\//, "https://")
+                            .replace(/\\+$/, "");
+                        } catch {
+                          return "https://via.placeholder.com/150";
+                        }
+                      })()
+                    : "https://via.placeholder.com/150",
+              }}
+              style={styles.featuredImage}
+              resizeMode="cover"
+            />
+
+            <View
+              style={[
+                styles.availabilityBadge,
+                { backgroundColor: isAvailable ? "#4CAF50" : "#FF5722" },
+              ]}
             >
-              <View style={styles.card}>
-                <View style={styles.upperHalf}>
-                  <Image
-                    source={{
-                      uri:
-                        item.itemImages && item.itemImages.length > 0
-                          ? (() => {
-                              try {
-                                const imgs = JSON.parse(item.itemImages[0]);
-                                let url =
-                                  Array.isArray(imgs) && imgs.length > 0
-                                    ? imgs[0]
-                                    : "https://via.placeholder.com/150";
-                                url = url.replace(/^http:\/\//, "https://").replace(/\\+$/, "");
-                                return url;
-                              } catch {
-                                return "https://via.placeholder.com/150";
-                              }
-                            })()
-                          : "https://via.placeholder.com/150",
-                    }}
-                    style={styles.featuredImage}
-                    resizeMode="cover"
-                  />
+              <Text style={styles.availabilityText}>
+                {isAvailable ? "Available" : "Unavailable"}
+              </Text>
+            </View>
+          </View>
 
-                  <View style={[
-                    styles.availabilityBadge,
-                    { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
-                  ]}>
-                    <Text style={styles.availabilityText}>
-                      {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
-                    </Text>
-                  </View>
-                </View>
+          {/* 🔹 DETAILS */}
+          <View style={styles.lowerHalf}>
+            <Text style={styles.title}>{item.title}</Text>
 
-                <View style={styles.lowerHalf}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  <View style={styles.ratingRow}>
-                    <Text style={styles.ratingValue}>5.0</Text>
-                    <Text style={styles.starIcon}>⭐</Text>
-                  </View>
-                  <View style={styles.locationRow}>
-                  <View style={styles.iconContainer}>
-                    <Icon name="location-on" size={20} color="#666" />
-                  </View>
+            <View style={styles.ratingRow}>
+              <Text style={styles.ratingValue}>5.0</Text>
+              <Text style={styles.starIcon}>⭐</Text>
+            </View>
 
-                  <View style={styles.textContainer}>
-                    <Text
-                      style={styles.location}
-                      numberOfLines={0}
-                      ellipsizeMode="clip"
-                    >
-                      {item.location}
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.price}>₱{item.pricePerDay}</Text>
-
-                  <Text style={styles.quantity}>
-                    Quantity: {item.availableQuantity} / {item.quantity}
-                  </Text>
-                </View>
+            <View style={styles.locationRow}>
+              <View style={styles.iconContainer}>
+                <Icon name="location-on" size={20} color="#666" />
               </View>
-            </Pressable>
+              <View style={styles.textContainer}>
+                <Text style={styles.location}>{item.location}</Text>
+              </View>
+            </View>
 
-            )}
-            numColumns={2}
-            columnWrapperStyle={{
-              justifyContent: "space-between",
-              marginBottom: 16,
-            }}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          />
+            <Text style={styles.price}>₱{item.pricePerDay}</Text>
+
+            <Text style={styles.quantity}>
+              Quantity: {item.availableQuantity} / {item.quantity}
+            </Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }}
+/>
+
       </ScrollView>
       <CustomerBottomNav/>
       {showFilter && (

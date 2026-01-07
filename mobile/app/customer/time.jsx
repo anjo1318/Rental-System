@@ -13,6 +13,7 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  RefreshControl
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -74,6 +75,13 @@ export default function TimeDuration() {
   const [timers, setTimers] = useState({});
   const [startingRent, setStartingRent] = useState({});
   const [notifiedItems, setNotifiedItems] = useState(new Set());
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOngoingAndForApproval();
+    setRefreshing(false);
+  };
 
 
 // 1. Timer with immediate notifications
@@ -453,6 +461,14 @@ const cancelScheduledNotification = async (itemId) => {
         style={styles.scrollView}
         contentContainerStyle={styles.contentWrapper}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007F7F"]}      // Android
+            tintColor="#007F7F"       // iOS
+          />
+        }
       >
         {loading ? (
           <View style={styles.loadingContainer}>

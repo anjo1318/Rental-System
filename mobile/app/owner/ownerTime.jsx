@@ -13,6 +13,7 @@ import {
   StatusBar,
   Dimensions,
   Alert,
+  RefreshControl
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -44,6 +45,13 @@ export default function ownerTime() {
   const [timers, setTimers] = useState({});
   const [startingRent, setStartingRent] = useState({});
   const [returningItem, setReturningItem] = useState({});
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOngoingAndForApproval();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     loadOwner();
@@ -378,6 +386,14 @@ export default function ownerTime() {
         style={styles.scrollView}
         contentContainerStyle={styles.contentWrapper}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007F7F"]}      // Android
+            tintColor="#007F7F"       // iOS
+          />
+        }
       >
         {loading ? (
           <View style={styles.loadingContainer}>

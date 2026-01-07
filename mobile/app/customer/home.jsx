@@ -11,6 +11,7 @@ import {
   StatusBar,
   StyleSheet,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
@@ -23,9 +24,9 @@ import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get("window");
 
-const CARD_MARGIN = 16;
+const CARD_MARGIN = 7;
 const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.45;
+const CARD_HEIGHT = height * 0.41;
 
 
 export default function Home() {
@@ -39,9 +40,16 @@ export default function Home() {
   const [OWNER_ID, setOwnerId] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [categories, setCategories] = useState(["All"]);
+  const [refreshing, setRefreshing] = useState(false);
   const pathname = usePathname();
 
-  // 🔒 Check authentication every time screen comes into focus
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchItems();
+    setRefreshing(false);
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       checkAuth();
@@ -79,25 +87,30 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const response = await axios.get(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/item`
-        );
-        if (response.data.success) {
-          setItems(Array.isArray(response.data.data) ? response.data.data : []);
-        }
-        else {
-          setError("Failed to fetch items");
-        }
-      } catch (err) {
-        setError(err.message || "Error fetching data");
-      } finally {
-        setLoading(false);
+  const fetchItems = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/item`
+      );
+      if (response.data.success) {
+        const itemsData = Array.isArray(response.data.data) ? response.data.data : [];
+        setItems(itemsData);
+        
+        // Extract unique categories from items
+        const uniqueCategories = ["All", ...new Set(itemsData.map(item => item.category).filter(Boolean))];
+        setCategories(uniqueCategories);
       }
-    };
-    
+      else {
+        setError("Failed to fetch items");
+      }
+    } catch (err) {
+      setError(err.message || "Error fetching data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (isAuthenticated) {
       fetchItems();
     }
@@ -138,12 +151,9 @@ export default function Home() {
 
   const breakLongWords = (str, maxLen = 18) =>
   str ? str.replace(new RegExp(`(\\S{${maxLen}})`, "g"), "$1\u200B") : "";
-  
-
 
   return (
     <>
-      {/* ✅ StatusBar must be OUTSIDE the main View */}
       <StatusBar
         barStyle="dark-content"
         backgroundColor="#057474" 
@@ -175,8 +185,6 @@ export default function Home() {
               </Text>
           </View>
 
-
-
   <View style={styles.notificationWrapper}>
   <Pressable onPress={() => router.push("customer/notifications")}>
     <Icon name="notifications-none" size={24} color="#007F7F" />
@@ -185,13 +193,11 @@ export default function Home() {
     </View>
   </Pressable>
   </View>
-  
 
   </View>
          {/* 🔹 Search Bar (Clickable) */}
   <Pressable onPress={() => router.push('/customer/tapsearchbar')}>
 
-  
     <View style={styles.searchContainer}>
       <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
       <TextInput
@@ -202,67 +208,41 @@ export default function Home() {
         placeholderTextColor="#555"
       />
       <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
-<Icon
-    name="tune"
-    size={20}
-    color="gray"
-    style={styles.filterIcon}
-  />
-</Pressable>
-
+        <Icon
+            name="tune"
+            size={20}
+            color="gray"
+            style={styles.filterIcon}
+          />
+        </Pressable>
               </View>
             </Pressable>
 
           </View>
 
 
-      <ScrollView style={styles.container} 
-      contentContainerStyle={{ paddingBottom: 80 }}
-      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
-      
-          {/* 🔹 Featured Devices */}
-          {/* <View style={styles.featuredSection}>
-            <Text style={styles.sectionTitle}>Featured Devices</Text>
-          </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                        {items.map((item) => {
-                          let imageUrl = "https://via.placeholder.com/150";
-                          
-                          if (item.itemImages && item.itemImages.length > 0) {
-                            try {
-                              const parsedImages = JSON.parse(item.itemImages[0]);
-                              if (Array.isArray(parsedImages) && parsedImages.length > 0) {
-                                imageUrl = parsedImages[0].replace(/^http:/, "https:");
-                              }
-                            } catch (e) {
-                              console.error('Image parse error for item', item.id, ':', e);
-                            }
-                          }
-
-                          return (
-                            <View key={item.id} style={styles.featuredCard}>
-                              <Image
-                                source={{ uri: imageUrl }}
-                                style={styles.featuredImage}
-                                resizeMode="cover"
-                                onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
-                                onLoad={() => console.log('Image loaded:', imageUrl)}
-                              />
-                            </View>
-                          );
-                        })}
-          </ScrollView> */}
-
-     
-
+      <ScrollView 
+        style={styles.container} 
+        contentContainerStyle={{ paddingBottom: 80 }}
+        showsVerticalScrollIndicator={false} 
+        nestedScrollEnabled={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007F7F"]}      // Android
+            tintColor="#007F7F"       // iOS
+          />
+        }
+      >
           {/* 🔹 Recommendations */}
-          <Text style={styles.sectionTitle}>Manage Your Items</Text>
+          <Text style={styles.sectionTitle}>Our Recommendations</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             style={{ marginBottom: 10 }}
           >
-            {["All", "Cellphone", "Projector", "Laptop", "Speaker"].map((cat) => (
+            {categories.map((cat) => (
               <Pressable
                 key={cat}
                 style={[
@@ -327,10 +307,10 @@ export default function Home() {
                 {/* Availability Badge */}
                   <View style={[
                     styles.availabilityBadge,
-                    { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
+                    { backgroundColor: item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
                   ]}>
                     <Text style={styles.availabilityText}>
-                      {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
+                      {item.availableQuantity > 0 ? "Available" : "Unavailable"}
                     </Text>
                   </View>
                   <View style={styles.ratingRow}>
@@ -345,8 +325,8 @@ export default function Home() {
                   <View style={styles.textContainer}>
                     <Text
                       style={styles.location}
-                      numberOfLines={0}          // ✅ allow unlimited lines
-                      ellipsizeMode="clip"       // ✅ no "..." truncation
+                      numberOfLines={0}
+                      ellipsizeMode="clip"
                     >
                       {item.location}
                     </Text>
@@ -354,8 +334,6 @@ export default function Home() {
                 </View>
 
                 <Text style={styles.price}>₱{item.pricePerDay}</Text>
-
-
 
                   {/* Quantity */}
                   <Text style={styles.quantity}>
@@ -369,7 +347,7 @@ export default function Home() {
             numColumns={2}
             columnWrapperStyle={{
               justifyContent: "space-between",
-              marginBottom: 16,
+              marginBottom: 10,
             }}
             scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -444,22 +422,22 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // avatar left, bell right
+    justifyContent: "space-between",
     padding: 16,
-    marginTop: 20,
+    marginTop: 10,
 
   },
   email: {
     fontSize: 13,
     color: "#e0f2f2",
-    marginTop: 2,     // ⬅️ moves it DOWN under the name
+    marginTop: 2,
     marginLeft: 13
   },
   
     topBackground: {
     backgroundColor:"#007F7F",
-    paddingTop: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 5,
+    paddingVertical: 15,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
@@ -512,11 +490,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 20,
     paddingHorizontal: 10,
-    marginHorizontal: 25,
+    marginHorizontal: 20,
     marginVertical: 10,
     height: 45,
     backgroundColor: "#fff",
-    marginTop: 20,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -546,7 +523,6 @@ const styles = StyleSheet.create({
     paddingVertical: height * 0.020,
 
   },
-  
 
   featuredCard: {
     width: width * 0.65,
@@ -583,10 +559,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: width * 0.05,
     overflow: "hidden",
-    marginBottom: width * 0.04,
     borderWidth: 0,
     borderColor: "transparent",
-    top: 10,
+    top: 5,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -602,6 +577,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
+    top:50
   },
   itemImage: {
     width: "100%",
@@ -611,11 +587,9 @@ const styles = StyleSheet.create({
   lowerHalf: {
     flex: 1.1,
     flexDirection: "column",
-    justifyContent: "space-between", // pushes elements apart
     paddingHorizontal: 5,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingBottom: 10,
-    top: -100,
   },
 
   title: {
@@ -637,7 +611,7 @@ const styles = StyleSheet.create({
   },
   locationRow: {
     flexDirection: "row",
-    alignItems: "center",   // ✅ center icon with multi-line text
+    alignItems: "center",
     marginLeft: -8,
     top: 5,
   },
@@ -670,17 +644,17 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   availabilityBadge: {
-    width: "60%",        // 🔥 makes it full width
-    paddingVertical: 3,   // top & bottom spacing
-    alignItems: "center", // center the text horizontally
-    justifyContent: "center", // center vertically
+    width: "60%",
+    paddingVertical: 3,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 10,
     borderRadius: 10,
     top: 5,
   },
 
   availabilityText: {
-    color: "#fff",       // white text so it's readable on green/orange
+    color: "#fff",
     fontSize: 12,
     fontWeight: "400",
   },

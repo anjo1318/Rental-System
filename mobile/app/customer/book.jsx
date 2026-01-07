@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar, Image } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar, Image, RefreshControl } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from "axios";
@@ -18,6 +18,13 @@ export default function BookedItem() {
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchBookedItems();
+    setRefreshing(false);
+  };
 
   useEffect(() => {
     loadUserData();
@@ -166,6 +173,14 @@ export default function BookedItem() {
         <ScrollView 
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#007F7F"]}      // Android
+              tintColor="#007F7F"       // iOS
+            />
+          }
         >
           {loading ? (
             <View style={styles.loadingContainer}>

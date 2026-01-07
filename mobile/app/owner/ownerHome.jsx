@@ -12,6 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
+  RefreshControl
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
@@ -38,6 +39,14 @@ export default function OwnerHome() {
 
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOwnerItems();
+    setRefreshing(false);
+  };
+
 
   // Load user data from AsyncStorage
   const loadUserData = async () => {
@@ -245,6 +254,14 @@ export default function OwnerHome() {
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#007F7F"]}      // Android
+            tintColor="#007F7F"       // iOS
+          />
+        }
       >
 
 
