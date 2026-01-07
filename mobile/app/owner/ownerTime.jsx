@@ -268,7 +268,7 @@ export default function ownerTime() {
               ) : (
                 <>
                   <MaterialIcons name="assignment-return" size={20} color="#fff" />
-                  <Text style={styles.returnButtonText}>Return Item</Text>
+                  <Text style={styles.returnButtonText}>Retreive Item</Text>
                 </>
               )}
             </Pressable>
