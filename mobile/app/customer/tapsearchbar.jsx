@@ -18,6 +18,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import { usePathname } from "expo-router";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,6 +37,10 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
   const [showFilter, setShowFilter] = useState(false);
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+  const [filterPrice, setFilterPrice] = useState(3000);
   const pathname = usePathname();
 
 
@@ -75,7 +80,7 @@ export default function Home() {
         return user.id;
       } else {
         console.log('❌ No user data found, redirecting to login');
-        router.replace('/login'); // Redirect to login if no user data
+        router.replace('/login');
         return null;
       }
     } catch (error) {
@@ -86,7 +91,6 @@ export default function Home() {
   };
 
   const handleNavigation = (route) => {
-    // 🚫 Prevent navigating to the same "home"
     if (route === "customer/home") return;
     router.push(`/${route}`);
   };
@@ -106,7 +110,13 @@ export default function Home() {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.description.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchSearch;
+    
+    // Filter conditions
+    const matchFilterCategory = !filterCategory || item.category === filterCategory;
+    const matchFilterPrice = parseFloat(item.pricePerDay) <= filterPrice;
+    const matchFilterLocation = !filterLocation || item.location.toLowerCase().includes(filterLocation.toLowerCase());
+    
+    return matchCategory && matchSearch && matchFilterCategory && matchFilterPrice && matchFilterLocation;
   });
 
   const breakLongWords = (str, maxLen = 18) =>
@@ -116,24 +126,15 @@ export default function Home() {
 
   return (
     <>
-      {/* ✅ StatusBar must be OUTSIDE the main View */}
       <StatusBar
         barStyle="dark-content"
         backgroundColor="#057474" 
         translucent={false}
       />
-
-      <ScrollView style={styles.container} 
-      contentContainerStyle={{ paddingBottom: 80 }}
-      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
-        <View style={styles.topBackground}>
-  {/* 🔹 Profile Section */}
+              <View style={styles.topBackground}>
   <View style={styles.profileContainer}></View>
 
-  {/* 🔹 Search Row */}
   <View style={styles.searchRow}>
-
-    {/* 🔙 Back Button (OUTSIDE container) */}
     <Pressable onPress={() => router.back()} hitSlop={10}>
       <Icon
         name="arrow-back"
@@ -143,45 +144,57 @@ export default function Home() {
       />
     </Pressable>
 
-    {/* 🔹 Search Bar (Clickable) */}
-    <Pressable
-      style={{ flex: 1 }}
-      onPress={() => router.push('/customer/tap_searchbar')}
-    >
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+    {/* ✅ REMOVED Pressable wrapper - Now fully editable */}
+    <View style={styles.searchContainer}>
+      <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
 
-        <TextInput
-          placeholder="Search your devices.."
-          value={search}
-          editable={false}
-          style={styles.searchInput}
-          placeholderTextColor="#555"
-        />
+      <TextInput
+        placeholder="Search devices.."
+        value={search}
+        onChangeText={setSearch}  // ✅ Now updates search state
+        style={styles.searchInput}
+        placeholderTextColor="#555"
+      />
 
-        <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
+      {/* ✅ Clear button when there's text */}
+      {search.length > 0 && (
+        <Pressable onPress={() => setSearch("")} hitSlop={10}>
           <Icon
-            name="tune"
+            name="close"
             size={20}
             color="gray"
-            style={styles.filterIcon}
+            style={styles.clearIcon}
           />
         </Pressable>
-      </View>
-    </Pressable>
+      )}
 
+      <Pressable onPress={() => setShowFilter(true)} hitSlop={10}>
+        <Icon
+          name="tune"
+          size={20}
+          color="gray"
+          style={styles.filterIcon}
+        />
+      </Pressable>
+    </View>
   </View>
 </View>
 
+      <ScrollView style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 80 }}
+      showsVerticalScrollIndicator={false} nestedScrollEnabled={true} >
 
-          {/* 🔹 Recommendations */}
-          <Text style={styles.sectionTitle}>Searched Result</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginBottom: 10 }}
-          >
-          </ScrollView>
+
+
+          {/* 🔹 Results header with count */}
+          <View style={styles.resultsHeader}>
+            <Text style={styles.sectionTitle}>
+              {search ? `Search Results (${filteredItems.length})` : 'All Items'}
+            </Text>
+            {search && filteredItems.length === 0 && (
+              <Text style={styles.noResults}>No items found for "{search}"</Text>
+            )}
+          </View>
 
           {/* 🔹 Items Grid */}
           <FlatList
@@ -216,8 +229,6 @@ export default function Home() {
                     resizeMode="cover"
                   />
 
-
-                  {/* Availability Badge */}
                   <View style={[
                     styles.availabilityBadge,
                     { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
@@ -242,8 +253,8 @@ export default function Home() {
                   <View style={styles.textContainer}>
                     <Text
                       style={styles.location}
-                      numberOfLines={0}          // ✅ allow unlimited lines
-                      ellipsizeMode="clip"       // ✅ no "..." truncation
+                      numberOfLines={0}
+                      ellipsizeMode="clip"
                     >
                       {item.location}
                     </Text>
@@ -252,9 +263,6 @@ export default function Home() {
 
                 <Text style={styles.price}>₱{item.pricePerDay}</Text>
 
-
-
-                  {/* Quantity */}
                   <Text style={styles.quantity}>
                     Quantity: {item.availableQuantity} / {item.quantity}
                   </Text>
@@ -271,102 +279,178 @@ export default function Home() {
             scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
-
-<View style={styles.bottomNav}>
-  {[
-    { name: "Home", icon: "home", route: "/customer/home" },
-    { name: "Book", icon: "shopping-cart", route: "/customer/book" },
-    { name: "Message", icon: "mail", route: "/customer/message" },
-    { name: "Time", icon: "schedule", route: "/customer/time" },
-  ].map((navItem, index) => {
-    const isActive = pathname === navItem.route;
-
-    return (
-      <Pressable
-        key={index}
-        style={styles.navButton}
-        hitSlop={10}
-        onPress={() => router.push(navItem.route)}
-      >
-        <Icon
-          name={navItem.icon}
-          size={24}
-          color={isActive ? "#057474" : "#999"}   // ✅ green / gray
-        />
-        <Text
-          style={[
-            styles.navText,
-            { color: isActive ? "#057474" : "#999" }, // ✅ text too
-          ]}
-        >
-          {navItem.name}
-        </Text>
-      </Pressable>
-    );
-  })}
-</View>
-
       </ScrollView>
+      <CustomerBottomNav/>
       {showFilter && (
-  <Filter onClose={() => setShowFilter(false)} />
+  <Filter 
+    onClose={() => setShowFilter(false)}
+    onApplyFilters={(filters) => {
+      setFilterCategory(filters.category);
+      setFilterBrand(filters.brand);
+      setFilterLocation(filters.location);
+      setFilterPrice(filters.price);
+      setShowFilter(false);
+    }}
+    initialFilters={{
+      category: filterCategory,
+      brand: filterBrand,
+      location: filterLocation,
+      price: filterPrice,
+    }}
+    items={items}
+  />
 )}
     </>
   );
 }
 
-function Filter({ onClose }) {
-  const [price, setPrice] = useState(2000);
+function Filter({ onClose, onApplyFilters, initialFilters, items = [] }) {
+  const [price, setPrice] = useState(initialFilters.price || 3000);
+  const [selectedCategory, setSelectedCategory] = useState(initialFilters.category || "");
+  const [selectedBrand, setSelectedBrand] = useState(initialFilters.brand || "");
+  const [selectedLocation, setSelectedLocation] = useState(initialFilters.location || "");
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [showBrandDropdown, setShowBrandDropdown] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Extract unique values from API data with safety checks
+  const categories = items && items.length > 0 
+    ? [...new Set(items.map(item => item.category).filter(Boolean))]
+    : [];
+  
+  const locations = items && items.length > 0
+    ? [...new Set(items.map(item => item.location).filter(Boolean))]
+    : [];
+  
+  // Extract brands from item titles or descriptions (you can modify this logic based on your data structure)
+  // For now, we'll use a placeholder since brand isn't in the API data
+  const brands = ["Apple", "Samsung", "HP", "Dell", "Asus", "Lenovo", "Sony", "LG"];
+
+  const handleApplyFilters = () => {
+    onApplyFilters({
+      category: selectedCategory,
+      brand: selectedBrand,
+      location: selectedLocation,
+      price: price,
+    });
+  };
+
+  const handleClearFilters = () => {
+    setSelectedCategory("");
+    setSelectedBrand("");
+    setSelectedLocation("");
+    setPrice(3000);
+  };
+
+  const Dropdown = ({ label, value, options, isOpen, setIsOpen, onSelect }) => (
+    <>
+      <Text style={filterStyles.label}>{label}</Text>
+      <Pressable 
+        style={filterStyles.input}
+        onPress={() => setIsOpen(!isOpen)}
+      >
+        <Text style={value ? filterStyles.selectedText : filterStyles.placeholder}>
+          {value || `Select ${label}`}
+        </Text>
+        <Icon 
+          name={isOpen ? "expand-less" : "expand-more"} 
+          size={20} 
+          color="#666"
+          style={filterStyles.dropdownIcon}
+        />
+      </Pressable>
+      
+      {isOpen && (
+        <View style={filterStyles.dropdownList}>
+          <ScrollView style={filterStyles.dropdownScroll} nestedScrollEnabled>
+            {options.length > 0 ? (
+              options.map((option, index) => (
+                <Pressable
+                  key={index}
+                  style={filterStyles.dropdownItem}
+                  onPress={() => {
+                    onSelect(option);
+                    setIsOpen(false);
+                  }}
+                >
+                  <Text style={filterStyles.dropdownItemText}>{option}</Text>
+                </Pressable>
+              ))
+            ) : (
+              <View style={filterStyles.dropdownItem}>
+                <Text style={filterStyles.dropdownItemText}>No options available</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      )}
+    </>
+  );
 
   return (
     <View style={filterStyles.overlay}>
-      {/* Transparent backdrop */}
       <Pressable style={filterStyles.backdrop} onPress={onClose} />
 
-      {/* Bottom modal */}
       <View style={filterStyles.modal}>
         <View style={filterStyles.header}>
           <Pressable onPress={onClose}>
             <Icon name="close" size={22} color="#333" />
           </Pressable>
           <Text style={filterStyles.headerTitle}>Filter</Text>
-          <View style={{ width: 22 }} />
+          <Pressable onPress={handleClearFilters}>
+            <Text style={filterStyles.clearText}>Clear</Text>
+          </Pressable>
         </View>
 
-        <Text style={filterStyles.label}>Category</Text>
-        <View style={filterStyles.input}>
-          <Text style={filterStyles.placeholder}>Select Category</Text>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <Dropdown
+            label="Category"
+            value={selectedCategory}
+            options={categories}
+            isOpen={showCategoryDropdown}
+            setIsOpen={setShowCategoryDropdown}
+            onSelect={setSelectedCategory}
+          />
 
-        <Text style={filterStyles.label}>Brand</Text>
-        <View style={filterStyles.input}>
-          <Text style={filterStyles.placeholder}>Select Brand</Text>
-        </View>
+          <Dropdown
+            label="Brand"
+            value={selectedBrand}
+            options={brands}
+            isOpen={showBrandDropdown}
+            setIsOpen={setShowBrandDropdown}
+            onSelect={setSelectedBrand}
+          />
 
-        <Text style={filterStyles.label}>Price Range</Text>
-        <Slider
-          minimumValue={1000}
-          maximumValue={3000}
-          step={100}
-          value={price}
-          onValueChange={setPrice}
-          minimumTrackTintColor="#007F7F"
-          maximumTrackTintColor="#ccc"
-          thumbTintColor="#007F7F"
-        />
+          <Text style={filterStyles.label}>Price Range (Max)</Text>
+          <Slider
+            minimumValue={1000}
+            maximumValue={3000}
+            step={100}
+            value={price}
+            onValueChange={setPrice}
+            minimumTrackTintColor="#007F7F"
+            maximumTrackTintColor="#ccc"
+            thumbTintColor="#007F7F"
+          />
 
-        <View style={filterStyles.priceRow}>
-          <Text>₱ 1000</Text>
-          <Text>₱ {price}</Text>
-        </View>
+          <View style={filterStyles.priceRow}>
+            <Text>₱ 1000</Text>
+            <Text>₱ {price}</Text>
+          </View>
 
-        <Text style={filterStyles.label}>Location</Text>
-        <View style={filterStyles.input}>
-          <Text style={filterStyles.placeholder}>Select Location</Text>
-        </View>
+          <Dropdown
+            label="Location"
+            value={selectedLocation}
+            options={locations}
+            isOpen={showLocationDropdown}
+            setIsOpen={setShowLocationDropdown}
+            onSelect={setSelectedLocation}
+          />
 
-        <Pressable style={filterStyles.doneButton} onPress={onClose}>
-          <Text style={filterStyles.doneText}>Done</Text>
-        </Pressable>
+          <Pressable style={filterStyles.doneButton} onPress={handleApplyFilters}>
+            <Text style={filterStyles.doneText}>Apply Filters</Text>
+          </Pressable>
+        </ScrollView>
       </View>
     </View>
   );
@@ -376,13 +460,12 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between", // avatar left, bell right
+    justifyContent: "space-between",
     padding: 16,
     marginTop: 16,
-
   },
 
-    topBackground: {
+  topBackground: {
     backgroundColor:"#007F7F",
     paddingTop: 10,
     paddingBottom: 20,
@@ -442,8 +525,8 @@ const styles = StyleSheet.create({
     padding: 6,
   },
 
-
   searchContainer: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     borderWidth: 1,
@@ -463,16 +546,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
   },
-  rightIcon: { 
-    marginLeft: 8 
+  clearIcon: {
+    marginRight: 4,
+  },
+  filterIcon: {
+    marginLeft: 4,
   },
 
+  resultsHeader: {
+    paddingHorizontal: 16,
+    marginTop: 10,
+  },
 
   sectionTitle: {
     fontWeight: "bold",
     fontSize: width * 0.045,
-    marginLeft: width * 0.04,
-    paddingVertical: height * 0.025,
+    paddingVertical: height * 0.015,
+  },
+
+  noResults: {
+    fontSize: 14,
+    color: "#999",
+    fontStyle: "italic",
+    marginBottom: 10,
   },
 
   featuredCard: {
@@ -515,7 +611,7 @@ const styles = StyleSheet.create({
   lowerHalf: {
     flex: 1.1,
     flexDirection: "column",
-    justifyContent: "space-between", // pushes elements apart
+    justifyContent: "space-between",
     paddingHorizontal: 8,
     paddingTop: 8,
     paddingBottom: 10,
@@ -542,7 +638,7 @@ const styles = StyleSheet.create({
   },
   locationRow: {
     flexDirection: "row",
-    alignItems: "center",   // ✅ center icon with multi-line text
+    alignItems: "center",
     marginLeft: -8,
     marginTop: 10,
   },
@@ -572,19 +668,24 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   availabilityBadge: {
-    width: "100%",        // 🔥 makes it full width
-    paddingVertical: 3,   // top & bottom spacing
-    alignItems: "center", // center the text horizontally
-    justifyContent: "center", // center vertically
+    width: "100%",
+    paddingVertical: 3,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 6,
   },
 
   availabilityText: {
-    color: "#fff",       // white text so it's readable on green/orange
+    color: "#fff",
     fontSize: 14,
     fontWeight: "400",
   },
 
+  quantity: {
+    fontSize: width * 0.035,
+    color: "#666",
+    marginTop: 4,
+  },
 
   categoryButton: {
     paddingHorizontal: width * 0.04,
@@ -636,7 +737,6 @@ const styles = StyleSheet.create({
     marginTop: height * 0.004,
   },
 
- 
   center: { 
     flex: 1, 
     justifyContent: "center", 
@@ -656,7 +756,7 @@ const filterStyles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     width: "100%",
-    height: "70%",
+    height: "75%",
     backgroundColor: "#fff",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -672,6 +772,11 @@ const filterStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
+  clearText: {
+    fontSize: 14,
+    color: "#007F7F",
+    fontWeight: "500",
+  },
   label: {
     fontSize: 13,
     fontWeight: "500",
@@ -683,11 +788,40 @@ const filterStyles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ddd",
-    justifyContent: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingHorizontal: 12,
   },
   placeholder: {
     color: "#999",
+  },
+  selectedText: {
+    color: "#333",
+  },
+  dropdownIcon: {
+    marginLeft: 8,
+  },
+  dropdownList: {
+    maxHeight: 150,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    marginTop: 4,
+    backgroundColor: "#fff",
+  },
+  dropdownScroll: {
+    maxHeight: 150,
+  },
+  dropdownItem: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: "#333",
   },
   priceRow: {
     flexDirection: "row",
@@ -695,7 +829,8 @@ const filterStyles = StyleSheet.create({
     marginBottom: 10,
   },
   doneButton: {
-    marginTop: 100,
+    marginTop: 20,
+    marginBottom: 20,
     backgroundColor: "#007F7F",
     paddingVertical: 12,
     borderRadius: 10,
@@ -708,4 +843,3 @@ const filterStyles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-  
