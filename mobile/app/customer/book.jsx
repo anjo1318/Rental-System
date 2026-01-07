@@ -53,10 +53,11 @@ export default function BookedItem() {
     try {
       setLoading(true);
       const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${userId}`);
+      
   
       if (response.data.success) {
         const pendingItems = (response.data.data || []).filter(
-          item => item.status?.toLowerCase() === "pending"
+          item => item.status?.toLowerCase() === "booked"
         );
         setBookedItem(pendingItems);
       } else {

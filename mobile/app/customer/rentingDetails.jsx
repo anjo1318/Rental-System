@@ -26,8 +26,8 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
   // Generate time slots every 30 minutes
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 0; hour < 24; hour++) {
-      for (let min of [0, 30]) {
+    for (let hour = 6; hour <= 22; hour++) {  // ✅ Changed: 6 AM to 10 PM (22:00)
+      for (let min of [0]) {
         const d = new Date();
         d.setHours(hour, min, 0, 0);
         slots.push(d);

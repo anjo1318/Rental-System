@@ -119,23 +119,7 @@ export default function TimeDuration() {
     }
   };
 
-  const handleStartRent = async (itemId) => {
-    try {
-      setStartingRent(prev => ({ ...prev, [itemId]: true }));
 
-      const res = await axios.put(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/start-rent/${itemId}`
-      );
-
-      Alert.alert("Success", "Rental has been started!");
-      fetchOngoingAndForApproval();
-    } catch (error) {
-      console.error("Start rent error:", error);
-      Alert.alert("Error", "Failed to start rental. Please try again.");
-    } finally {
-      setStartingRent(prev => ({ ...prev, [itemId]: false }));
-    }
-  };
 
   const getImageUrl = (itemImage) => {
     try {
@@ -155,138 +139,142 @@ export default function TimeDuration() {
     });
   };
 
-  const renderBookingCard = (item) => {
-    const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
-    const isBooked = item.status === 'booked';
-    const isOngoing = item.status === 'ongoing';
+// Replace the renderBookingCard function with this enhanced version:
 
-    return (
-      <View key={item.id} style={styles.card}>
-        <View style={styles.deviceRow}>
-          <Image
-            source={{
-              uri: getImageUrl(item.itemImage) || "https://via.placeholder.com/150",
-            }}
-            style={styles.deviceImage}
-            onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
-          />
+const renderBookingCard = (item) => {
+  const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
+  const isBooked = item.status === 'booked';
+  const isOngoing = item.status === 'ongoing';
 
-          <View style={styles.deviceInfo}>
-            <Text style={styles.deviceName}>{item.product}</Text>
-            <Text style={styles.categoryText}>{item.category}</Text>
-            <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
-              <Text style={styles.statusText}>{isBooked ? 'Out for Delivery' : 'Ongoing'}</Text>
-            </View>
+  return (
+    <View key={item.id} style={styles.card}>
+      <View style={styles.deviceRow}>
+        <Image
+          source={{
+            uri: getImageUrl(item.itemImage) || "https://via.placeholder.com/150",
+          }}
+          style={styles.deviceImage}
+          onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+        />
+
+        <View style={styles.deviceInfo}>
+          <Text style={styles.deviceName}>{item.product}</Text>
+          <Text style={styles.categoryText}>{item.category}</Text>
+          <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
+            <Text style={styles.statusText}>{isBooked ? 'Out for Delivery' : 'Ongoing'}</Text>
           </View>
-        </View>
-
-       
-
-    {isOngoing && (
-      timer.expired ? (
-        <>
-          <View style={styles.expiredContainer}>
-            <MaterialIcons name="access-time" size={40} color="#FF5252" />
-            <Text style={styles.expiredText}>Rental Period Ended</Text>
-          </View>
-          
-          {/* Add Action Buttons */}
-          <View style={styles.actionButtonsContainer}>
-          <Pressable 
-            style={styles.reviewButton}
-            onPress={() => {
-              console.log('Navigating with params:', {
-                itemId: String(item.itemId),
-                ownerId: String(item.ownerId),
-                customerId: String(ownerId),
-                productName: item.product,
-                productImage: item.itemImage
-              });
-              router.push({
-                pathname: "/customer/reviewProducts",
-                params: {
-                  itemId: String(item.itemId),
-                  ownerId: String(item.ownerId),
-                  customerId: String(ownerId),
-                  productName: item.product,
-                  productImage: item.itemImage  // Add this line
-                }
-              });
-            }}
-          >
-            <MaterialIcons name="rate-review" size={20} color="#fff" />
-            <Text style={styles.reviewButtonText}>Write Review</Text>
-          </Pressable>
-
-            <Pressable 
-              style={styles.rentAgainButton}
-              onPress={() => {
-                // Navigate to product details or booking page to rent again
-                router.push({
-                  pathname: "customer/productDetails", // or wherever you handle new bookings
-                  params: {
-                    itemId: item.itemId,
-                  }
-                });
-              }}
-            >
-              <MaterialIcons name="refresh" size={20} color="#057474" />
-              <Text style={styles.rentAgainButtonText}>Rent Again</Text>
-            </Pressable>
-          </View>
-        </>
-      ) : (
-
-            <View style={styles.timerRow}>
-              {[
-                { value: String(timer.days).padStart(2, "0"), label: "Days" },
-                { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
-                { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
-                { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
-              ].map((timeItem, index) => (
-                <View key={index} style={styles.timeBox}>
-                  <Text style={styles.timeValue}>{timeItem.value}</Text>
-                  <Text style={styles.timeLabel}>{timeItem.label}</Text>
-                </View>
-              ))}
-            </View>
-          )
-        )}
-
-        <View style={styles.dateRow}>
-          <View style={styles.dateItem}>
-            <Text style={styles.dateLabel}>Start Date:</Text>
-            <Text style={styles.dateText}>{formatDate(item.pickUpDate)}</Text>
-          </View>
-          <View style={styles.dateItem}>
-            <Text style={styles.dateLabel}>Return Date:</Text>
-            <Text style={styles.dateText}>{formatDate(item.returnDate)}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailsRow}>
-          <View style={styles.detailItem}>
-          <MaterialIcons name="payment" size={16} color="#666" />
-            <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
-            <Text style={styles.detailValue}>
-               
-            </Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Total:</Text>
-            <Text style={styles.detailValue}>
-              ₱{item.grandTotal ? parseFloat(item.grandTotal).toFixed(2) : item.amount}
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.paymentRow}>
-
-          <Text style={styles.paymentText}>{item.address}</Text>
         </View>
       </View>
-    );
-  };
+
+      {/* Show delivery info for booked items */}
+      {isBooked && (
+        <View style={styles.deliveryContainer}>
+          <MaterialCommunityIcon name="truck-delivery" size={40} color="#FF9800" />
+          <Text style={styles.deliveryText}>Your rental is on the way!</Text>
+          <Text style={styles.deliverySubtext}>Expected delivery on pickup date</Text>
+        </View>
+      )}
+
+      {/* Show timer for ongoing items */}
+      {isOngoing && (
+        timer.expired ? (
+          <>
+            <View style={styles.expiredContainer}>
+              <MaterialIcons name="access-time" size={40} color="#FF5252" />
+              <Text style={styles.expiredText}>Rental Period Ended</Text>
+            </View>
+            
+            {/* Action Buttons for expired rentals */}
+            <View style={styles.actionButtonsContainer}>
+              <Pressable 
+                style={styles.reviewButton}
+                onPress={() => {
+                  console.log('Navigating with params:', {
+                    itemId: String(item.itemId),
+                    ownerId: String(item.ownerId),
+                    customerId: String(ownerId),
+                    productName: item.product,
+                    productImage: item.itemImage
+                  });
+                  router.push({
+                    pathname: "/customer/reviewProducts",
+                    params: {
+                      itemId: String(item.itemId),
+                      ownerId: String(item.ownerId),
+                      customerId: String(customerId),
+                      productName: item.product,
+                      productImage: item.itemImage
+                    }
+                  });
+                }}
+              >
+                <MaterialIcons name="rate-review" size={20} color="#fff" />
+                <Text style={styles.reviewButtonText}>Write Review</Text>
+              </Pressable>
+
+              <Pressable 
+                style={styles.rentAgainButton}
+                onPress={() => {
+                  router.push({
+                    pathname: "customer/productDetails",
+                    params: {
+                      itemId: item.itemId,
+                    }
+                  });
+                }}
+              >
+                <MaterialIcons name="refresh" size={20} color="#057474" />
+                <Text style={styles.rentAgainButtonText}>Rent Again</Text>
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <View style={styles.timerRow}>
+            {[
+              { value: String(timer.days).padStart(2, "0"), label: "Days" },
+              { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
+              { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
+              { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
+            ].map((timeItem, index) => (
+              <View key={index} style={styles.timeBox}>
+                <Text style={styles.timeValue}>{timeItem.value}</Text>
+                <Text style={styles.timeLabel}>{timeItem.label}</Text>
+              </View>
+            ))}
+          </View>
+        )
+      )}
+
+      <View style={styles.dateRow}>
+        <View style={styles.dateItem}>
+          <Text style={styles.dateLabel}>Start Date:</Text>
+          <Text style={styles.dateText}>{formatDate(item.pickUpDate)}</Text>
+        </View>
+        <View style={styles.dateItem}>
+          <Text style={styles.dateLabel}>Return Date:</Text>
+          <Text style={styles.dateText}>{formatDate(item.returnDate)}</Text>
+        </View>
+      </View>
+
+      <View style={styles.detailsRow}>
+        <View style={styles.detailItem}>
+          <MaterialIcons name="payment" size={16} color="#666" />
+          <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
+        </View>
+        <View style={styles.detailItem}>
+          <Text style={styles.detailLabel}>Total:</Text>
+          <Text style={styles.detailValue}>
+            ₱{item.grandTotal ? parseFloat(item.grandTotal).toFixed(2) : item.amount}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.paymentRow}>
+        <Text style={styles.paymentText}>{item.address}</Text>
+      </View>
+    </View>
+  );
+};
 
   return (
     <View style={styles.container}>
@@ -729,5 +717,27 @@ const styles = StyleSheet.create({
     color: "#057474",
     fontSize: RFValue(12),
     fontWeight: "600",
+  },
+  deliveryContainer: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+
+  deliveryText: {
+    fontSize: RFValue(14),
+    fontWeight: "600",
+    color: "#FF9800",
+    marginTop: 8,
+  },
+
+  deliverySubtext: {
+    fontSize: RFValue(11),
+    color: "#666",
+    marginTop: 4,
   },
 });

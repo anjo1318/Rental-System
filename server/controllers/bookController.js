@@ -1350,8 +1350,9 @@ const ongoingBookAndForApprovalCustomer = async (req, res) => {
     const response = await Books.findAll({
       where: {
         customerId: id,
-        status: "pending"
-      },
+        status: {
+          [Op.in]: ["ongoing", "booked"]
+        }      },
       order: [["created_at", "DESC"]],
     });
 
