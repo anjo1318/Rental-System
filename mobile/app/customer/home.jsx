@@ -188,7 +188,7 @@ export default function Home() {
   
 
   </View>
-  {/* 🔹 Search Bar (Clickable) */}
+         {/* 🔹 Search Bar (Clickable) */}
   <Pressable onPress={() => router.push('/customer/tapsearchbar')}>
 
   
@@ -212,6 +212,7 @@ export default function Home() {
 
               </View>
             </Pressable>
+
           </View>
 
 
@@ -252,8 +253,10 @@ export default function Home() {
                         })}
           </ScrollView> */}
 
+     
+
           {/* 🔹 Recommendations */}
-          <Text style={styles.sectionTitle}>Our Recommendations</Text>
+          <Text style={styles.sectionTitle}>Manage Your Items</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -290,6 +293,7 @@ export default function Home() {
             >
               <View style={styles.card}>
                 <View style={styles.upperHalf}>
+                  <View style={styles.imageWrapper}>
                   <Image
                     source={{
                       uri:
@@ -312,9 +316,15 @@ export default function Home() {
                     style={styles.featuredImage}
                     resizeMode="cover"
                   />
+                  </View>
 
 
-                  {/* Availability Badge */}
+
+                </View>
+
+                <View style={styles.lowerHalf}>
+                  <Text style={styles.title}>{item.title}</Text>
+                {/* Availability Badge */}
                   <View style={[
                     styles.availabilityBadge,
                     { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
@@ -323,10 +333,6 @@ export default function Home() {
                       {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
                     </Text>
                   </View>
-                </View>
-
-                <View style={styles.lowerHalf}>
-                  <Text style={styles.title}>{item.title}</Text>
                   <View style={styles.ratingRow}>
                     <Text style={styles.ratingValue}>5.0</Text>
                     <Text style={styles.starIcon}>⭐</Text>
@@ -453,7 +459,6 @@ const styles = StyleSheet.create({
     topBackground: {
     backgroundColor:"#007F7F",
     paddingTop: 10,
-    paddingBottom: 20,
     paddingHorizontal: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
@@ -481,17 +486,15 @@ const styles = StyleSheet.create({
     width: width * 0.10,
     height: width * 0.10,
     borderRadius: (width * 0.12) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#ccc",
+    backgroundColor: "#fff",
   },
   badge: {
     position: "absolute",
     right: -8,
     top: -8,
-    backgroundColor: "#ccc",
+    backgroundColor: "#fff",
     borderRadius: 10,
     width: 17,
     height: 17,
@@ -507,14 +510,21 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#007F7F",
     borderRadius: 20,
     paddingHorizontal: 10,
-    marginHorizontal: 10,
+    marginHorizontal: 25,
     marginVertical: 10,
     height: 45,
     backgroundColor: "#fff",
+    marginTop: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
   },
   leftIcon: { 
     marginRight: 8 
@@ -533,8 +543,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: width * 0.045,
     marginLeft: width * 0.04,
-    paddingVertical: height * 0.025,
+    paddingVertical: height * 0.020,
+
   },
+  
 
   featuredCard: {
     width: width * 0.65,
@@ -544,11 +556,25 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#007F7F99",
+    
+  
   },
-  featuredImage: { 
-    width: "100%", 
-    height: "100%", 
-    resizeMode: "cover" 
+  imageWrapper: {
+    width: "100%",
+    height: 180,          
+    borderBottomWidth: 0,
+    borderBottomColor: "transparent",
+    overflow: "hidden",   
+    top: -60,
+    
+
+  },
+
+  featuredImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+    top: 20,
   },
 
   card: {
@@ -558,15 +584,24 @@ const styles = StyleSheet.create({
     borderRadius: width * 0.05,
     overflow: "hidden",
     marginBottom: width * 0.04,
-    borderWidth: 1,
-    borderColor: "#007F7F99",
+    borderWidth: 0,
+    borderColor: "transparent",
+    top: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 5,
   },
 
   upperHalf: {
     flex: 0.9,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#fff",
   },
   itemImage: {
     width: "100%",
@@ -580,6 +615,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingTop: 8,
     paddingBottom: 10,
+    top: -100,
   },
 
   title: {
@@ -603,6 +639,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",   // ✅ center icon with multi-line text
     marginLeft: -8,
+    top: 5,
   },
 
   iconContainer: {
@@ -627,19 +664,24 @@ const styles = StyleSheet.create({
   price: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    marginTop: 12,
+    marginTop: 10,
+  },
+  quantity: {
+    marginTop: 5,
   },
   availabilityBadge: {
-    width: "100%",        // 🔥 makes it full width
+    width: "60%",        // 🔥 makes it full width
     paddingVertical: 3,   // top & bottom spacing
     alignItems: "center", // center the text horizontally
     justifyContent: "center", // center vertically
-    marginBottom: 6,
+    marginBottom: 10,
+    borderRadius: 10,
+    top: 5,
   },
 
   availabilityText: {
     color: "#fff",       // white text so it's readable on green/orange
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: "400",
   },
 
