@@ -47,19 +47,21 @@ export default function BookedItem() {
 
   const fetchBookedItems = async () => {
     if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
+      console.log("walang user id");
       return;
     }
-  
+    
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${userId}`);
+      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
       
-  
       if (response.data.success) {
-        const pendingItems = (response.data.data || []).filter(
-          item => item.status?.toLowerCase() === "booked"
+        // FIX: Change back to "pending" status
+        const bookedItems = (response.data.data || []).filter(
+          item => item.status?.toLowerCase() === "pending"
         );
-        setBookedItem(pendingItems);
+        setBookedItem(bookedItems);
+        console.log("Fetch booked items in book.jsx", bookedItems);
       } else {
         setBookedItem([]);
       }
