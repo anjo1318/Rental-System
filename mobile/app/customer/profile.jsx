@@ -5,24 +5,18 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
-  StatusBar,
   Image,
   Alert,
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Header from "../components/header";
+
 const { width, height } = Dimensions.get("window");
 
-// 📏 Responsive constants
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.08));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.025);
-const PADDING_V = Math.min(Math.round(height * 0.0), 8);
 
 export default function Profile() {
   const router = useRouter();
@@ -122,38 +116,13 @@ export default function Profile() {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" translucent={false} />
+      <View style={styles.container}>
+  <Header
+    title="Profile"
+    backgroundColor="#007F7F"
+  />
 
-      {/* Header */}
-      <View
-        style={[
-          styles.headerWrapper,
-          {
-            height: HEADER_HEIGHT,
-            paddingHorizontal: PADDING_H,
-            paddingVertical: PADDING_V,
-          },
-        ]}
-      >
-        <View style={styles.topBackground}>
 
-          
-        <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-              <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
-            </Pressable>
-          </View>
-
-          <Text numberOfLines={1} ellipsizeMode="tail" style={[styles.pageName, { fontSize: TITLE_FONT }]}>
-            Profile
-          </Text>
-
-            <View style={[styles.iconBox, { width: ICON_BOX }]} />
-          </View>
-        </View>
-      </View>
 
       {/* User Profile Section */}
       <View style={styles.userContainer}>
@@ -289,53 +258,14 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#007F7F",
+    backgroundColor: "#fff",
   },
-
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  headerWrapper: {
-    width: "100%",
-    borderBottomWidth: 3,
-    borderBottomColor:"#007F7F",
     justifyContent: "center",
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
-  profileContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
   },
 
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  iconPress: {
-    padding: width * 0.015,
-    borderRadius: 6,
-  },
-
-  pageName: {
-    fontWeight: "600",
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    marginRight: 10,
-  },
-   topBackground: {
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
   userContainer: {
     padding: 13,
   },

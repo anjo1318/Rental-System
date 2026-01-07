@@ -12,7 +12,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Header from "../components//header";
+import Header from "../components/header";
 
 const { height } = Dimensions.get("window");
 
