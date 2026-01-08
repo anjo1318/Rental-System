@@ -57,8 +57,6 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
 const styles = StyleSheet.create({
   headerWrapper: {
     width: "100%",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
     justifyContent: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,

@@ -573,7 +573,7 @@ const styles = StyleSheet.create({
   },
 
   upperHalf: {
-    flex: 0.9,
+    flex: 0.8,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -585,11 +585,12 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   lowerHalf: {
-    flex: 1.1,
+    flex: 1.2,
     flexDirection: "column",
     paddingHorizontal: 5,
     paddingTop: 10,
     paddingBottom: 10,
+    top: 13,
   },
 
   title: {
@@ -644,7 +645,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   availabilityBadge: {
-    width: "60%",
+    width: "45%",
     paddingVertical: 3,
     alignItems: "center",
     justifyContent: "center",
@@ -655,7 +656,7 @@ const styles = StyleSheet.create({
 
   availabilityText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "400",
   },
 

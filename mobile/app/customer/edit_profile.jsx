@@ -196,6 +196,9 @@ export default function EditProfile() {
             </View>
           </View>
           {/* Avatar */}
+          
+
+         <View style={styles.mainContainer}>
           <View style={styles.userContainer}>
             <View style={styles.userRow}>
               <Pressable onPress={pickImage} style={styles.userPressable}>
@@ -211,10 +214,6 @@ export default function EditProfile() {
                       resizeMode="contain"
                     />
                   </Pressable>
-                </View>
-
-                <View style={styles.nameContainer}>
-                  <Text style={styles.username}>{currentUser?.firstName || 'Loading...'}</Text>
                 </View>
               </Pressable>
             </View>
@@ -386,6 +385,7 @@ export default function EditProfile() {
               <Text style={styles.saveText}>Save Changes</Text>
             </Pressable>
           </View>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -446,13 +446,16 @@ const styles = StyleSheet.create({
 
   userContainer: {
     padding: 13,
-    marginTop: 20,
+    marginBottom: 10,
   },
 
   userRow: {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "space-between",
+    bottom: 50,
+ 
+
   },
 
   userPressable: {
@@ -460,16 +463,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+
+  mainContainer: {
+    borderWidth: 1,            // visible line
+    borderColor: "#05747480", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 4,
+    borderRadius: 20  ,          
+    marginHorizontal: 20,      // shrink from screen edges
+    marginTop: 60,             // optional vertical spacing
+    backgroundColor: "#FFF",
+    top: 50,   // optional to make border visible
+    marginBottom: 200,
+  },
+
+
+
   avatarWrapper: {
     position: "relative",
     width: width * 0.20,
     height: width * 0.20,
+
   },
 
   avatar: {
     width: "100%",
     height: "100%",
     borderRadius: (width * 0.20) / 2,
+    borderWidth: 2,            // visible line
+    borderColor: "#057474BF", 
   },
 
   cameraButton: {
@@ -494,35 +520,31 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
 
-  nameContainer: {
-    marginTop: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
   username: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    marginTop: 10,
+    bottom: 5,
   },
 
   inputContainer: {
     paddingHorizontal: width * 0.08,
     paddingBottom: height * 0.06,
-    marginTop: 20,
+    bottom: 40,
+
+    
   },
 
   input: {
     width: "100%",
-    borderWidth: 1,
-    borderColor: "#D7D7D7",
+    borderWidth: 1,            // visible line
+    borderColor: "#0574744D", 
     borderRadius: 12,
     paddingVertical: height * 0.018,
     backgroundColor: "transparent",
     paddingHorizontal: 14,
     marginBottom: 15,
     fontSize: width * 0.04,
-    color: "#000", // Changed from #D7D7D7 to #000 for better readability
+    color: "#000", 
   },
 
   saveButton: {
@@ -530,7 +552,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 20,
     alignItems: "center",
-    marginTop: 170,
+    marginTop: 30,
+    top: 20,
   },
 
   saveText: {
