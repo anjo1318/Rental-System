@@ -161,6 +161,7 @@ export default function EditProfile() {
         <ScrollView
           contentContainerStyle={{ paddingBottom: 20 }}
           keyboardShouldPersistTaps="handled"
+          
         >
           {/* Avatar */}
          <View style={styles.mainContainer}>

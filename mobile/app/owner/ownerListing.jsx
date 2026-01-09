@@ -10,7 +10,8 @@ import {
   Alert,
   Image,
   Pressable,
-  Dimensions
+  Dimensions,
+  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
@@ -26,17 +27,15 @@ import OwnerBottomNav from '../components/OwnerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
-// Responsive values
-const HEADER_HEIGHT = height * 0.11;
-const PADDING_H = width * 0.05;
-const PADDING_V = height * 0.02;
-const MARGIN_TOP = height * 0.01;
-const ICON_BOX = width * 0.1;
-const ICON_SIZE = width * 0.06;
-const TITLE_FONT = RFValue(16);
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.04);
 
 
-export default function OwnerListing() {
+export default function OwnerListing({ title = "Title", backgroundColor = "#057474", onAddPress }) {
   const router = useRouter();
   const pathname = usePathname();
 
@@ -440,30 +439,53 @@ export default function OwnerListing() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          activeOpacity={0.7}
-          onPress={() => {
-            console.log("Back button pressed");
-            router.replace("owner/ownerHome");
-          }} 
-          style={styles.backButton}
-        >
-          <Icon name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Items ({items.length})</Text>
-        <TouchableOpacity 
-          activeOpacity={0.5}
-          onPress={() => {
-            console.log("Add button pressed");
-            addNewItem();
-          }} 
-          style={styles.addButton}
-        >
-          <Icon name="add" size={28} color="#FFF" />
-        </TouchableOpacity>
-      </View>
+      <StatusBar
+  barStyle="light-content"
+  backgroundColor="#007F7F"
+  translucent={false}
+/>
+
+    <View style={[styles.header, { height: HEADER_HEIGHT }]}>
+  <View
+    style={[
+      styles.profileContainer,
+      { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }
+    ]}
+  >
+    {/* Back Button */}
+    <View style={[styles.iconBox, { width: ICON_BOX }]}>
+      <Pressable
+        onPress={() => {
+          console.log("Back button pressed");
+          router.replace("owner/ownerHome");
+        }}
+        hitSlop={10}
+        style={styles.iconPress}
+      >
+        <Icon name="arrow-back" size={ICON_SIZE} color="#fff" />
+      </Pressable>
+    </View>
+
+    {/* Title */}
+    <Text
+      numberOfLines={1}
+      style={[styles.headerTitle, { fontSize: TITLE_FONT }]}
+    >
+      My Items ({items.length})
+    </Text>
+
+    {/* Add Button — ORIGINAL FUNCTION */}
+    <View style={[styles.iconBox, { width: ICON_BOX }]}>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={addNewItem}
+        style={styles.addButton}
+      >
+        <Icon name="add" size={ICON_SIZE} color="#fff" />
+      </TouchableOpacity>
+    </View>
+  </View>
+</View>
 
       {/* Items List */}
       <FlatList
@@ -515,16 +537,29 @@ const styles = StyleSheet.create({
     justifyContent: "center", 
     alignItems: "center"
   },
-  header: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    justifyContent: "space-between", 
-    padding: 10, 
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    marginTop: 30
-  },
+header: { 
+  width: "100%",
+  justifyContent: "center",
+  backgroundColor: "#007F7F",
+  borderBottomLeftRadius: 20,
+  borderBottomRightRadius: 20,
+},
+profileContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+},
+
+iconBox: {
+  alignItems: "center",
+  justifyContent: "center",
+},
+
+iconPress: {
+  padding: width * 0.02,
+  borderRadius: 6,
+},
+
   backButton: { 
     padding: 12,
     borderRadius: 8,
@@ -543,12 +578,12 @@ const styles = StyleSheet.create({
   addButton: {
     padding: 4,
     borderRadius: 8,
-    minWidth: 40,
-    minHeight: 40,
+    minWidth: 35,
+    minHeight: 35,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
-    marginRight: 10,
+    marginRight: 8,
   },
   listContainer: {
     padding: 16,

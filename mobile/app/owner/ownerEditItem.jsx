@@ -18,6 +18,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
+import Header from "../components/header";
 
 export default function OwnerEditItem() {
   const router = useRouter();
@@ -253,29 +254,10 @@ export default function OwnerEditItem() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          onPress={() => router.back()} 
-          style={styles.backButton}
-          activeOpacity={0.7}
-        >
-          <Icon name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Edit Item</Text>
-        <TouchableOpacity
-          onPress={updateItem}
-          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-          activeOpacity={0.7}
-          disabled={saving}
-        >
-          {saving ? (
-            <ActivityIndicator size="small" color="#FFF" />
-          ) : (
-            <Text style={styles.saveButtonText}>Save</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+     <Header
+             title="Edit Item"
+             backgroundColor="#007F7F"
+           />
 
       <ScrollView 
         style={styles.content} 
@@ -414,35 +396,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 8,
-    minWidth: 40,
-    minHeight: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: "#FFF",
-    fontWeight: "600",
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
-  },
+
   saveButton: {
     backgroundColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 20,

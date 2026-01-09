@@ -148,8 +148,7 @@ export default function Index() {
     >
       <View style={styles.upperHalf}>
         <Image source={{ uri: imageUrl }} style={styles.itemImage} />
-        
-        {/* Availability Badge - positioned at bottom of image */}
+           {/* Availability Badge - positioned at bottom of image */}
         <View
           style={[
             styles.availabilityBadge,
@@ -164,6 +163,7 @@ export default function Index() {
     
       <View style={styles.lowerHalf}>
         <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+
         
         {/* Rating Row */}
         <View style={styles.ratingRow}>
@@ -500,6 +500,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginLeft: 16,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
 
   activeCategory: {
@@ -521,8 +523,8 @@ const styles = StyleSheet.create({
   card: {
     width: (width - 39) / 2,
     backgroundColor: "#FFF",
-    borderWidth: 1,
-    borderColor:"#057474",
+    borderWidth: 0,
+    borderColor:"transparent",
     borderRadius: 12,
     overflow: "hidden",
     shadowColor: "#000",
@@ -545,12 +547,14 @@ const styles = StyleSheet.create({
   // ✅ Oblong badge at bottom of image
   availabilityBadge: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
+    bottom: -50,
+    left: 17,
     right: 0,
     paddingHorizontal: 1,
     paddingVertical: 1,
     alignItems: "center",
+    borderRadius: 20,
+    width: "55%",
   },
 
   availabilityText: {
@@ -573,7 +577,7 @@ const styles = StyleSheet.create({
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 6,
+    marginTop: 20,
   },
 
   ratingValue: {
@@ -591,6 +595,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     marginBottom: 6,
+    right: 5,
   },
 
   iconContainer: {

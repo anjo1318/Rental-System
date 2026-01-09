@@ -198,10 +198,7 @@ export default function ItemDetail() {
         <ItemImages images={item.itemImages} />
 
         {/* Price and Title Section */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
-/>
-
-      
+        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}/>      
         <View style={styles.infoSection}>
           <View style={styles.priceRow}>
             <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>

@@ -18,16 +18,9 @@ import { useRouter } from "expo-router";
 import OwnerBottomNav from '../components/OwnerBottomNav';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
-
-// ✅ Responsive constants derived from screen size
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.12));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.04);
-const MARGIN_TOP = Math.round(height * 0.045);
 
 export default function ProfileHeader() {
   const router = useRouter();
@@ -148,41 +141,10 @@ export default function ProfileHeader() {
     <View style={styles.container}>
       <OwnerBottomNav/>
 
-      {/* Status bar */}
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="#057474"
-        translucent={false}
-      />
-
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }]}>
-          {/* Left: back button */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <Pressable
-              onPress={handleBackPress}
-              hitSlop={10}
-              style={styles.iconPress}
-            >
-              <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
-            </Pressable>
-          </View>
-
-          {/* Center: page title */}
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[styles.pageName, { fontSize: TITLE_FONT }]}
-          >
-            Messages
-          </Text>
-
-          {/* Right: placeholder (keeps title centered) */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]} />
-        </View>
-      </View>
-
+  <Header
+    title="Messages"
+    backgroundColor="#007F7F"
+  />
       {/* Body */}
       <View style={styles.bodyWrapper}>
         {loading ? (
@@ -266,37 +228,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
   },
 
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#057474",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
-    justifyContent: "center",
-  },
-
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  iconPress: {
-    padding: width * 0.02,
-    borderRadius: 6,
-  },
-
-  pageName: {
-    color: "#FFF",
-    textAlign: "center",
-    flex: 1,
-    paddingHorizontal: width * 0.015,
-    fontWeight: "600",
-  },
 
   bodyWrapper: {
     flex: 1,

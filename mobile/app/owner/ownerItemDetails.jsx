@@ -15,6 +15,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import OwnerItemImages from "./ownerItemImages";
+import Header from "../components/header";
 
 export default function OwnerItemDetail() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function OwnerItemDetail() {
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
+  
   useEffect(() => {
     const fetchItem = async () => {
       try {
@@ -176,14 +178,10 @@ export default function OwnerItemDetail() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Item Details</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <Header
+              title="Item Details"
+              backgroundColor="#007F7F"
+            />
 
       {/* Item Images */}
       <OwnerItemImages images={item.itemImages} />
@@ -290,38 +288,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#E6E1D6",
     padding: 20
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    minWidth: 40,
-    minHeight: 40,
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  headerTitle: {
-    fontSize: 18,
-    color: "#FFF",
-    fontWeight: "600",
-    flex: 1,
-    textAlign: 'center'
-  },
-  headerSpacer: {
-    width: 40
   },
   imageContainer: {
     position: 'relative',

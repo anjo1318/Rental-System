@@ -1,20 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar, Image } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
 
-// ✅ Responsive constants (bounded so they don't blow up on tablets or collapse on small screens)
-const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110); // min 60, max 110
-const ICON_BOX = Math.max(40, width * 0.1); // Fixed: was width * 0.00, now width * 0.1
-const ICON_SIZE = Math.max(20, width * 0.07); // min 20px
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045)); // adaptive title font
-const BADGE_SIZE = Math.max(12, Math.round(width * 0.045)); // badge scales with width
-const PADDING_H = Math.min(Math.max(12, width * 0.02), 28); // Fixed: was min 7, now min 12
-const MARGIN_TOP = Math.min(Math.round(height * 0.02), 20); // Fixed: was height * 0.1, now height * 0.02
 
 export default function ownerItem() {
   const router = useRouter();
@@ -147,68 +140,10 @@ export default function ownerItem() {
 
   return (
     <View style={styles.container}>
-      {/* Status bar */}
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" translucent={false} />
-
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, paddingTop: MARGIN_TOP }]}>
-        <View style={[styles.profileContainer, { paddingHorizontal: PADDING_H }]}>
-          {/* Left: back button */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <Pressable
-                onPress={() => {
-                  if (router.canGoBack()) {
-                    router.back();
-                      } else {
-                    router.replace("/customer/home"); // fallback screen
-                      }}}
-                      hitSlop={10}
-                      style={styles.iconPress}
-                      >
-                <Icon name="arrow-back" size={24} color="#000" />
-              </Pressable>
-          </View>
-
-          {/* Center: page title */}
-          <Text
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            style={[styles.pageName, { fontSize: TITLE_FONT }]}
-          >
-            Request
-          </Text>
-
-          {/* Right: notification */}
-          <View style={[styles.iconBox, { width: ICON_BOX }]}>
-            <View
-              style={[
-                styles.notificationWrapper,
-                {
-                  width: ICON_BOX * 0.8,
-                  height: ICON_BOX * 0.8,
-                  borderRadius: (ICON_BOX * 0.8) / 2,
-                },
-              ]}
-            >
-              <Icon name="notifications-none" size={Math.round(ICON_SIZE * 0.9)} color="#057474" />
-              <View
-                style={[
-                  styles.badge,
-                  {
-                    width: BADGE_SIZE,
-                    height: BADGE_SIZE,
-                    borderRadius: BADGE_SIZE / 2,
-                    right: -BADGE_SIZE * 0.25,
-                    top: -BADGE_SIZE * 0.25,
-                  },
-                ]}
-              >
-                <Text style={[styles.badgeText, { fontSize: BADGE_SIZE * 0.45 }]}>2</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-      </View>
+ <Header
+    title="Request"
+    backgroundColor="#007F7F"
+  />
 
       {/* Body */}
       <View style={styles.bodyWrapper}>
@@ -291,59 +226,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E6E1D6",
-  },
-
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#FFF",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
-    justifyContent: "center",
-  },
-
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between", // keeps title centered
-    height: "100%",
-  },
-
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  iconPress: {
-    padding: width * 0.015,
-    borderRadius: 6,
-  },
-
-  pageName: {
-    fontWeight: "600",
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    paddingHorizontal: 6,
-  },
-
-  notificationWrapper: {
-    position: "relative",
-    borderWidth: 1.5,
-    borderColor: "#057474",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badge: {
-    position: "absolute",
-    backgroundColor: "#057474",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  badgeText: {
-    color: "white",
-    fontWeight: "bold",
   },
 
   bodyWrapper: {

@@ -18,18 +18,12 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
 import * as ImagePicker from "expo-image-picker";
+import Header from "../components/header";
 
 
 const { width, height } = Dimensions.get("window");
 
-// Responsive constants
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.08));
-const ICON_BOX = Math.round(width * 0.1);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.025);
-const PADDING_V = Math.min(Math.round(height * 0.0), 8);
+
 
 export default function EditProfile() {
   const router = useRouter();
@@ -182,7 +176,10 @@ export default function EditProfile() {
 
   return (
     <View style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+    <Header
+      title="Edit Profile"
+      backgroundColor="#007F7F"
+    />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -191,33 +188,8 @@ export default function EditProfile() {
           contentContainerStyle={{ paddingBottom: 20 }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
-          <View
-            style={[
-              styles.headerWrapper,
-              { height: HEADER_HEIGHT, paddingHorizontal: PADDING_H, paddingVertical: PADDING_V },
-            ]}
-          >
-            <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
-              <View style={[styles.iconBox, { width: ICON_BOX }]}>
-                <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-                  <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
-                </Pressable>
-              </View>
-
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[styles.pageName, { fontSize: TITLE_FONT }]}
-              >
-                Edit Profile
-              </Text>
-
-              <View style={[styles.iconBox, { width: ICON_BOX }]} />
-            </View>
-          </View>
-
           {/* Avatar */}
+          <View style={styles.mainContainer}>
           <View style={styles.userContainer}>
             <View style={styles.userRow}>
               <Pressable onPress={pickImage} style={styles.userPressable}>
@@ -295,24 +267,24 @@ export default function EditProfile() {
                 keyboardType="phone-pad"
                 autoCapitalize="none"
               />
-           <View>
+
+              <View>
               <Text style={styles.username}>Gcash QR</Text>
             </View>
             <Pressable onPress={pickGcashQR} style={{ marginBottom: 15 }}>
               {gcashQR ? (
                 <Image source={{ uri: gcashQR }} style={{ width: 100, height: 100, borderRadius: 8 }} />
               ) : (
-                <View style={{ width: 100, height: 100, borderWidth: 1, borderColor: "#ccc", justifyContent: "center", alignItems: "center" }}>
+                <View style={{ width: 100, height: 100, borderWidth: 1, borderColor:  "#05747480", justifyContent: "center", alignItems: "center",  }}>
                   <Text>Select QR</Text>
                 </View>
               )}
             </Pressable>
-
-
             {/* Save Button */}
             <Pressable style={styles.saveButton} onPress={handleUpdateOwnerDetails}>
               <Text style={styles.saveText}>Save Changes</Text>
             </Pressable>
+          </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -332,47 +304,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#FFF",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
+
+  nameContainer: {
+    marginTop: 10,
     justifyContent: "center",
-  },
-
-  profileContainer: {
-    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
   },
 
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  iconPress: {
-    padding: width * 0.015,
-    borderRadius: 6,
-  },
-
-  pageName: {
-    fontWeight: "600",
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    paddingHorizontal: 6,
+  username: {
+    fontWeight: "bold",
+    fontSize: width * 0.04,
+    marginTop: 10,
   },
 
   userContainer: {
     padding: 13,
-    marginTop: 20,
+    marginBottom: 10,
   },
 
   userRow: {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "space-between",
+    bottom: 50,
   },
 
   userPressable: {
@@ -380,16 +334,39 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
+
+  mainContainer: {
+    borderWidth: 1,            // visible line
+    borderColor: "#05747480", 
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 3,
+    borderRadius: 20  ,          
+    marginHorizontal: 20,      // shrink from screen edges
+    marginTop: 60,             // optional vertical spacing
+    backgroundColor: "#FFF",
+    top: 50,   // optional to make border visible
+    marginBottom: 200,
+  },
+
+
+
   avatarWrapper: {
     position: "relative",
     width: width * 0.20,
     height: width * 0.20,
+
   },
 
   avatar: {
     width: "100%",
     height: "100%",
     borderRadius: (width * 0.20) / 2,
+    borderWidth: 2,            // visible line
+    borderColor: "#057474BF", 
   },
 
   cameraButton: {
@@ -414,35 +391,32 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
 
-  nameContainer: {
-    marginTop: 10,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
   username: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    marginTop: 10,
+    bottom: 5,
+    
   },
 
   inputContainer: {
     paddingHorizontal: width * 0.08,
     paddingBottom: height * 0.06,
-    marginTop: 20,
+    bottom: 40,
+
+    
   },
 
   input: {
     width: "100%",
-    borderWidth: 1,
-    borderColor: "#D7D7D7",
+    borderWidth: 1,            // visible line
+    borderColor: "#0574744D", 
     borderRadius: 12,
     paddingVertical: height * 0.018,
     backgroundColor: "transparent",
     paddingHorizontal: 14,
     marginBottom: 15,
     fontSize: width * 0.04,
-    color: "#000", // Changed from #D7D7D7 to #000 for better readability
+    color: "#000", 
   },
 
   saveButton: {
@@ -450,7 +424,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 20,
     alignItems: "center",
-    marginTop: 170,
+    marginTop: 30,
+    top: 20,
   },
 
   saveText: {
@@ -458,4 +433,5 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: width * 0.045,
   },
+  
 });
