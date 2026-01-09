@@ -17,15 +17,10 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.02);
 
 export default function Chat() {
   const router = useRouter();

@@ -199,7 +199,7 @@ export default function Profile() {
       </View>    
 
       <View style={styles.privacyContainer}>
-        <Pressable style={styles.privacyRow} onPress={() => router.push("customer/privacy")}>
+        <Pressable style={styles.privacyRow} onPress={() => router.push("/terms")}>
           <View style={styles.privacyPhotoWrapper}>
             <Image
               source={require("../../assets/images/privacy.png")}
@@ -620,7 +620,7 @@ settingsRow: {
 
   outContainer: {
     width: "92%",
-    marginTop: 105,
+    marginTop: 95,
     alignSelf: "center",
     alignItems: "center",
     paddingHorizontal: 8,

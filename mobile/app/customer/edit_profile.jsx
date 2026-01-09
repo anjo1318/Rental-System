@@ -5,7 +5,6 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
-  StatusBar,
   Alert,
   Image,
   TextInput,
@@ -17,17 +16,10 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
 
-// Responsive constants
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.08));
-const ICON_BOX = Math.round(width * 0.1);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.025);
-const PADDING_V = Math.min(Math.round(height * 0.0), 8);
 
 export default function EditProfile() {
   const router = useRouter();
@@ -159,7 +151,9 @@ export default function EditProfile() {
 
   return (
     <View style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#007F7F" />
+      {/* Header */}
+<     Header title="Edit Profile" backgroundColor="#007F7F" />
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -168,36 +162,7 @@ export default function EditProfile() {
           contentContainerStyle={{ paddingBottom: 20 }}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Header */}
-          <View
-            style={[
-              styles.headerWrapper,
-              { height: HEADER_HEIGHT, paddingHorizontal: PADDING_H, paddingVertical: PADDING_V },
-            ]}
-          >
-            <View style={styles.topBackground}>
-            <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
-              <View style={[styles.iconBox, { width: ICON_BOX }]}>
-                <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-                  <Icon name="arrow-back" size={ICON_SIZE} color="#ccc" />
-                </Pressable>
-              </View>
-
-              <Text
-                numberOfLines={1}
-                ellipsizeMode="tail"
-                style={[styles.pageName, { fontSize: TITLE_FONT }]}
-              >
-                Edit Profile
-              </Text>
-
-              <View style={[styles.iconBox, { width: ICON_BOX }]} />
-             </View>
-            </View>
-          </View>
           {/* Avatar */}
-          
-
          <View style={styles.mainContainer}>
           <View style={styles.userContainer}>
             <View style={styles.userRow}>
@@ -404,46 +369,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  headerWrapper: {
-    width: "100%",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
-    justifyContent: "center",
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  iconPress: {
-    padding: width * 0.015,
-    borderRadius: 6,
-  },
-
-  pageName: {
-    fontWeight: "600",
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    paddingHorizontal: 6,
-  },
-
-  topBackground: {
-    backgroundColor:"#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
   userContainer: {
     padding: 13,
     marginBottom: 10,
@@ -454,8 +379,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     bottom: 50,
- 
-
   },
 
   userPressable: {
@@ -472,7 +395,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 3,
     borderRadius: 20  ,          
     marginHorizontal: 20,      // shrink from screen edges
     marginTop: 60,             // optional vertical spacing

@@ -667,6 +667,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "transparent",
     marginLeft: width * 0.04,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
   activeCategory: { 
     backgroundColor: "#007F7F" 

@@ -58,15 +58,14 @@ const sendRentalEndedNotification = async (productName) => {
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = height * 0.11;
-const PADDING_H = width * 0.05;
-const PADDING_V = height * 0.02;
-const MARGIN_TOP = height * 0.04;
-const ICON_BOX = width * 0.1;
-const ICON_SIZE = width * 0.06;
-const TITLE_FONT = RFValue(16);
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.04);
 
-export default function TimeDuration() {
+export default function TimeDuration({ title = "TIme Duration", backgroundColor = "#fff" }) {
   const router = useRouter();
   const pathname = usePathname();
   const [bookedItems, setBookedItems] = useState([]);
@@ -427,35 +426,45 @@ const cancelScheduledNotification = async (itemId) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
       <CustomerBottomNav/>
 
-      <View
-        style={[
-          styles.headerWrapper,
-          {
-            height: HEADER_HEIGHT,
-            paddingHorizontal: PADDING_H,
-            paddingVertical: PADDING_V,
-          },
-        ]}
-      >
-        <View style={styles.topBackground}>
-          <View style={[styles.profileContainer, { marginTop: MARGIN_TOP }]}>
-            <View style={[styles.iconBox, { width: ICON_BOX }]}>
-              <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-                <Ionicons name="arrow-back" size={ICON_SIZE} color="#fff" />
-              </Pressable>
+            <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, backgroundColor }]}>
+              <View
+                style={[
+                  styles.profileContainer,
+                  { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
+                ]}
+              >
+                {/* Back Button */}
+                <View style={[styles.iconBox, { width: ICON_BOX }]}>
+                  <Pressable
+                    onPress={() => {
+                      if (router.canGoBack()) {
+                        router.back();
+                      } else {
+                        router.replace("/customer/home"); // change fallback if needed
+                      }
+                    }}
+                    hitSlop={10}
+                    style={styles.iconPress}
+                  >
+                    <Ionicons name="arrow-back" size={ICON_SIZE} color="#000" />
+                  </Pressable>
+                </View>
+      
+                {/* Title */}
+                <Text
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                  style={[styles.pageName, { fontSize: TITLE_FONT }]}
+                >
+                  {title}
+                </Text>
+      
+                {/* Spacer */}
+                <View style={[styles.iconBox, { width: ICON_BOX }]} />
+              </View>
             </View>
-
-            <Text style={[styles.pageName, { fontSize: TITLE_FONT }]}>
-              Time Duration
-            </Text>
-
-            <View style={[styles.iconBox, { width: ICON_BOX }]} />
-          </View>
-        </View>
-      </View>
 
       <ScrollView
         style={styles.scrollView}
@@ -495,44 +504,30 @@ const styles = StyleSheet.create({
     backgroundColor: "#E6E1D6",
   },
 
-  headerWrapper: {
+ headerWrapper: {
     width: "100%",
-    backgroundColor: "#007F7F",
-    borderBottomWidth: 2,
-    borderBottomColor: "#007F7F",
     justifyContent: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
   },
-
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-
   iconBox: {
     alignItems: "center",
     justifyContent: "center",
   },
-
   iconPress: {
-    padding: width * 0.001,
+    padding: width * 0.02,
     borderRadius: 6,
   },
-
   pageName: {
-    fontWeight: "600",
-    color: "#fff",
+    color: "#000",
     textAlign: "center",
     flex: 1,
-    paddingHorizontal: 6,
-  },
-
-  topBackground: {
-    backgroundColor: "#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
+    fontWeight: "600",
   },
 
   scrollView: {

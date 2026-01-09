@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, StatusBar, Image, RefreshControl } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, Image, RefreshControl } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Header from "../components/header2";
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = Math.min(Math.max(60, height * 0.09), 110);
-const ICON_SIZE = 24;
-const TITLE_FONT = 18;
-const PADDING_H = 16;
 
 export default function BookedItem() {
   const router = useRouter();
@@ -152,22 +149,10 @@ export default function BookedItem() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#007F7F" translucent={false} />
-
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        
-        <View style={styles.headerContent}>
-          <Pressable onPress={() => router.replace("/customer/home")} hitSlop={10}>
-            <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
-          </Pressable>
-
-          <Text style={styles.headerTitle}>Booked Item</Text>
-
-          <Pressable hitSlop={10}>
-            <Icon name="notifications-none" size={ICON_SIZE} color="#FFF" />
-          </Pressable>
-        </View>
-      </View>
+      <Header
+          title="Booked Item"
+          backgroundColor="#007F7F"
+        />
 
       <View style={styles.bodyWrapper}>
         <ScrollView 
@@ -271,29 +256,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E8E8E8",
-  },
-
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#007F7F",
-    justifyContent: "center",
-    paddingHorizontal: PADDING_H,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
-  headerContent: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    top: 10,
-  },
-
-  headerTitle: {
-    fontSize: TITLE_FONT,
-    fontWeight: "600",
-    color: "#FFF",
-    
   },
 
   bodyWrapper: {
@@ -431,12 +393,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: "row",
-    backgroundColor: "#FFF",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
     gap: 12,
+    marginBottom: 10,
   },
 
   deleteButton: {

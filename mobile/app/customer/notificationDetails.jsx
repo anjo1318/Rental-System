@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable, Dimensions, StatusBar, Image } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
 
@@ -11,28 +12,10 @@ export default function NotificationDetails() {
 
   return (
     <View style={styles.container}>
-      {/* Status bar */}
-      <StatusBar barStyle="light-content" backgroundColor="#057474" translucent={false} />
-
-      {/* Header with back button */}
-      <View style={[styles.headerWrapper, { height: Math.max(64, Math.round(height * 0.09)) }]}>
-        <View style={styles.profileContainer}>
-          {/* Left: back button */}
-          <View style={styles.iconBox}>
-            <Pressable onPress={() => router.back()} hitSlop={10} style={styles.iconPress}>
-              <Icon name="arrow-back" size={24} color="#FFF" />
-            </Pressable>
-          </View>
-
-          {/* Center: page title */}
-          <Text style={styles.pageName}>Notification Details</Text>
-
-          {/* Right: placeholder */}
-          <View style={styles.iconBox} />
-        </View>
-      </View>
-
-      {/* Body */}
+        <Header
+          title="Notifications Details"
+          backgroundColor="#007F7F"
+        />
       <ScrollView style={styles.bodyWrapper} contentContainerStyle={{ paddingBottom: 30 }}>
         {/* Product Info */}
         <View style={styles.card}>
@@ -129,36 +112,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#E6E1D6",
-  },
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#057474",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
-    justifyContent: "center",
-  },
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: width * 0.04,
-    marginTop: height * 0.02,
-  },
-  iconBox: {
-    width: width * 0.1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconPress: {
-    padding: width * 0.02,
-    borderRadius: 6,
-  },
-  pageName: {
-    color: "#FFF",
-    textAlign: "center",
-    flex: 1,
-    fontWeight: "600",
-    fontSize: Math.max(16, Math.round(width * 0.045)),
   },
   bodyWrapper: {
     flex: 1,

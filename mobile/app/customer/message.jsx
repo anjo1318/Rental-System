@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Dimensions,
   Pressable,
-  StatusBar,
   Image,
   ActivityIndicator,
   RefreshControl
@@ -18,16 +17,9 @@ import {  } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
-
-// ✅ Responsive constants derived from screen size
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.02);
 
 export default function Messages() {
   const router = useRouter();
@@ -153,32 +145,10 @@ export default function Messages() {
   return (
     <View style={styles.container}>
       <CustomerBottomNav/>
-
-      {/* Status bar */}
-      <StatusBar barStyle="light-content" backgroundColor="#057474" />
-
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        <View style={styles.topBackground}>
-          <View
-            style={[
-              styles.profileContainer,
-              { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
-            ]}
-          >
-            <View style={[styles.iconBox, { width: ICON_BOX }]}>
-              <Pressable onPress={handleBackPress} hitSlop={10} style={styles.iconPress}>
-                <Icon name="arrow-back" size={ICON_SIZE} color="#ffffff" />
-              </Pressable>
-            </View>
-
-            <Text style={[styles.pageName, { fontSize: TITLE_FONT }]}>Messages</Text>
-
-            <View style={[styles.iconBox, { width: ICON_BOX }]} />
-          </View>
-        </View>
-      </View>
-
+        <Header
+          title="Messages"
+          backgroundColor="#007F7F"
+        />
       {/* Messages List */}
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -258,44 +228,6 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: "#ffffff" 
-  },
-
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-
-  iconBox: { 
-    alignItems: "center", 
-    justifyContent: "center",
-    top: 10,
-    left: 10,
-  },
-
-  iconPress: { 
-    padding: width * 0.02 
-  },
-
-  topBackground: {
-    backgroundColor: "FFF",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
-  pageName: {
-    color: "#FFF",
-    textAlign: "center",
-    flex: 1,
-    fontWeight: "600",
-    top: 10,
   },
 
   loadingContainer: {

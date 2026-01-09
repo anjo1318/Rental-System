@@ -16,6 +16,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import ItemImages from "./itemImages";
+import Header from "../components/header";
 
 export default function ItemDetail() {
   const router = useRouter();
@@ -182,14 +183,11 @@ export default function ItemDetail() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={22} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gadget Details</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <Header
+        title="Gadget Details"
+        backgroundColor="#007F7F"
+      />
+
 
       <ScrollView 
         style={styles.scrollContent} 
@@ -200,6 +198,10 @@ export default function ItemDetail() {
         <ItemImages images={item.itemImages} />
 
         {/* Price and Title Section */}
+        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
+/>
+
+      
         <View style={styles.infoSection}>
           <View style={styles.priceRow}>
             <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
@@ -214,6 +216,7 @@ export default function ItemDetail() {
           <Text style={styles.title}>{item.title}</Text>
 
           {/* Owner Info */}
+          
           <View style={styles.ownerContainer}>
             <Image
               source={{ uri: "https://via.placeholder.com/40" }}
@@ -226,12 +229,14 @@ export default function ItemDetail() {
           </View>
 
           {/* Brand */}
-          <View style={styles.detailRow}>
+            
             <Text style={styles.detailLabel}>Brand</Text>
             <Text style={styles.detailValue}>Acer</Text>
           </View>
-        </View>
-
+        
+        <View style={styles.detailLine2}></View>
+        <View style={styles.detailLine4}></View>
+        <View style={styles.detailLine}></View>
         {/* Specifications */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Specification</Text>
@@ -273,13 +278,19 @@ export default function ItemDetail() {
           </View>
         </View>
 
+
         {/* Description */}
+        <View style={styles.detailLine}></View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Description (actual condition)</Text>
           <Text style={styles.description}>{item.description}</Text>
         </View>
 
         {/* Reviews */}
+        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
+        />
+        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
+        />
 
 <View style={styles.section}>
   <Text style={styles.sectionTitle}>Review (1)</Text>
@@ -308,21 +319,22 @@ export default function ItemDetail() {
         </View>
       </View>
     </View>
-
+   
     <Text style={styles.reviewText}>
       Okay naman sya maganda at maayos ang takbo ng Acer Predator Helios 300 mabilis,
       malinis, at parang brand new pa rin gamitin; walang lag at perfect para sa gaming
       at school works, highly recommended!
     </Text>
+
   </Pressable>
 </View>
-
-
-        {/* Bottom spacing for fixed buttons */}
-        <View style={styles.bottomSpacer} />
+        <View style={[styles.detailLine3, { borderTopColor: '#00000040' }]}
+/>
       </ScrollView>
 
+
       {/* Fixed Action Buttons */}
+      
       <View style={styles.actionContainer}>
         <TouchableOpacity 
           style={styles.chatButton}
@@ -452,7 +464,7 @@ export default function ItemDetail() {
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#F5F5F5" 
+    backgroundColor: "#fff" 
   },
   center: { 
     flex: 1, 
@@ -460,36 +472,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F5F5F5",
     padding: 20
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: 8,
-  },
-  headerTitle: {
-    fontSize: 16,
-    color: "#FFF",
-    fontWeight: "600",
-    flex: 1,
-    textAlign: 'center',
-    top: 8,
-  },
-  headerSpacer: {
-    width: 40
   },
   scrollContent: {
     flex: 1,
@@ -500,7 +482,7 @@ const styles = StyleSheet.create({
   infoSection: {
     backgroundColor: '#FFF',
     padding: 16,
-    marginBottom: 2,
+    bottom: 10,
   },
   priceRow: {
     flexDirection: 'row',
@@ -525,9 +507,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
   },
   rating: {
     fontSize: 14,
@@ -545,6 +524,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
+    top: 20,
   },
   avatar: {
     width: 32,
@@ -558,20 +538,42 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
-  detailRow: {
+  detailLine: {
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: '#0574744D',
+  },
+  detailLine2: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#0574744D',
+    bottom: 105,
+    
+  },
+ detailLine4: {
+    paddingTop: 12,
+    borderTopColor: '#0574744D',
+    bottom: 50,
+    borderTopWidth: 1,
+    
+  },
+   detailLine3: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#0574744D',
+    top: 15,
   },
   detailLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 4,
+    top: 40,
   },
   detailValue: {
     fontSize: 14,
     color: '#666',
+    top: 40,
+    left: 5,
   },
   section: {
     backgroundColor: '#FFF',
@@ -640,33 +642,25 @@ const styles = StyleSheet.create({
     color: '#555',
     lineHeight: 20,
   },
-  bottomSpacer: {
-    height: 20,
-  },
+
   actionContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     flexDirection: 'row',
-    backgroundColor: '#FFF',
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    backgroundColor: "#fff",
+    bottom: 10,
   },
   chatButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 10,
     borderRadius: 12,
     backgroundColor: '#FFF',
     borderWidth: 2,
@@ -683,7 +677,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     backgroundColor: '#057474',
   },

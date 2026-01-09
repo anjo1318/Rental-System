@@ -6,7 +6,6 @@ import {
   ScrollView, 
   Pressable, 
   Dimensions, 
-  StatusBar, 
   Image, 
   Alert,
   Modal
@@ -14,6 +13,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
+import Header from "../components/header";
 
 const { width, height } = Dimensions.get("window");
 
@@ -52,31 +52,11 @@ export default function BookedProductDetail() {
 
   return (
     <View style={styles.container}>
-      {/* Status bar */}
-      <StatusBar barStyle="light-content" backgroundColor="#057474" translucent={false} />
+        <Header
+          title="Booked Details"
+          backgroundColor="#007F7F"
+        />
 
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: Math.max(64, Math.round(height * 0.09)) }]}>
-        <View style={styles.profileContainer}>
-          <View style={styles.iconBox}>
-            <Pressable
-              onPress={() => {
-                if (router.canGoBack()) {
-                  router.back();
-                } else {
-                  router.replace("/customer/book");
-                }
-              }}
-              hitSlop={10}
-              style={styles.iconPress}
-            >
-              <Icon name="arrow-back" size={24} color="#FFF" />
-            </Pressable>
-          </View>
-          <Text style={styles.pageName}>Booking Details</Text>
-          <View style={styles.iconBox} />
-        </View>
-      </View>
 
       {/* Body */}
       <ScrollView
@@ -208,25 +188,16 @@ export default function BookedProductDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#E6E1D6" },
-  headerWrapper: {
-    width: "100%",
-    backgroundColor: "#057474",
-    borderBottomWidth: 2,
-    borderBottomColor: "#ccc",
-    justifyContent: "center",
+  container: { 
+    flex: 1, 
+    backgroundColor: "#E6E1D6" 
   },
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: width * 0.04,
-    marginTop: height * 0.02,
+  
+  bodyWrapper: { 
+    flex: 1, 
+    paddingHorizontal: width * 0.04, 
+    paddingTop: 16 
   },
-  iconBox: { width: width * 0.1, alignItems: "center", justifyContent: "center" },
-  iconPress: { padding: width * 0.02, borderRadius: 6 },
-  pageName: { color: "#FFF", textAlign: "center", flex: 1, fontWeight: "600", fontSize: Math.max(16, Math.round(width * 0.045)) },
-  bodyWrapper: { flex: 1, paddingHorizontal: width * 0.04, paddingTop: 16 },
   card: {
     backgroundColor: "#FFF",
     borderRadius: 12,
@@ -238,13 +209,47 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  detailImage: { width: "100%", height: 200, borderRadius: 8, marginBottom: 16 },
-  productName: { fontSize: 20, fontWeight: "700", color: "#057474", marginBottom: 4 },
-  category: { fontSize: 14, color: "#666", marginBottom: 12 },
-  row: { flexDirection: "row", justifyContent: "space-between", marginVertical: 6, alignItems: "flex-start" },
-  label: { fontSize: 14, fontWeight: "600", color: "#333", flex: 1 },
-  value: { fontSize: 14, color: "#444", flex: 2, textAlign: "right" },
-  sectionTitle: { fontSize: 16, fontWeight: "700", color: "#057474", marginBottom: 10 },
+  detailImage: { 
+    width: "100%", 
+    height: 200, 
+    borderRadius: 8,
+    marginBottom: 16 
+  },
+  productName: { 
+    fontSize: 20, 
+    fontWeight: "700", 
+    color: "#057474", 
+    marginBottom: 4 
+  },
+  category: { 
+    fontSize: 14, 
+    color: "#666", 
+    marginBottom: 12 
+  },
+  row: { 
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    marginVertical: 6, 
+    alignItems: "flex-start" 
+  },
+  label: { 
+    fontSize: 14, 
+    fontWeight: "600", 
+    color: "#333", 
+    flex: 1 
+  },
+  value: { 
+    fontSize: 14, 
+    color: "#444", 
+    flex: 2, 
+    textAlign: "right" 
+  },
+  sectionTitle: { 
+    fontSize: 16, 
+    fontWeight: "700", 
+    color: "#057474", 
+    marginBottom: 10 
+  },
   footer: {
     position: "absolute",
     bottom: 20,
@@ -279,11 +284,36 @@ const styles = StyleSheet.create({
     maxWidth: 400,
     elevation: 5,
   },
-  modalTitle: { fontSize: 18, fontWeight: "700", marginBottom: 10, color: "#D40004" },
-  modalMessage: { fontSize: 14, color: "#333", marginBottom: 20 },
-  modalActions: { flexDirection: "row", justifyContent: "flex-end" },
-  modalButton: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 6, marginLeft: 10 },
-  cancelAction: { backgroundColor: "#eee" },
-  confirmAction: { backgroundColor: "#D40004" },
-  modalButtonText: { fontSize: 14, fontWeight: "600", color: "#333" },
+  modalTitle: { 
+    fontSize: 18, 
+    fontWeight: "700", 
+    marginBottom: 10, 
+    color: "#D40004" 
+  },
+  modalMessage: { 
+    fontSize: 14, 
+    color: "#333", 
+    marginBottom: 20 
+  },
+  modalActions: { 
+    flexDirection: "row", 
+    justifyContent: "flex-end" 
+  },
+  modalButton: { 
+    paddingVertical: 10, 
+    paddingHorizontal: 16, 
+    borderRadius: 6, 
+    marginLeft: 10 
+  },
+  cancelAction: { 
+    backgroundColor: "#eee" 
+  },
+  confirmAction: { 
+    backgroundColor: "#D40004"
+   },
+  modalButtonText: { 
+    fontSize: 14, 
+    fontWeight: "600", 
+    color: "#333" 
+  },
 });

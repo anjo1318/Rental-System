@@ -71,6 +71,7 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
         <View style={styles.overlay}>
           <View style={styles.container}>
             {/* Time Section */}
+            
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>Time</Text>
               <TouchableOpacity
@@ -1065,6 +1066,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     gap: 6,
+    justifyContent: "center",
   },
   timeBox: {
     flexDirection: "row",
@@ -1074,9 +1076,16 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     gap: 6,
+    
   },
-  timeTextActive: { color: "#FFF", fontWeight: "600" },
-  timeText: { color: "#057474", fontWeight: "600" },
+  timeTextActive: { 
+    color: "#FFF", 
+    fontWeight: "600",
+  },
+  timeText: { 
+    color: "#057474", 
+    fontWeight: "600" 
+  },
   monthRow: {
     flexDirection: "row",
     justifyContent: "space-between",

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity,} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
+import Header from "../components/header";
 
 const reviews = [
   {
@@ -30,15 +31,11 @@ export default function Reviews() {
 
   return (
      <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Icon name="arrow-back" size={22} color="#FFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Reviews</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-
+        <Header
+          title="Reviews"
+          backgroundColor="#007F7F"
+        />
+      
       <ScrollView>
       {/* Reviews */}
       <View style={styles.titleRow}>
@@ -84,36 +81,6 @@ const styles = StyleSheet.create({
   container: { 
     flex: 1, 
     backgroundColor: "#F5F5F5" 
-  },
- header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#057474",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    elevation: 4,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-
-  },
-    backButton: {
-    padding: 8,
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    top: 8,
-  },
-  headerTitle: {
-    fontSize: 16,
-    color: "#FFF",
-    fontWeight: "600",
-    flex: 1,
-    textAlign: 'center',
-    top: 8,
-  },
-  headerSpacer: {
-    width: 40,
   },
   titleRow: {
     flexDirection: "row",
