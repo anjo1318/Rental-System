@@ -33,6 +33,8 @@ export default function Index() {
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
   const pathname = usePathname();
+  const [categories, setCategories] = useState(["All"]);
+
 
   // ✅ Check for existing user and auto-route on mount
   useEffect(() => {
@@ -77,7 +79,16 @@ export default function Index() {
           `${process.env.EXPO_PUBLIC_API_URL}/api/item`
         );
         if (response.data.success) {
-          setItems(Array.isArray(response.data.data) ? response.data.data : []);
+          const itemsData = Array.isArray(response.data.data) ? response.data.data : [];
+          setItems(itemsData);
+          
+          // ✅ Extract unique categories from API data
+          const uniqueCategories = ["All", ...new Set(
+            itemsData
+              .map(item => item.category)
+              .filter(Boolean) // Remove null/undefined
+          )];
+          setCategories(uniqueCategories);
         }
         else {
           setError("Failed to fetch items");
@@ -90,7 +101,6 @@ export default function Index() {
     };
     fetchItems();
   }, []);
-
   const handleNavigation = (route) => {
     // 🚫 Prevent navigating to the same "home"
     if (route === "customer/home") return;
@@ -98,13 +108,13 @@ export default function Index() {
   };
 
   // ✅ Handle product click with login check
-  const handleProductClick = (item) => {
+  const handleProductClick = (item) => { 
     if (!currentUser) {
       // User is not logged in, redirect to login
-      router.push('/login');
+      router.push({ pathname: '/customer/itemDetailForGuest', params: { id: item.id } });
     } else {
       // User is logged in, go to item detail
-      router.push({ pathname: '/customer/itemDetail', params: { id: item.id } });
+      router.push({ pathname: '/customer/itemDetailForGuest', params: { id: item.id } });
     }
   };
 
@@ -265,35 +275,35 @@ export default function Index() {
       >
  
 
-        {/* 🔹 Recommendations */}
-        <View style={{ marginTop: 170 }}>
-          <Text style={styles.sectionTitle}>Our Recommendations</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={{ marginTop: 20 }}
-          >
-            {["All", "Cellphone", "Projector", "Laptop", "Speaker"].map((cat) => (
-              <Pressable
-                key={cat}
+      {/* 🔹 Recommendations */}
+      <View style={{ marginTop: 170 }}>
+        <Text style={styles.sectionTitle}>Our Recommendations</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={{ marginTop: 20 }}
+        >
+          {categories.map((cat) => (
+            <Pressable
+              key={cat}
+              style={[
+                styles.categoryButton,
+                activeCategory === cat && styles.activeCategory,
+              ]}
+              onPress={() => setActiveCategory(cat)}
+            >
+              <Text
                 style={[
-                  styles.categoryButton,
-                  activeCategory === cat && styles.activeCategory,
+                  styles.categoryText,
+                  activeCategory === cat && styles.activeCategoryText,
                 ]}
-                onPress={() => setActiveCategory(cat)}
               >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    activeCategory === cat && styles.activeCategoryText,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-        </View>
+                {cat}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
 
         {/* 🔹 Items Grid */}

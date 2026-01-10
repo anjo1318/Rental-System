@@ -20,11 +20,9 @@ export default function LoginInterface() {
   const [isChecking, setIsChecking] = React.useState(true);
 
   useEffect(() => {
-    // Only auto-route if we're on the root/login interface page
-    if (pathname === '/' || pathname === '/loginInterface') {
-      checkUserAndRoute();
-    }
-  }, [pathname]);
+    // Check on mount for ANY pathname
+    checkUserAndRoute();
+  }, []);
 
   const checkUserAndRoute = async () => {
     try {

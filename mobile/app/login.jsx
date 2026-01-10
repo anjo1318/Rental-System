@@ -383,11 +383,11 @@ export default function Login() {
               </Pressable>
             </View>
 
-            <View style={styles.termsRow}>
+            {/* <View style={styles.termsRow}>
               <Pressable onPress={() => router.push("/terms")}>
                 <Text style={styles.termsLink}>Terms</Text>
               </Pressable>
-            </View>
+            </View> */}
           </View>
         </ScrollView>
       </Animated.View>

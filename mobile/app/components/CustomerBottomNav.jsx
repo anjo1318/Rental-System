@@ -8,8 +8,6 @@ const { width, height } = Dimensions.get("window");
 export default function CustomerBottomNav() {
   const router = useRouter();
   const segments = useSegments(); 
-  // Example: ["customer", "message"]
-
   const currentRoute = `/${segments.join("/")}`;
 
   const navItems = [
@@ -23,14 +21,14 @@ export default function CustomerBottomNav() {
     <View style={styles.bottomNav}>
       {navItems.map((navItem) => {
         const isActive = currentRoute === navItem.route;
-
         return (
           <Pressable
             key={navItem.route}
             style={styles.navButton}
             onPress={() => {
               if (!isActive) {
-                router.replace(navItem.route); // ✅ This prevents stacking
+                // ✅ Use push instead of replace to maintain navigation stack
+                router.push(navItem.route);
               }
             }}
           >
@@ -54,9 +52,7 @@ export default function CustomerBottomNav() {
   );
 }
 
-
 const styles = StyleSheet.create({
-    
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -64,15 +60,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#00000040",
-  
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    zIndex: 1000,    // 🔥 stay above content
-    elevation: 10,   // 🔥 Android
+    zIndex: 1000,
+    elevation: 10,
   },
-  
   navButton: {
     alignItems: "center",
     justifyContent: "center",

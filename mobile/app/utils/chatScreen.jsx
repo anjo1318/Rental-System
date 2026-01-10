@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
   },
 
   header: {
-    marginTop: 40,
+    marginTop: 1,
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFF",

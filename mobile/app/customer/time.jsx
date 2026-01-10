@@ -509,11 +509,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    
   },
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  
+    // Line below the container
+    borderBottomWidth: 1,        // thickness of the line
+    borderBottomColor: "#ccc",   // color of the line (light gray here)
+    paddingBottom: 8,            // optional: spacing so text/icons don’t touch the line
   },
   iconBox: {
     alignItems: "center",
@@ -532,6 +538,8 @@ const styles = StyleSheet.create({
 
   scrollView: {
     flex: 1,
+    backgroundColor: "#fff", 
+
   },
 
   contentWrapper: {

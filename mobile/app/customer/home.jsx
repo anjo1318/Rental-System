@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Dimensions,
   RefreshControl,
+  BackHandler
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
@@ -44,6 +45,13 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const pathname = usePathname();
 
+  const [filterCategory, setFilterCategory] = useState("All");
+  const [filterBrand, setFilterBrand] = useState("");
+  const [filterPrice, setFilterPrice] = useState(3000);
+  const [filterLocation, setFilterLocation] = useState("");
+  const [brands, setBrands] = useState([]);
+  const [locations, setLocations] = useState([]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchItems();
@@ -53,6 +61,19 @@ export default function Home() {
   useFocusEffect(
     React.useCallback(() => {
       checkAuth();
+    }, [])
+  );
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        BackHandler.exitApp();
+        return true;
+      };
+  
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+  
+      return () => subscription.remove();
     }, [])
   );
 
@@ -71,7 +92,7 @@ export default function Home() {
       
       // 🚫 Block if role is owner (this is customer home)
       if (user.role === 'owner') {
-        console.log('🚫 Owner trying to access customer home, clearing and redirecting');
+        console.log('Owner trying to access customer home, clearing and redirecting');
         await AsyncStorage.multiRemove(['token', 'user', 'isLoggedIn']);
         router.replace('/login');
         return;
@@ -80,7 +101,7 @@ export default function Home() {
       setCurrentUser(user);
       setOwnerId(user.id);
       setIsAuthenticated(true);
-      console.log('✅ User authenticated:', user);
+      console.log('User authenticated:', user);
     } catch (error) {
       console.error('Error checking authentication:', error);
       router.replace('/login');
@@ -96,9 +117,15 @@ export default function Home() {
         const itemsData = Array.isArray(response.data.data) ? response.data.data : [];
         setItems(itemsData);
         
-        // Extract unique categories from items
+        // Extract unique categories, brands, and locations
         const uniqueCategories = ["All", ...new Set(itemsData.map(item => item.category).filter(Boolean))];
         setCategories(uniqueCategories);
+        
+        const uniqueBrands = [...new Set(itemsData.map(item => item.brand).filter(Boolean))];
+        setBrands(uniqueBrands);
+        
+        const uniqueLocations = [...new Set(itemsData.map(item => item.location).filter(Boolean))];
+        setLocations(uniqueLocations);
       }
       else {
         setError("Failed to fetch items");
@@ -117,12 +144,10 @@ export default function Home() {
   }, [isAuthenticated]);
 
   const handleNavigation = (route) => {
-    // 🚫 Prevent navigating to the same "home"
     if (route === "customer/home") return;
     router.push(`/${route}`);
   };
 
-  // 🔒 Don't render anything until authentication is verified
   if (!isAuthenticated) {
     return (
       <View style={styles.center}>
@@ -146,8 +171,33 @@ export default function Home() {
     const matchSearch =
       item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.description.toLowerCase().includes(search.toLowerCase());
-    return matchCategory && matchSearch;
+    
+    // Additional filter criteria
+    const matchFilterCategory = 
+      filterCategory === "All" || item.category === filterCategory;
+    const matchBrand = 
+      !filterBrand || item.brand === filterBrand;
+    const matchPrice = 
+      parseFloat(item.pricePerDay) <= filterPrice;
+    const matchLocation = 
+      !filterLocation || item.location === filterLocation;
+    
+    return matchCategory && matchSearch && matchFilterCategory && matchBrand && matchPrice && matchLocation;
   });
+
+  const applyFilter = (category, brand, price, location) => {
+    setFilterCategory(category);
+    setFilterBrand(brand);
+    setFilterPrice(price);
+    setFilterLocation(location);
+  };
+  
+  const resetFilter = () => {
+    setFilterCategory("All");
+    setFilterBrand("");
+    setFilterPrice(3000);
+    setFilterLocation("");
+  };
 
   const breakLongWords = (str, maxLen = 18) =>
   str ? str.replace(new RegExp(`(\\S{${maxLen}})`, "g"), "$1\u200B") : "";
@@ -354,69 +404,229 @@ export default function Home() {
           />
       </ScrollView>
       {showFilter && (
-  <Filter onClose={() => setShowFilter(false)} />
+  <Filter 
+    onClose={() => setShowFilter(false)}
+    categories={categories}
+    brands={brands}
+    locations={locations}
+    onApply={applyFilter}
+    onReset={resetFilter}
+    initialCategory={filterCategory}
+    initialBrand={filterBrand}
+    initialPrice={filterPrice}
+    initialLocation={filterLocation}
+  />
 )}
     </>
   );
 }
 
-function Filter({ onClose }) {
-  const [price, setPrice] = useState(2000);
+function Filter({ 
+  onClose, 
+  categories, 
+  brands, 
+  locations, 
+  onApply, 
+  onReset,
+  initialCategory,
+  initialBrand,
+  initialPrice,
+  initialLocation
+}) {
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [selectedBrand, setSelectedBrand] = useState(initialBrand);
+  const [price, setPrice] = useState(initialPrice);
+  const [selectedLocation, setSelectedLocation] = useState(initialLocation);
+  const [showCategoryPicker, setShowCategoryPicker] = useState(false);
+  const [showBrandPicker, setShowBrandPicker] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  const handleDone = () => {
+    onApply(selectedCategory, selectedBrand, price, selectedLocation);
+    onClose();
+  };
+
+  const handleReset = () => {
+    setSelectedCategory("All");
+    setSelectedBrand("");
+    setPrice(3000);
+    setSelectedLocation("");
+    onReset();
+  };
 
   return (
     <View style={filterStyles.overlay}>
-      {/* Transparent backdrop */}
       <Pressable style={filterStyles.backdrop} onPress={onClose} />
 
-      {/* Bottom modal */}
       <View style={filterStyles.modal}>
         <View style={filterStyles.header}>
           <Pressable onPress={onClose}>
             <Icon name="close" size={22} color="#333" />
           </Pressable>
           <Text style={filterStyles.headerTitle}>Filter</Text>
-          <View style={{ width: 22 }} />
+          <Pressable onPress={handleReset}>
+            <Text style={{ color: "#007F7F", fontSize: 14 }}>Reset</Text>
+          </Pressable>
         </View>
 
-        <Text style={filterStyles.label}>Category</Text>
-        <View style={filterStyles.input}>
-          <Text style={filterStyles.placeholder}>Select Category</Text>
-        </View>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Category */}
+          <Text style={filterStyles.label}>Category</Text>
+          <Pressable 
+            style={filterStyles.input}
+            onPress={() => setShowCategoryPicker(!showCategoryPicker)}
+          >
+            <Text style={selectedCategory === "All" ? filterStyles.placeholder : { color: "#000" }}>
+              {selectedCategory === "All" ? "Select Category" : selectedCategory}
+            </Text>
+            <Icon name="keyboard-arrow-down" size={20} color="#666" />
+          </Pressable>
+          
+          {showCategoryPicker && (
+            <View style={filterStyles.picker}>
+              {categories.map((cat) => (
+                <Pressable
+                  key={cat}
+                  style={filterStyles.pickerItem}
+                  onPress={() => {
+                    setSelectedCategory(cat);
+                    setShowCategoryPicker(false);
+                  }}
+                >
+                  <Text style={selectedCategory === cat ? filterStyles.selectedPickerText : filterStyles.pickerText}>
+                    {cat}
+                  </Text>
+                  {selectedCategory === cat && (
+                    <Icon name="check" size={20} color="#007F7F" />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
 
-        <Text style={filterStyles.label}>Brand</Text>
-        <View style={filterStyles.input}>
-          <Text style={filterStyles.placeholder}>Select Brand</Text>
-        </View>
+          {/* Brand */}
+          <Text style={filterStyles.label}>Brand</Text>
+          <Pressable 
+            style={filterStyles.input}
+            onPress={() => setShowBrandPicker(!showBrandPicker)}
+          >
+            <Text style={!selectedBrand ? filterStyles.placeholder : { color: "#000" }}>
+              {selectedBrand || "Select Brand"}
+            </Text>
+            <Icon name="keyboard-arrow-down" size={20} color="#666" />
+          </Pressable>
 
-        <Text style={filterStyles.label}>Price Range</Text>
-        <Slider
-          minimumValue={1000}
-          maximumValue={3000}
-          step={100}
-          value={price}
-          onValueChange={setPrice}
-          minimumTrackTintColor="#007F7F"
-          maximumTrackTintColor="#ccc"
-          thumbTintColor="#007F7F"
-        />
+          {showBrandPicker && (
+            <View style={filterStyles.picker}>
+              <Pressable
+                style={filterStyles.pickerItem}
+                onPress={() => {
+                  setSelectedBrand("");
+                  setShowBrandPicker(false);
+                }}
+              >
+                <Text style={!selectedBrand ? filterStyles.selectedPickerText : filterStyles.pickerText}>
+                  All Brands
+                </Text>
+                {!selectedBrand && (
+                  <Icon name="check" size={20} color="#007F7F" />
+                )}
+              </Pressable>
+              {brands.map((brand) => (
+                <Pressable
+                  key={brand}
+                  style={filterStyles.pickerItem}
+                  onPress={() => {
+                    setSelectedBrand(brand);
+                    setShowBrandPicker(false);
+                  }}
+                >
+                  <Text style={selectedBrand === brand ? filterStyles.selectedPickerText : filterStyles.pickerText}>
+                    {brand}
+                  </Text>
+                  {selectedBrand === brand && (
+                    <Icon name="check" size={20} color="#007F7F" />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
 
-        <View style={filterStyles.priceRow}>
-          <Text>₱ 1000</Text>
-          <Text>₱ {price}</Text>
-        </View>
+          {/* Price Range */}
+          <Text style={filterStyles.label}>Price Range</Text>
+          <Slider
+            minimumValue={0}
+            maximumValue={3000}
+            step={100}
+            value={price}
+            onValueChange={setPrice}
+            minimumTrackTintColor="#007F7F"
+            maximumTrackTintColor="#ccc"
+            thumbTintColor="#007F7F"
+          />
 
-        <Text style={filterStyles.label}>Location</Text>
-        <View style={filterStyles.input}>
-          <Text style={filterStyles.placeholder}>Select Location</Text>
-        </View>
+          <View style={filterStyles.priceRow}>
+            <Text>₱ 0</Text>
+            <Text style={{ fontWeight: "600", color: "#007F7F" }}>₱ {price}</Text>
+          </View>
 
-        <Pressable style={filterStyles.doneButton} onPress={onClose}>
-          <Text style={filterStyles.doneText}>Done</Text>
+          {/* Location */}
+          <Text style={filterStyles.label}>Location</Text>
+          <Pressable 
+            style={filterStyles.input}
+            onPress={() => setShowLocationPicker(!showLocationPicker)}
+          >
+            <Text style={!selectedLocation ? filterStyles.placeholder : { color: "#000" }}>
+              {selectedLocation || "Select Location"}
+            </Text>
+            <Icon name="keyboard-arrow-down" size={20} color="#666" />
+          </Pressable>
+
+          {showLocationPicker && (
+            <View style={filterStyles.picker}>
+              <Pressable
+                style={filterStyles.pickerItem}
+                onPress={() => {
+                  setSelectedLocation("");
+                  setShowLocationPicker(false);
+                }}
+              >
+                <Text style={!selectedLocation ? filterStyles.selectedPickerText : filterStyles.pickerText}>
+                  All Locations
+                </Text>
+                {!selectedLocation && (
+                  <Icon name="check" size={20} color="#007F7F" />
+                )}
+              </Pressable>
+              {locations.map((loc) => (
+                <Pressable
+                  key={loc}
+                  style={filterStyles.pickerItem}
+                  onPress={() => {
+                    setSelectedLocation(loc);
+                    setShowLocationPicker(false);
+                  }}
+                >
+                  <Text style={selectedLocation === loc ? filterStyles.selectedPickerText : filterStyles.pickerText}>
+                    {loc}
+                  </Text>
+                  {selectedLocation === loc && (
+                    <Icon name="check" size={20} color="#007F7F" />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+
+        <Pressable style={filterStyles.doneButton} onPress={handleDone}>
+          <Text style={filterStyles.doneText}>Apply Filter</Text>
         </Pressable>
       </View>
     </View>
   );
 }
+
 
 const styles = StyleSheet.create({
   profileContainer: {
@@ -760,7 +970,9 @@ const filterStyles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#ddd",
-    justifyContent: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 12,
   },
   placeholder: {
@@ -772,7 +984,7 @@ const filterStyles = StyleSheet.create({
     marginBottom: 10,
   },
   doneButton: {
-    marginTop: 100,
+    marginBottom:70,
     backgroundColor: "#007F7F",
     paddingVertical: 12,
     borderRadius: 10,
@@ -782,6 +994,33 @@ const filterStyles = StyleSheet.create({
   },
   doneText: {
     color: "#fff",
+    fontWeight: "600",
+  },
+  picker: {
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    marginTop: 8,
+    marginBottom: 10,
+    maxHeight: 150,
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  pickerItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  pickerText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  selectedPickerText: {
+    fontSize: 14,
+    color: "#007F7F",
     fontWeight: "600",
   },
 });
