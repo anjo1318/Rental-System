@@ -8,7 +8,6 @@ import {
   Pressable,
   TextInput,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Dimensions,
   RefreshControl,
@@ -22,6 +21,7 @@ import Slider from "@react-native-community/slider";
 import { usePathname } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -204,14 +204,11 @@ export default function Home() {
 
   return (
     <>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#057474" 
-        translucent={false}
-      />
-      <CustomerBottomNav/>
+     <SafeAreaView style={styles.safeAreaRoot}>
+             <View style={styles.header}>
+      
 
-      <View style={styles.topBackground}>
+
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>
@@ -267,13 +264,11 @@ export default function Home() {
         </Pressable>
               </View>
             </Pressable>
-
           </View>
-
 
       <ScrollView 
         style={styles.container} 
-        contentContainerStyle={{ paddingBottom: 80 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false} 
         nestedScrollEnabled={true}
         refreshControl={
@@ -403,6 +398,7 @@ export default function Home() {
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
       </ScrollView>
+      </SafeAreaView>
       {showFilter && (
   <Filter 
     onClose={() => setShowFilter(false)}

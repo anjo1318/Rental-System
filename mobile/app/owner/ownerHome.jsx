@@ -11,7 +11,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  StatusBar,
   RefreshControl
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
@@ -20,8 +19,9 @@ import FeatherIcon from "react-native-vector-icons/Feather";
 import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OwnerBottomNav from '../components/OwnerBottomNav';
-
+import { SafeAreaView } from "react-native-safe-area-context";
 const { width } = Dimensions.get("window");
+
 
 export default function OwnerHome() {
   const router = useRouter();
@@ -214,9 +214,8 @@ export default function OwnerHome() {
 
   return (
     <>
-      <StatusBar barStyle="light-content" backgroundColor="#007F7F" translucent={false} />
-        {/* Profile Section */}
-        <View style={styles.topBackground}>
+     <SafeAreaView style={styles.safeAreaRoot}>
+        <View style={styles.header}>
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
               <Image
@@ -249,6 +248,7 @@ export default function OwnerHome() {
             </View>
           </View>
         </View>
+       
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -264,7 +264,7 @@ export default function OwnerHome() {
         }
       >
 
-
+ 
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View
@@ -282,7 +282,7 @@ export default function OwnerHome() {
               />
             </View>
           </View>
-
+              
           <View
             style={[
               styles.statCard,
@@ -315,6 +315,8 @@ export default function OwnerHome() {
             </View>
           </View>
         </View>
+
+        <View style={styles.subHeader}></View>
 
         {/* Search */}
         <View style={styles.searchContainer}>
@@ -381,19 +383,30 @@ export default function OwnerHome() {
 
       </ScrollView>
       <OwnerBottomNav/>
+      </SafeAreaView>
 
     </>
   );
 }
 
 const styles = StyleSheet.create({
-    
-  username: { 
-    marginLeft: width * 0.03, 
-    fontWeight: "bold", 
-    fontSize: width * 0.04 ,
-    color: "#e0f2f2",
+  
+safeAreaRoot: {
+  flex: 1,
+  backgroundColor: "#007F7F", // screen background
+},
+header: {
+  backgroundColor: "#007F7F",
+  paddingHorizontal: 16,
+},
+  subHeader: {
+    backgroundColor: "#007F7F",
+    padding: 12,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    bottom: 223,
   },
+
   email: {
     fontSize: 13,
     color: "#e0f2f2",
@@ -414,14 +427,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    marginTop: 22,
+    paddingVertical: 0,
   },
 
-  topBackground: {
-    backgroundColor: "#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
 
   avatar: { 
     width: width * 0.2, 
@@ -469,6 +477,7 @@ const styles = StyleSheet.create({
     right: -1,
     top: -1,
   },
+
 
   statsContainer: {
     flexDirection: "row",
@@ -692,20 +701,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 8,
   },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    justifyContent: "space-around",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    alignItems: "center",
-  },
+
   navButton: {
     alignItems: "center",
     flex: 1,
