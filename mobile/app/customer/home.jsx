@@ -11,7 +11,8 @@ import {
   StyleSheet,
   Dimensions,
   RefreshControl,
-  BackHandler
+  BackHandler,
+  StatusBar,
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
@@ -22,12 +23,13 @@ import { usePathname } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView } from "react-native-safe-area-context";
+import SubHeader from "../components/subheader";
 
 const { width, height } = Dimensions.get("window");
 
 const CARD_MARGIN = 7;
 const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.41;
+const CARD_HEIGHT = height * 0.36;
 
 
 export default function Home() {
@@ -206,9 +208,6 @@ export default function Home() {
     <>
      <SafeAreaView style={styles.safeAreaRoot}>
              <View style={styles.header}>
-      
-
-
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
            <Pressable onPress={() => router.push("customer/profile")}>
@@ -234,14 +233,17 @@ export default function Home() {
 
   <View style={styles.notificationWrapper}>
   <Pressable onPress={() => router.push("customer/notifications")}>
-    <Icon name="notifications-none" size={24} color="#007F7F" />
-    <View style={styles.badge}>
-      <Text style={styles.badgeText}>2</Text>
-    </View>
+   <Image
+  source={require("../../assets/images/notification.png")}
+  style={{ width: 37, height: 37 }}
+  resizeMode="contain"
+/>
   </Pressable>
   </View>
 
   </View>
+
+  <SubHeader/>
          {/* 🔹 Search Bar (Clickable) */}
   <Pressable onPress={() => router.push('/customer/tapsearchbar')}>
 
@@ -264,11 +266,14 @@ export default function Home() {
         </Pressable>
               </View>
             </Pressable>
+           
           </View>
+
+          
 
       <ScrollView 
         style={styles.container} 
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 50 }}
         showsVerticalScrollIndicator={false} 
         nestedScrollEnabled={true}
         refreshControl={
@@ -280,6 +285,8 @@ export default function Home() {
           />
         }
       >
+
+        
           {/* 🔹 Recommendations */}
           <Text style={styles.sectionTitle}>Our Recommendations</Text>
           <ScrollView
@@ -316,6 +323,7 @@ export default function Home() {
             <Pressable 
               onPress={() => router.push({ pathname: '/customer/itemDetail', params: { id: item.id } })}
             >
+              
               <View style={styles.card}>
                 <View style={styles.upperHalf}>
                   <View style={styles.imageWrapper}>
@@ -341,6 +349,7 @@ export default function Home() {
                     style={styles.featuredImage}
                     resizeMode="cover"
                   />
+                  
                   </View>
 
 
@@ -364,7 +373,11 @@ export default function Home() {
                   </View>
                   <View style={styles.locationRow}>
                   <View style={styles.iconContainer}>
-                    <Icon name="location-on" size={20} color="#666" />
+                    <Image
+  source={require("../../assets/images/location.png")}
+  style={{ width: 14, height: 17 }}
+  resizeMode="contain"
+/>
                   </View>
 
                   <View style={styles.textContainer}>
@@ -381,9 +394,10 @@ export default function Home() {
                 <Text style={styles.price}>₱{item.pricePerDay}</Text>
 
                   {/* Quantity */}
-                  <Text style={styles.quantity}>
+                { /* <Text style={styles.quantity}>
                     Quantity: {item.availableQuantity} / {item.quantity}
-                  </Text>
+                  </Text> 
+                  */}
                 </View>
               </View>
             </Pressable>
@@ -398,6 +412,7 @@ export default function Home() {
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
       </ScrollView>
+        <CustomerBottomNav/>
       </SafeAreaView>
       {showFilter && (
   <Filter 
@@ -625,70 +640,72 @@ function Filter({
 
 
 const styles = StyleSheet.create({
+  safeAreaRoot: {
+  flex: 1,
+  backgroundColor: "#007F7F", // screen background
+},
+header: {
+  backgroundColor: "#007F7F",
+  paddingHorizontal: 16,
+      borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+},
+
+
+
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
-    marginTop: 10,
+    padding: 4,
+    top: 10,
+    
 
   },
-  email: {
-    fontSize: 13,
-    color: "#e0f2f2",
-    marginTop: 2,
-    marginLeft: 13
-  },
-  
-    topBackground: {
-    backgroundColor:"#007F7F",
-    paddingHorizontal: 5,
-    paddingVertical: 15,
+  subHeader: {
+    position: "relative",
+    backgroundColor: "#007F7F",
+    padding: 12,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+      zIndex: 1000,
+  width: "100%",
+  },
+
+  container: {
+  flex: 1,
+  backgroundColor: "#fff", // ✅ everything below header is white
+},
+  email: {
+    fontSize: 10,
+    color: "#e0f2f2",
+    marginLeft: 13,
   },
 
   avatar: { 
-    width: width * 0.2, 
-    height: width * 0.2, 
+    width: width * 0.16, 
+    height: width * 0.16, 
     borderRadius: width * 0.1,
     borderColor:"#e0f2f2",
-    borderWidth: 2,        
+    borderWidth: 2,      
   },
   
   username: { 
     marginLeft: width * 0.03, 
     fontWeight: "bold", 
-    fontSize: width * 0.04 ,
+    fontSize: width * 0.035,
     color: "#e0f2f2",
   },
 
   notificationWrapper: {
     marginLeft: "auto", 
-    marginRight: 16,
+    marginRight: 5,
+    marginTop: 7,
     position: "relative",
-    width: width * 0.10,
-    height: width * 0.10,
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
-  },
-  badge: {
-    position: "absolute",
-    right: -8,
-    top: -8,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    width: 17,
-    height: 17,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: {
-    color: "#007F7F",
-    fontSize: 8,
-    fontWeight: "bold",
   },
 
   searchContainer: {
@@ -696,18 +713,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 20,
     paddingHorizontal: 10,
-    marginHorizontal: 20,
-    marginVertical: 10,
-    height: 45,
+    marginHorizontal:  5,
+    height: 37,
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 5,
   },
   leftIcon: { 
     marginRight: 8 
@@ -724,9 +732,10 @@ const styles = StyleSheet.create({
 
   sectionTitle: {
     fontWeight: "bold",
-    fontSize: width * 0.045,
+    fontSize: width * 0.040,
     marginLeft: width * 0.04,
     paddingVertical: height * 0.020,
+    marginTop: 25,
 
   },
 
@@ -742,21 +751,25 @@ const styles = StyleSheet.create({
   
   },
   imageWrapper: {
-    width: "100%",
+    width: "220",
     height: 180,          
     borderBottomWidth: 0,
     borderBottomColor: "transparent",
     overflow: "hidden",   
     top: -60,
+    backgroundColor: "#EDEDED",
+    
     
 
   },
 
   featuredImage: {
-    width: "100%",
-    height: "100%",
+    width: "70%",
+    height: "70%",
     resizeMode: "cover",
-    top: 20,
+    top: 50,
+    left: 30,
+    
   },
 
   card: {
@@ -768,14 +781,8 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderColor: "transparent",
     top: 5,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: "#007F7F80",
   },
 
   upperHalf: {
@@ -783,7 +790,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
-    top:50
+    top: 50,
   },
   itemImage: {
     width: "100%",
@@ -794,9 +801,10 @@ const styles = StyleSheet.create({
     flex: 1.2,
     flexDirection: "column",
     paddingHorizontal: 5,
-    paddingTop: 10,
+    paddingTop: 5,
     paddingBottom: 10,
-    top: 13,
+    top: 21,
+    
   },
 
   title: {
@@ -819,7 +827,7 @@ const styles = StyleSheet.create({
   locationRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginLeft: -8,
+    marginLeft: -5,
     top: 5,
   },
 
@@ -827,7 +835,6 @@ const styles = StyleSheet.create({
     width: 24,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: 4,
   },
 
   textContainer: {
@@ -873,8 +880,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: "transparent",
     marginLeft: width * 0.04,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
   },
   activeCategory: { 
     backgroundColor: "#007F7F" 

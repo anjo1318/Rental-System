@@ -399,12 +399,12 @@ header: {
   backgroundColor: "#007F7F",
   paddingHorizontal: 16,
 },
-  subHeader: {
+  ader: {
     backgroundColor: "#007F7F",
     padding: 12,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    bottom: 223,
+    bottomsubHe: 223,
   },
 
   email: {
