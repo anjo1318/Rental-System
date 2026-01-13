@@ -19,6 +19,8 @@ import {useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { usePathname } from "expo-router";
+import CustomerBottomNav from './components/CustomerBottomNav';
+import ScreenWrapper from "./components/screenwrapper";
 
 
 const { width, height } = Dimensions.get("window");
@@ -206,14 +208,8 @@ export default function Index() {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#057474" 
-        translucent={false}
-      />
-
-
+    
+       <ScreenWrapper backgroundColor="#007F7F">
 
         <View style={styles.topBackground}>
           {/* 🔹 Profile Section */}
@@ -245,10 +241,11 @@ export default function Index() {
 
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("customer/notifications")}>
-                <Icon name="notifications-none" size={24} color="#007F7F" />
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>2</Text>
-                </View>
+                 <Image
+                  source={require("../assets/images/notification.png")}
+                  style={{ width: 37, height: 37 }}
+                  resizeMode="contain"
+                />
               </Pressable>
             </View>
           </View>
@@ -320,49 +317,8 @@ export default function Index() {
           contentContainerStyle={{ paddingHorizontal: 16 }}
         />
       </ScrollView>
-
-      {/* 🔹 Bottom Nav - Fixed at bottom */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "/customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "/customer/loginInterface" },
-          { name: "Message", icon: "mail", route: "/customer/loginInterface" },
-          { name: "Time", icon: "schedule", route: "/customer/loginInterface" },
-        ].map((navItem, index) => {
-          // Compare with current pathname
-          const isActive = pathname === navItem.route || (pathname === "/" && navItem.route === "/customer/home");
-
-          return (
-            <Pressable
-              key={index}
-              style={styles.navButton}
-              hitSlop={10}
-              onPress={() => {
-                // Prevent navigation if already on the same page
-                if (pathname === navItem.route) return;
-                
-                // Use push instead of replace to maintain navigation stack
-                router.push(navItem.route);
-              }}
-            >
-              <Icon
-                name={navItem.icon}
-                size={24}
-                color={isActive ? "#057474" : "#999"}
-              />
-              <Text
-                style={[
-                  styles.navText,
-                  { color: isActive ? "#057474" : "#999" },
-                ]}
-              >
-                {navItem.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-    </View>
+      <CustomerBottomNav/>
+        </ScreenWrapper>
   );
 }
 
@@ -381,8 +337,8 @@ const styles = StyleSheet.create({
   },
 
   avatar: { 
-    width: width * 0.1, 
-    height: width * 0.1, 
+    width: width * 0.13, 
+    height: width * 0.13, 
     borderRadius: width * 0.05 
   },
   
@@ -394,7 +350,7 @@ const styles = StyleSheet.create({
 
   loginButton: {
     paddingVertical: 6,
-    paddingHorizontal: 14,
+    paddingHorizontal: 16,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#057474',
@@ -420,35 +376,15 @@ const styles = StyleSheet.create({
 
   notificationWrapper: {
     marginLeft: "auto", 
-    marginRight: 16,
+    left: 25,
     position: "relative",
-    width: width * 0.10,
-    height: width * 0.10,
+    width: width * 0.2,
+    height: width * 0.2,
     borderRadius: (width * 0.12) / 2,
-    borderWidth: 2,
-    borderColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#ccc",
-  },
-
-  badge: {
-    position: "absolute",
-    right: -8,
-    top: -8,
-    backgroundColor: "#ccc",
-    borderRadius: 10,
-    width: 17,
-    height: 17,
     justifyContent: "center",
     alignItems: "center",
   },
 
-  badgeText: {
-    color: "#007F7F",
-    fontSize: 8,
-    fontWeight: "bold",
-  },
 
   searchContainer: {
     flexDirection: "row",
@@ -510,8 +446,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginLeft: 16,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "#E0E0E0",
   },
 
   activeCategory: {

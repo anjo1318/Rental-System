@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions, Pressable, StatusBar } from "react-native";
+import { View, Text, StyleSheet, Dimensions, Pressable, StatusBar, Image } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 
@@ -55,27 +55,23 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
           >
             {title}
           </Text>
+            
+          {/* Notification */}
+          <View style={styles.notificationWrapper}>
+            <Pressable onPress={() => router.push("customer/notifications")}>
+             <Image
+               source={require("../../assets/images/notification.png")}
+               style={{ width: 37, height: 37 }}
+               resizeMode="contain"
+             />
+            </Pressable>
+          </View>
 
-          {/* Spacer */}
-        <View style={[styles.notificationWrapper, { width: ICON_BOX, height: ICON_BOX }]}>
-          <Pressable onPress={() => router.push("customer/notifications")}>
-            <Icon
-              name="notifications-none"
-              size={ICON_SIZE * 0.85}
-              color="#fff"
-              style={{ marginTop: 6, marginLeft: -5 }}
-            />
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>2</Text>
-            </View>
-          </Pressable>
-        </View>
         </View>
       </View>
     </>
   );
 }
-
 const styles = StyleSheet.create({
   headerWrapper: {
     width: "100%",
@@ -102,16 +98,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontWeight: "600",
   },
-  notificationWrapper: {
-    marginRight: 16, // 👈 keeps it away from the edge
+notificationWrapper: {
+    marginLeft: "auto", 
+    marginRight: 5,
+    marginTop: 7,
     position: "relative",
-    borderRadius: 20,
+    borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#007F7F",
-    borderWidth: 1,
-    borderColor: "#fff",
-    marginBottom: 2,
+    backgroundColor: "#fff",
   },
 
   badge: {

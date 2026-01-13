@@ -12,7 +12,6 @@ import {
   Dimensions,
   RefreshControl,
   BackHandler,
-  StatusBar,
 } from "react-native";
 import axios from "axios";
 import {useRouter } from "expo-router";
@@ -22,8 +21,9 @@ import Slider from "@react-native-community/slider";
 import { usePathname } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
 import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaView } from "react-native-safe-area-context";
 import SubHeader from "../components/subheader";
+import ScreenWrapper from "../components/screenwrapper";
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -32,7 +32,7 @@ const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
 const CARD_HEIGHT = height * 0.36;
 
 
-export default function Home() {
+export default function TapSearchBar() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +53,8 @@ export default function Home() {
   const [filterLocation, setFilterLocation] = useState("");
   const [brands, setBrands] = useState([]);
   const [locations, setLocations] = useState([]);
+
+
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -206,7 +208,7 @@ export default function Home() {
 
   return (
     <>
-     <SafeAreaView style={styles.safeAreaRoot}>
+      <ScreenWrapper backgroundColor="#007F7F">
              <View style={styles.header}>
           {/* 🔹 Profile Section */}
           <View style={styles.profileContainer}>
@@ -273,7 +275,7 @@ export default function Home() {
 
       <ScrollView 
         style={styles.container} 
-        contentContainerStyle={{ paddingBottom: 50 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
         showsVerticalScrollIndicator={false} 
         nestedScrollEnabled={true}
         refreshControl={
@@ -413,7 +415,7 @@ export default function Home() {
           />
       </ScrollView>
         <CustomerBottomNav/>
-      </SafeAreaView>
+       </ScreenWrapper>
       {showFilter && (
   <Filter 
     onClose={() => setShowFilter(false)}
@@ -640,10 +642,7 @@ function Filter({
 
 
 const styles = StyleSheet.create({
-  safeAreaRoot: {
-  flex: 1,
-  backgroundColor: "#007F7F", // screen background
-},
+
 header: {
   backgroundColor: "#007F7F",
   paddingHorizontal: 16,
@@ -659,6 +658,7 @@ header: {
     justifyContent: "space-between",
     padding: 4,
     top: 10,
+    marginTop: 40,
     
 
   },
@@ -893,36 +893,7 @@ header: {
     fontWeight: "bold" 
   },
     
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
 
-  navButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-  },
-
-  navIcon: {
-    fontSize: Math.min(width * 0.06, 26),
-    color: "#057474",
-  },
-
-  navText: {
-    color: "#057474",
-    fontWeight: "600",
-    fontSize: Math.min(width * 0.03, 13),
-    marginTop: height * 0.004,
-  },
 
  
   center: { 

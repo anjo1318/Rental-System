@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, Dimensions, } from "react-native";
 import { useRouter, useSegments } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -9,6 +10,7 @@ export default function CustomerBottomNav() {
   const router = useRouter();
   const segments = useSegments(); 
   const currentRoute = `/${segments.join("/")}`;
+  const insets = useSafeAreaInsets();
 
   const navItems = [
     { name: "Home", icon: "home", route: "/customer/home" },
@@ -18,7 +20,12 @@ export default function CustomerBottomNav() {
   ];
 
   return (
-    <View style={styles.bottomNav}>
+    <View style={[styles.bottomNav,
+        {
+          paddingBottom: insets.bottom - 10, // ✅ sits ABOVE system navbar
+        },
+      ]}
+      >
       {navItems.map((navItem) => {
         const isActive = currentRoute === navItem.route;
         return (
