@@ -29,7 +29,7 @@ const { width, height } = Dimensions.get("window");
 
 const CARD_MARGIN = 7;
 const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.36;
+const CARD_HEIGHT = height * 0.33;
 
 
 export default function TapSearchBar() {
@@ -350,16 +350,11 @@ export default function TapSearchBar() {
                     }}
                     style={styles.featuredImage}
                     resizeMode="cover"
-                  />
-                  
+                  />  
                   </View>
-
-
-
                 </View>
-
                 <View style={styles.lowerHalf}>
-                  <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
                 {/* Availability Badge */}
                   <View style={[
                     styles.availabilityBadge,
@@ -385,8 +380,8 @@ export default function TapSearchBar() {
                   <View style={styles.textContainer}>
                     <Text
                       style={styles.location}
-                      numberOfLines={0}
-                      ellipsizeMode="clip"
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
                     >
                       {item.location}
                     </Text>
@@ -399,7 +394,7 @@ export default function TapSearchBar() {
                 { /* <Text style={styles.quantity}>
                     Quantity: {item.availableQuantity} / {item.quantity}
                   </Text> 
-                  */}
+                 */}
                 </View>
               </View>
             </Pressable>
@@ -411,7 +406,7 @@ export default function TapSearchBar() {
               marginBottom: 10,
             }}
             scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
+            contentContainerStyle={{ paddingHorizontal: 16, }}
           />
       </ScrollView>
         <CustomerBottomNav/>
@@ -658,7 +653,7 @@ header: {
     justifyContent: "space-between",
     padding: 4,
     top: 10,
-    marginTop: 40,
+    marginTop: 35,
     
 
   },
@@ -803,7 +798,7 @@ header: {
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 21,
+    top: 30,
     
   },
 

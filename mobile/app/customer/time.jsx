@@ -23,10 +23,11 @@ import { useRouter, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { RFValue } from "react-native-responsive-fontsize";
-import OwnerBottomNav from '../components/OwnerBottomNav';
-import CustomerBottomNav from '../components/CustomerBottomNav';
 import * as Notifications from 'expo-notifications';
 import { Vibration } from 'react-native';
+import CustomerBottomNav from '../components/CustomerBottomNav';
+import Header from "../components/header3";
+import ScreenWrapper from "../components/screenwrapper";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -58,12 +59,7 @@ const sendRentalEndedNotification = async (productName) => {
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.04);
+
 
 export default function TimeDuration({ title = "TIme Duration", backgroundColor = "#fff" }) {
   const router = useRouter();
@@ -425,47 +421,12 @@ const cancelScheduledNotification = async (itemId) => {
   };
 
   return (
-    <View style={styles.container}>
-      <CustomerBottomNav/>
-
-            <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, backgroundColor }]}>
-              <View
-                style={[
-                  styles.profileContainer,
-                  { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
-                ]}
-              >
-                {/* Back Button */}
-                <View style={[styles.iconBox, { width: ICON_BOX }]}>
-                  <Pressable
-                    onPress={() => {
-                      if (router.canGoBack()) {
-                        router.back();
-                      } else {
-                        router.replace("/customer/home"); // change fallback if needed
-                      }
-                    }}
-                    hitSlop={10}
-                    style={styles.iconPress}
-                  >
-                    <Ionicons name="arrow-back" size={ICON_SIZE} color="#000" />
-                  </Pressable>
-                </View>
+    <ScreenWrapper>
+          <Header
+            title="Time Duration"
+            backgroundColor="#fff"
+          />
       
-                {/* Title */}
-                <Text
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                  style={[styles.pageName, { fontSize: TITLE_FONT }]}
-                >
-                  {title}
-                </Text>
-      
-                {/* Spacer */}
-                <View style={[styles.iconBox, { width: ICON_BOX }]} />
-              </View>
-            </View>
-
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentWrapper}
@@ -494,49 +455,13 @@ const cancelScheduledNotification = async (itemId) => {
           bookedItems.map(renderBookingCard)
         )}
       </ScrollView>
-    </View>
+    <CustomerBottomNav/>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#E6E1D6",
-  },
-
- headerWrapper: {
-    width: "100%",
-    justifyContent: "center",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    
-  },
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  
-    // Line below the container
-    borderBottomWidth: 1,        // thickness of the line
-    borderBottomColor: "#ccc",   // color of the line (light gray here)
-    paddingBottom: 8,            // optional: spacing so text/icons don’t touch the line
-  },
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconPress: {
-    padding: width * 0.02,
-    borderRadius: 6,
-  },
-  pageName: {
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    fontWeight: "600",
-  },
-
-  scrollView: {
+ scrollView: {
     flex: 1,
     backgroundColor: "#fff", 
 
@@ -544,7 +469,7 @@ const styles = StyleSheet.create({
 
   contentWrapper: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 80
   },
 
   loadingContainer: {

@@ -29,30 +29,33 @@ export default function CustomerBottomNav() {
       {navItems.map((navItem) => {
         const isActive = currentRoute === navItem.route;
         return (
-          <Pressable
-            key={navItem.route}
-            style={styles.navButton}
-            onPress={() => {
-              if (!isActive) {
-                // ✅ Use push instead of replace to maintain navigation stack
-                router.push(navItem.route);
-              }
-            }}
-          >
+        <Pressable
+          key={navItem.route}
+          style={styles.navButton}
+          onPress={() => {
+            if (!isActive) {
+              router.push(navItem.route);
+            }
+          }}
+        >
+          <View style={styles.iconContainer}>
             <Icon
               name={navItem.icon}
               size={24}
               color={isActive ? "#057474" : "#999"}
+              style={{ transform: [{ translateY: isActive ? -5 : -3 }] }}
             />
             <Text
               style={[
                 styles.navText,
-                { color: isActive ? "#057474" : "#999" },
+                { color: isActive ? "#057474" : "#999", transform: [{ translateY: isActive ? -5 : -7 }] },
               ]}
             >
               {navItem.name}
             </Text>
-          </Pressable>
+          </View>
+        </Pressable>
+
         );
       })}
     </View>
@@ -75,9 +78,14 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   navButton: {
+    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
+  },
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative", // ✅ isolated movement
   },
   navText: {
     fontWeight: "600",

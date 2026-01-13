@@ -17,6 +17,8 @@ import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import ItemImages from "./itemImages";
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
+
 
 export default function ItemDetail() {
   const router = useRouter();
@@ -182,11 +184,11 @@ export default function ItemDetail() {
   }
 
   return (
-    <View style={styles.container}>
-      <Header
-        title="Gadget Details"
-        backgroundColor="#007F7F"
-      />
+      <ScreenWrapper>
+        <Header
+          title="Gadget Detail"
+          backgroundColor="#007F7F"
+        />
 
 
       <ScrollView 
@@ -198,7 +200,7 @@ export default function ItemDetail() {
         <ItemImages images={item.itemImages} />
 
         {/* Price and Title Section */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}/>      
+        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 6, }]}/>      
         <View style={styles.infoSection}>
           <View style={styles.priceRow}>
             <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
@@ -325,12 +327,9 @@ export default function ItemDetail() {
 
   </Pressable>
 </View>
-        <View style={[styles.detailLine3, { borderTopColor: '#00000040' }]}
-/>
-      </ScrollView>
+        <View style={[styles.detailLine3, { borderTopColor: '#00000040' }]} />
 
-
-      {/* Fixed Action Buttons */}
+        
       
       <View style={styles.actionContainer}>
         <TouchableOpacity 
@@ -420,7 +419,7 @@ export default function ItemDetail() {
               }
 
               if (chatIdToUse && chatIdToUse !== 'undefined') {
-                const navUrl = `/customer/chat?id=${chatIdToUse}&itemId=${item.id}`;
+                const navUrl = `/customer/convointerface?id=${chatIdToUse}&itemId=${item.id}`;
                 console.log("🔗 Navigating to:", navUrl);
                 router.push(navUrl);
               } else {
@@ -454,7 +453,8 @@ export default function ItemDetail() {
           )}
         </TouchableOpacity>
       </View>
-    </View>
+      </ScrollView>  
+        </ScreenWrapper>
   );
 }
 
@@ -474,12 +474,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    paddingBottom: 100,
+    paddingBottom: 150,
   },
   infoSection: {
     backgroundColor: '#FFF',
     padding: 16,
-    bottom: 10,
+    bottom: 15,
   },
   priceRow: {
     flexDirection: 'row',
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
-    top: 20,
+    top: 25,
   },
   avatar: {
     width: 32,
@@ -564,12 +564,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    top: 40,
+    top: 45,
   },
   detailValue: {
     fontSize: 14,
     color: '#666',
-    top: 40,
+    top: 45,
     left: 5,
   },
   section: {
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     backgroundColor: "#fff",
-    bottom: 10,
+    bottom: 50,
   },
   chatButton: {
     flex: 1,
@@ -660,13 +660,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 12,
     backgroundColor: '#FFF',
-    borderWidth: 2,
+    borderWidth: 1  ,
     borderColor: '#057474',
   },
   chatButtonText: {
     color: '#057474',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '400',
     marginLeft: 6,
   },
   bookButton: {
@@ -681,7 +681,7 @@ const styles = StyleSheet.create({
   bookButtonText: {
     color: '#FFF',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '400',
     marginLeft: 6,
   },
   disabledButton: {

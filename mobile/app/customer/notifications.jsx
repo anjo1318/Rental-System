@@ -13,6 +13,9 @@ import { useRouter } from "expo-router";
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
+import CustomerBottomNav from '../components/CustomerBottomNav';
+
 
 const { height } = Dimensions.get("window");
 
@@ -160,7 +163,7 @@ export default function Notifications() {
   };
 
   return (
-      <View style={styles.container}>
+      <ScreenWrapper>
     <Header title="Notification" />
 
       {/* Body */}
@@ -228,26 +231,8 @@ export default function Notifications() {
           ))
         )}
       </ScrollView>
-      {/* 🔹 Bottom Nav */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "customer/book" },
-          { name: "Message", icon: "mail", route: "customer/message" },
-          { name: "Time", icon: "schedule", route: "customer/time" },
-        ].map((navItem, index) => (
-          <Pressable
-            key={index}
-            style={styles.navButton}
-            hitSlop={10}
-            onPress={() => handleNavigation(navItem.route)}
-          >
-            <Icon name={navItem.icon} size={24} color="#656565" />
-            <Text style={styles.navText}>{navItem.name}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
+       <CustomerBottomNav/>
+      </ScreenWrapper>
   );
 }
 

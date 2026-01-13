@@ -8,12 +8,15 @@ import {
   Image,
   Alert,
   StatusBar,
+  ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -116,14 +119,12 @@ export default function Profile() {
   }
 
   return (
-      <View style={styles.container}>
-  <Header
-    title="Profile"
-    backgroundColor="#007F7F"
-  />
-
-
-
+      <ScreenWrapper>
+      <Header
+        title="Profile"
+        backgroundColor="#007F7F"
+      />
+      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
       {/* User Profile Section */}
       <View style={styles.userContainer}>
         <View style={styles.userRow}>
@@ -231,27 +232,9 @@ export default function Profile() {
       
         </Pressable>
       </View>    
-
-      {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
-        {[
-          { name: "Home", icon: "home", route: "customer/home" },
-          { name: "Book", icon: "shopping-cart", route: "customer/book" },
-          { name: "Message", icon: "mail", route: "customer/message" },
-          { name: "Time", icon: "schedule", route: "customer/time" },
-        ].map((navItem, index) => (
-          <Pressable
-            key={index}
-            style={styles.navButton}
-            hitSlop={10}
-            onPress={() => handleNavigation(navItem.route)}
-          >
-            <Icon name={navItem.icon} size={24} color="#656565" />
-            <Text style={styles.navText}>{navItem.name}</Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
+        </ScrollView>
+    <CustomerBottomNav/>
+    </ScreenWrapper>
   );
 }
 
@@ -620,7 +603,7 @@ settingsRow: {
 
   outContainer: {
     width: "92%",
-    marginTop: 95,
+    marginTop: 75,
     alignSelf: "center",
     alignItems: "center",
     paddingHorizontal: 8,
@@ -668,32 +651,6 @@ settingsRow: {
     color: "#7e7e7e",
     marginLeft: 208,
     marginTop: 1,
-  },
-
-  navButton: { 
-    alignItems: "center", 
-    flex: 1,
-    zIndex: 10, 
-  },
-
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "#fff",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-  },
-    
-  navText: {
-    color: "#656565",
-    fontWeight: "bold",
-    fontSize: width * 0.03,
-    marginTop: height * 0.005,
   },
 
   center: { 

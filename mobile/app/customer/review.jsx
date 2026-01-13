@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity,} from "react-nati
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
 
 const reviews = [
   {
@@ -30,7 +31,7 @@ export default function Reviews() {
   const router = useRouter();
 
   return (
-     <View style={styles.container}>
+     <ScreenWrapper>
         <Header
           title="Reviews"
           backgroundColor="#007F7F"
@@ -72,7 +73,7 @@ export default function Reviews() {
         </View>
       ))}
     </ScrollView>
-    </View>
+      </ScreenWrapper>
   );
 }
 

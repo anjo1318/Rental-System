@@ -20,12 +20,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Slider from "@react-native-community/slider";
 import { usePathname } from "expo-router";
 import CustomerBottomNav from '../components/CustomerBottomNav';
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
 const CARD_MARGIN = 7
 const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.36   ;
+const CARD_HEIGHT = height * 0.33   ;
 
 
 export default function Home() {
@@ -139,11 +140,7 @@ export default function Home() {
 
   return (
     <>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="#057474" 
-        translucent={false}
-      />
+    <ScreenWrapper backgroundColor="#fff">
               <View style={styles.topBackground}>
   <View style={styles.profileContainer}></View>
 
@@ -228,7 +225,7 @@ export default function Home() {
     marginBottom: 16,
   }}
   scrollEnabled={false}
-  contentContainerStyle={{ paddingHorizontal: 16 }}
+  contentContainerStyle={{ paddingHorizontal: 16, }}
   renderItem={({ item }) => {
     const isAvailable = Number(item.availableQuantity) > 0;
 
@@ -317,6 +314,7 @@ export default function Home() {
 
       </ScrollView>
       <CustomerBottomNav/>
+      </ScreenWrapper>
       {showFilter && (
   <Filter 
     onClose={() => setShowFilter(false)}
@@ -498,7 +496,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    marginTop: 16,
+    marginTop: 5,
   },
 
   topBackground: {
@@ -541,7 +539,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     marginHorizontal: 10,
-    marginVertical: 10,
     height: 45,
     backgroundColor: "#fff",
   },
@@ -642,7 +639,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 21,
+    top: 30,
     
   },
 
@@ -732,37 +729,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold" 
   },
     
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-
-  navButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-  },
-
-  navIcon: {
-    fontSize: Math.min(width * 0.06, 26),
-    color: "#057474",
-  },
-
-  navText: {
-    color: "#057474",
-    fontWeight: "600",
-    fontSize: Math.min(width * 0.03, 13),
-    marginTop: height * 0.004,
-  },
-
   center: { 
     flex: 1, 
     justifyContent: "center", 

@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, StyleSheet, StatusBar, ScrollView} from "
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Header from "../components/header3";
+import ScreenWrapper from "../components/screenwrapper";
 
 
 export default function RentingPaymentMethod({ bookingData, onBack, onContinue }) {
@@ -252,20 +254,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
     );
 
   return (
-    <View style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
-    {/* Header */}
-    <View style={styles.headerWrapper}>
-    <View style={styles.profileContainer}>
-        <TouchableOpacity onPress={onBack} style={styles.backButton}>
-        <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.pageName}>Renting Details</Text>
-        <View style={styles.headerSpacer} />
-    </View>
-    </View>
-    
-
+         <ScreenWrapper>    
       {/* Progress Steps */}
       <View style={styles.progressContainer}>
         <View style={styles.progressSteps}>
@@ -292,7 +281,8 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 50 }}>
         {/* ✅ Rental Usage Section */}
         <View style={styles.rentalUsageCard}>
           <Text style={styles.cardTitle}>Rental Usage</Text>
@@ -378,9 +368,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
             </TouchableOpacity>
           ))}
         </View>
-      </ScrollView>
-
-      {/* Action Buttons */}
+              {/* Action Buttons */}
       <View style={styles.actions}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
@@ -409,7 +397,9 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
           </View>
         </TouchableOpacity>
       </View>
-   </View>
+      </ScrollView>
+
+   </ScreenWrapper>
   );
 }
 
@@ -451,7 +441,7 @@ const styles = StyleSheet.create({
   },
 
   progressContainer: {
-    backgroundColor: "#f6f6f6",
+    backgroundColor: "#fff",
     paddingVertical: 20,
     paddingHorizontal: 16,
     marginRight: 20,
@@ -647,11 +637,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     position: "absolute",
-    bottom: 20,
+    bottom: 60,
     left: 0,
     right: 0,
     paddingHorizontal: 16,
-    backgroundColor: "#f6f6f6",
+    backgroundColor: "#fff",
     paddingTop: 10,
   },
 

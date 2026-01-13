@@ -288,26 +288,6 @@ const confirmRent = async () => {
     <View style={styles.safe}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
 
-      {/* Header */}
-      <View style={styles.headerWrapper}>
-        <View style={styles.profileContainer}>
-        <TouchableOpacity 
-            onPress={() => {
-              if (onBack) {
-                onBack();
-              } else {
-                router.back();
-              }
-            }} 
-            style={styles.backButton}
-          >
-            <Icon name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.pageName}>Renting Details</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-      </View>
-
       {/* Progress Steps */}
       <ScrollView
         contentContainerStyle={{ paddingBottom: 30, alignItems: "center" }}

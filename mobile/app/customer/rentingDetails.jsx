@@ -13,8 +13,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import RentingPaymentMethod from "./rentingPaymentMethod";
 import ConfirmationScreen from "./confirmationScreen";
+import Header from "../components/header3";
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
+
 
 
 export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initialDate, mode = "date" }) {
@@ -638,8 +641,12 @@ const proceedWithBooking = (imageUrl) => {
   );
 
     return (
-    <View style={styles.safe}>
-        <StatusBar barStyle="dark-content" backgroundColor="#FFF" />
+   <ScreenWrapper>
+        <Header
+          title="Renting Details"
+          backgroundColor="#fff"
+        />
+
         {currentStep === 2 ? (
         // ✅ Payment screen takes full screen
         <RentingPaymentMethod
@@ -661,18 +668,20 @@ const proceedWithBooking = (imageUrl) => {
         ) : (
         // ✅ Step 1 → Renting Details (form + progress bar)
         <>
-            {/* Header */}
-            <View style={styles.headerWrapper}>
-            <View style={styles.profileContainer}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Icon name="arrow-back" size={24} color="#000" />
-                </TouchableOpacity>
-                <Text style={styles.pageName}>Renting Details</Text>
-                <View style={styles.headerSpacer} />
-            </View>
-            </View>
+           
+            
 
-            {/* Progress Steps */}
+            {/* Renting form (Step 1 content) */}
+            <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+            <ScrollView
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+              {/* Progress Steps */}
             <View style={styles.progressContainer}>
             <View style={styles.progressSteps}>
                 {steps.map((stepName, index) => (
@@ -698,17 +707,6 @@ const proceedWithBooking = (imageUrl) => {
             </View>
             </View>
           
-
-            {/* Renting form (Step 1 content) */}
-            <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            >
-            <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-            >
                 {/* Form Inputs */}
                 <View style={styles.inputContainer}>
                 <View style={styles.inputGroup}>
@@ -1000,9 +998,7 @@ const proceedWithBooking = (imageUrl) => {
             setShowDateTimeModal(false);
           }}
         />
-
-
-    </View>
+        </ScreenWrapper>
     );
 
 }
@@ -1178,7 +1174,7 @@ const styles = StyleSheet.create({
 
   // Content
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 50,
    
   },
   inputContainer: {
@@ -1354,7 +1350,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 20,
     alignItems: "center",
-    marginTop: 16,
+    top: 30,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

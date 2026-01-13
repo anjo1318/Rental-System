@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from "../components/header2";
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -148,7 +149,7 @@ export default function BookedItem() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScreenWrapper>
       <Header
           title="Booked Item"
           backgroundColor="#007F7F"
@@ -224,7 +225,8 @@ export default function BookedItem() {
               </View>
             ))
           )}
-        </ScrollView>
+        
+       
 
         {bookedItem.length > 0 && (
           <View style={styles.bottomContainer}>
@@ -246,9 +248,11 @@ export default function BookedItem() {
               <Text style={styles.proceedText}>Proceed to Renting</Text>
             </Pressable>
           </View>
+          
         )}
+        </ScrollView>
       </View>
-    </View>
+    </ScreenWrapper>
   );
 }
 
@@ -396,7 +400,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    marginBottom: 10,
+    marginBottom: 25,
   },
 
   deleteButton: {

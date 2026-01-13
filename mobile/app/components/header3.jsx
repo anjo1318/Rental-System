@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Dimensions, Pressable, StatusBar, Image } from "react-native";
+import { View, Text, StyleSheet, Dimensions, Pressable, StatusBar } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 
@@ -7,12 +7,12 @@ const { width, height } = Dimensions.get("window");
 
 const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
 const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.07));
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
 const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
 const PADDING_H = Math.round(width * 0.02);
 const MARGIN_TOP = Math.round(height * 0.04);
 
-export default function Header({ title = "Title", backgroundColor = "#057474" }) {
+export default function Header({ title = "Title", backgroundColor = "#fff" }) {
   const router = useRouter();
 
   return (
@@ -32,7 +32,7 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
         >
           {/* Back Button */}
           <View style={[styles.iconBox, { width: ICON_BOX }]}>
-           <Pressable
+            <Pressable
               onPress={() => {
                 if (router.canGoBack()) {
                   router.back();
@@ -43,7 +43,7 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
               hitSlop={10}
               style={styles.iconPress}
             >
-              <Icon name="arrow-back" size={ICON_SIZE} color="#fff" />
+              <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
             </Pressable>
           </View>
 
@@ -55,34 +55,36 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
           >
             {title}
           </Text>
-            
-          {/* Notification */}
-          <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("customer/notifications")}>
-             <Image
-               source={require("../../assets/images/notification.png")}
-               style={{ width: 32, height: 32 }}
-               resizeMode="contain"
-             />
-            </Pressable>
-          </View>
 
+          {/* Spacer */}
+          <View style={[styles.iconBox, { width: ICON_BOX }]} />
         </View>
       </View>
     </>
   );
 }
+
 const styles = StyleSheet.create({
   headerWrapper: {
     width: "100%",
     justifyContent: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-  },
+    borderWidth: 1,
+    borderColor: "#00000040",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
+    shadowRadius: 4,
+    elevation: 4,       
+    overflow: "hidden",
+  },  
+    
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+ 
   },
   iconBox: {
     alignItems: "center",
@@ -93,41 +95,9 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   pageName: {
-    color: "#fff",
+    color: "#000",
     textAlign: "center",
     flex: 1,
     fontWeight: "600",
   },
-notificationWrapper: {
-    marginLeft: "auto", 
-    marginRight: 7,
-    marginTop: 3,
-    position: "relative",
-    borderRadius: (width * 0.12) / 2,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-
-  badge: {
-    position: "absolute",
-    right: -4,
-    top: 1,
-    backgroundColor: "#007F7F",
-    borderRadius: 10,
-    width: 16,
-    height: 16,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
-
-  badgeText: {
-    color: "#fff",
-    fontSize: 8,
-    fontWeight: "700",
-    
-  },
-
 });

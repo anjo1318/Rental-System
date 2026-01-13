@@ -9,7 +9,6 @@ import {
   Pressable,
   TextInput,
   ScrollView,
-  StatusBar,
   Dimensions,
   StyleSheet,
   TouchableOpacity
@@ -24,6 +23,10 @@ import ScreenWrapper from "./components/screenwrapper";
 
 
 const { width, height } = Dimensions.get("window");
+
+const CARD_MARGIN = 7;
+const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.33;
 
 export default function Index() {
   const router = useRouter();
@@ -159,8 +162,30 @@ export default function Index() {
       onPress={() => handleProductClick(item)}
     >
       <View style={styles.upperHalf}>
-        <Image source={{ uri: imageUrl }} style={styles.itemImage} />
-           {/* Availability Badge - positioned at bottom of image */}
+        <View style={styles.imageWrapper}>
+         <Image source={{ uri:item.itemImages && item.itemImages.length > 0
+            ? (() => {
+                try {
+                  const imgs = JSON.parse(item.itemImages[0]);
+                  let url =
+                    Array.isArray(imgs) && imgs.length > 0
+                      ? imgs[0]
+                      : "https://via.placeholder.com/150";
+                  url = url.replace(/^http:\/\//, "https://").replace(/\\+$/, "");
+                  return url;
+                } catch {
+                  return "https://via.placeholder.com/150";
+                }
+              })()
+            : "https://via.placeholder.com/150",
+      }} style={styles.featuredImage} />
+        </View>
+      </View>
+    
+      <View style={styles.lowerHalf}>
+        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+
+        {/* Availability Badge - positioned at bottom of image */}
         <View
           style={[
             styles.availabilityBadge,
@@ -171,10 +196,6 @@ export default function Index() {
             {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
           </Text>
         </View>
-      </View>
-    
-      <View style={styles.lowerHalf}>
-        <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
 
         
         {/* Rating Row */}
@@ -189,7 +210,7 @@ export default function Index() {
             <Icon name="location-on" size={16} color="#666" />
           </View>
           <View style={styles.textContainer}>
-            <Text style={styles.location} numberOfLines={2}>
+            <Text style={styles.location} numberOfLines={1}>
               {item.location}
             </Text>
           </View>
@@ -198,10 +219,10 @@ export default function Index() {
         {/* Price */}
         <Text style={styles.price}>₱{item.pricePerDay}</Text>
     
-        {/* Quantity */}
-        <Text style={styles.quantity}>
+        {/* <Text style={styles.quantity}>
           Qty: {item.availableQuantity} / {item.quantity}
-        </Text>
+        </Text> */}
+        
       </View>
     </Pressable>
     );
@@ -314,7 +335,7 @@ export default function Index() {
             marginBottom: 16,
           }}
           scrollEnabled={false}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 16, top: 7, }}
         />
       </ScrollView>
       <CustomerBottomNav/>
@@ -333,7 +354,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    marginTop: 16,
+    top: 16,
   },
 
   avatar: { 
@@ -394,7 +415,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     marginHorizontal: -3,
-    marginVertical: 10,
+    marginVertical: 5,
     height: 45,
     backgroundColor: "#fff",
   },
@@ -432,144 +453,165 @@ const styles = StyleSheet.create({
   
 
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "600",
     color: "#333",
     paddingHorizontal: 16,
-    marginTop: 20,
+    marginTop: 40,
   },
 
-  categoryButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 10,
-    marginLeft: 16,
-    marginBottom: 20,
+ featuredCard: {
+    width: width * 0.65,
+    height: height * 0.30,
+    borderRadius: width * 0.03,
+    marginLeft: width * 0.04,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#007F7F99",
+    
+  
+  },
+  imageWrapper: {
+    width: "220",
+    height: 180,          
+    borderBottomWidth: 0,
+    borderBottomColor: "transparent",
+    overflow: "hidden",   
+    top: -60,
+    backgroundColor: "#EDEDED",
+    
+    
+
   },
 
-  activeCategory: {
-    backgroundColor: "#057474",
-    borderColor: "#057474",
-  },
-
-  categoryText: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-  },
-
-  activeCategoryText: {
-    color: "#FFF",
-    fontWeight: "500",
+  featuredImage: {
+    width: "70%",
+    height: "70%",
+    resizeMode: "cover",
+    top: 50,
+    left: 30,
+    
   },
 
   card: {
-    width: (width - 39) / 2,
-    backgroundColor: "#FFF",
-    borderWidth: 0,
-    borderColor:"transparent",
-    borderRadius: 12,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    backgroundColor: "#fff",
+    borderRadius: width * 0.05,
     overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 10,
+    borderWidth: 0,
+    borderColor: "transparent",
+    top: 5,
+    borderWidth: 1,
+    borderColor: "#007F7F80",
   },
 
   upperHalf: {
-    height: 120,
+    flex: 0.8,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    top: 50,
   },
-
   itemImage: {
     width: "100%",
-    height: "100%",
+    height: "95%",
     resizeMode: "cover",
   },
+  lowerHalf: {
+    flex: 1.2,
+    flexDirection: "column",
+    paddingHorizontal: 5,
+    paddingTop: 5,
+    paddingBottom: 10,
+    top: 30,
+    
+  },
 
-  // ✅ Oblong badge at bottom of image
-  availabilityBadge: {
-    position: "absolute",
-    bottom: -50,
-    left: 17,
-    right: 0,
-    paddingHorizontal: 1,
-    paddingVertical: 1,
+  title: {
+    fontWeight: "bold",
+    fontSize: width * 0.04,
+  },
+  ratingRow: {
+    flexDirection: "row",
     alignItems: "center",
-    borderRadius: 20,
-    width: "55%",
+  },
+  ratingValue: {
+    fontSize: width * 0.035,
+    color: "#555",
+    marginRight: 4,
+  },
+  starIcon: {
+    fontSize: width * 0.035,
+    color: "#f5a623",
+  },
+  locationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: -5,
+    top: 5,
+  },
+
+  iconContainer: {
+    width: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  textContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  location: {
+    fontSize: width * 0.035,
+    color: "#555",
+    flexShrink: 1,
+    flexWrap: "wrap",
+  },
+
+  price: {
+    fontWeight: "bold",
+    fontSize: width * 0.04,
+    marginTop: 10,
+  },
+  quantity: {
+    marginTop: 5,
+  },
+  availabilityBadge: {
+    width: "45%",
+    paddingVertical: 3,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    borderRadius: 10,
+    top: 5,
   },
 
   availabilityText: {
     color: "#fff",
     fontSize: 10,
-    fontWeight: "500",
+    fontWeight: "400",
   },
 
-  lowerHalf: {
-    padding: 12,
-  },
 
-  title: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 6,
+  categoryButton: {
+    paddingHorizontal: width * 0.04,
+    paddingVertical: height * 0.01,
+    borderRadius: 20,
+    backgroundColor: "transparent",
+    marginLeft: width * 0.04,
   },
-
-  ratingRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 20,
+  activeCategory: { 
+    backgroundColor: "#007F7F" 
   },
-
-  ratingValue: {
-    fontSize: 12,
-    color: "#666",
-    marginRight: 4,
+  categoryText: { 
+    fontSize: width * 0.035, 
+    color: "#555" 
   },
-
-  starIcon: {
-    fontSize: 12,
-    color: "#f5a623",
-  },
-
-  locationRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: 6,
-    right: 5,
-  },
-
-  iconContainer: {
-    width: 20,
-    alignItems: "center",
-    justifyContent: "flex-start",
-    marginRight: 4,
-    paddingTop: 2,
-  },
-
-  textContainer: {
-    flex: 1,
-  },
-
-  location: {
-    fontSize: 12,
-    color: "#666",
-    flexWrap: "wrap",
-  },
-
-  price: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#057474",
-    marginBottom: 4,
-  },
-
-  quantity: {
-    fontSize: 12,
-    color: "#666",
+  activeCategoryText: { 
+    color: "#fff", 
+    fontWeight: "bold" 
   },
 
   bottomNav: {

@@ -14,10 +14,11 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import {  } from "expo-router";
-import CustomerBottomNav from '../components/CustomerBottomNav';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -143,8 +144,7 @@ export default function Messages() {
   });
 
   return (
-    <View style={styles.container}>
-      <CustomerBottomNav/>
+      <ScreenWrapper>
         <Header
           title="Messages"
           backgroundColor="#007F7F"
@@ -220,7 +220,8 @@ export default function Messages() {
           })}
         </ScrollView>
       )}
-    </View>
+      <CustomerBottomNav/>
+    </ScreenWrapper>
   );
 }
 
@@ -297,24 +298,5 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: height * 0.015,
-    backgroundColor: "##ffffff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
 
-  navButton: { alignItems: "center", flex: 1 },
-
-  navText: {
-    fontWeight: "bold",
-    fontSize: width * 0.03,
-    marginTop: height * 0.005,
-  },
 });
