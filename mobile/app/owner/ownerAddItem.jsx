@@ -20,19 +20,15 @@ import axios from "axios";
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from "@react-native-picker/picker";
 import Ionicons from "react-native-vector-icons/Ionicons"
+import Header from "../components/header3";
+import ScreenWrapper from "../components/screenwrapper";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
-const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
-const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.04);
 
-export default function OwnerAddItem({ title = "Add New Product", backgroundColor = "#fff" }) {
+export default function OwnerAddItem() {
   const router = useRouter();
   const [ownerId, setOwnerId] = useState(null);
   const [token, setToken] = useState(null);
@@ -438,50 +434,17 @@ const pickMultipleImages = async () => {
 
 
   return (
+      <ScreenWrapper>
+      <Header
+        title="Add New Product"
+        backgroundColor="#fff"
+      />
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
-     <View style={[styles.headerWrapper, { height: HEADER_HEIGHT, backgroundColor }]}>
-                   <View
-                     style={[
-                       styles.profileContainer,
-                       { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
-                     ]}
-                   >
-                     {/* Back Button */}
-                     <View style={[styles.iconBox, { width: ICON_BOX }]}>
-                       <Pressable
-                         onPress={() => {
-                           if (router.canGoBack()) {
-                             router.back();
-                           } else {
-                             router.replace("/customer/home"); // change fallback if needed
-                           }
-                         }}
-                         hitSlop={10}
-                         style={styles.iconPress}
-                       >
-                         <Ionicons name="arrow-back" size={ICON_SIZE} color="#000" />
-                       </Pressable>
-                     </View>
-           
-                     {/* Title */}
-                     <Text
-                       numberOfLines={1}
-                       ellipsizeMode="tail"
-                       style={[styles.pageName, { fontSize: TITLE_FONT }]}
-                     >
-                       {title}
-                     </Text>
-           
-                     {/* Spacer */}
-                     <View style={[styles.iconBox, { width: ICON_BOX }]} />
-                   </View>
-                 </View>
      
-
       <ScrollView contentContainerStyle={styles.form}>
 {/* PRODUCT NAME */}
 <View style={styles.pickerContainer}>
@@ -683,44 +646,22 @@ const pickMultipleImages = async () => {
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "ffffff",
   },
-  headerWrapper: {
-    width: "100%",
-    justifyContent: "center",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  iconBox: {
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  iconPress: {
-    padding: width * 0.02,
-    borderRadius: 6,
-  },
-  pageName: {
-    color: "#000",
-    textAlign: "center",
-    flex: 1,
-    fontWeight: "600",
-  },
+
+  
   form: {
     padding: 16,
   },
   input: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFF6F6",
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
@@ -734,7 +675,7 @@ const styles = StyleSheet.create({
   borderWidth: 1,
   borderRadius: 8,
   borderColor: "#ccc",
-  backgroundColor: "#FFF",
+  backgroundColor: "#FFF6F6",
   justifyContent: "center",
   marginBottom: 12,
   paddingHorizontal: 12,
@@ -826,7 +767,7 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderStyle: "dashed",
     borderRadius: 8,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#FFF6F6",
   },
   noImagesText: {
     fontSize: 14,
@@ -844,7 +785,7 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 10,
+    marginBottom: 15,
   },
   submitButtonDisabled: {
     backgroundColor: "#999",

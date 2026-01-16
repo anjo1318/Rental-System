@@ -27,9 +27,9 @@ import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
-const CARD_MARGIN = 7;
-const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.33;
+const CARD_MARGIN = 5;
+const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.29;
 
 
 export default function TapSearchBar() {
@@ -402,8 +402,8 @@ export default function TapSearchBar() {
             )}
             numColumns={2}
             columnWrapperStyle={{
-              justifyContent: "space-between",
-              marginBottom: 10,
+              justifyContent: "center",
+              marginBottom: 7,
             }}
             scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 16, }}
@@ -665,6 +665,7 @@ header: {
     borderBottomRightRadius: 20,
       zIndex: 1000,
   width: "100%",
+   marginTop: -90,
   },
 
   container: {
@@ -771,17 +772,17 @@ header: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#fff",
-    borderRadius: width * 0.05,
+    borderRadius: 15,
     overflow: "hidden",
     borderWidth: 0,
     borderColor: "transparent",
-    top: 5,
+    marginHorizontal: 3,
     borderWidth: 1,
     borderColor: "#007F7F80",
   },
 
   upperHalf: {
-    flex: 0.8,
+    flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -793,12 +794,12 @@ header: {
     resizeMode: "cover",
   },
   lowerHalf: {
-    flex: 1.2,
+    flex: 1.5,
     flexDirection: "column",
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 30,
+    top: 47,
     
   },
 

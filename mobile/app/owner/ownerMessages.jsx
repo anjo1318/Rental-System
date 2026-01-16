@@ -19,6 +19,7 @@ import OwnerBottomNav from '../components/OwnerBottomNav';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -138,13 +139,14 @@ export default function ProfileHeader() {
   });
 
   return (
-    <View style={styles.container}>
-      <OwnerBottomNav/>
-
-  <Header
-    title="Messages"
-    backgroundColor="#007F7F"
-  />
+    
+      
+ <ScreenWrapper>
+        <Header
+          title="Messages"
+          backgroundColor="#007F7F"
+        />
+        <View style={styles.container}>
       {/* Body */}
       <View style={styles.bodyWrapper}>
         {loading ? (
@@ -215,10 +217,13 @@ export default function ProfileHeader() {
                 </Pressable>
               );
             })}
+          
           </ScrollView>
         )}
       </View>
     </View>
+      <OwnerBottomNav/>
+    </ScreenWrapper>
   );
 }
 

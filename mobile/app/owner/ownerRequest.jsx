@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -139,12 +140,13 @@ export default function ownerItem() {
   console.log("Fetching booked items from:", `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-request/${userId}`);
 
   return (
-    <View style={styles.container}>
- <Header
-    title="Request"
-    backgroundColor="#007F7F"
-  />
-
+  
+ <ScreenWrapper>
+         <Header
+           title="Request"
+           backgroundColor="#007F7F"
+         />
+  <View style={styles.container}>
       {/* Body */}
       <View style={styles.bodyWrapper}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -219,6 +221,7 @@ export default function ownerItem() {
 
       </View>
     </View>
+    </ScreenWrapper>
   );
 }
 

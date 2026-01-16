@@ -142,7 +142,7 @@ export default function Messages() {
     loading,
     chatsCount: chats.length,
   });
-
+ 
   return (
       <ScreenWrapper>
         <Header

@@ -360,23 +360,24 @@ const styles = StyleSheet.create({
   avatar: { 
     width: width * 0.13, 
     height: width * 0.13, 
-    borderRadius: width * 0.05 
+    borderRadius: width * 0.05,
+    right: 10,
   },
   
   loginActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
   },
 
   loginButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
     borderRadius: 6,
     borderWidth: 1,
     borderColor: '#057474',
     backgroundColor: '#ffffff',
-    left: 10,
+    left: 5,
   },
 
   loginButtonText: {

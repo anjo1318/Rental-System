@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity,} from "react-native";
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity,Pressable,} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import Header from "../components/header";
@@ -69,9 +69,17 @@ export default function Reviews() {
 
               <Text style={styles.comment}>{item.comment}</Text>
             </View>
+
+            
+
           </View>
         </View>
+        
       ))}
+
+      <Pressable style={styles.bookButton}>
+  <Text style={styles.bookText}>Book Now</Text>
+</Pressable>
     </ScrollView>
       </ScreenWrapper>
   );
@@ -161,4 +169,23 @@ const styles = StyleSheet.create({
     top: 5,
     
   },
+
+  bookButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#057474',
+    marginHorizontal: 90,
+    top: 200,
+  },
+  bookText: {
+    color: '#FFF',
+    fontSize: 15,
+    fontWeight: '700',
+    marginLeft: 6,
+  },
+
 });

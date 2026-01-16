@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import axios from 'axios';
 import Header from "../components/header";
+import ScreenWrapper from "../components/screenwrapper";
 
 export default function OwnerEditItem() {
   const router = useRouter();
@@ -249,16 +250,17 @@ export default function OwnerEditItem() {
   }
 
   return (
-    <KeyboardAvoidingView
+   
+         <ScreenWrapper>
+            <Header
+              title="Messages"
+              backgroundColor="#007F7F"
+            />
+             <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
-     <Header
-             title="Edit Item"
-             backgroundColor="#007F7F"
-           />
-
       <ScrollView 
         style={styles.content} 
         showsVerticalScrollIndicator={false}
@@ -384,6 +386,7 @@ export default function OwnerEditItem() {
         <View style={styles.bottomPadding} />
       </ScrollView>
     </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 }
 

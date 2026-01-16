@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
 import * as ImagePicker from "expo-image-picker";
 import Header from "../components/header";
-
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -175,17 +175,19 @@ export default function EditProfile() {
   }
 
   return (
+    
+   <ScreenWrapper>
+           <Header
+             title="Edit Profile"
+             backgroundColor="#007F7F"
+           />
     <View style={styles.safe}>
-    <Header
-      title="Edit Profile"
-      backgroundColor="#007F7F"
-    />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ paddingBottom: 0 }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Avatar */}
@@ -289,6 +291,7 @@ export default function EditProfile() {
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
+    </ScreenWrapper>
   );
 }
 

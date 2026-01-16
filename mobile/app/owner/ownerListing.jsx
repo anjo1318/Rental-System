@@ -22,6 +22,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
 import { RFValue } from "react-native-responsive-fontsize";
 import OwnerBottomNav from '../components/OwnerBottomNav';
+import ScreenWrapper from "../components/screenwrapper";
+import Header from "../components/header";
+
 
 
 
@@ -438,55 +441,14 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-  barStyle="light-content"
-  backgroundColor="#007F7F"
-  translucent={false}
-/>
+    
+      <ScreenWrapper>
+          <Header
+       title={`My Items (${items.length})`}
+          backgroundColor="#007F7F"
+              />
 
-    <View style={[styles.header, { height: HEADER_HEIGHT }]}>
-  <View
-    style={[
-      styles.profileContainer,
-      { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP }
-    ]}
-  >
-    {/* Back Button */}
-    <View style={[styles.iconBox, { width: ICON_BOX }]}>
-      <Pressable
-        onPress={() => {
-          console.log("Back button pressed");
-          router.replace("owner/ownerHome");
-        }}
-        hitSlop={10}
-        style={styles.iconPress}
-      >
-        <Icon name="arrow-back" size={ICON_SIZE} color="#fff" />
-      </Pressable>
-    </View>
-
-    {/* Title */}
-    <Text
-      numberOfLines={1}
-      style={[styles.headerTitle, { fontSize: TITLE_FONT }]}
-    >
-      My Items ({items.length})
-    </Text>
-
-    {/* Add Button — ORIGINAL FUNCTION */}
-    <View style={[styles.iconBox, { width: ICON_BOX }]}>
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={addNewItem}
-        style={styles.addButton}
-      >
-        <Icon name="add" size={ICON_SIZE} color="#fff" />
-      </TouchableOpacity>
-    </View>
-  </View>
-</View>
-
+      <View style={styles.container}>
       {/* Items List */}
       <FlatList
         data={filteredItems}
@@ -524,7 +486,7 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
 
        <OwnerBottomNav/>
       </View>
-  
+      </ScreenWrapper>
   );
 }
 

@@ -15,6 +15,7 @@ import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header";
 import OwnerBottomNav from '../components/OwnerBottomNav';
+import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
@@ -115,11 +116,13 @@ export default function ownerProfile() {
   }
 
   return (
-    <View style={styles.container}>
-    <Header
-        title="Profile"
-        backgroundColor="#007F7F"
-      />
+  
+    <ScreenWrapper>
+            <Header
+              title="Profile"
+              backgroundColor="#007F7F"
+            />
+      <View style={styles.container}>
 
       {/* User Profile Section */}
       <View style={styles.userContainer}>
@@ -226,16 +229,17 @@ export default function ownerProfile() {
       </View>    
 
       {/* Logout Section */}
-      <View style={styles.outContainer}>
-        <Pressable style={styles.outRow} onPress={handleLogout}>
-          <Text style={styles.outText}>Log out</Text>
-      
-        </Pressable>
-      </View>    
+      <Pressable style={styles.outContainer} onPress={handleLogout}>
+  <View style={styles.outRow}>
+    <Text style={styles.outText}>Log out</Text>
+  </View>
+</Pressable>
+
 
     <OwnerBottomNav/>
 
     </View>
+    </ScreenWrapper>
   );
 }
 

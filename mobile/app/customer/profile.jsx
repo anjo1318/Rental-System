@@ -226,12 +226,12 @@ export default function Profile() {
       </View>    
 
       {/* Logout Section */}
-      <View style={styles.outContainer}>
-        <Pressable style={styles.outRow} onPress={handleLogout}>
-          <Text style={styles.outText}>Log out</Text>
-      
-        </Pressable>
-      </View>    
+      <Pressable style={styles.outContainer} onPress={handleLogout}>
+  <View style={styles.outRow}>
+    <Text style={styles.outText}>Log out</Text>
+  </View>
+</Pressable>
+
         </ScrollView>
     <CustomerBottomNav/>
     </ScreenWrapper>

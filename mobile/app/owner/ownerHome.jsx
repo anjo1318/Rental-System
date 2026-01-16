@@ -19,8 +19,14 @@ import FeatherIcon from "react-native-vector-icons/Feather";
 import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import OwnerBottomNav from '../components/OwnerBottomNav';
-import { SafeAreaView } from "react-native-safe-area-context";
-const { width } = Dimensions.get("window");
+import SubHeader from "../components/subheader";
+import ScreenWrapper from "../components/screenwrapper";
+
+const { width, height } = Dimensions.get("window");
+
+const CARD_MARGIN = 7;
+const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.33;
 
 
 export default function OwnerHome() {
@@ -214,7 +220,7 @@ export default function OwnerHome() {
 
   return (
     <>
-     <SafeAreaView style={styles.safeAreaRoot}>
+     <ScreenWrapper backgroundColor="#007F7F">
         <View style={styles.header}>
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
@@ -240,18 +246,21 @@ export default function OwnerHome() {
            
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
-                <MaterialIcon name="notifications-none" size={24} color="#007F7F" />
-                <View style={styles.badge}>
-                  <Text style={styles.badgeText}>2</Text>
-                </View>
+    <Image
+   source={require("../../assets/images/notification.png")}
+   style={{ width: 37, height: 37 }}
+   resizeMode="contain"
+ />
               </Pressable>
             </View>
           </View>
         </View>
+
+
        
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
         refreshControl={
@@ -318,17 +327,19 @@ export default function OwnerHome() {
 
         <View style={styles.subHeader}></View>
 
+        <View style={styles.lowerCard}>
+
         {/* Search */}
         <View style={styles.searchContainer}>
-          <MaterialIcon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
+          <MaterialIcon name="search" size={20} color="#057474" style={styles.leftIcon} />
           <TextInput
             placeholder="Search your items.."
             value={search}
             onChangeText={setSearch}
             style={styles.searchInput}
-            placeholderTextColor="#555"
+            placeholderTextColor="#057474"
           />
-          <MaterialIcon name="tune" size={20} color="gray" style={styles.rightIcon} />
+          <MaterialIcon name="tune" size={20} color="#057474" style={styles.rightIcon} />
         </View>
 
         {/* Categories */}
@@ -359,7 +370,7 @@ export default function OwnerHome() {
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
             numColumns={2}
-            columnWrapperStyle={{ justifyContent: "space-between", marginBottom: 16 }}
+            columnWrapperStyle={{ justifyContent: "center", marginBottom: 16 }}
             scrollEnabled={false}
             contentContainerStyle={{ paddingHorizontal: 16 }}
           />
@@ -379,11 +390,11 @@ export default function OwnerHome() {
             </Pressable>
           </View>
         )}
-
+      </View>
 
       </ScrollView>
       <OwnerBottomNav/>
-      </SafeAreaView>
+      </ScreenWrapper>
 
     </>
   );
@@ -391,93 +402,70 @@ export default function OwnerHome() {
 
 const styles = StyleSheet.create({
   
-safeAreaRoot: {
-  flex: 1,
-  backgroundColor: "#007F7F", // screen background
-},
 header: {
   backgroundColor: "#007F7F",
   paddingHorizontal: 16,
+        borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
 },
-  ader: {
+profileContainer: {
+    flexDirection: "row",
+  alignItems: "center",
+  justifyContent: "space-between",
+  paddingVertical: 34,
+  paddingHorizontal: 16,
+  top: 19,
+    
+
+  },
+ subHeader: {
+    position: "relative",
     backgroundColor: "#007F7F",
     padding: 12,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    bottomsubHe: 223,
+      zIndex: 1000,
+  width: "100%",
+  bottom: 203,
   },
 
-  email: {
-    fontSize: 13,
-    color: "#e0f2f2",
-    marginTop: 2,     // ⬅️ moves it DOWN under the name
-    marginLeft: 13
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
-  },
   container: {
-    flex: 1,
-    backgroundColor: "#FFFFFF",
+  flex: 1,
+  backgroundColor: "#F6F6F6", // ✅ everything below header is white
+},
+ email: {
+    fontSize: 10,
+    color: "#e0f2f2",
+    marginLeft: 13,
   },
-
-  profileContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    paddingVertical: 0,
-  },
-
 
   avatar: { 
-    width: width * 0.2, 
-    height: width * 0.2, 
+    width: width * 0.16, 
+    height: width * 0.16, 
     borderRadius: width * 0.1,
     borderColor:"#e0f2f2",
-    borderWidth: 2,        
+    borderWidth: 2,      
   },
-
-  username: {
-    marginLeft: width * 0.03,
-    fontWeight: "bold",
-    fontSize: width * 0.04,
-    color: "#FFF",
+  
+  username: { 
+    marginLeft: width * 0.03, 
+    fontWeight: "bold", 
+    fontSize: width * 0.035,
+    color: "#e0f2f2",
   },
 
   notificationWrapper: {
-    marginLeft: "auto",
-    marginRight: 16,
+    marginLeft: "auto", 
+    marginRight: 5,
+    marginTop: 7,
     position: "relative",
-    width: width * 0.1,
-    height: width * 0.1,
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
-    borderColor: "white",
-    backgroundColor: "white",
-  },
-  badge: {
-    position: "absolute",
-    right: -8,
-    top: -3,
-    backgroundColor: "white",
-    borderRadius: 10,
-    width: 15,
-    height: 15,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  badgeText: {
-    color: "#007F7F",
-    fontSize: 10,
-    fontWeight: "bold",
-    right: -1,
-    top: -1,
+    backgroundColor: "#fff",
   },
 
+  
 
   statsContainer: {
     flexDirection: "row",
@@ -486,15 +474,15 @@ header: {
     marginTop: 20,
     borderWidth: 1,
     borderColor: "#00000020",
-    height: 195,
-    width: 330,
-    right: -10,
+    height: 175,
+    width: 340,
     shadowColor: "white",
     shadowOpacity: 0.5,
     shadowRadius: 20,
     borderRadius: 20,
-    left: 5,
+    
     top: 5,
+    backgroundColor: "#fff",
   },
 
   statCard: {
@@ -503,10 +491,12 @@ header: {
     marginHorizontal: 4,
     backgroundColor: "#FFF",
     borderRadius: 4,
-    height: 170,
+    height: 155,
     width: 98,
-    top: 12,
+    top: 8,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#D7D7D7",
   },
 
   statNumber: {
@@ -517,7 +507,7 @@ header: {
   },
 
   statLabel: {
-    fontSize: 15,
+    fontSize: 13,
     color: "#666",
     textAlign: "center",
   },
@@ -543,6 +533,13 @@ header: {
     height: 17,
   },
 
+  lowerCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 10,
+    borderRadius: 20,
+    bottom: 10,
+  },
+
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -550,13 +547,14 @@ header: {
     marginHorizontal: 16,
     marginVertical: 16,
     borderRadius: 25,
-    paddingHorizontal: 15,
+    paddingHorizontal: 13,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
-    top: 15,
+    borderWidth: 1,
+    borderColor: "#057474",
   },
   leftIcon: {
     marginRight: 10,
@@ -604,8 +602,10 @@ header: {
   },
   card: {
     width: (width - 48) / 2,
+    marginHorizontal: 6, 
+    
     backgroundColor: "#FFF",
-    borderRadius: 12,
+    borderRadius: 5,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
