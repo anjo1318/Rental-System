@@ -3,14 +3,14 @@ import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; // ✅ ADD
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
 export default function OwnerBottomNav({ role = "owner" }) {
   const router = useRouter();
   const pathname = usePathname();
-  const insets = useSafeAreaInsets(); // ✅ ADD
+  const insets = useSafeAreaInsets();
 
   const navItems = [
     { name: "Home", icon: "home", type: "material", route: "/owner/ownerHome" },
@@ -56,7 +56,7 @@ export default function OwnerBottomNav({ role = "owner" }) {
       style={[
         styles.bottomNav,
         {
-          paddingBottom: insets.bottom - 20, // ✅ SAFE AREA FIX
+          paddingBottom: insets.bottom - 20,
         },
       ]}
     >
@@ -69,7 +69,7 @@ export default function OwnerBottomNav({ role = "owner" }) {
             <Pressable
               key={index}
               style={styles.addNewButton}
-              onPress={() => router.replace(item.route)}
+              onPress={() => router.push(item.route)}
             >
               <View style={styles.addNewCircle}>
                 <MaterialCommunityIcons
@@ -90,7 +90,7 @@ export default function OwnerBottomNav({ role = "owner" }) {
             style={styles.navButton}
             hitSlop={10}
             onPress={() => {
-              if (!isActive) router.replace(item.route);
+              if (!isActive) router.push(item.route);
             }}
           >
             {renderIcon(item, isActive)}
@@ -117,13 +117,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#00000040",
-
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-
-
     zIndex: 999,
     elevation: 20,
   },

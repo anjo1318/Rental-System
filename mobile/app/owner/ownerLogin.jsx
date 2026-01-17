@@ -12,6 +12,7 @@ import {View,
   Platform,
   Keyboard,
   Animated,
+  ActivityIndicator
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,6 +28,7 @@ export default function ownerLogin() {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [hidden, setHidden] = useState(true);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true); // ✅ ADD THIS
 
   // animated value for moving the whole screen up/down
   const translateY = useRef(new Animated.Value(0)).current;
@@ -90,7 +92,8 @@ export default function ownerLogin() {
         } catch (err) {
           console.error("❌ Corrupted user data, clearing storage");
           await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
-          return; // don't redirect
+          setIsCheckingAuth(false); // ✅ ADD THIS
+          return;
         }
 
         if (parsedUser && parsedUser.firstName) {
@@ -98,20 +101,24 @@ export default function ownerLogin() {
           if (parsedUser.role === 'customer') {
             console.log("🚫 Customer data detected, silently removing...");
             await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
-            // Don't show alert, don't redirect - just stay on login page
+            setIsCheckingAuth(false); // ✅ ADD THIS
             return;
           }
 
           // ✅ Role is owner, allow access
           console.log("✅ Found valid owner login, redirecting to dashboard");
-          router.replace("/owner/ownerHome");
+          router.replace("/owner/ownerHome"); // ✅ Already using replace - good!
         } else {
           console.log("⚠️ User data invalid, clearing storage");
           await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
+          setIsCheckingAuth(false); // ✅ ADD THIS
         }
+      } else {
+        setIsCheckingAuth(false); // ✅ ADD THIS - No user data, show login
       }
     } catch (error) {
       console.error("Error checking existing login:", error);
+      setIsCheckingAuth(false); // ✅ ADD THIS
     }
   };
 
@@ -224,6 +231,16 @@ export default function ownerLogin() {
     }
   };
 
+    if (isCheckingAuth) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#007F7F" />
+        <ActivityIndicator size="large" color="#057474" />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.safe}>
       <StatusBar barStyle="light-content" backgroundColor="#007F7F" />
@@ -334,6 +351,20 @@ export default function ownerLogin() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#fff" },
+
+    loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#057474",
+    fontWeight: "500",
+  },
+
 
   // IMPORTANT: animated wrapper must at least fill the screen so translateY moves everything
   animatedWrap: { 

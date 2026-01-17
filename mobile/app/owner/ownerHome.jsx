@@ -11,9 +11,11 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  RefreshControl
+  RefreshControl,
+  BackHandler
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
+import { useFocusEffect } from '@react-navigation/native';
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -48,10 +50,24 @@ export default function OwnerHome() {
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchOwnerItems();
-    setRefreshing(false);
-  };
+      setRefreshing(true);
+      await fetchOwnerItems();
+      setRefreshing(false);
+    };
+
+    // ✅ ADD THIS ENTIRE BLOCK - Handle back button to exit app
+    useFocusEffect(
+      React.useCallback(() => {
+        const onBackPress = () => {
+          BackHandler.exitApp();
+          return true;
+        };
+
+        const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+        return () => subscription.remove();
+      }, [])
+    );
 
 
   // Load user data from AsyncStorage
