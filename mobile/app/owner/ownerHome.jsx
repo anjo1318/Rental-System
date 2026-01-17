@@ -49,26 +49,28 @@ export default function OwnerHome() {
   const [OWNER_ID, setOwnerId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
+  // ✅ FIXED: Now uses the stored OWNER_ID state
   const onRefresh = async () => {
-      setRefreshing(true);
-      await fetchOwnerItems();
-      setRefreshing(false);
-    };
+    setRefreshing(true);
+    if (OWNER_ID) {
+      await fetchOwnerItems(OWNER_ID);
+    }
+    setRefreshing(false);
+  };
 
-    // ✅ ADD THIS ENTIRE BLOCK - Handle back button to exit app
-    useFocusEffect(
-      React.useCallback(() => {
-        const onBackPress = () => {
-          BackHandler.exitApp();
-          return true;
-        };
+  // Handle back button to exit app
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        BackHandler.exitApp();
+        return true;
+      };
 
-        const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
 
-        return () => subscription.remove();
-      }, [])
-    );
-
+      return () => subscription.remove();
+    }, [])
+  );
 
   // Load user data from AsyncStorage
   const loadUserData = async () => {
@@ -94,10 +96,11 @@ export default function OwnerHome() {
 
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
-  // Fetch owner's items
+  // ✅ FIXED: Added proper validation and error handling
   const fetchOwnerItems = async (userId) => {
     if (!userId) {
       console.log("❌ No user ID provided");
+      setLoading(false);
       return;
     }
 
@@ -152,7 +155,7 @@ export default function OwnerHome() {
             location: item.location || "Your Location",
             pricePerDay: item.pricePerDay.toString(),
             category: item.category,
-            isAvailable: item.availability,
+            isAvailable: item.availableQuantity > 0,
           };
         });
 
@@ -180,6 +183,7 @@ export default function OwnerHome() {
     }
   };
 
+  // ✅ FIXED: Simplified initialization
   useEffect(() => {
     const initializeApp = async () => {
       const userId = await loadUserData();
@@ -188,13 +192,34 @@ export default function OwnerHome() {
       }
     };
     initializeApp();
-  }, []);
+  }, []); // Empty dependency array - only runs once on mount
 
   const handleNavigation = (route) => {
     router.push(`/${route}`);
   };
 
-  // ✅ Make each item card clickable
+  // ✅ FIXED: Added filtering by category and search
+  const getFilteredItems = () => {
+    let filtered = items;
+
+    // Filter by category
+    if (activeCategory !== "All") {
+      filtered = filtered.filter(item => 
+        item.category.toLowerCase() === activeCategory.toLowerCase()
+      );
+    }
+
+    // Filter by search
+    if (search.trim()) {
+      filtered = filtered.filter(item =>
+        item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.location.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+
+    return filtered;
+  };
+
   const renderItem = ({ item }) => {
     return (
       <Pressable
@@ -234,6 +259,8 @@ export default function OwnerHome() {
     );
   }
 
+  const filteredItems = getFilteredItems();
+
   return (
     <>
      <ScreenWrapper backgroundColor="#007F7F">
@@ -254,7 +281,6 @@ export default function OwnerHome() {
               <Text style={styles.username}>
                 {currentUser?.firstName} {currentUser?.lastName}
               </Text>
-
               <Text style={styles.email}>
                 {currentUser?.email || currentUser?.emailAddress}
               </Text>
@@ -262,18 +288,16 @@ export default function OwnerHome() {
            
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
-    <Image
-   source={require("../../assets/images/notification.png")}
-   style={{ width: 37, height: 37 }}
-   resizeMode="contain"
- />
+                <Image
+                  source={require("../../assets/images/notification.png")}
+                  style={{ width: 37, height: 37 }}
+                  resizeMode="contain"
+                />
               </Pressable>
             </View>
           </View>
         </View>
 
-
-       
       <ScrollView
         style={styles.container}
         contentContainerStyle={{ paddingBottom: 120 }}
@@ -283,13 +307,11 @@ export default function OwnerHome() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#007F7F"]}      // Android
-            tintColor="#007F7F"       // iOS
+            colors={["#007F7F"]}
+            tintColor="#007F7F"
           />
         }
       >
-
- 
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View
@@ -344,117 +366,109 @@ export default function OwnerHome() {
         <View style={styles.subHeader}></View>
 
         <View style={styles.lowerCard}>
-
-        {/* Search */}
-        <View style={styles.searchContainer}>
-          <MaterialIcon name="search" size={20} color="#057474" style={styles.leftIcon} />
-          <TextInput
-            placeholder="Search your items.."
-            value={search}
-            onChangeText={setSearch}
-            style={styles.searchInput}
-            placeholderTextColor="#057474"
-          />
-          <MaterialIcon name="tune" size={20} color="#057474" style={styles.rightIcon} />
-        </View>
-
-        {/* Categories */}
-        <Text style={styles.sectionTitle}>Manage Your Items</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {categories.map((cat) => (
-            <Pressable
-              key={cat}
-              style={[styles.categoryButton, activeCategory === cat && styles.activeCategory]}
-              onPress={() => setActiveCategory(cat)}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  activeCategory === cat && styles.activeCategoryText,
-                ]}
-              >
-                {cat}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {/* Items List */}
-        {items.length > 0 ? (
-          <FlatList
-            data={items}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={renderItem}
-            numColumns={2}
-            columnWrapperStyle={{ justifyContent: "center", marginBottom: 16 }}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 16 }}
-          />
-        ) : (
-          <View style={styles.noItemsContainer}>
-            <MaterialIcon name="inventory" size={64} color="#ccc" />
-            <Text style={styles.noItemsText}>
-              {search || activeCategory !== "All"
-                ? "No items match your search"
-                : "You haven't added any items yet"}
-            </Text>
-            <Pressable
-              style={styles.addItemButton}
-              onPress={() => router.push("owner/ownerAddItem")}
-            >
-              <Text style={styles.addItemButtonText}>Add Your First Item</Text>
-            </Pressable>
+          {/* Search */}
+          <View style={styles.searchContainer}>
+            <MaterialIcon name="search" size={20} color="#057474" style={styles.leftIcon} />
+            <TextInput
+              placeholder="Search your items.."
+              value={search}
+              onChangeText={setSearch}
+              style={styles.searchInput}
+              placeholderTextColor="#057474"
+            />
+            <MaterialIcon name="tune" size={20} color="#057474" style={styles.rightIcon} />
           </View>
-        )}
-      </View>
 
+          {/* Categories */}
+          <Text style={styles.sectionTitle}>Manage Your Items</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {categories.map((cat) => (
+              <Pressable
+                key={cat}
+                style={[styles.categoryButton, activeCategory === cat && styles.activeCategory]}
+                onPress={() => setActiveCategory(cat)}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+                    activeCategory === cat && styles.activeCategoryText,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+
+          {/* Items List */}
+          {filteredItems.length > 0 ? (
+            <FlatList
+              data={filteredItems}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={renderItem}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: "center", marginBottom: 16 }}
+              scrollEnabled={false}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+            />
+          ) : (
+            <View style={styles.noItemsContainer}>
+              <MaterialIcon name="inventory" size={64} color="#ccc" />
+              <Text style={styles.noItemsText}>
+                {search || activeCategory !== "All"
+                  ? "No items match your search"
+                  : "You haven't added any items yet"}
+              </Text>
+              <Pressable
+                style={styles.addItemButton}
+                onPress={() => router.push("owner/ownerAddItem")}
+              >
+                <Text style={styles.addItemButtonText}>Add Your First Item</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
       </ScrollView>
       <OwnerBottomNav/>
       </ScreenWrapper>
-
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  
-header: {
-  backgroundColor: "#007F7F",
-  paddingHorizontal: 16,
-        borderBottomLeftRadius: 20,
+  header: {
+    backgroundColor: "#007F7F",
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-},
-profileContainer: {
-    flexDirection: "row",
-  alignItems: "center",
-  justifyContent: "space-between",
-  paddingVertical: 34,
-  paddingHorizontal: 16,
-  top: 19,
-    
-
   },
- subHeader: {
+  profileContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 34,
+    paddingHorizontal: 16,
+    top: 19,
+  },
+  subHeader: {
     position: "relative",
     backgroundColor: "#007F7F",
     padding: 12,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-      zIndex: 1000,
-  width: "100%",
-  bottom: 203,
+    zIndex: 1000,
+    width: "100%",
+    bottom: 203,
   },
-
   container: {
-  flex: 1,
-  backgroundColor: "#F6F6F6", // ✅ everything below header is white
-},
- email: {
+    flex: 1,
+    backgroundColor: "#F6F6F6",
+  },
+  email: {
     fontSize: 10,
     color: "#e0f2f2",
     marginLeft: 13,
   },
-
   avatar: { 
     width: width * 0.16, 
     height: width * 0.16, 
@@ -462,14 +476,12 @@ profileContainer: {
     borderColor:"#e0f2f2",
     borderWidth: 2,      
   },
-  
   username: { 
     marginLeft: width * 0.03, 
     fontWeight: "bold", 
     fontSize: width * 0.035,
     color: "#e0f2f2",
   },
-
   notificationWrapper: {
     marginLeft: "auto", 
     marginRight: 5,
@@ -480,9 +492,6 @@ profileContainer: {
     alignItems: "center",
     backgroundColor: "#fff",
   },
-
-  
-
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -496,11 +505,9 @@ profileContainer: {
     shadowOpacity: 0.5,
     shadowRadius: 20,
     borderRadius: 20,
-    
     top: 5,
     backgroundColor: "#fff",
   },
-
   statCard: {
     alignItems: "center",
     paddingVertical: 40,
@@ -514,33 +521,21 @@ profileContainer: {
     borderWidth: 1,
     borderColor: "#D7D7D7",
   },
-
   statNumber: {
     fontSize: 35,
     fontWeight: "bold",
     color: "#057474",
     marginBottom: 4,
   },
-
   statLabel: {
     fontSize: 13,
     color: "#666",
     textAlign: "center",
   },
-  numberRow: {
-    position: "relative",
-    alignItems: "flex-start",
-  },
-  statIcon: {
-    width: 20,
-    height: 20,
-    marginLeft: 4,
-  },
   numberContainer: {
     position: "relative",
     alignItems: "flex-start",
   },
-
   lowerLeftIcon: {
     position: "absolute",
     bottom: 5,
@@ -548,14 +543,12 @@ profileContainer: {
     width: 20,
     height: 17,
   },
-
   lowerCard: {
     backgroundColor: "#fff",
     marginHorizontal: 10,
     borderRadius: 20,
     bottom: 10,
   },
-
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -592,7 +585,6 @@ profileContainer: {
     paddingHorizontal: 16,
     marginTop: 15,
   },
-
   categoryButton: {
     paddingHorizontal: 20,
     paddingVertical: 8,
@@ -619,7 +611,6 @@ profileContainer: {
   card: {
     width: (width - 48) / 2,
     marginHorizontal: 6, 
-    
     backgroundColor: "#FFF",
     borderRadius: 5,
     overflow: "hidden",
@@ -692,59 +683,5 @@ profileContainer: {
     color: "#FFF",
     fontSize: 14,
     fontWeight: "600",
-  },
-  addButtonContainer: {
-    paddingHorizontal: 16,
-    marginTop: 20,
-    marginBottom: 20,
-  },
-  addButton: {
-    backgroundColor: "#057474",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  addButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-
-  navButton: {
-    alignItems: "center",
-    flex: 1,
-  },
-  navText: {
-    fontSize: 10,
-    marginTop: 4,
-  },
-  addNewButton: {
-    alignItems: "center",
-    flex: 1,
-    position: "relative",
-    top: -20,
-  },
-  addNewCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    borderWidth: 2,
-    borderColor: "#656565",
   },
 });
