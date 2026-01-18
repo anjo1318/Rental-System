@@ -350,25 +350,24 @@ const cancelScheduledNotification = async (itemId) => {
             <Text style={styles.reviewButtonText}>Write Review</Text>
           </Pressable>
 
-            <Pressable 
-              style={styles.rentAgainButton}
-              onPress={() => {
-                // Navigate to product details or booking page to rent again
-                router.push({
-                  pathname: "customer/productDetails", // or wherever you handle new bookings
-                  params: {
-                    itemId: item.itemId,
-                  }
-                });
-              }}
-            >
-              <MaterialIcons name="refresh" size={20} color="#057474" />
-              <Text style={styles.rentAgainButtonText}>Rent Again</Text>
-            </Pressable>
+          <Pressable 
+            style={styles.rentAgainButton}
+            onPress={() => {
+              router.push({
+                pathname: "customer/rentingDetails",
+                params: {
+                  itemId: String(item.itemId),
+                  id: String(item.itemId), // Some components use 'id' instead of 'itemId'
+                }
+              });
+            }}
+          >
+            <MaterialIcons name="refresh" size={20} color="#057474" />
+            <Text style={styles.rentAgainButtonText}>Rent Again</Text>
+          </Pressable>
           </View>
         </>
       ) : (
-
             <View style={styles.timerRow}>
               {[
                 { value: String(timer.days).padStart(2, "0"), label: "Days" },
@@ -413,7 +412,6 @@ const cancelScheduledNotification = async (itemId) => {
         </View>
 
         <View style={styles.paymentRow}>
-
           <Text style={styles.paymentText}>{item.address}</Text>
         </View>
       </View>
