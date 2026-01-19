@@ -446,26 +446,13 @@ const pickMultipleImages = async () => {
     >
      
       <ScrollView contentContainerStyle={styles.form}>
-{/* PRODUCT NAME */}
-<View style={styles.pickerContainer}>
-  {!productName && (
-    <Text style={styles.pickerOverlayText}>Product Name *</Text>
-  )}
-  <Picker
-    selectedValue={productName}
-    onValueChange={(itemValue) => setProductName(itemValue)}
-    style={{ color: productName ? "#000" : "transparent", width: "100%" }}
-  >
-    <Picker.Item label="Select Product Name" value="" color="#888" />
-    <Picker.Item label="Laptop" value="laptop" />
-    <Picker.Item label="Smartphone" value="smartphone" />
-    <Picker.Item label="Tablet" value="tablet" />
-    <Picker.Item label="Camera" value="camera" />
-    <Picker.Item label="Gaming Console" value="gaming_console" />
-    <Picker.Item label="Projector" value="projector" />
-    <Picker.Item label="Drone" value="drone" />
-  </Picker>
-</View>
+<TextInput
+          style={styles.input}
+          placeholder="Product Name *"
+          value={productName}
+          onChangeText={setProductName}
+        />
+        
 
 {/* PRODUCT BRAND */}
 <View style={styles.pickerContainer}>

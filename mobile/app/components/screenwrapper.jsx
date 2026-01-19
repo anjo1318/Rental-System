@@ -19,8 +19,10 @@ export default function ScreenWrapper({
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
+    
   },
   container: {
     flex: 1,
+    backgroundColor: "#000",
   },
 });

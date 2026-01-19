@@ -259,15 +259,15 @@ const styles = StyleSheet.create({
   },
 
   avatar: {
-    width: 42,
-    height: 42,
+    width: 44,
+    height: 44,
     borderRadius: 21,
     marginRight: 12,
   },
 
   bottomDivider: {
     position: "absolute",
-    bottom: 0,
+    bottom: 5,
     left: 68,
     right: 0,
     height: 1,
@@ -276,6 +276,7 @@ const styles = StyleSheet.create({
 
   messageContent: {
     flex: 1,
+    top: 4,
   },
 
   messageHeader: {
@@ -286,6 +287,7 @@ const styles = StyleSheet.create({
   sender: {
     fontWeight: "600",
     color: "#000",
+    fontSize: 14,
   },
 
   date: {
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
 
   preview: {
     color: "#666",
-    marginTop: 4,
+    fontSize: 12,
   },
 
 

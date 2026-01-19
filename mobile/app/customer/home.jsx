@@ -233,11 +233,11 @@ export default function TapSearchBar() {
               </Text>
           </View>
 
-  <View style={styles.notificationWrapper}>
-  <Pressable onPress={() => router.push("customer/notifications")}>
-   <Image
+    <View style={styles.notificationWrapper}>
+    <Pressable onPress={() => router.push("customer/notifications")}>
+    <Image
   source={require("../../assets/images/notification.png")}
-  style={{ width: 37, height: 37 }}
+  style={{ width:  37, height: 37 }}
   resizeMode="contain"
 />
   </Pressable>
@@ -247,14 +247,14 @@ export default function TapSearchBar() {
 
   <SubHeader/>
          {/* 🔹 Search Bar (Clickable) */}
-  <Pressable onPress={() => router.push('/customer/tapsearchbar')}>
+  
 
     <View style={styles.searchContainer}>
       <Icon name="search" size={20} color="#cccccc" style={styles.leftIcon} />
       <TextInput
         placeholder="Search your devices.."
         value={search}
-        editable={false}
+       onChangeText={setSearch}
         style={styles.searchInput}
         placeholderTextColor="#555"
       />
@@ -267,7 +267,6 @@ export default function TapSearchBar() {
           />
         </Pressable>
               </View>
-            </Pressable>
            
           </View>
 
@@ -401,13 +400,17 @@ export default function TapSearchBar() {
 
             )}
             numColumns={2}
+            scrollEnabled={false}
             columnWrapperStyle={{
-              justifyContent: "center",
+              justifyContent:
+              filteredItems.length === 1 ? "flex-start" : "center",
               marginBottom: 7,
             }}
-            scrollEnabled={false}
-            contentContainerStyle={{ paddingHorizontal: 16, }}
-          />
+           contentContainerStyle={{
+    paddingHorizontal:
+      filteredItems.length === 1 ? 7 : 20,
+  }}
+/>
       </ScrollView>
         <CustomerBottomNav/>
        </ScreenWrapper>

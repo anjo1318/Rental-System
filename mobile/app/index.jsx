@@ -24,9 +24,9 @@ import ScreenWrapper from "./components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
-const CARD_MARGIN = 7;
-const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.33;
+const CARD_MARGIN = 5;
+const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.29;
 
 export default function Index() {
   const router = useRouter();
@@ -207,7 +207,11 @@ export default function Index() {
         {/* Location */}
         <View style={styles.locationRow}>
           <View style={styles.iconContainer}>
-            <Icon name="location-on" size={16} color="#666" />
+            <Image
+            source={require("../assets/images/location.png")}
+            style={{ width: 14, height: 17 }}
+            resizeMode="contain"
+          />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.location} numberOfLines={1}>
@@ -301,11 +305,12 @@ export default function Index() {
           showsHorizontalScrollIndicator={false}
           style={{ marginTop: 20 }}
         >
-          {categories.map((cat) => (
+          {categories.map((cat, index) => (
             <Pressable
               key={cat}
               style={[
                 styles.categoryButton,
+                index !== 9 && styles.notAllSpacing, 
                 activeCategory === cat && styles.activeCategory,
               ]}
               onPress={() => setActiveCategory(cat)}
@@ -332,10 +337,10 @@ export default function Index() {
           numColumns={2}
           columnWrapperStyle={{
             justifyContent: "space-between",
-            marginBottom: 16,
+            marginBottom: 7,
           }}
           scrollEnabled={false}
-          contentContainerStyle={{ paddingHorizontal: 16, top: 7, }}
+          contentContainerStyle={{ paddingHorizontal: 16, }}
         />
       </ScrollView>
       <CustomerBottomNav/>
@@ -494,21 +499,23 @@ const styles = StyleSheet.create({
     
   },
 
-  card: {
+   card: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#fff",
-    borderRadius: width * 0.05,
+    borderRadius: 15,
     overflow: "hidden",
     borderWidth: 0,
     borderColor: "transparent",
-    top: 5,
+    marginHorizontal: 3,
     borderWidth: 1,
     borderColor: "#007F7F80",
+    top: 8,
+    right: 9,
   },
 
   upperHalf: {
-    flex: 0.8,
+    flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -520,12 +527,12 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   lowerHalf: {
-    flex: 1.2,
+    flex: 1.5,
     flexDirection: "column",
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 30,
+    top: 47,
     
   },
 
@@ -599,10 +606,15 @@ const styles = StyleSheet.create({
   categoryButton: {
     paddingHorizontal: width * 0.04,
     paddingVertical: height * 0.01,
+    marginHorizontal: -10,
     borderRadius: 20,
     backgroundColor: "transparent",
-    marginLeft: width * 0.04,
+    marginLeft: width * 0.02,
   },
+
+  notAllSpacing: {
+  marginLeft: 12,   // 👈 pushes everything EXCEPT "All" to the right
+},
   activeCategory: { 
     backgroundColor: "#007F7F" 
   },

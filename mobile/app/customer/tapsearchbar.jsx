@@ -24,12 +24,12 @@ import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
-const CARD_MARGIN = 7
-const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.33   ;
+const CARD_MARGIN = 5;
+const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.29   ;
 
 
-export default function Home() {
+export default function TapSearchBar() {
   const router = useRouter();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -221,8 +221,8 @@ export default function Home() {
   keyExtractor={(item) => item.id.toString()}
   numColumns={2}
   columnWrapperStyle={{
-    justifyContent: "space-between",
-    marginBottom: 16,
+    justifyContent: "center",
+    marginBottom: 7,
   }}
   scrollEnabled={false}
   contentContainerStyle={{ paddingHorizontal: 16, }}
@@ -273,7 +273,7 @@ export default function Home() {
 
           {/* 🔹 DETAILS */}
           <View style={styles.lowerHalf}>
-            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
 
               <View
               style={[
@@ -296,7 +296,10 @@ export default function Home() {
                 <Icon name="location-on" size={20} color="#666" />
               </View>
               <View style={styles.textContainer}>
-                <Text style={styles.location}>{item.location}</Text>
+                <Text sstyle={styles.location}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >{item.location}</Text>
               </View>
             </View>
 
@@ -599,6 +602,8 @@ const styles = StyleSheet.create({
 
   },
 
+  
+
   featuredImage: {
     width: "70%",
     height: "70%",
@@ -612,17 +617,17 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#fff",
-    borderRadius: width * 0.05,
+    borderRadius: 15,
     overflow: "hidden",
     borderWidth: 0,
     borderColor: "transparent",
-    top: 5,
+    marginHorizontal: 3,
     borderWidth: 1,
     borderColor: "#007F7F80",
   },
 
   upperHalf: {
-    flex: 0.8,
+    flex: 0.5,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -634,12 +639,12 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
   },
   lowerHalf: {
-    flex: 1.2,
+    flex: 1.5,
     flexDirection: "column",
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 30,
+    top: 47,
     
   },
 

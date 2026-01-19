@@ -12,28 +12,38 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import Header from "../components/header";
+
+import ScreenWrapper from "../components/screenwrapper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 const { width, height } = Dimensions.get("window");
+const INPUT_CONTAINER_LIFT = 60; // adjust freely (10–20 is normal)
+
 
 const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
 const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const ICON_SIZE = Math.max(18, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
 const PADDING_H = Math.round(width * 0.02);
 const MARGIN_TOP = Math.round(height * 0.04);
-
 
 
 export default function Chat() {
   const router = useRouter();
   const { id: chatId, itemId } = useLocalSearchParams();
   const scrollViewRef = useRef();
+  const insets = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -44,6 +54,23 @@ export default function Chat() {
   const [otherUserName, setOtherUserName] = useState("Chat");
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+    // 🔹 KEYBOARD LISTENER (input bar control)
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+    });
+
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
+
 
   useEffect(() => {
     console.log("🌐 API_URL from env:", API_URL);
@@ -228,45 +255,57 @@ export default function Chat() {
   }
 
   return (
-    <KeyboardAvoidingView
+   
+  <ScreenWrapper>
+    {/* Status Bar */}
+    <StatusBar
+      barStyle="dark-content"
+      backgroundColor="#fff"
+      translucent={false}
+    />
+
+<View style={styles.headerWrapper}>
+  <View style={styles.headerContent}>
+    {/* Back button */}
+    <View style={styles.iconBox}>
+      <Pressable
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/customer/home");
+          }
+        }}
+        hitSlop={10}
+      >
+        <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
+      </Pressable>
+    </View>
+
+    {/* Avatar + Seller Name */}
+    <View style={styles.userInfo}>
+      <Image
+        source={{
+          uri: "https://i.pravatar.cc/150?img=5", // Random seller avatar
+        }}
+        style={styles.avatar}
+      />
+      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.headerTitle}>
+        John Doe  {/* Random seller name */}
+      </Text>
+    </View>
+
+    {/* Spacer */}
+    <View style={styles.iconBox} />
+  </View>
+</View>
+
+
+ <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      behavior={undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#057474" />
-
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        <View style={styles.topBackground}>
-          <View
-            style={[
-              styles.profileContainer,
-              { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
-            ]}
-          >
-            <View style={[styles.iconBox, { width: ICON_BOX }]}>
-              <Pressable
-                onPress={() => router.back()}
-                hitSlop={10}
-                style={styles.iconPress}
-              >
-                <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
-              </Pressable>
-            </View>
-
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={[styles.pageName, { fontSize: TITLE_FONT }]}
-            >
-              {otherUserName}
-            </Text>
-
-            <View style={[styles.iconBox, { width: ICON_BOX }]} />
-          </View>
-        </View>
-      </View>
-
       {/* Chat Body */}
       <ScrollView
         ref={scrollViewRef}
@@ -277,7 +316,7 @@ export default function Chat() {
       >
         {messages.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Icon name="chat-bubble-outline" size={64} color="#ccc" />
+            <Icon name="chat-bubble-outline" size={70} color="#ccc" />
             <Text style={styles.emptyText}>No messages yet</Text>
             <Text style={styles.emptySubtext}>
               Start the conversation by sending a message
@@ -307,12 +346,27 @@ export default function Chat() {
       </ScrollView>
 
       {/* Input */}
-      <View style={styles.inputWrapper}>
+          <View
+            style={[
+              styles.inputWrapper,
+              {
+            bottom:
+        keyboardHeight > 0
+          ? Math.max(
+              0,
+              keyboardHeight - insets.bottom
+            ) + INPUT_CONTAINER_LIFT
+          : 0,
+
+      paddingBottom: insets.bottom + 5,
+              },
+            ]}
+          >
         <Pressable disabled>
           <Icon 
             name="add-circle-outline" 
             size={26} 
-            color="#ccc" 
+            color="#057474" 
           />
         </Pressable>
 
@@ -343,13 +397,14 @@ export default function Chat() {
         </Pressable>
       </View>
     </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#fff",
   },
 
   loadingContainer: {
@@ -366,41 +421,57 @@ const styles = StyleSheet.create({
   },
 
   headerWrapper: {
-    width: "100%",
-    backgroundColor: "#007F7F",
+    height: HEADER_HEIGHT,
+    backgroundColor: "#fff",
+    justifyContent: "center",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    borderWidth: 1,
+    borderColor: "#00000040",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
+    shadowRadius: 4,
+    elevation: 4,       
+    overflow: "hidden",
+    
   },
-
-  topBackground: {
-    backgroundColor: "#007F7F",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-
-  profileContainer: {
+  headerContent: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    paddingHorizontal: PADDING_H,
+    marginTop: MARGIN_TOP,
+    
   },
-
   iconBox: {
+    width: ICON_BOX,
     alignItems: "center",
-    justifyContent: "center",
-    top: 10,
   },
 
-  iconPress: {
-    padding: width * 0.02,
-  },
+  userInfo: {
+  flexDirection: "row",
+  alignItems: "center",
+  flex: 1,
+  marginLeft: 10, // space from back button
+  
+},
 
-  pageName: {
-    color: "#FFF",
-    textAlign: "center",
-    flex: 1,
-    fontWeight: "600",
-    top: 10,
-  },
+avatar: {
+  width: 33,
+  height: 33,
+  borderRadius: 18,
+  left: 20,
+},
+
+headerTitle: {
+  flex: 1,
+  color: "#000",
+  fontSize: TITLE_FONT,
+  fontWeight: "600",
+  left: 30,
+},
+
 
   chatBody: {
     padding: 16,
@@ -477,6 +548,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    borderColor: "#057474"
   },
 
   input: {
@@ -488,5 +560,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     fontSize: 14,
     maxHeight: 100,
+    borderWidth: 1,
+    borderColor: "#057474"
   },
 });

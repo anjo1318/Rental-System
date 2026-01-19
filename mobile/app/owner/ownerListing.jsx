@@ -23,7 +23,7 @@ import axios from 'axios';
 import { RFValue } from "react-native-responsive-fontsize";
 import OwnerBottomNav from '../components/OwnerBottomNav';
 import ScreenWrapper from "../components/screenwrapper";
-import Header from "../components/header";
+import Header from "../components/header3";
 
 
 
@@ -441,11 +441,10 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
   }
 
   return (
-    
-      <ScreenWrapper>
+    <ScreenWrapper backgroundColor="#E6E1D6" >
           <Header
        title={`My Items (${items.length})`}
-          backgroundColor="#007F7F"
+          backgroundColor="#fff"
               />
 
       <View style={styles.container}>
