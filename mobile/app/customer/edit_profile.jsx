@@ -20,6 +20,8 @@ import axios from 'axios';
 import Header from "../components/header";
 import * as ImagePicker from 'expo-image-picker';
 
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
 
 const { width, height } = Dimensions.get("window");
 
@@ -64,9 +66,9 @@ export default function EditProfile() {
         
         // ✅ Load profile image
         if (user.profileImage && user.profileImage !== "N/A") {
-          setAvatar(user.profileImage);
+          setAvatar(`${API_URL}/uploads/images/${user.profileImage}`);
         }
-        
+
         setFirstName(user.firstName || '');
         setMiddleName(user.middleName || '');
         setLastName(user.lastName || '');
@@ -219,9 +221,19 @@ export default function EditProfile() {
       console.log("✅ Image uploaded:", response.data);
       
       // Update user data in AsyncStorage
-      const updatedUser = { ...currentUser, idPhoto: response.data.photoUrl };
-      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      const filename = response.data.photoUrl.split("/").pop();
+
+      const updatedUser = {
+        ...currentUser,
+        profileImage: filename
+      };
+
+      await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
       setCurrentUser(updatedUser);
+
+      // Update avatar immediately
+      setAvatar(`${API_URL}/uploads/images/${filename}`);
+
       
       Alert.alert("Success", "Profile photo updated successfully!");
       
