@@ -131,7 +131,13 @@ export default function Profile() {
           <Pressable onPress={pickImage} style={styles.userPressable}>
             <View style={styles.avatarWrapper}>
               <Image
-                source={avatar ? { uri: avatar } : require("../../assets/images/avatar.png")}
+                source={
+                  avatar 
+                    ? { uri: avatar } 
+                    : currentUser?.profileImage && currentUser.profileImage !== "N/A"
+                    ? { uri: currentUser.profileImage }
+                    : require("../../assets/images/avatar.png")
+                }
                 style={styles.avatar}
               />
               <Pressable style={styles.cameraButton} onPress={pickImage}>
@@ -144,8 +150,12 @@ export default function Profile() {
             </View>
 
             <View style={styles.nameContainer}>
-              <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
-              <Text style={styles.gmail}>{currentUser.emailAddress}</Text>
+              <Text style={styles.username}>
+                {currentUser?.firstName} {currentUser?.lastName}
+              </Text>
+              <Text style={styles.gmail}>
+                {currentUser?.email}
+              </Text>
             </View>
           </Pressable>
 

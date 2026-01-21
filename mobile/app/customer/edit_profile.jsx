@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from 'axios';
 import Header from "../components/header";
+import * as ImagePicker from 'expo-image-picker';
 
 
 const { width, height } = Dimensions.get("window");
@@ -47,7 +48,7 @@ export default function EditProfile() {
 
   useEffect(() => {
     loadUserData();
-    handleUpdateCustomerDetails();
+    // ✅ REMOVED handleUpdateCustomerDetails() from here
     console.log("This is the url", process.env.EXPO_PUBLIC_API_URL);
   }, []);
 
@@ -60,12 +61,16 @@ export default function EditProfile() {
         setCurrentUser(user);
         setOwnerId(user.id);
         
-        const nameParts = user.name ? user.name.split(' ') : ['', ''];
-        setFirstName(user.firstName|| '');
+        // ✅ Load profile image
+        if (user.idPhoto && user.idPhoto !== "N/A") {
+          setAvatar(user.idPhoto);
+        }
+        
+        setFirstName(user.firstName || '');
         setMiddleName(user.middleName || '');
         setLastName(user.lastName || '');
-        setEmail(user.email|| '');
-        setPhoneNumber(user.phone || '');
+        setEmail(user.emailAddress || ''); // ✅ Fixed: was user.email
+        setPhoneNumber(user.phoneNumber || ''); // ✅ Fixed: was user.phone
         setBirthday(user.birthday || '');
         setGender(user.gender || '');
         setHouseNumber(user.houseNumber || '');
@@ -92,6 +97,12 @@ export default function EditProfile() {
   };
 
   const handleUpdateCustomerDetails = async () => {
+    // ✅ Add safety check
+    if (!currentUser || !currentUser.id) {
+      Alert.alert("Error", "User data not loaded. Please try again.");
+      return;
+    }
+
     try {
       const response = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/api/customer/update/${currentUser.id}`,
@@ -119,24 +130,83 @@ export default function EditProfile() {
 
       // Save the updated user in AsyncStorage
       await AsyncStorage.setItem("user", JSON.stringify(updatedUser));
-      router.push("/customer/edit_profile");
-
 
       // Update state immediately so UI refreshes
       setCurrentUser(updatedUser);
 
       Alert.alert("Success", "Profile updated successfully!");
+      
+      // ✅ Navigate back to profile instead of edit_profile
+      router.back();
+
     } catch (error) {
       console.error("❌ Update failed:", error.response?.data || error.message);
       Alert.alert("Error", "Failed to update profile. Please try again.");
     }
   };
 
+const pickImage = async () => {
+  try {
+    // Request permission
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (!permissionResult.granted) {
+      Alert.alert("Permission Required", "Please allow access to your photo library to change your profile picture.");
+      return;
+    }
 
-  // placeholder image picker
-  const pickImage = () => {
-    Alert.alert("Image picker", "pickImage not implemented in this snippet.");
-  };
+    // Launch image picker
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const imageUri = result.assets[0].uri;
+      setAvatar(imageUri);
+      
+      // You'll need to upload this to your server
+      await uploadImage(imageUri);
+    }
+  } catch (error) {
+    console.error("Error picking image:", error);
+    Alert.alert("Error", "Failed to pick image. Please try again.");
+  }
+};
+
+const uploadImage = async (imageUri) => {
+  try {
+    const formData = new FormData();
+    formData.append('photo', {
+      uri: imageUri,
+      type: 'image/jpeg',
+      name: `profile_${currentUser.id}.jpg`,
+    });
+
+    const response = await axios.post(
+      `${process.env.EXPO_PUBLIC_API_URL}/api/customer/upload-photo/${currentUser.id}`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    console.log("✅ Image uploaded:", response.data);
+    
+    // Update user data in AsyncStorage
+    const updatedUser = { ...currentUser, idPhoto: response.data.photoUrl };
+    await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+    setCurrentUser(updatedUser);
+    
+  } catch (error) {
+    console.error("❌ Image upload failed:", error);
+    Alert.alert("Error", "Failed to upload image. Please try again.");
+  }
+};
 
 
   // Show loading or redirect if no user data
@@ -153,7 +223,7 @@ export default function EditProfile() {
   return (
     <View style={styles.safe}>
       {/* Header */}
-<     Header title="Edit Profile" backgroundColor="#007F7F" />
+      <Header title="Edit Profile" backgroundColor="#007F7F" />
 
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -162,35 +232,38 @@ export default function EditProfile() {
         <ScrollView
           contentContainerStyle={{ paddingBottom: 20 }}
           keyboardShouldPersistTaps="handled"
-          
         >
           {/* Avatar */}
-         <View style={styles.mainContainer}>
-          <View style={styles.userContainer}>
-            <View style={styles.userRow}>
-              <Pressable onPress={pickImage} style={styles.userPressable}>
-                <View style={styles.avatarWrapper}>
-                  <Image
-                    source={avatar ? { uri: avatar } : require("../../assets/images/avatar.png")}
-                    style={styles.avatar}
-                  />
-                  <Pressable style={styles.cameraButton} onPress={pickImage}>
+          <View style={styles.mainContainer}>
+            <View style={styles.userContainer}>
+              <View style={styles.userRow}>
+                <Pressable onPress={pickImage} style={styles.userPressable}>
+                  <View style={styles.avatarWrapper}>
                     <Image
-                      source={require("../../assets/images/edit.png")}
-                      style={styles.cameraImage}
-                      resizeMode="contain"
+                      source={
+                        avatar && avatar !== "N/A"
+                          ? { uri: avatar }
+                          : require("../../assets/images/avatar.png")
+                      }
+                      style={styles.avatar}
                     />
-                  </Pressable>
-                </View>
-              </Pressable>
+                    <Pressable style={styles.cameraButton} onPress={pickImage}>
+                      <Image
+                        source={require("../../assets/images/edit.png")}
+                        style={styles.cameraImage}
+                        resizeMode="contain"
+                      />
+                    </Pressable>
+                  </View>
+                </Pressable>
+              </View>
             </View>
-          </View>
 
-          {/* Inputs */}
-          <View style={styles.inputContainer}>
-            <View>
-              <Text style={styles.username}>First Name</Text>
-            </View>
+            {/* Inputs */}
+            <View style={styles.inputContainer}>
+              <View>
+                <Text style={styles.username}>First Name</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="First Name"
@@ -199,9 +272,9 @@ export default function EditProfile() {
                 onChangeText={setFirstName}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Middle Name</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Middle Name</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Middle Name"
@@ -210,9 +283,9 @@ export default function EditProfile() {
                 onChangeText={setMiddleName}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Last Name</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Last Name</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Last Name"
@@ -221,9 +294,9 @@ export default function EditProfile() {
                 onChangeText={setLastName}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Email</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Email</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -234,9 +307,9 @@ export default function EditProfile() {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-            <View>
-              <Text style={styles.username}>Phone Number</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Phone Number</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Phone Number"
@@ -246,9 +319,9 @@ export default function EditProfile() {
                 keyboardType="phone-pad"
                 autoCapitalize="none"
               />
-            <View>
-              <Text style={styles.username}>Birthday</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Birthday</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Birthday"
@@ -258,9 +331,9 @@ export default function EditProfile() {
                 keyboardType="phone-pad"
                 autoCapitalize="none"
               />
-            <View>
-              <Text style={styles.username}>Gender</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Gender</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Gender"
@@ -269,9 +342,9 @@ export default function EditProfile() {
                 onChangeText={setGender}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>House Number</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>House Number</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="House Number"
@@ -280,9 +353,9 @@ export default function EditProfile() {
                 onChangeText={setHouseNumber}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Street</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Street</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Street"
@@ -291,9 +364,9 @@ export default function EditProfile() {
                 onChangeText={setStreet}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Barangay</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Barangay</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Barangay"
@@ -302,9 +375,9 @@ export default function EditProfile() {
                 onChangeText={setBarangay}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Town</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Town</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Town"
@@ -313,9 +386,9 @@ export default function EditProfile() {
                 onChangeText={setTown}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Province</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Province</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Province"
@@ -324,9 +397,9 @@ export default function EditProfile() {
                 onChangeText={setProvince}
                 autoCapitalize="words"
               />
-            <View>
-              <Text style={styles.username}>Country</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Country</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Country"
@@ -335,9 +408,9 @@ export default function EditProfile() {
                 onChangeText={setCountry}
                 autoCapitalize="words"
               />
-             <View>
-              <Text style={styles.username}>Zip code</Text>
-            </View>
+              <View>
+                <Text style={styles.username}>Zip code</Text>
+              </View>
               <TextInput
                 style={styles.input}
                 placeholder="Zip code"
@@ -347,17 +420,19 @@ export default function EditProfile() {
                 autoCapitalize="words"
               />
 
-            {/* Save Button */}
-            <Pressable style={styles.saveButton} onPress={handleUpdateCustomerDetails}>
-              <Text style={styles.saveText}>Save Changes</Text>
-            </Pressable>
-          </View>
+              {/* Save Button */}
+              <Pressable style={styles.saveButton} onPress={handleUpdateCustomerDetails}>
+                <Text style={styles.saveText}>Save Changes</Text>
+              </Pressable>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
 }
+
+// ... rest of styles remain the same
 
 const styles = StyleSheet.create({
   safe: {

@@ -265,9 +265,6 @@ export default function RentingDetails() {
   const [gender, setGender] = useState("");
   const genderOptions = ["Male", "Female", "Other"];
   
-  // Rental period
-  const [rentalPeriod, setRentalPeriod] = useState("Day");
-  const rentalOptions = ["Hour", "Day", "Week"];
 
   const [showPickupTimePicker, setShowPickupTimePicker] = useState(false);
   const [showReturnTimePicker, setShowReturnTimePicker] = useState(false);
@@ -364,28 +361,19 @@ export default function RentingDetails() {
   const calculateRentalDuration = () => {
     const diffMs = returnDate - pickupDate;
     
-    if (rentalPeriod === "Hour") {
+    // ✅ Check if same day rental
+    const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
+    const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+    
+    if (pickupDay.getTime() === returnDay.getTime()) {
+      // Same day - calculate hours
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       return diffHours;
-    } else if (rentalPeriod === "Day") {
-      // ✅ Check if same day rental
-      const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
-      const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
-      
-      if (pickupDay.getTime() === returnDay.getTime()) {
-        // Same day - calculate hours
-        const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-        return diffHours;
-      } else {
-        // Different days - calculate days
-        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-        return diffDays;
-      }
-    } else if (rentalPeriod === "Week") {
-      const diffWeeks = Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 7));
-      return diffWeeks;
+    } else {
+      // Different days - calculate days
+      const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      return diffDays;
     }
-    return 1;
   };
 
   const validateForm = () => {
@@ -409,22 +397,26 @@ export default function RentingDetails() {
       newErrors.gender = "Please select your gender";
     }
 
-    // ✅ NEW: Validate rental duration for hourly rentals
-    if (rentalPeriod === "Hour") {
+    // ✅ Check if same day rental
+    const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
+    const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+    
+    if (pickupDay.getTime() === returnDay.getTime()) {
+      // Same day - check 3 hour minimum
       const diffMs = returnDate - pickupDate;
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       
       if (diffHours < 3) {
-        newErrors.rentalDuration = "Minimum rental period is 3 hours";
+        newErrors.rentalDuration = "Minimum rental period for same-day rentals is 3 hours";
         Alert.alert(
           "Invalid Rental Period",
-          "The minimum rental period for hourly rentals is 3 hours. Please adjust your return time.",
+          "The minimum rental period for same-day rentals is 3 hours. Please adjust your return time.",
           [{ text: "OK" }]
         );
       }
     }
 
-    // Guarantor validation (only one guarantor now)
+    // Guarantor validation
     if (!guarantor1FullName.trim()) {
       newErrors.guarantor1FullName = "Please enter guarantor full name";
     }
@@ -445,7 +437,6 @@ export default function RentingDetails() {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
 
   const handleProceedToPayment = () => {
     if (!validateForm()) return;
@@ -487,12 +478,11 @@ export default function RentingDetails() {
         gender,
       },
       rentalDetails: {
-        period: rentalPeriod,
-        pickupDate,
+        period: "Flexible",
+        pickupDate,  // ✅ Fixed: was missing this line properly
         returnDate,
         duration,
       },
-      // ✅ Send the same guarantor data for both guarantor1 and guarantor2
       guarantors: [
         {
           fullName: guarantor1FullName,
@@ -501,7 +491,6 @@ export default function RentingDetails() {
           email: guarantor1Email,
         },
         {
-          // ✅ Duplicate the same guarantor data to maintain backend compatibility
           fullName: guarantor1FullName,
           phoneNumber: guarantor1PhoneNumber,
           address: guarantor1Address,
@@ -539,12 +528,11 @@ export default function RentingDetails() {
         gender,
       },
       rentalDetails: {
-        period: rentalPeriod,
-        pickupDate,
+        period: "Flexible",
+        pickupDate,  // ✅ Fixed: was missing this line properly
         returnDate,
         duration,
       },
-      // ✅ Send the same guarantor data for both
       guarantors: [
         {
           fullName: guarantor1FullName,
@@ -615,25 +603,6 @@ export default function RentingDetails() {
       <Text style={[
         styles.optionText,
         gender === option && styles.selectedOptionText
-      ]}>
-        {option}
-      </Text>
-    </TouchableOpacity>
-  );
-
-  const renderRentalPeriodOption = (option) => (
-    <TouchableOpacity
-      key={option}
-      style={[
-        styles.optionButton,
-        rentalPeriod === option && styles.selectedOptionButton
-      ]}
-      onPress={() => setRentalPeriod(option)}
-      activeOpacity={0.7}
-    >
-      <Text style={[
-        styles.optionText,
-        rentalPeriod === option && styles.selectedOptionText
       ]}>
         {option}
       </Text>
@@ -758,19 +727,6 @@ export default function RentingDetails() {
                   {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
                 </View>
 
-                {/* Rental Period */}
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Rental Date/Time</Text>
-                  <View style={styles.optionsContainer}>
-                    {rentalOptions.map(renderRentalPeriodOption)}
-                  </View>
-                  {/* ✅ NEW: Show minimum rental info */}
-                  {rentalPeriod === "Hour" && (
-                    <Text style={styles.helperText}>
-                      Minimum rental period: 3 hours
-                    </Text>
-                  )}
-                </View>
 
                 {/* Date Selection */}
                 <View style={styles.section}>
@@ -778,24 +734,25 @@ export default function RentingDetails() {
                     {/* Pickup Date */}
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle}>Pick up Date</Text>
-                  <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => {
-                      setActiveDateType("pickup");
-                      setShowDateTimeModal(true);
-                    }}
-                    activeOpacity={0.7}
-                  >
-
-                        <Icon name="date-range" size={18} color="#666" />
-                        <Text style={styles.dateText}>
-                          {rentalPeriod === "Hour"
-                            ? pickupDate
-                                .toLocaleTimeString([], { hour: "numeric", hour12: true })
-                                .replace(" ", ":00 ") // ✅ force :00
-                            : formatDate(pickupDate)}
-                        </Text>
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.dateButton}
+                          onPress={() => {
+                            setActiveDateType("pickup");
+                            setShowDateTimeModal(true);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Icon name="date-range" size={18} color="#666" />
+                          <Text style={styles.dateText}>
+                            {pickupDate.toLocaleString([], { 
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </Text>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.verticalLine} />
@@ -804,24 +761,25 @@ export default function RentingDetails() {
                     {/* Return Date */}
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle1}>Return Date</Text>
-<TouchableOpacity
-  style={styles.dateButton}
-  onPress={() => {
-    setActiveDateType("return");
-    setShowDateTimeModal(true);
-  }}
-  activeOpacity={0.7}
->
-
-                        <Icon name="date-range" size={18} color="#666" />
-                        <Text style={styles.dateText}>
-                          {rentalPeriod === "Hour"
-                            ? returnDate
-                                .toLocaleTimeString([], { hour: "numeric", hour12: true })
-                                .replace(" ", ":00 ") // ✅ force :00
-                            : formatDate(returnDate)}
-                        </Text>
-                      </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.dateButton}
+                          onPress={() => {
+                            setActiveDateType("return");
+                            setShowDateTimeModal(true);
+                          }}
+                          activeOpacity={0.7}
+                        >
+                          <Icon name="date-range" size={18} color="#666" />
+                          <Text style={styles.dateText}>
+                            {returnDate.toLocaleString([], { 
+                              month: 'short', 
+                              day: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              hour12: true 
+                            })}
+                          </Text>
+                        </TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -982,71 +940,73 @@ export default function RentingDetails() {
             </KeyboardAvoidingView>
         </>
         )}
-          {/* ✅ PICKERS GO HERE - OUTSIDE THE CONDITIONAL STEPS */}
-    {rentalPeriod === "Hour" ? (
-      <HourTimePickerModal
-        visible={showDateTimeModal}
-        initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
-        onCancel={() => setShowDateTimeModal(false)}
-        onDone={(selectedDate) => {
-          if (activeDateType === "pickup") {
-            setPickupDate(selectedDate);
-            
+    {/* ✅ Always use hour picker */}
+    <HourTimePickerModal
+      visible={showDateTimeModal}
+      initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
+      onCancel={() => setShowDateTimeModal(false)}
+      onDone={(selectedDate) => {
+        if (activeDateType === "pickup") {
+          setPickupDate(selectedDate);
+          
+          // ✅ Check if return date is on the same day
+          const pickupDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+          const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
+          
+          if (pickupDay.getTime() === returnDay.getTime()) {
+            // Same day - ensure 3 hour minimum
             const minReturn = new Date(selectedDate);
             minReturn.setHours(minReturn.getHours() + 3);
             
+            // If current return time is less than 3 hours from new pickup, adjust it
             if (returnDate < minReturn) {
               setReturnDate(minReturn);
             }
-          } else {
-            if (selectedDate < pickupDate) {
-              Alert.alert("Invalid Date", "Return time cannot be before pickup time");
-              return;
-            }
-            
+          }
+        } else {
+          // Setting return date
+          if (selectedDate < pickupDate) {
+            Alert.alert("Invalid Date", "Return time cannot be before pickup time");
+            return;
+          }
+          
+          // ✅ Check if same day rental
+          const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
+          const returnDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+          
+          if (pickupDay.getTime() === returnDay.getTime()) {
+            // Same day - enforce 3 hour minimum
             const diffMs = selectedDate - pickupDate;
-            const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+            const diffHours = diffMs / (1000 * 60 * 60);
             
             if (diffHours < 3) {
+              const minReturn = new Date(pickupDate);
+              minReturn.setHours(minReturn.getHours() + 3);
+              
               Alert.alert(
                 "Minimum Rental Period",
-                "The minimum rental period for hourly rentals is 3 hours. Please select a later time.",
+                "The minimum rental period for same-day rentals is 3 hours. Return time has been set to " + 
+                minReturn.toLocaleString([], { 
+                  hour: 'numeric',
+                  minute: '2-digit',
+                  hour12: true 
+                }),
                 [{ text: "OK" }]
               );
+              
+              setReturnDate(minReturn);
+              setShowDateTimeModal(false);
               return;
             }
-            
-            setReturnDate(selectedDate);
           }
-          setShowDateTimeModal(false);
-        }}
-      />
-    ) : (
-      <DateTimePickerModalUI
-        visible={showDateTimeModal}
-        initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
-        onCancel={() => setShowDateTimeModal(false)}
-        onDone={(selectedDate) => {
-          if (activeDateType === "pickup") {
-            setPickupDate(selectedDate);
-            if (returnDate < selectedDate) {
-              const newReturn = new Date(selectedDate);
-              newReturn.setHours(newReturn.getHours() + 1);
-              setReturnDate(newReturn);
-            }
-          } else {
-            if (selectedDate < pickupDate) {
-              Alert.alert("Invalid Date", "Return date cannot be before pickup date");
-              return;
-            }
-            setReturnDate(selectedDate);
-          }
-          setShowDateTimeModal(false);
-        }}
-      />
-    )}
-        </ScreenWrapper>
-    );
+          
+          setReturnDate(selectedDate);
+        }
+        setShowDateTimeModal(false);
+      }}
+    />
+  </ScreenWrapper>
+);
 
 }
 

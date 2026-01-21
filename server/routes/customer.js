@@ -6,7 +6,8 @@ import {
   fetchCustomers,
   updateCustomerDetails,
   customerSignUp,
-  getCustomerProgress
+  getCustomerProgress,
+  uploadCustomerPhoto  // ✅ ADD THIS IMPORT
 } from "../controllers/customerController.js";
 
 const router = express.Router();
@@ -28,7 +29,20 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    
+    if (mimetype && extname) {
+      return cb(null, true);
+    }
+    cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+  }
+});
 
 router.get("/sign-up/progress/:id", getCustomerProgress);
 
@@ -68,11 +82,11 @@ router.post(
   customerSignUp
 );
 
-// router.post("/sign-up", add)
-
 router.get("/", fetchCustomers);
 
 router.put("/update/:id", updateCustomerDetails);
+
+router.post("/upload-photo/:id", upload.single('photo'), uploadCustomerPhoto);
 
 // Multer error handling
 router.use((error, req, res, next) => {
@@ -85,10 +99,10 @@ router.use((error, req, res, next) => {
     }
   }
 
-  if (error.message === "Only image files are allowed!") {
+  if (error.message === "Only .png, .jpg and .jpeg format allowed!") {
     return res.status(400).json({
       success: false,
-      message: "Only image files are allowed!",
+      message: error.message,
     });
   }
 

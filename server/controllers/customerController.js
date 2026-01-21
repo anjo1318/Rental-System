@@ -268,9 +268,61 @@ const updateCustomerDetails = async (req, res) => {
   }
 };
 
+const uploadCustomerPhoto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    console.log(`📸 Uploading photo for customer ID: ${id}`);
+    console.log("📂 Received file:", req.file);
+
+    // Check if customer exists
+    const customer = await Customer.findByPk(id);
+    
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found"
+      });
+    }
+
+    // Check if file was uploaded
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No photo file uploaded"
+      });
+    }
+
+    // Construct the photo URL
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const photoUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
+    // Update customer's idPhoto field
+    await customer.update({
+      idPhoto: photoUrl
+    });
+
+    console.log("✅ Photo uploaded successfully:", photoUrl);
+
+    return res.status(200).json({
+      success: true,
+      message: "Photo uploaded successfully",
+      photoUrl: photoUrl
+    });
+
+  } catch (error) {
+    console.error("❌ Error uploading photo:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to upload photo"
+    });
+  }
+};
+
 export { 
   fetchCustomers,
   updateCustomerDetails,
   customerSignUp,
-  getCustomerProgress  // ✅ ADD THIS TO EXPORTS
+  getCustomerProgress,  // ✅ ADD THIS TO EXPORTS
+  uploadCustomerPhoto
 };

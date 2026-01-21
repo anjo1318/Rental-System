@@ -18,7 +18,6 @@ export function WheelPicker({ items, selectedIndex, onSelect, unit = '' }) {
   const scrollViewRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(selectedIndex);
 
-  // ✅ Scroll to initial position when component mounts or selectedIndex changes
   useEffect(() => {
     if (scrollViewRef.current && selectedIndex !== undefined) {
       setTimeout(() => {
@@ -90,14 +89,17 @@ export function WheelPicker({ items, selectedIndex, onSelect, unit = '' }) {
   );
 }
 
-// Time Picker Modal for Hour rental
+// Combined Date & Time Picker Modal
 export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) {
-  // Generate hours (1-12) and minutes (00-59)
+  const [showDatePicker, setShowDatePicker] = useState(true);
+  const [currentMonth, setCurrentMonth] = useState(initialDate || new Date());
+  const [selectedDate, setSelectedDate] = useState(initialDate || new Date());
+
+  // Time picker data
   const hours = Array.from({ length: 12 }, (_, i) => i + 1);
   const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, '0'));
   const periods = ['AM', 'PM'];
 
-  // ✅ Recalculate indices whenever initialDate or visible changes
   const getInitialIndices = () => {
     const initial = initialDate || new Date();
     const initialHour = initial.getHours();
@@ -112,13 +114,43 @@ export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) 
 
   const [indices, setIndices] = useState(getInitialIndices());
 
-  // ✅ Update indices when modal becomes visible or initialDate changes
   useEffect(() => {
     if (visible) {
+      setShowDatePicker(true);
+      setCurrentMonth(initialDate || new Date());
+      setSelectedDate(initialDate || new Date());
       const newIndices = getInitialIndices();
       setIndices(newIndices);
     }
   }, [visible, initialDate]);
+
+  // Calendar functions
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+  const year = currentMonth.getFullYear();
+  const month = currentMonth.getMonth();
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDayIndex = getFirstDayOfMonth(year, month);
+
+  const today = new Date();
+  const isAtCurrentMonth =
+    currentMonth.getFullYear() === today.getFullYear() &&
+    currentMonth.getMonth() === today.getMonth();
+
+  const isPastDate = (day) => {
+    const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return checkDate < todayMidnight;
+  };
+
+  const selectDate = (day) => {
+    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    // Preserve the current time
+    newDate.setHours(selectedDate.getHours());
+    newDate.setMinutes(selectedDate.getMinutes());
+    setSelectedDate(newDate);
+  };
 
   const handleDone = () => {
     const hour = hours[indices.hour];
@@ -133,10 +165,10 @@ export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) 
       hour24 = 0;
     }
 
-    const selectedDate = new Date(initialDate || new Date());
-    selectedDate.setHours(hour24, minute, 0, 0);
+    const finalDate = new Date(selectedDate);
+    finalDate.setHours(hour24, minute, 0, 0);
 
-    onDone && onDone(selectedDate);
+    onDone && onDone(finalDate);
   };
 
   return (
@@ -147,32 +179,141 @@ export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) 
             <TouchableOpacity onPress={onCancel}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Select Time</Text>
+            <Text style={styles.title}>
+              {showDatePicker ? 'Select Date' : 'Select Time'}
+            </Text>
             <TouchableOpacity onPress={handleDone}>
               <Text style={styles.doneText}>Done</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.pickerRow}>
-            <WheelPicker
-              items={hours}
-              selectedIndex={indices.hour}
-              onSelect={(index) => setIndices({ ...indices, hour: index })}
-            />
-            <View style={styles.separator}>
-              <Text style={styles.separatorText}>:</Text>
-            </View>
-            <WheelPicker
-              items={minutes}
-              selectedIndex={indices.minute}
-              onSelect={(index) => setIndices({ ...indices, minute: index })}
-            />
-            <WheelPicker
-              items={periods}
-              selectedIndex={indices.period}
-              onSelect={(index) => setIndices({ ...indices, period: index })}
-            />
+          {/* Tab Switcher */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, showDatePicker && styles.activeTab]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Icon name="date-range" size={20} color={showDatePicker ? '#0A84FF' : '#8E8E93'} />
+              <Text style={[styles.tabText, showDatePicker && styles.activeTabText]}>Date</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, !showDatePicker && styles.activeTab]}
+              onPress={() => setShowDatePicker(false)}
+            >
+              <Icon name="access-time" size={20} color={!showDatePicker ? '#0A84FF' : '#8E8E93'} />
+              <Text style={[styles.tabText, !showDatePicker && styles.activeTabText]}>Time</Text>
+            </TouchableOpacity>
           </View>
+
+          {showDatePicker ? (
+            /* Calendar View */
+            <View style={styles.calendarContainer}>
+              {/* Month Navigation */}
+              <View style={styles.monthRow}>
+                <TouchableOpacity
+                  disabled={isAtCurrentMonth}
+                  onPress={() => {
+                    if (isAtCurrentMonth) return;
+                    const prev = new Date(currentMonth);
+                    prev.setMonth(currentMonth.getMonth() - 1);
+                    setCurrentMonth(prev);
+                  }}
+                >
+                  <Icon
+                    name="chevron-left"
+                    size={24}
+                    color={isAtCurrentMonth ? '#38383A' : '#FFF'}
+                  />
+                </TouchableOpacity>
+
+                <Text style={styles.monthText}>
+                  {currentMonth.toLocaleDateString('en-US', {
+                    month: 'long',
+                    year: 'numeric',
+                  })}
+                </Text>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    const next = new Date(currentMonth);
+                    next.setMonth(currentMonth.getMonth() + 1);
+                    setCurrentMonth(next);
+                  }}
+                >
+                  <Icon name="chevron-right" size={24} color="#FFF" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Week Days */}
+              <View style={styles.weekRow}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                  <Text key={d} style={styles.weekText}>
+                    {d}
+                  </Text>
+                ))}
+              </View>
+
+              {/* Calendar Grid */}
+              <View style={styles.calendarGrid}>
+                {[...Array(firstDayIndex)].map((_, index) => (
+                  <View key={`empty-${index}`} style={styles.dayCell} />
+                ))}
+                {[...Array(daysInMonth)].map((_, i) => {
+                  const day = i + 1;
+                  const isSelected =
+                    selectedDate.getDate() === day &&
+                    selectedDate.getMonth() === currentMonth.getMonth() &&
+                    selectedDate.getFullYear() === currentMonth.getFullYear();
+                  const isDisabled = isPastDate(day);
+
+                  return (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.dayCell,
+                        isSelected && styles.daySelected,
+                        isDisabled && styles.dayDisabled,
+                      ]}
+                      onPress={() => !isDisabled && selectDate(day)}
+                      disabled={isDisabled}
+                    >
+                      <Text
+                        style={[
+                          styles.dayText,
+                          isSelected && styles.dayTextSelected,
+                          isDisabled && styles.dayTextDisabled,
+                        ]}
+                      >
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          ) : (
+            /* Time Picker View */
+            <View style={styles.pickerRow}>
+              <WheelPicker
+                items={hours}
+                selectedIndex={indices.hour}
+                onSelect={(index) => setIndices({ ...indices, hour: index })}
+              />
+              <View style={styles.separator}>
+                <Text style={styles.separatorText}>:</Text>
+              </View>
+              <WheelPicker
+                items={minutes}
+                selectedIndex={indices.minute}
+                onSelect={(index) => setIndices({ ...indices, minute: index })}
+              />
+              <WheelPicker
+                items={periods}
+                selectedIndex={indices.period}
+                onSelect={(index) => setIndices({ ...indices, period: index })}
+              />
+            </View>
+          )}
         </View>
       </View>
     </Modal>
@@ -214,12 +355,97 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#0A84FF',
   },
+  tabContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 12,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+    backgroundColor: '#2C2C2E',
+    gap: 8,
+  },
+  activeTab: {
+    backgroundColor: '#38383A',
+  },
+  tabText: {
+    fontSize: 15,
+    color: '#8E8E93',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#0A84FF',
+    fontWeight: '600',
+  },
+  calendarContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  monthRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  monthText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFF',
+  },
+  weekRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  weekText: {
+    width: 36,
+    textAlign: 'center',
+    color: '#8E8E93',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  calendarGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dayCell: {
+    width: 36,
+    height: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 4,
+    borderRadius: 18,
+  },
+  daySelected: {
+    backgroundColor: '#0A84FF',
+  },
+  dayText: {
+    color: '#FFF',
+    fontSize: 15,
+  },
+  dayTextSelected: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
+  dayDisabled: {
+    opacity: 0.3,
+  },
+  dayTextDisabled: {
+    color: '#38383A',
+  },
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     height: ITEM_HEIGHT * 5,
     paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   separator: {
     width: 20,
