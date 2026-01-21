@@ -236,13 +236,12 @@ const updateCustomerDetails = async (req, res) => {
       return res.status(404).json({ success: false, message: "Customer not found" });
     }
 
-    // Update fields with request body
     await customer.update({
       firstName: req.body.firstName,
       middleName: req.body.middleName,
       lastName: req.body.lastName,
-      emailAddress: req.body.emailAddress, // Fixed: was 'email', should be 'emailAddress'
-      phoneNumber: req.body.phoneNumber,   // Fixed: was 'phone', should be 'phoneNumber'
+      emailAddress: req.body.emailAddress,
+      phoneNumber: req.body.phoneNumber,
       birthday: req.body.birthday,
       gender: req.body.gender,
       houseNumber: req.body.houseNumber,
@@ -254,13 +253,37 @@ const updateCustomerDetails = async (req, res) => {
       zipCode: req.body.zipCode,
     });
 
-    console.log("After the request", customer);
+    // ✅ Format the response to match your frontend's expected structure
+    const formattedCustomer = {
+      id: customer.id,
+      firstName: customer.firstName,
+      middleName: customer.middleName,
+      lastName: customer.lastName,
+      email: customer.emailAddress,        // ✅ Map to "email"
+      phone: customer.phoneNumber,         // ✅ Map to "phone"
+      profileImage: customer.idPhoto,      // ✅ Map to "profileImage"
+      birthday: customer.birthday,
+      gender: customer.gender,
+      houseNumber: customer.houseNumber,
+      street: customer.street,
+      barangay: customer.barangay,
+      town: customer.town,
+      province: customer.province,
+      country: customer.country,
+      zipCode: customer.zipCode,
+      role: "customer",                    // ✅ Add role
+      isVerified: customer.isVerified,
+      address: "",                         // ✅ Add if needed
+      bio: null,                           // ✅ Add if needed
+      gcashQR: customer.gcashQR || "N/A",  // ✅ Add if needed
+    };
+
     console.log("Customer detail updated successfully");
 
     return res.status(200).json({ 
       success: true, 
       message: "Customer details updated", 
-      updatedCustomer: customer 
+      updatedCustomer: formattedCustomer  // ✅ Return formatted data
     });
   } catch (error) {
     console.error("Update error:", error);
