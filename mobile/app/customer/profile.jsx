@@ -128,7 +128,7 @@ export default function Profile() {
       {/* User Profile Section */}
       <View style={styles.userContainer}>
         <View style={styles.userRow}>
-          <Pressable onPress={pickImage} style={styles.userPressable}>
+          <Pressable onPress={() => router.push("customer/edit_profile")} style={styles.userPressable}>
             <View style={styles.avatarWrapper}>
               <Image
                 source={
@@ -140,7 +140,7 @@ export default function Profile() {
                 }
                 style={styles.avatar}
               />
-              <Pressable style={styles.cameraButton} onPress={pickImage}>
+              <Pressable style={styles.cameraButton} onPress={() => router.push("customer/edit_profile")}>
                 <Image
                   source={require("../../assets/images/camera_icon.png")}
                   style={styles.cameraImage}

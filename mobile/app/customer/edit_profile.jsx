@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -29,6 +30,7 @@ export default function EditProfile() {
   const [currentUser, setCurrentUser] = useState(null);
   const [OWNER_ID, setOwnerId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false); // ✅ NEW: Loading state for save button
 
   // Input states - properly initialized
   const [firstName, setFirstName] = useState("");
@@ -48,7 +50,6 @@ export default function EditProfile() {
 
   useEffect(() => {
     loadUserData();
-    // ✅ REMOVED handleUpdateCustomerDetails() from here
     console.log("This is the url", process.env.EXPO_PUBLIC_API_URL);
   }, []);
 
@@ -62,15 +63,15 @@ export default function EditProfile() {
         setOwnerId(user.id);
         
         // ✅ Load profile image
-        if (user.idPhoto && user.idPhoto !== "N/A") {
-          setAvatar(user.idPhoto);
+        if (user.profileImage && user.profileImage !== "N/A") {
+          setAvatar(user.profileImage);
         }
         
         setFirstName(user.firstName || '');
         setMiddleName(user.middleName || '');
         setLastName(user.lastName || '');
-        setEmail(user.emailAddress || ''); // ✅ Fixed: was user.email
-        setPhoneNumber(user.phoneNumber || ''); // ✅ Fixed: was user.phone
+        setEmail(user.email || '');
+        setPhoneNumber(user.phone || '');
         setBirthday(user.birthday || '');
         setGender(user.gender || '');
         setHouseNumber(user.houseNumber || '');
@@ -103,15 +104,24 @@ export default function EditProfile() {
       return;
     }
 
+    console.log("Saving na yung data");
+
+    // ✅ Prevent multiple clicks
+    if (isSaving) {
+      return;
+    }
+
     try {
+      setIsSaving(true); // ✅ Start loading
+
       const response = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/api/customer/update/${currentUser.id}`,
         {
           firstName,
           middleName,
           lastName,
-          email,
-          phone: phoneNumber,
+          emailAddress: email,      // ✅ Fixed field name
+          phoneNumber: phoneNumber, // ✅ Fixed field name
           birthday,
           gender,
           houseNumber,
@@ -134,79 +144,92 @@ export default function EditProfile() {
       // Update state immediately so UI refreshes
       setCurrentUser(updatedUser);
 
-      Alert.alert("Success", "Profile updated successfully!");
-      
-      // ✅ Navigate back to profile instead of edit_profile
-      router.back();
+      // ✅ Show success alert and navigate back after user dismisses it
+      Alert.alert(
+        "Success", 
+        "Profile updated successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              setIsSaving(false); // ✅ Stop loading
+              router.back(); // ✅ Navigate back
+            }
+          }
+        ]
+      );
 
     } catch (error) {
       console.error("❌ Update failed:", error.response?.data || error.message);
+      setIsSaving(false); // ✅ Stop loading on error
       Alert.alert("Error", "Failed to update profile. Please try again.");
     }
   };
 
-const pickImage = async () => {
-  try {
-    // Request permission
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (!permissionResult.granted) {
-      Alert.alert("Permission Required", "Please allow access to your photo library to change your profile picture.");
-      return;
-    }
-
-    // Launch image picker
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      setAvatar(imageUri);
+  const pickImage = async () => {
+    try {
+      // Request permission
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
-      // You'll need to upload this to your server
-      await uploadImage(imageUri);
-    }
-  } catch (error) {
-    console.error("Error picking image:", error);
-    Alert.alert("Error", "Failed to pick image. Please try again.");
-  }
-};
-
-const uploadImage = async (imageUri) => {
-  try {
-    const formData = new FormData();
-    formData.append('photo', {
-      uri: imageUri,
-      type: 'image/jpeg',
-      name: `profile_${currentUser.id}.jpg`,
-    });
-
-    const response = await axios.post(
-      `${process.env.EXPO_PUBLIC_API_URL}/api/customer/upload-photo/${currentUser.id}`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      if (!permissionResult.granted) {
+        Alert.alert("Permission Required", "Please allow access to your photo library to change your profile picture.");
+        return;
       }
-    );
 
-    console.log("✅ Image uploaded:", response.data);
-    
-    // Update user data in AsyncStorage
-    const updatedUser = { ...currentUser, idPhoto: response.data.photoUrl };
-    await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-    setCurrentUser(updatedUser);
-    
-  } catch (error) {
-    console.error("❌ Image upload failed:", error);
-    Alert.alert("Error", "Failed to upload image. Please try again.");
-  }
-};
+      // ✅ FIXED: Use MediaType instead of deprecated MediaTypeOptions
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'], // ✅ Updated to use array of strings
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const imageUri = result.assets[0].uri;
+        setAvatar(imageUri);
+        
+        // Upload to server
+        await uploadImage(imageUri);
+      }
+    } catch (error) {
+      console.error("Error picking image:", error);
+      Alert.alert("Error", "Failed to pick image. Please try again.");
+    }
+  };
+
+  const uploadImage = async (imageUri) => {
+    try {
+      const formData = new FormData();
+      formData.append('photo', {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: `profile_${currentUser.id}.jpg`,
+      });
+
+      const response = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/customer/upload-photo/${currentUser.id}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      console.log("✅ Image uploaded:", response.data);
+      
+      // Update user data in AsyncStorage
+      const updatedUser = { ...currentUser, idPhoto: response.data.photoUrl };
+      await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+      setCurrentUser(updatedUser);
+      
+      Alert.alert("Success", "Profile photo updated successfully!");
+      
+    } catch (error) {
+      console.error("❌ Image upload failed:", error);
+      Alert.alert("Error", "Failed to upload image. Please try again.");
+    }
+  };
 
 
   // Show loading or redirect if no user data
@@ -214,7 +237,8 @@ const uploadImage = async (imageUri) => {
     return (
       <View style={styles.safe}>
         <View style={styles.loadingContainer}>
-          <Text>Loading...</Text>
+          <ActivityIndicator size="large" color="#057474" />
+          <Text style={{ marginTop: 10 }}>Loading...</Text>
         </View>
       </View>
     );
@@ -271,6 +295,7 @@ const uploadImage = async (imageUri) => {
                 value={firstName}
                 onChangeText={setFirstName}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Middle Name</Text>
@@ -282,6 +307,7 @@ const uploadImage = async (imageUri) => {
                 value={middleName}
                 onChangeText={setMiddleName}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Last Name</Text>
@@ -293,6 +319,7 @@ const uploadImage = async (imageUri) => {
                 value={lastName}
                 onChangeText={setLastName}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Email</Text>
@@ -306,6 +333,7 @@ const uploadImage = async (imageUri) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Phone Number</Text>
@@ -318,6 +346,7 @@ const uploadImage = async (imageUri) => {
                 onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
                 autoCapitalize="none"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Birthday</Text>
@@ -330,6 +359,7 @@ const uploadImage = async (imageUri) => {
                 onChangeText={setBirthday}
                 keyboardType="phone-pad"
                 autoCapitalize="none"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Gender</Text>
@@ -341,6 +371,7 @@ const uploadImage = async (imageUri) => {
                 value={gender}
                 onChangeText={setGender}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>House Number</Text>
@@ -352,6 +383,7 @@ const uploadImage = async (imageUri) => {
                 value={houseNumber}
                 onChangeText={setHouseNumber}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Street</Text>
@@ -363,6 +395,7 @@ const uploadImage = async (imageUri) => {
                 value={street}
                 onChangeText={setStreet}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Barangay</Text>
@@ -374,6 +407,7 @@ const uploadImage = async (imageUri) => {
                 value={barangay}
                 onChangeText={setBarangay}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Town</Text>
@@ -385,6 +419,7 @@ const uploadImage = async (imageUri) => {
                 value={town}
                 onChangeText={setTown}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Province</Text>
@@ -396,6 +431,7 @@ const uploadImage = async (imageUri) => {
                 value={province}
                 onChangeText={setProvince}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Country</Text>
@@ -407,6 +443,7 @@ const uploadImage = async (imageUri) => {
                 value={country}
                 onChangeText={setCountry}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
               <View>
                 <Text style={styles.username}>Zip code</Text>
@@ -418,11 +455,23 @@ const uploadImage = async (imageUri) => {
                 value={zipCode}
                 onChangeText={setZipCode}
                 autoCapitalize="words"
+                editable={!isSaving}
               />
 
               {/* Save Button */}
-              <Pressable style={styles.saveButton} onPress={handleUpdateCustomerDetails}>
-                <Text style={styles.saveText}>Save Changes</Text>
+              <Pressable 
+                style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+                onPress={handleUpdateCustomerDetails}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <View style={styles.savingContainer}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={[styles.saveText, { marginLeft: 10 }]}>Saving Changes...</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.saveText}>Save Changes</Text>
+                )}
               </Pressable>
             </View>
           </View>
@@ -431,8 +480,6 @@ const uploadImage = async (imageUri) => {
     </View>
   );
 }
-
-// ... rest of styles remain the same
 
 const styles = StyleSheet.create({
   safe: {
@@ -463,9 +510,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-
   mainContainer: {
-    borderWidth: 1,            // visible line
+    borderWidth: 1,
     borderColor: "#05747480", 
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
@@ -473,28 +519,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 8,
     elevation: 3,
-    borderRadius: 20  ,          
-    marginHorizontal: 20,      // shrink from screen edges
-    marginTop: 60,             // optional vertical spacing
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginTop: 60,
     backgroundColor: "#FFF",
-    top: 50,   // optional to make border visible
+    top: 50,
     marginBottom: 200,
   },
-
-
 
   avatarWrapper: {
     position: "relative",
     width: width * 0.20,
     height: width * 0.20,
-
   },
 
   avatar: {
     width: "100%",
     height: "100%",
     borderRadius: (width * 0.20) / 2,
-    borderWidth: 2,            // visible line
+    borderWidth: 2,
     borderColor: "#057474BF", 
   },
 
@@ -530,13 +573,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: width * 0.08,
     paddingBottom: height * 0.06,
     bottom: 40,
-
-    
   },
 
   input: {
     width: "100%",
-    borderWidth: 1,            // visible line
+    borderWidth: 1,
     borderColor: "#0574744D", 
     borderRadius: 12,
     paddingVertical: height * 0.018,
@@ -554,6 +595,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 30,
     top: 20,
+  },
+
+  saveButtonDisabled: {
+    backgroundColor: "#057474aa", // ✅ Slightly transparent when disabled
+  },
+
+  savingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   saveText: {
