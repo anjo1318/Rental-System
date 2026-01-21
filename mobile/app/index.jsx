@@ -268,9 +268,13 @@ export default function Index() {
               <Pressable onPress={() => router.push("customer/notifications")}>
                  <Image
                   source={require("../assets/images/notification.png")}
-                  style={{ width: 37, height: 37 }}
+                  style={{ width: 30, height: 30 }}
                   resizeMode="contain"
                 />
+                {/* Badge */}
+                    <View style={styles.badge}>
+                      <Text style={styles.badgeText}>3</Text>
+                    </View>
               </Pressable>
             </View>
           </View>
@@ -401,17 +405,34 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
 
+
   notificationWrapper: {
     marginLeft: "auto", 
-    left: 25,
+    marginRight: 5,
+    marginTop: 7,
     position: "relative",
-    width: width * 0.2,
-    height: width * 0.2,
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
-    alignItems: "center",
-  },
+    top: 9,
+    },
 
+  badge: {
+  position: "relative",
+  bottom: 38,
+  left: 13,
+  backgroundColor: "#fff",
+  height: 20,
+  width: 20,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+badgeText: {
+  color: "#000",
+  fontSize: 11,
+  fontWeight: "bold",
+},
 
   searchContainer: {
     flexDirection: "row",

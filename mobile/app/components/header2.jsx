@@ -57,13 +57,17 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
           </Text>
             
           {/* Notification */}
-          <View style={styles.notificationWrapper}>
-            <Pressable onPress={() => router.push("customer/notifications")}>
-             <Image
-               source={require("../../assets/images/notification.png")}
-               style={{ width: 32, height: 32 }}
-               resizeMode="contain"
-             />
+           <View style={styles.notificationWrapper}>
+                        <Pressable onPress={() => router.push("owner/ownerRequest")}>
+                          <Image
+                            source={require("../../assets/images/notification.png")}
+                            style={{ width: 25, height: 25}}
+                            resizeMode="contain"
+                          />
+                          {/* Badge */}
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>3</Text>
+              </View>
             </Pressable>
           </View>
 
@@ -106,17 +110,17 @@ notificationWrapper: {
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#fff",
+
   },
 
   badge: {
     position: "absolute",
-    right: -4,
-    top: 1,
+    right: -2,
+    bottom: 15,
     backgroundColor: "#007F7F",
     borderRadius: 10,
-    width: 16,
-    height: 16,
+    width: 14,
+    height: 14,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,

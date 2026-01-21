@@ -233,13 +233,17 @@ export default function TapSearchBar() {
               </Text>
           </View>
 
-    <View style={styles.notificationWrapper}>
-    <Pressable onPress={() => router.push("customer/notifications")}>
-    <Image
-  source={require("../../assets/images/notification.png")}
-  style={{ width:  37, height: 37 }}
-  resizeMode="contain"
-/>
+ <View style={styles.notificationWrapper}>
+              <Pressable onPress={() => router.push("owner/ownerRequest")}>
+                <Image
+                  source={require("../../assets/images/notification.png")}
+                  style={{ width: 30, height: 30 }}
+                  resizeMode="contain"
+                />
+                {/* Badge */}
+    <View style={styles.badge}>
+      <Text style={styles.badgeText}>3</Text>
+    </View>
   </Pressable>
   </View>
 
@@ -696,16 +700,33 @@ header: {
     color: "#e0f2f2",
   },
 
-  notificationWrapper: {
+ notificationWrapper: {
     marginLeft: "auto", 
     marginRight: 5,
     marginTop: 7,
     position: "relative",
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
+    top: 9,
+    },
+
+  badge: {
+  position: "relative",
+  bottom: 38,
+  left: 13,
+  backgroundColor: "#fff",
+  height: 20,
+  width: 20,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+badgeText: {
+  color: "#000",
+  fontSize: 11,
+  fontWeight: "bold",
+},
 
   searchContainer: {
     flexDirection: "row",

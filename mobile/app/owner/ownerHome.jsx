@@ -290,9 +290,13 @@ export default function OwnerHome() {
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
                 <Image
                   source={require("../../assets/images/notification.png")}
-                  style={{ width: 37, height: 37 }}
+                  style={{ width: 30, height: 30 }}
                   resizeMode="contain"
                 />
+                {/* Badge */}
+    <View style={styles.badge}>
+      <Text style={styles.badgeText}>3</Text>
+    </View>
               </Pressable>
             </View>
           </View>
@@ -489,9 +493,28 @@ const styles = StyleSheet.create({
     position: "relative",
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
+    top: 15,
+    },
+
+  badge: {
+  position: "relative",
+  bottom: 38,
+  left: 13,
+  backgroundColor: "#fff",
+  height: 20,
+  width: 20,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
+badgeText: {
+  color: "#000",
+  fontSize: 11,
+  fontWeight: "bold",
+},
+
+  
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -500,7 +523,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#00000020",
     height: 175,
-    width: 340,
+    width: width - 20,
     shadowColor: "white",
     shadowOpacity: 0.5,
     shadowRadius: 20,
@@ -515,7 +538,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 4,
     height: 155,
-    width: 98,
+    width: 105,
     top: 8,
     borderRadius: 20,
     borderWidth: 1,

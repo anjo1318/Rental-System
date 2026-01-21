@@ -84,26 +84,37 @@ export default function OwnerBottomNav({ role = "owner" }) {
         }
 
         // NORMAL TABS
-        return (
-          <Pressable
-            key={index}
-            style={styles.navButton}
-            hitSlop={10}
-            onPress={() => {
-              if (!isActive) router.push(item.route);
-            }}
-          >
-            {renderIcon(item, isActive)}
-            <Text
-              style={[
-                styles.navText,
-                { color: isActive ? "#057474" : "#999" },
-              ]}
-            >
-              {item.name}
-            </Text>
-          </Pressable>
-        );
+  // NORMAL TABS
+return (
+  <Pressable
+    key={index}
+    style={styles.navButton}
+    hitSlop={10}
+    onPress={() => {
+      if (!isActive) router.push(item.route);
+    }}
+  >
+    <View
+      style={[
+        styles.tabContent,
+        {
+          transform: [{ translateY: isActive ? -7 : -7 }],
+        },
+      ]}
+    >
+      {renderIcon(item, isActive)}
+      <Text
+        style={[
+          styles.navText,
+          { color: isActive ? "#057474" : "#999" },
+        ]}
+      >
+        {item.name}
+      </Text>
+    </View>
+  </Pressable>
+);
+
       })}
     </View>
   );
@@ -154,4 +165,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#057474",
   },
+  tabContent: {
+  alignItems: "center",
+  justifyContent: "center",
+},
+
 });
