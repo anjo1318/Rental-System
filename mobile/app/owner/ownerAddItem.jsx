@@ -415,23 +415,6 @@ const pickMultipleImages = async () => {
     }
   };
 
-  const testServerConnection = async () => {
-  try {
-    console.log('Testing server connection...');
-    const response = await axios.get(`${API_URL}/api/health`, {
-      timeout: 10000,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      }
-    });
-    console.log('Server connection test:', response.status, response.data);
-    return true;
-  } catch (error) {
-    console.error('Server connection failed:', error.message);
-    return false;
-  }
-};
-
 
   return (
       <ScreenWrapper>
@@ -452,31 +435,13 @@ const pickMultipleImages = async () => {
           value={productName}
           onChangeText={setProductName}
         />
-        
-
-{/* PRODUCT BRAND */}
-<View style={styles.pickerContainer}>
-  {!productBrand && (
-    <Text style={styles.pickerOverlayText}>Product Brand *</Text>
-  )}
-  <Picker
-    selectedValue={productBrand}
-    onValueChange={(itemValue) => setProductBrand(itemValue)}
-    style={{ color: productBrand ? "#000" : "transparent", width: "100%" }}
-  >
-    <Picker.Item label="Select Product Brand" value="" color="#888" />
-    <Picker.Item label="Apple" value="apple" />
-    <Picker.Item label="Samsung" value="samsung" />
-    <Picker.Item label="Sony" value="sony" />
-    <Picker.Item label="Dell" value="dell" />
-    <Picker.Item label="HP" value="hp" />
-    <Picker.Item label="Lenovo" value="lenovo" />
-    <Picker.Item label="Asus" value="asus" />
-    <Picker.Item label="Canon" value="canon" />
-    <Picker.Item label="Nikon" value="nikon" />
-  </Picker>
-</View>
-
+      
+        <TextInput
+          style={styles.input}
+          placeholder="Add Product Brand *"
+          value={productBrand}
+          onChangeText={setProductBrand}
+        />
         <TextInput
           style={styles.input}
           placeholder="Price Per Hour *"
@@ -511,11 +476,11 @@ const pickMultipleImages = async () => {
     style={{ color: category ? "#000" : "transparent", width: "100%" }}
   >
     <Picker.Item label="Select Category" value="" color="#888" />
-    <Picker.Item label="Personal Electronics" value="personal_electronics" />
-    <Picker.Item label="Office Equipment" value="office_equipment" />
-    <Picker.Item label="Photography & Video" value="photography_video" />
-    <Picker.Item label="Gaming & Entertainment" value="gaming_entertainment" />
-    <Picker.Item label="Presentation Equipment" value="presentation_equipment" />
+    <Picker.Item label="Personal Electronics" value="Personal Electronics" />
+    <Picker.Item label="Office Equipment" value="Office Equipment" />
+    <Picker.Item label="Photography & Video" value="Photography & Video" />
+    <Picker.Item label="Gaming & Entertainment" value="Gaming & Entertainment" />
+    <Picker.Item label="Presentation Equipment" value="Presentation Equipment" />
   </Picker>
 </View>
 

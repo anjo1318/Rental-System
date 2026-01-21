@@ -15,6 +15,7 @@ import RentingPaymentMethod from "./rentingPaymentMethod";
 import ConfirmationScreen from "./confirmationScreen";
 import Header from "../components/header3";
 import ScreenWrapper from "../components/screenwrapper";
+import { HourTimePickerModal } from "./HourTimePickerModal ";
 
 const { width, height } = Dimensions.get("window");
 
@@ -287,10 +288,10 @@ export default function RentingDetails() {
   const [guarantor1PhoneNumber, setGuarantor1PhoneNumber] = useState("");
   const [guarantor1Address, setGuarantor1Address] = useState("");
   const [guarantor1Email, setGuarantor1Email] = useState("");
-  const [guarantor2FullName, setGuarantor2FullName] = useState("");
-  const [guarantor2PhoneNumber, setGuarantor2PhoneNumber] = useState("");
-  const [guarantor2Address, setGuarantor2Address] = useState("");
-  const [guarantor2Email, setGuarantor2Email] = useState("");
+  // const [guarantor2FullName, setGuarantor2FullName] = useState("");
+  // const [guarantor2PhoneNumber, setGuarantor2PhoneNumber] = useState("");
+  // const [guarantor2Address, setGuarantor2Address] = useState("");
+  // const [guarantor2Email, setGuarantor2Email] = useState("");
   const [errors, setErrors] = useState({});
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
@@ -389,7 +390,7 @@ export default function RentingDetails() {
 
   const validateForm = () => {
     const newErrors = {};
-  
+
     if (!fullName.trim()) {
       newErrors.fullName = "Please enter your full name";
     }
@@ -407,46 +408,44 @@ export default function RentingDetails() {
     if (!gender) {
       newErrors.gender = "Please select your gender";
     }
-  
-    // Guarantor 1 validation
+
+    // ✅ NEW: Validate rental duration for hourly rentals
+    if (rentalPeriod === "Hour") {
+      const diffMs = returnDate - pickupDate;
+      const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+      
+      if (diffHours < 3) {
+        newErrors.rentalDuration = "Minimum rental period is 3 hours";
+        Alert.alert(
+          "Invalid Rental Period",
+          "The minimum rental period for hourly rentals is 3 hours. Please adjust your return time.",
+          [{ text: "OK" }]
+        );
+      }
+    }
+
+    // Guarantor validation (only one guarantor now)
     if (!guarantor1FullName.trim()) {
-      newErrors.guarantor1FullName = "Please enter Guarantor 1 full name";
+      newErrors.guarantor1FullName = "Please enter guarantor full name";
     }
     if (!guarantor1PhoneNumber.trim()) {
-      newErrors.guarantor1PhoneNumber = "Please enter Guarantor 1 phone number";
+      newErrors.guarantor1PhoneNumber = "Please enter guarantor phone number";
     } else if (!/^09\d{9}$/.test(guarantor1PhoneNumber.trim())) {
       newErrors.guarantor1PhoneNumber = "Phone number must be 11 digits and start with 09";
     }
     if (!guarantor1Address.trim()) {
-      newErrors.guarantor1Address = "Please enter Guarantor 1 address";
+      newErrors.guarantor1Address = "Please enter guarantor address";
     }
     if (!guarantor1Email.trim()) {
-      newErrors.guarantor1Email = "Please enter Guarantor 1 email address";
+      newErrors.guarantor1Email = "Please enter guarantor email address";
     } else if (!/^[^\s@]+@gmail\.com$/.test(guarantor1Email.trim().toLowerCase())) {
       newErrors.guarantor1Email = "Email must be a valid Gmail address";
     }
-  
-    // Guarantor 2 validation
-    if (!guarantor2FullName.trim()) {
-      newErrors.guarantor2FullName = "Please enter Guarantor 2 full name";
-    }
-    if (!guarantor2PhoneNumber.trim()) {
-      newErrors.guarantor2PhoneNumber = "Please enter Guarantor 2 phone number";
-    } else if (!/^09\d{9}$/.test(guarantor2PhoneNumber.trim())) {
-      newErrors.guarantor2PhoneNumber = "Phone number must be 11 digits and start with 09";
-    }
-    if (!guarantor2Address.trim()) {
-      newErrors.guarantor2Address = "Please enter Guarantor 2 address";
-    }
-    if (!guarantor2Email.trim()) {
-      newErrors.guarantor2Email = "Please enter Guarantor 2 email address";
-    } else if (!/^[^\s@]+@gmail\.com$/.test(guarantor2Email.trim().toLowerCase())) {
-      newErrors.guarantor2Email = "Email must be a valid Gmail address";
-    }
-  
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+
 
   const handleProceedToPayment = () => {
     if (!validateForm()) return;
@@ -456,7 +455,6 @@ export default function RentingDetails() {
       return;
     }
 
-    // ✅ Extract image from itemImages array
     const imageUrl = item.itemImages && item.itemImages.length > 0 
       ? item.itemImages[0] 
       : null;
@@ -467,7 +465,6 @@ export default function RentingDetails() {
       return;
     }
 
-    // ✅ Calculate duration
     const duration = calculateRentalDuration();
 
     const data = {
@@ -490,11 +487,12 @@ export default function RentingDetails() {
         gender,
       },
       rentalDetails: {
-        period: rentalPeriod, // "Hour", "Day", or "Week"
+        period: rentalPeriod,
         pickupDate,
         returnDate,
-        duration, // ✅ calculated duration
+        duration,
       },
+      // ✅ Send the same guarantor data for both guarantor1 and guarantor2
       guarantors: [
         {
           fullName: guarantor1FullName,
@@ -503,10 +501,11 @@ export default function RentingDetails() {
           email: guarantor1Email,
         },
         {
-          fullName: guarantor2FullName,
-          phoneNumber: guarantor2PhoneNumber,
-          address: guarantor2Address,
-          email: guarantor2Email,
+          // ✅ Duplicate the same guarantor data to maintain backend compatibility
+          fullName: guarantor1FullName,
+          phoneNumber: guarantor1PhoneNumber,
+          address: guarantor1Address,
+          email: guarantor1Email,
         },
       ],
     };
@@ -517,55 +516,56 @@ export default function RentingDetails() {
     setCurrentStep(2);
   };
 
-const proceedWithBooking = (imageUrl) => {
-  const duration = calculateRentalDuration();
-  
-  const data = {
-    itemId: parseInt(itemId),
-    ownerId: item.Owner.id,
-    itemDetails: {
+  const proceedWithBooking = (imageUrl) => {
+    const duration = calculateRentalDuration();
+    
+    const data = {
+      itemId: parseInt(itemId),
       ownerId: item.Owner.id,
-      title: item.title ?? "Unknown Product",
-      category: item.category,
-      location: item.location,
-      itemImage: imageUrl,
-      pricePerDay: item.pricePerDay,
-    },
-    customerDetails: {
-      customerId: userId,
-      fullName,
-      email: emailAddress,
-      phone: phoneNumber,
-      location,
-      gender,
-    },
-    rentalDetails: {
-      period: rentalPeriod,
-      pickupDate,
-      returnDate,
-      duration,
-    },
-    guarantors: [
-      {
-        fullName: guarantor1FullName,
-        phoneNumber: guarantor1PhoneNumber,
-        address: guarantor1Address,
-        email: guarantor1Email,
+      itemDetails: {
+        ownerId: item.Owner.id,
+        title: item.title ?? "Unknown Product",
+        category: item.category,
+        location: item.location,
+        itemImage: imageUrl,
+        pricePerDay: item.pricePerDay,
       },
-      {
-        fullName: guarantor2FullName,
-        phoneNumber: guarantor2PhoneNumber,
-        address: guarantor2Address,
-        email: guarantor2Email,
+      customerDetails: {
+        customerId: userId,
+        fullName,
+        email: emailAddress,
+        phone: phoneNumber,
+        location,
+        gender,
       },
-    ],
-  };
+      rentalDetails: {
+        period: rentalPeriod,
+        pickupDate,
+        returnDate,
+        duration,
+      },
+      // ✅ Send the same guarantor data for both
+      guarantors: [
+        {
+          fullName: guarantor1FullName,
+          phoneNumber: guarantor1PhoneNumber,
+          address: guarantor1Address,
+          email: guarantor1Email,
+        },
+        {
+          fullName: guarantor1FullName,
+          phoneNumber: guarantor1PhoneNumber,
+          address: guarantor1Address,
+          email: guarantor1Email,
+        },
+      ],
+    };
 
-  console.log("Booking Data Prepared:", data);
-  console.log("Image URL:", imageUrl);
-  setBookingData(data);
-  setCurrentStep(2);
-};
+    console.log("Booking Data Prepared:", data);
+    console.log("Image URL:", imageUrl);
+    setBookingData(data);
+    setCurrentStep(2);
+  };
 
   const formatDate = (date) => {
     return date.toLocaleDateString('en-US', {
@@ -760,10 +760,16 @@ const proceedWithBooking = (imageUrl) => {
 
                 {/* Rental Period */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Rental Date/Time</Text>
-                    <View style={styles.optionsContainer}>
+                  <Text style={styles.sectionTitle}>Rental Date/Time</Text>
+                  <View style={styles.optionsContainer}>
                     {rentalOptions.map(renderRentalPeriodOption)}
-                    </View>
+                  </View>
+                  {/* ✅ NEW: Show minimum rental info */}
+                  {rentalPeriod === "Hour" && (
+                    <Text style={styles.helperText}>
+                      Minimum rental period: 3 hours
+                    </Text>
+                  )}
                 </View>
 
                 {/* Date Selection */}
@@ -839,7 +845,7 @@ const proceedWithBooking = (imageUrl) => {
 
                 {/* Guarantor Input */}
                 <View style={styles.guarantorSection}>
-                  <Text style={styles.sectionTitle3}>Guarantor 1</Text>
+                  <Text style={styles.sectionTitle3}>Guarantor</Text>
                   <View style={styles.locationContainer}>
                     <FolderPen size={20} color="#666" style={styles.locationIcon} />
                     <TextInput
@@ -897,7 +903,7 @@ const proceedWithBooking = (imageUrl) => {
                   </View>
                   {errors.guarantor1Email && <Text style={styles.errorText}>{errors.guarantor1Email}</Text>}
                 </View>
-                {/* Guarantor Input */}
+                {/* Guarantor Input
                 <View style={styles.guarantorSection}>
                   <Text style={styles.sectionTitle3}>Guarantor 2</Text>
                   <View style={styles.locationContainer}>
@@ -956,7 +962,7 @@ const proceedWithBooking = (imageUrl) => {
                 />
               </View>
               {errors.guarantor2Email && <Text style={styles.errorText}>{errors.guarantor2Email}</Text>}
-            </View>
+            </View> */}
                           
 
  
@@ -976,28 +982,69 @@ const proceedWithBooking = (imageUrl) => {
             </KeyboardAvoidingView>
         </>
         )}
-        <DateTimePickerModalUI
-          visible={showDateTimeModal}
-          initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
-          onCancel={() => setShowDateTimeModal(false)}
-          onDone={(selectedDate) => {
-            if (activeDateType === "pickup") {
-              setPickupDate(selectedDate);
-              if (returnDate < selectedDate) {
-                const newReturn = new Date(selectedDate);
-                newReturn.setHours(newReturn.getHours() + 1);
-                setReturnDate(newReturn);
-              }
-            } else {
-              if (selectedDate < pickupDate) {
-                Alert.alert("Invalid Date", "Return date cannot be before pickup date");
-                return;
-              }
-              setReturnDate(selectedDate);
+          {/* ✅ PICKERS GO HERE - OUTSIDE THE CONDITIONAL STEPS */}
+    {rentalPeriod === "Hour" ? (
+      <HourTimePickerModal
+        visible={showDateTimeModal}
+        initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
+        onCancel={() => setShowDateTimeModal(false)}
+        onDone={(selectedDate) => {
+          if (activeDateType === "pickup") {
+            setPickupDate(selectedDate);
+            
+            const minReturn = new Date(selectedDate);
+            minReturn.setHours(minReturn.getHours() + 3);
+            
+            if (returnDate < minReturn) {
+              setReturnDate(minReturn);
             }
-            setShowDateTimeModal(false);
-          }}
-        />
+          } else {
+            if (selectedDate < pickupDate) {
+              Alert.alert("Invalid Date", "Return time cannot be before pickup time");
+              return;
+            }
+            
+            const diffMs = selectedDate - pickupDate;
+            const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
+            
+            if (diffHours < 3) {
+              Alert.alert(
+                "Minimum Rental Period",
+                "The minimum rental period for hourly rentals is 3 hours. Please select a later time.",
+                [{ text: "OK" }]
+              );
+              return;
+            }
+            
+            setReturnDate(selectedDate);
+          }
+          setShowDateTimeModal(false);
+        }}
+      />
+    ) : (
+      <DateTimePickerModalUI
+        visible={showDateTimeModal}
+        initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
+        onCancel={() => setShowDateTimeModal(false)}
+        onDone={(selectedDate) => {
+          if (activeDateType === "pickup") {
+            setPickupDate(selectedDate);
+            if (returnDate < selectedDate) {
+              const newReturn = new Date(selectedDate);
+              newReturn.setHours(newReturn.getHours() + 1);
+              setReturnDate(newReturn);
+            }
+          } else {
+            if (selectedDate < pickupDate) {
+              Alert.alert("Invalid Date", "Return date cannot be before pickup date");
+              return;
+            }
+            setReturnDate(selectedDate);
+          }
+          setShowDateTimeModal(false);
+        }}
+      />
+    )}
         </ScreenWrapper>
     );
 
@@ -1008,6 +1055,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFF",
   },
+    helperText: {
+    fontSize: 12,
+    color: "#666",
+    marginTop: 8,
+    marginLeft: 12,
+    fontStyle: "italic",
+  },
+  
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
