@@ -294,53 +294,36 @@ const updateCustomerDetails = async (req, res) => {
 const uploadCustomerPhoto = async (req, res) => {
   try {
     const { id } = req.params;
-    
-    console.log(`📸 Uploading photo for customer ID: ${id}`);
-    console.log("📂 Received file:", req.file);
 
-    // Check if customer exists
     const customer = await Customer.findByPk(id);
-    
     if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "Customer not found"
-      });
+      return res.status(404).json({ success: false, message: "Customer not found" });
     }
 
-    // Check if file was uploaded
     if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "No photo file uploaded"
-      });
+      return res.status(400).json({ success: false, message: "No photo uploaded" });
     }
 
-    // Construct the photo URL
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const photoUrl = `${baseUrl}/uploads/${req.file.filename}`;
-
-    // Update customer's idPhoto field
+    // ✅ STORE ONLY THE FILENAME
     await customer.update({
-      idPhoto: photoUrl
+      idPhoto: req.file.filename
     });
 
-    console.log("✅ Photo uploaded successfully:", photoUrl);
+    // ✅ BUILD URL ONLY FOR RESPONSE
+    const photoUrl = `${req.protocol}://${req.get("host")}/uploads/images/${req.file.filename}`;
 
     return res.status(200).json({
       success: true,
-      message: "Photo uploaded successfully",
-      photoUrl: photoUrl
+      message: "Photo updated successfully",
+      photoUrl
     });
 
   } catch (error) {
-    console.error("❌ Error uploading photo:", error);
-    return res.status(500).json({
-      success: false,
-      message: "Failed to upload photo"
-    });
+    console.error("Upload error:", error);
+    return res.status(500).json({ success: false, message: "Upload failed" });
   }
 };
+
 
 export { 
   fetchCustomers,

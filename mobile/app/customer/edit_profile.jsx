@@ -153,7 +153,7 @@ export default function EditProfile() {
             text: "OK",
             onPress: () => {
               setIsSaving(false); // ✅ Stop loading
-              router.back(); // ✅ Navigate back
+              router.push("customer/profile"); // ✅ Navigate back
             }
           }
         ]
