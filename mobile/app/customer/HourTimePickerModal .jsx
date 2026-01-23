@@ -193,14 +193,14 @@ export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) 
               style={[styles.tab, showDatePicker && styles.activeTab]}
               onPress={() => setShowDatePicker(true)}
             >
-              <Icon name="date-range" size={20} color={showDatePicker ? '#0A84FF' : '#8E8E93'} />
+              <Icon name="date-range" size={20} color={showDatePicker ? '#FFFFFF' : '#666'} />
               <Text style={[styles.tabText, showDatePicker && styles.activeTabText]}>Date</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, !showDatePicker && styles.activeTab]}
               onPress={() => setShowDatePicker(false)}
             >
-              <Icon name="access-time" size={20} color={!showDatePicker ? '#0A84FF' : '#8E8E93'} />
+              <Icon name="access-time" size={20} color={!showDatePicker ? '#FFFFFF' : '#666'} />
               <Text style={[styles.tabText, !showDatePicker && styles.activeTabText]}>Time</Text>
             </TouchableOpacity>
           </View>
@@ -222,7 +222,7 @@ export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) 
                   <Icon
                     name="chevron-left"
                     size={24}
-                    color={isAtCurrentMonth ? '#38383A' : '#FFF'}
+                    color={isAtCurrentMonth ? '#CCCCCC' : '#000'}
                   />
                 </TouchableOpacity>
 
@@ -240,7 +240,7 @@ export function HourTimePickerModal({ visible, onCancel, onDone, initialDate }) 
                     setCurrentMonth(next);
                   }}
                 >
-                  <Icon name="chevron-right" size={24} color="#FFF" />
+                  <Icon name="chevron-right" size={24} color="#000" />
                 </TouchableOpacity>
               </View>
 
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContainer: {
-    backgroundColor: '#1C1C1E',
+    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 30,
@@ -339,21 +339,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 0.5,
-    borderBottomColor: '#38383A',
+    borderBottomColor: '#E0E0E0',
   },
   title: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#FFF',
+    color: '#000',
   },
   cancelText: {
     fontSize: 17,
-    color: '#0A84FF',
+    color: '#057474',
   },
   doneText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#0A84FF',
+    color: '#057474',
   },
   tabContainer: {
     flexDirection: 'row',
@@ -368,19 +368,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#2C2C2E',
+    backgroundColor: '#F5F5F5',
     gap: 8,
   },
   activeTab: {
-    backgroundColor: '#38383A',
+    backgroundColor: '#057474',
   },
   tabText: {
     fontSize: 15,
-    color: '#8E8E93',
+    color: '#666',
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#0A84FF',
+    color: '#FFFFFF',
     fontWeight: '600',
   },
   calendarContainer: {
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFF',
+    color: '#000',
   },
   weekRow: {
     flexDirection: 'row',
@@ -406,7 +406,7 @@ const styles = StyleSheet.create({
   weekText: {
     width: 36,
     textAlign: 'center',
-    color: '#8E8E93',
+    color: '#666',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -423,10 +423,10 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   daySelected: {
-    backgroundColor: '#0A84FF',
+    backgroundColor: '#057474',
   },
   dayText: {
-    color: '#FFF',
+    color: '#333',
     fontSize: 15,
   },
   dayTextSelected: {
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     opacity: 0.3,
   },
   dayTextDisabled: {
-    color: '#38383A',
+    color: '#CCCCCC',
   },
   pickerRow: {
     flexDirection: 'row',
@@ -456,7 +456,7 @@ const styles = StyleSheet.create({
   separatorText: {
     fontSize: 34,
     fontWeight: '300',
-    color: '#FFF',
+    color: '#000',
   },
 });
 
@@ -473,11 +473,11 @@ const pickerStyles = StyleSheet.create({
   },
   itemText: {
     fontSize: 23,
-    color: '#8E8E93',
+    color: '#999',
     fontWeight: '400',
   },
   selectedItemText: {
-    color: '#FFF',
+    color: '#000',
     fontWeight: '400',
   },
   selectionIndicator: {
@@ -491,9 +491,9 @@ const pickerStyles = StyleSheet.create({
   },
   selectionBar: {
     height: ITEM_HEIGHT,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: 'rgba(5, 116, 116, 0.1)',  // Changed to match your theme color with transparency
     borderTopWidth: 0.5,
     borderBottomWidth: 0.5,
-    borderColor: '#38383A',
+    borderColor: '#E0E0E0',
   },
 });
