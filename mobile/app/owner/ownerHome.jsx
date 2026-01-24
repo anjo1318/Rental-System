@@ -643,7 +643,7 @@ badgeText: {
     shadowRadius: 4,
     elevation: 3,
     borderWidth: 1,
-    borderColor: "#007F7F33"
+    borderColor: "#007F7F39"
 
   },
   upperHalf: {

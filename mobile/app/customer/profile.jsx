@@ -177,7 +177,7 @@ export default function Profile() {
             />
           </View>
           <Text style={styles.historyText}>History of Rent</Text>
-          <Icon name="arrow-forward-ios" style={styles.historyArrowIcon} />
+          <Icon name="-forward-ios"arrow style={styles.historyArrowIcon} />
         </Pressable>
       </View>    
 

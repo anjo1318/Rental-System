@@ -2,6 +2,7 @@ import React from "react";
 import {View,Image,Text,Pressable,StyleSheet,Dimensions,StatusBar,
 } from "react-native";
 import { useRouter } from "expo-router";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 
 const { width, height } = Dimensions.get("window");
@@ -20,6 +21,7 @@ export default function LoginInterface() {
 
       <View style={styles.safe}>
         {/* Header image */}
+        <View style={styles.headerContainer}>
         <Image
           source={require("../assets/images/header.png")}
           style={styles.headerImage}
@@ -27,7 +29,15 @@ export default function LoginInterface() {
           accessible
           accessibilityLabel="Top banner"
         />
-
+        {/* Back Button */}
+  <Pressable
+    style={styles.backButton}
+    onPress={() => router.back()}
+    hitSlop={10}
+  >
+    <MaterialIcons name="arrow-back-ios" size={22} color="#fff" />
+  </Pressable>
+      </View>
         {/* Logo section */}
         <View style={styles.middle}>
           <Image
@@ -87,6 +97,24 @@ const styles = StyleSheet.create({
     width: "100%",
     height: height * 0.22,
   },
+  headerContainer: {
+  width: "100%",
+  height: height * 0.22,
+},
+
+backButton: {
+  position: "absolute",
+  left: 16,
+  top: StatusBar.currentHeight
+    ? StatusBar.currentHeight + 10
+    : 40,
+  width: 40,
+  height: 40,
+  borderRadius: 20,
+  justifyContent: "center",
+  alignItems: "center",
+},
+
   middle: {
     alignItems: "center",
     marginTop: height * 0.13,

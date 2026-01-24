@@ -807,7 +807,7 @@ badgeText: {
     borderColor: "transparent",
     marginHorizontal: 3,
     borderWidth: 1,
-    borderColor: "#007F7F33"  
+    borderColor: "#007F7F39"  
     
   },
 

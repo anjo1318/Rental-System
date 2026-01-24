@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     position: "relative",
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
-    top: 9,
+    left: 5,
     },
 
 
@@ -424,6 +424,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     height: 45,
     backgroundColor: "#fff",
+    top: 12,
   },
 
   leftIcon: { 
@@ -508,8 +509,13 @@ const styles = StyleSheet.create({
     borderWidth: 0,
     borderColor: "transparent",
     marginHorizontal: 3,
+     shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     borderWidth: 1,
-    borderColor: "#007F7F80",
+    borderColor: "#007F7F39",
     top: 8,
     right: 9,
   },
