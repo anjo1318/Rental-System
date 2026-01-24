@@ -235,7 +235,7 @@ export default function OwnerHome() {
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: item.isAvailable ? "#4CAF50" : "#FF5722" },
+                { backgroundColor: item.isAvailable ? "#4CAF50" : "#FF2125" },
               ]}
             >
               <Text style={styles.statusText}>
@@ -304,7 +304,7 @@ export default function OwnerHome() {
 
       <ScrollView
         style={styles.container}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
         showsVerticalScrollIndicator={false}
         nestedScrollEnabled={true}
         refreshControl={
@@ -633,15 +633,18 @@ badgeText: {
   },
   card: {
     width: (width - 48) / 2,
-    marginHorizontal: 6, 
+    marginHorizontal: 3, 
     backgroundColor: "#FFF",
-    borderRadius: 5,
+    borderRadius: 15,
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    borderWidth: 1,
+    borderColor: "#007F7F33"
+
   },
   upperHalf: {
     height: 120,

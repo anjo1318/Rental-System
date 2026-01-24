@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   StatusBar,
+  ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -122,8 +123,9 @@ export default function ownerProfile() {
               title="Profile"
               backgroundColor="#007F7F"
             />
+            <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
       <View style={styles.container}>
-
+    
       {/* User Profile Section */}
       <View style={styles.userContainer}>
         <View style={styles.userRow}>
@@ -234,11 +236,13 @@ export default function ownerProfile() {
     <Text style={styles.outText}>Log out</Text>
   </View>
 </Pressable>
-
+ </View>
+ </ScrollView>
 
     <OwnerBottomNav/>
 
-    </View>
+   
+   
     </ScreenWrapper>
   );
 }

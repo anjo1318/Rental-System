@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
 
   contentWrapper: {
     padding: 16,
-    paddingBottom: 80,
+    paddingBottom: 150,
   },
 
   loadingContainer: {

@@ -667,7 +667,7 @@ export default function PersonalInfo() {
     <>
       <View style={styles.headerTextRow}>
         <Text style={styles.stepText}>Step 3</Text>
-        <Text style={styles.personalText}>ID Upload/Guarantor</Text>
+        <Text style={styles.personalText}>Role/ID Upload</Text>
       </View>
 
       <View style={styles.photoContainer}>

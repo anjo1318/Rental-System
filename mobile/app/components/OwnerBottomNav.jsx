@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Pressable, StyleSheet, Dimensions, ImageBackground } from "react-native";
 import { useRouter, usePathname } from "expo-router";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -52,14 +52,20 @@ export default function OwnerBottomNav({ role = "owner" }) {
   };
 
   return (
-    <View
-      style={[
-        styles.bottomNav,
-        {
-          paddingBottom: insets.bottom - 20,
-        },
-      ]}
-    >
+   <ImageBackground
+  source={require("../../assets/images/navline.png")} // <-- your image path
+  resizeMode="cover" // or "cover"
+  imageStyle={{
+    left: -14,        // 👈 move image left
+    width: width + 40 // 👈 compensate so it still fills
+  }}
+  style={[
+    styles.bottomNav,
+    {
+      paddingBottom: insets.bottom - 20,
+    },
+  ]}
+>
       {navItems.map((item, index) => {
         const isActive = pathname.startsWith(item.route);
 
@@ -116,25 +122,24 @@ return (
 );
 
       })}
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 3,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 999,
-    elevation: 20,
-  },
+bottomNav: {
+  flexDirection: "row",
+  justifyContent: "space-around",
+  paddingVertical: 40,
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  right: 0,
+  zIndex: 999,
+  elevation: 20,
+  overflow: "hidden", // ✅ ensures image doesn’t overflow
+},
+
 
   navButton: {
     alignItems: "center",
@@ -168,6 +173,17 @@ const styles = StyleSheet.create({
   tabContent: {
   alignItems: "center",
   justifyContent: "center",
+
+  topNavLine: {
+  position: "absolute",
+  top: 0,
+  left: 0,
+  right: 0,
+  width: "100%",
+  height: 6,          // adjust height as needed
+  resizeMode: "cover",
+},
+
 },
 
 });

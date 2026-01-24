@@ -799,10 +799,16 @@ badgeText: {
     borderRadius: 15,
     overflow: "hidden",
     borderWidth: 0,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
     borderColor: "transparent",
     marginHorizontal: 3,
     borderWidth: 1,
-    borderColor: "#007F7F80",
+    borderColor: "#007F7F33"  
+    
   },
 
   upperHalf: {
