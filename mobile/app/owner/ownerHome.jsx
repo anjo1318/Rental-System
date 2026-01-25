@@ -263,7 +263,7 @@ export default function OwnerHome() {
 
   return (
     <>
-     <ScreenWrapper backgroundColor="#007F7F">
+     <ScreenWrapper backgroundColor="#fff">
         <View style={styles.header}>
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
@@ -367,7 +367,7 @@ export default function OwnerHome() {
           </View>
         </View>
 
-        <View style={styles.subHeader}></View>
+      
 
         <View style={styles.lowerCard}>
           {/* Search */}
@@ -380,7 +380,6 @@ export default function OwnerHome() {
               style={styles.searchInput}
               placeholderTextColor="#057474"
             />
-            <MaterialIcon name="tune" size={20} color="#057474" style={styles.rightIcon} />
           </View>
 
           {/* Categories */}
@@ -450,20 +449,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 34,
+    paddingVertical: 42,
     paddingHorizontal: 16,
     top: 19,
   },
-  subHeader: {
-    position: "relative",
-    backgroundColor: "#007F7F",
-    padding: 12,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    zIndex: 1000,
-    width: "100%",
-    bottom: 203,
-  },
+
   container: {
     flex: 1,
     backgroundColor: "#F6F6F6",
@@ -568,10 +558,11 @@ badgeText: {
     height: 17,
   },
   lowerCard: {
-    backgroundColor: "#fff",
-    marginHorizontal: 10,
     borderRadius: 20,
-    bottom: 10,
+    top: 20,
+    paddingBottom: 20,
+    marginHorizontal: -5, // smaller = wider
+    
   },
   searchContainer: {
     flexDirection: "row",
@@ -619,6 +610,7 @@ badgeText: {
     borderWidth: 1,
     borderColor: "#007F7F39", 
     marginBottom: 20,
+    
   },
   activeCategory: {
     backgroundColor: "#057474",
@@ -633,7 +625,7 @@ badgeText: {
     fontWeight: "500",
   },
   card: {
-    width: (width - 48) / 2,
+    width: (width - 25) / 2,
     marginHorizontal: 3, 
     backgroundColor: "#FFF",
     borderRadius: 15,
@@ -668,13 +660,13 @@ badgeText: {
     marginBottom: 6,
   },
   statusBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
     borderRadius: 5,
     alignSelf: "flex-start",
   },
   statusText: {
-    fontSize: 8,
+    fontSize: 9,
     color: "#FFF",
     fontWeight: "500",
   },

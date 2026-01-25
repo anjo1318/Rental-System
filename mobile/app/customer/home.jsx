@@ -484,7 +484,9 @@ function Filter({
           </Pressable>
         </View>
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <ScrollView showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}>
+          
           {/* Category */}
           <Text style={filterStyles.label}>Category</Text>
           <Pressable 
@@ -498,26 +500,38 @@ function Filter({
           </Pressable>
           
           {showCategoryPicker && (
-            <View style={filterStyles.picker}>
-              {categories.map((cat) => (
-                <Pressable
-                  key={cat}
-                  style={filterStyles.pickerItem}
-                  onPress={() => {
-                    setSelectedCategory(cat);
-                    setShowCategoryPicker(false);
-                  }}
-                >
-                  <Text style={selectedCategory === cat ? filterStyles.selectedPickerText : filterStyles.pickerText}>
-                    {cat}
-                  </Text>
-                  {selectedCategory === cat && (
-                    <Icon name="check" size={20} color="#007F7F" />
-                  )}
-                </Pressable>
-              ))}
-            </View>
+  <View style={filterStyles.picker}>
+    <ScrollView
+      nestedScrollEnabled
+      showsVerticalScrollIndicator={true}
+    >
+      {categories.map((cat) => (
+        <Pressable
+          key={cat}
+          style={filterStyles.pickerItem}
+          onPress={() => {
+            setSelectedCategory(cat);
+            setShowCategoryPicker(false);
+          }}
+        >
+          <Text
+            style={
+              selectedCategory === cat
+                ? filterStyles.selectedPickerText
+                : filterStyles.pickerText
+            }
+          >
+            {cat}
+          </Text>
+          {selectedCategory === cat && (
+            <Icon name="check" size={20} color="#007F7F" />
           )}
+        </Pressable>
+      ))}
+    </ScrollView>
+  </View>
+)}
+
 
           {/* Brand */}
           <Text style={filterStyles.label}>Brand</Text>
@@ -533,6 +547,10 @@ function Filter({
 
           {showBrandPicker && (
             <View style={filterStyles.picker}>
+              <ScrollView
+      nestedScrollEnabled
+      showsVerticalScrollIndicator={true}
+    >
               <Pressable
                 style={filterStyles.pickerItem}
                 onPress={() => {
@@ -564,8 +582,10 @@ function Filter({
                   )}
                 </Pressable>
               ))}
+              </ScrollView>
             </View>
           )}
+          
 
           {/* Price Range */}
           <Text style={filterStyles.label}>Price Range</Text>
@@ -599,6 +619,10 @@ function Filter({
 
           {showLocationPicker && (
             <View style={filterStyles.picker}>
+              <ScrollView
+      nestedScrollEnabled
+      showsVerticalScrollIndicator={true}
+    >
               <Pressable
                 style={filterStyles.pickerItem}
                 onPress={() => {
@@ -630,13 +654,15 @@ function Filter({
                   )}
                 </Pressable>
               ))}
+              </ScrollView>
             </View>
           )}
-        </ScrollView>
-
-        <Pressable style={filterStyles.doneButton} onPress={handleDone}>
+          <Pressable style={filterStyles.doneButton} onPress={handleDone}>
           <Text style={filterStyles.doneText}>Apply Filter</Text>
         </Pressable>
+        </ScrollView>
+
+        
       </View>
     </View>
   );
@@ -982,17 +1008,18 @@ const filterStyles = StyleSheet.create({
     marginBottom: 10,
   },
   doneButton: {
-    marginBottom:70,
     backgroundColor: "#007F7F",
     paddingVertical: 12,
     borderRadius: 10,
     width: "70%",
     alignItems: "center",
     alignSelf: "center",
+    top: 40,
   },
   doneText: {
     color: "#fff",
     fontWeight: "600",
+    
   },
   picker: {
     backgroundColor: "#f9f9f9",
