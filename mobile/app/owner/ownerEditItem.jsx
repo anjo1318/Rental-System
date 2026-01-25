@@ -251,7 +251,7 @@ export default function OwnerEditItem() {
 
   return (
    
-         <ScreenWrapper>
+        <ScreenWrapper backgroundColor="#E6E1D6" >
             <Header
               title="Messages"
               backgroundColor="#007F7F"
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
   },
   picker: {
-    height: 50,
+    height: 52,
   },
   imageContainer: {
     backgroundColor: '#FFF',

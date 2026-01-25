@@ -11,7 +11,6 @@ import {
   Image,
   Pressable,
   Dimensions,
-  StatusBar,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
@@ -435,48 +434,48 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
   }
 
   return (
-    <ScreenWrapper backgroundColor="#E6E1D6" >
+    <ScreenWrapper backgroundColor="#fff" >
           <Header
        title={`My Items (${items.length})`}
           backgroundColor="#fff"
               />
-
+      
       <View style={styles.container}>
-      {/* Items List */}
-      <FlatList
-        data={filteredItems}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderItem}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        removeClippedSubviews={false}
-        keyboardShouldPersistTaps="handled"
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Icon name="inventory" size={64} color="#ccc" />
-            <Text style={styles.emptyTitle}>
-              {search ? 'No matching items' : 'No items yet'}
-            </Text>
-            <Text style={styles.emptyText}>
-              {search 
-                ? 'Try adjusting your search terms' 
-                : 'Tap the + button to add your first item'}
-            </Text>
-            {!search && (
-              <TouchableOpacity 
-                activeOpacity={0.7}
-                onPress={addNewItem} 
-                style={styles.addFirstItemButton}
-              >
-                <Text style={styles.addFirstItemText}>Add First Item</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        }
-      />
+<FlatList
+  data={filteredItems}
+  keyExtractor={(item) => item.id.toString()}
+  renderItem={renderItem}
+  contentContainerStyle={[styles.listContainer, { paddingBottom: 120 }]} // <-- extra bottom padding
+  showsVerticalScrollIndicator={false}
+  refreshing={refreshing}
+  onRefresh={onRefresh}
+  removeClippedSubviews={false}
+  keyboardShouldPersistTaps="handled"
+  ListEmptyComponent={
+    <View style={styles.emptyContainer}>
+      <Icon name="inventory" size={64} color="#ccc" />
+      <Text style={styles.emptyTitle}>
+        {search ? 'No matching items' : 'No items yet'}
+      </Text>
+      <Text style={styles.emptyText}>
+        {search 
+          ? 'Try adjusting your search terms' 
+          : 'Tap the + button to add your first item'}
+      </Text>
+      {!search && (
+        <TouchableOpacity 
+          activeOpacity={0.7}
+          onPress={addNewItem} 
+          style={styles.addFirstItemButton}
+        >
+          <Text style={styles.addFirstItemText}>Add First Item</Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  }
+/>
 
+   
        <OwnerBottomNav/>
       </View>
       </ScreenWrapper>
@@ -486,19 +485,12 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    backgroundColor: "#E6E1D6" 
+    backgroundColor: "#fff", 
   },
   centered: {
     justifyContent: "center", 
     alignItems: "center"
   },
-header: { 
-  width: "100%",
-  justifyContent: "center",
-  backgroundColor: "#007F7F",
-  borderBottomLeftRadius: 20,
-  borderBottomRightRadius: 20,
-},
 profileContainer: {
   flexDirection: "row",
   alignItems: "center",
@@ -541,7 +533,7 @@ iconPress: {
     marginRight: 8,
   },
   listContainer: {
-    padding: 16,
+    padding: 8,
     paddingTop: 20
   },
   
