@@ -60,17 +60,20 @@ export default function OwnerItemImages({ images }) {
       >
         {imageArray.length > 0 ? (
           imageArray.map((imgUrl, index) => (
-            <Image
-              key={index}
-              source={{ uri: imgUrl }}
-              style={styles.image}
-            />
+            <View key={index} style={styles.imageWrapper}>
+              <Image
+                source={{ uri: imgUrl }}
+                style={styles.image}
+              />
+            </View>
           ))
         ) : (
-          <Image
-            source={{ uri: "https://via.placeholder.com/400x300?text=No+Image" }}
-            style={styles.image}
-          />
+          <View style={styles.imageWrapper}>
+            <Image
+              source={{ uri: "https://via.placeholder.com/400x300?text=No+Image" }}
+              style={styles.image}
+            />
+          </View>
         )}
       </ScrollView>
 
@@ -104,12 +107,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
   },
-  image: {
-    width: width - 32, // full width minus margins
+
+  imageWrapper: {
+    width: width - 32,
     height: 280,
-    resizeMode: "cover",
-    marginRight: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f2f2f2",
   },
+
+  image: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",   // 🔥 KEY FIX – keeps aspect ratio
+  },
+
   dotsContainer: {
     position: "absolute",
     bottom: 10,
@@ -117,6 +129,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
+
   dot: {
     height: 8,
     width: 8,

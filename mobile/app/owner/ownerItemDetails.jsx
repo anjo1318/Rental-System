@@ -428,13 +428,13 @@ const styles = StyleSheet.create({
   detailLine2: {
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#0574744D',
+    borderTopColor: 'white',
     bottom: 105,
   },
   detailLine4: {
     paddingTop: 12,
     borderTopColor: '#0574744D',
-    bottom: 50,
+    bottom: 70,
     borderTopWidth: 1,
   },
   detailLine3: {
@@ -447,12 +447,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    top: 45,
+    top: 33,
   },
   detailValue: {
     fontSize: 14,
     color: '#666',
-    top: 45,
+    top: 33,
     left: 5,
   },
   section: {

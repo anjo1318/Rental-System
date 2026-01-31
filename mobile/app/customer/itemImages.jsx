@@ -17,7 +17,23 @@ export default function ItemImages({ images }) {
   const [activeIndex, setActiveIndex] = useState(0);
 
   // Parse JSON string to array
-  const imageArray = images && images.length > 0 ? JSON.parse(images[0]) : [];
+  let imageArray = [];
+
+try {
+  if (images && images.length > 0) {
+    const parsed = JSON.parse(images[0]);
+
+    if (Array.isArray(parsed)) {
+      imageArray = parsed.map(url =>
+        url.replace(/^http:\/\//, "https://").replace(/\\+$/, "")
+      );
+    }
+  }
+} catch (e) {
+  console.warn("Error parsing images:", e);
+  imageArray = [];
+}
+
 
   const onScroll = (event) => {
     const slide = Math.ceil(event.nativeEvent.contentOffset.x / width);
@@ -36,20 +52,24 @@ export default function ItemImages({ images }) {
         onScroll={onScroll}
         scrollEventThrottle={16}
       >
-        {imageArray.length > 0 ? (
-          imageArray.map((imgUrl, index) => (
-            <Image
-              key={index}
-              source={{ uri: imgUrl }}
-              style={styles.image}
-            />
-          ))
-        ) : (
-          <Image
-            source={{ uri: "https://via.placeholder.com/400x300" }}
-            style={styles.image}
-          />
-        )}
+       {imageArray.length > 0 ? (
+  imageArray.map((imgUrl, index) => (
+    <View key={index} style={styles.imageWrapper}>
+      <Image
+        source={{ uri: imgUrl || "https://via.placeholder.com/400x300" }}
+        style={styles.image}
+      />
+    </View>
+  ))
+) : (
+  <View style={styles.imageWrapper}>
+    <Image
+      source={{ uri: "https://via.placeholder.com/400x300" }}
+      style={styles.image}
+    />
+  </View>
+)}
+
       </ScrollView>
 
       {/* Dot Indicators */}
@@ -79,13 +99,22 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
+     backgroundColor: "#EDEDED",
   },
-  image: {
-    width: width - 32, // full width minus margins
-    height: 280,
-    resizeMode: "cover",
-    marginRight: 0,
-  },
+  imageWrapper: {
+  width: width - 32,
+  height: 280,
+  backgroundColor: "#EDEDED",
+  overflow: "hidden",
+},
+
+image: {
+  width: "100%",
+  height: "100%",
+  resizeMode: "contain",
+},
+
+
   dotsContainer: {
     position: "absolute",
     bottom: 10,

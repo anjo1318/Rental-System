@@ -227,7 +227,9 @@ export default function OwnerHome() {
         onPress={() => router.push({ pathname: "owner/ownerItemDetails", params: { id: item.id } })}
       >
         <View style={styles.upperHalf}>
+          <View style={styles.imageWrapper}>
           <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
+          </View>
         </View>
         <View style={styles.lowerHalf}>
           <Text style={styles.title}>{item.title}</Text>
@@ -638,14 +640,25 @@ badgeText: {
     borderColor: "#007F7F39"
 
   },
+  imageWrapper: {
+  width: "100%",
+  height: "100%",
+  justifyContent: "center",
+  alignItems: "center",
+  backgroundColor: "#f2f2f2",
+},
+
   upperHalf: {
-    height: 120,
-  },
-  itemImage: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
+  height: 120,
+  backgroundColor: "#f2f2f2",
+},
+
+itemImage: {
+  width: "100%",
+  height: "100%",
+  resizeMode: "contain",   // 🔥 MAIN FIX
+},
+
   lowerHalf: {
     padding: 12,
   },

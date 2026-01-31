@@ -11,6 +11,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  Keyboard,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -34,6 +35,8 @@ export default function ChatScreen({ BottomNav }) {
   const [chatDetails, setChatDetails] = useState(null);
   const flatListRef = useRef(null);
   const insets = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
 
 
   console.log("💬 ChatScreen - Chat ID:", id);
@@ -93,6 +96,22 @@ export default function ChatScreen({ BottomNav }) {
 
     fetchChatDetails();
   }, [id, userId, token]);
+
+  useEffect(() => {
+  const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+    setKeyboardHeight(e.endCoordinates.height);
+  });
+
+  const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+    setKeyboardHeight(0);
+  });
+
+  return () => {
+    showSub.remove();
+    hideSub.remove();
+  };
+}, []);
+
 
   // Fetch messages
   useEffect(() => {
@@ -174,6 +193,13 @@ export default function ChatScreen({ BottomNav }) {
 
   return (
     <ScreenWrapper>
+       <KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={undefined}
+>
+
+  
+   
     <View style={styles.container}>
       
       {/* Header */}
@@ -209,19 +235,34 @@ export default function ChatScreen({ BottomNav }) {
         renderItem={renderMessage}
         contentContainerStyle={styles.messagesList}
         style={styles.messagesContainer}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+        keyboardShouldPersistTaps="handled"
+         onContentSizeChange={() =>
+    flatListRef.current?.scrollToEnd({ animated: true })
+  }
+  onLayout={() =>
+    flatListRef.current?.scrollToEnd({ animated: true })
+  }
+
       />
       
       {/* Input */}
-      <KeyboardAvoidingView
-  behavior={Platform.OS === "ios" ? "padding" : "height"}
-  keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0}
+        <View
+  style={[
+    styles.inputContainer,
+    {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom:
+        keyboardHeight > 0
+          ? keyboardHeight + 5
+          : 0,
+      paddingBottom: insets.bottom + 8,
+    },
+  ]}
 >
 
-        <View style={[
-  styles.inputContainer,
-  { paddingBottom: insets.bottom || 10 }
-]}>
+
           <Pressable style={styles.addButton}>
             <Icon name="add-circle-outline" size={28} color="#666" />
           </Pressable>
@@ -239,8 +280,8 @@ export default function ChatScreen({ BottomNav }) {
             <Icon name="send" size={24} color="#03A3A3" />
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
     </View>
+    </KeyboardAvoidingView>
     </ScreenWrapper>
     
   );
@@ -362,14 +403,17 @@ const styles = StyleSheet.create({
   },
 
   inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: "#FFF",
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
-  },
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 12,
+  paddingVertical: 10,
+  backgroundColor: "#FFF",
+  borderTopWidth: 1,
+  borderTopColor: "#E0E0E0",
+  position: "absolute",
+},
+
+
 
   addButton: {
     padding: 4,

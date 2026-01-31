@@ -361,7 +361,7 @@ export default function TapSearchBar() {
                 {/* Availability Badge */}
                   <View style={[
                     styles.availabilityBadge,
-                    { backgroundColor: item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
+                    { backgroundColor: item.availableQuantity > 0 ? "#4CAF50" : "#FF2125" }
                   ]}>
                     <Text style={styles.availabilityText}>
                       {item.availableQuantity > 0 ? "Available" : "Unavailable"}
@@ -797,26 +797,17 @@ badgeText: {
   
   },
   imageWrapper: {
-    width: "220",
-    height: 180,          
-    borderBottomWidth: 0,
-    borderBottomColor: "transparent",
-    overflow: "hidden",   
-    top: -60,
-    backgroundColor: "#EDEDED",
-    
-    
+  width: "100%",
+  height: "100%",
+  overflow: "hidden",
+  backgroundColor: "#EDEDED",
+},
 
-  },
-
-  featuredImage: {
-    width: "70%",
-    height: "70%",
-    resizeMode: "cover",
-    top: 50,
-    left: 30,
-    
-  },
+featuredImage: {
+  width: "100%",
+  height: "100%",
+  resizeMode: "cover",
+},
 
   card: {
     width: CARD_WIDTH,
@@ -838,12 +829,11 @@ badgeText: {
   },
 
   upperHalf: {
-    flex: 0.5,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    top: 50,
-  },
+  height: CARD_HEIGHT * 0.45,   // fixed image area
+  width: "100%",
+  backgroundColor: "#fff",
+},
+
   itemImage: {
     width: "100%",
     height: "95%",
@@ -855,7 +845,6 @@ badgeText: {
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 47,
     
   },
 

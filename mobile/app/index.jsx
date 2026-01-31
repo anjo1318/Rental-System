@@ -479,26 +479,17 @@ const styles = StyleSheet.create({
   
   },
   imageWrapper: {
-    width: "220",
-    height: 180,          
-    borderBottomWidth: 0,
-    borderBottomColor: "transparent",
-    overflow: "hidden",   
-    top: -60,
-    backgroundColor: "#EDEDED",
-    
-    
+  width: "100%",
+  height: "100%",
+  overflow: "hidden",
+  backgroundColor: "#EDEDED",
+},
 
-  },
-
-  featuredImage: {
-    width: "70%",
-    height: "70%",
-    resizeMode: "cover",
-    top: 50,
-    left: 30,
-    
-  },
+featuredImage: {
+  width: "100%",
+  height: "100%",
+  resizeMode: "cover",
+},
 
    card: {
     width: CARD_WIDTH,
@@ -521,12 +512,11 @@ const styles = StyleSheet.create({
   },
 
   upperHalf: {
-    flex: 0.5,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    top: 50,
-  },
+  height: CARD_HEIGHT * 0.45,   // fixed image area
+  width: "100%",
+  backgroundColor: "#fff",
+},
+
   itemImage: {
     width: "100%",
     height: "95%",
@@ -538,7 +528,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
-    top: 47,
+    
     
   },
 
@@ -633,32 +623,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold" 
   },
 
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
-    elevation: 10,
-  },
-
-  navButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    flex: 1,
-  },
-
-  navText: {
-    fontWeight: "600",
-    fontSize: 13,
-    marginTop: 4,
-  },
 
   center: { 
     flex: 1, 

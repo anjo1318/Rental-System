@@ -190,19 +190,8 @@ export default function ownerProfile() {
       </View>    
 
       {/* Support Section */}
-      <View style={styles.settingsContainer}>
         <Text style={styles.supportText}>Support</Text>
-        <Pressable style={styles.settingsRow} onPress={() => router.push("customer/settings")}>
-          <View style={styles.settingsPhotoWrapper}>
-            <Image
-              source={require("../../assets/images/settings.png")}
-              style={styles.settingsAvatar}
-            />
-          </View>
-          <Text style={styles.settingsText}>Settings</Text>
-          <Icon name="arrow-forward-ios" style={styles.settingsArrowIcon} />
-        </Pressable>
-      </View>    
+        
 
       <View style={styles.privacyContainer}>
         <Pressable style={styles.privacyRow} onPress={() => router.push("/terms")}>
@@ -344,7 +333,6 @@ const styles = StyleSheet.create({
   },
 
   generalText: {
-    marginLeft: 13,
     fontSize: width * 0.045,
     fontWeight: "700",
     color: "#000",
@@ -614,7 +602,7 @@ settingsRow: {
 
   outContainer: {
     width: "92%",
-    marginTop: 50,
+    marginTop: 90,
     alignSelf: "center",
     alignItems: "center",
     paddingHorizontal: 8,
