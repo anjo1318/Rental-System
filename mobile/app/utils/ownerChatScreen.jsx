@@ -16,6 +16,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import ScreenWrapper from "../components/screenwrapper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 
@@ -29,6 +31,7 @@ export default function OwnerChatScreen({ BottomNav }) {
   const [userName, setUserName] = useState("");
   const [chatDetails, setChatDetails] = useState(null);
   const flatListRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
   console.log("💬 Owner ChatScreen - Chat ID:", id);
 
@@ -167,11 +170,11 @@ export default function OwnerChatScreen({ BottomNav }) {
   };
 
   return (
+    <ScreenWrapper>
     <View style={styles.container}>
-      {BottomNav && <BottomNav />}
       
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top }]}>
         <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
           <Icon name="arrow-back" size={24} color="#000" />
         </Pressable>
@@ -207,11 +210,13 @@ export default function OwnerChatScreen({ BottomNav }) {
       />
       
       {/* Input */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
-      >
-        <View style={styles.inputContainer}>
+           <KeyboardAvoidingView
+       behavior={Platform.OS === "ios" ? "padding" : "height"}
+       keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0} >
+         <View style={[
+          styles.inputContainer,
+          { paddingBottom: insets.bottom || 10 }
+        ]}>
           <Pressable style={styles.addButton}>
             <Icon name="add-circle-outline" size={28} color="#666" />
           </Pressable>
@@ -231,6 +236,7 @@ export default function OwnerChatScreen({ BottomNav }) {
         </View>
       </KeyboardAvoidingView>
     </View>
+    </ScreenWrapper>
   );
 }
 
@@ -247,7 +253,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
+    borderBottomColor: "#00000040",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
+    shadowRadius: 4,
+    elevation: 4,       
+    overflow: "hidden",
   },
 
   backButton: {

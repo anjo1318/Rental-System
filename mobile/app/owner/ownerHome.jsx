@@ -559,8 +559,8 @@ badgeText: {
   },
   lowerCard: {
     borderRadius: 20,
-    top: 20,
     paddingBottom: 20,
+    top: 15,
     marginHorizontal: -5, // smaller = wider
     
   },
@@ -569,7 +569,6 @@ badgeText: {
     alignItems: "center",
     backgroundColor: "#FFF",
     marginHorizontal: 16,
-    marginVertical: 16,
     borderRadius: 25,
     paddingHorizontal: 13,
     shadowColor: "#000",
@@ -598,7 +597,7 @@ badgeText: {
     color: "#333",
     marginBottom: 12,
     paddingHorizontal: 16,
-    marginTop: 15,
+    marginTop: 10,
   },
   categoryButton: {
     paddingHorizontal: 20,

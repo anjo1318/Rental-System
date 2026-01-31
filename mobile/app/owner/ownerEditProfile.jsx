@@ -47,7 +47,7 @@ export default function EditProfile() {
   const [province, setProvince] = useState("");
   const [country, setCountry] = useState("");
   const [zipCode, setZipCode] = useState("");
-  const [gcashQR, setGcashQR] = useState("");
+
 
     useEffect(() => {
     loadUserData();
@@ -99,18 +99,8 @@ export default function EditProfile() {
     }
     };
 
-    const pickGcashQR = async () => {
-      let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
+    
 
-      if (!result.canceled) {
-        setGcashQR(result.assets[0].uri); // store local URI
-      }
-    };
 
     const handleUpdateOwnerDetails = async () => {
       if (!currentUser?.id) {
@@ -125,15 +115,7 @@ export default function EditProfile() {
         formData.append("email", email);
         formData.append("phone", phoneNumber);
 
-        if (gcashQR && !gcashQR.startsWith("http")) {
-          const filename = gcashQR.split("/").pop();
-          const filetype = filename.split(".").pop();
-          formData.append("gcashQR", {
-            uri: gcashQR,
-            name: filename,
-            type: `image/${filetype}`,
-          });
-        }
+    
 
         const response = await axios.put(
           `${process.env.EXPO_PUBLIC_API_URL}/api/owner/update/${currentUser.id}`,
@@ -269,19 +251,6 @@ export default function EditProfile() {
                 keyboardType="phone-pad"
                 autoCapitalize="none"
               />
-
-              <View>
-              <Text style={styles.username}>Gcash QR</Text>
-            </View>
-            <Pressable onPress={pickGcashQR} style={{ marginBottom: 15 }}>
-              {gcashQR ? (
-                <Image source={{ uri: gcashQR }} style={{ width: 100, height: 100, borderRadius: 8 }} />
-              ) : (
-                <View style={{ width: 100, height: 100, borderWidth: 1, borderColor:  "#05747480", justifyContent: "center", alignItems: "center",  }}>
-                  <Text>Select QR</Text>
-                </View>
-              )}
-            </Pressable>
             {/* Save Button */}
             <Pressable style={styles.saveButton} onPress={handleUpdateOwnerDetails}>
               <Text style={styles.saveText}>Save Changes</Text>
