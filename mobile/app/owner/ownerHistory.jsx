@@ -26,22 +26,22 @@ export default function OwnerHistory({ title = "Time Duration", backgroundColor 
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  // Load customer ID and fetch history
+  // Load owner ID and fetch history
   useEffect(() => {
-    loadCustomerAndFetchHistory();
+    loadOwnerAndFetchHistory();
   }, []);
 
-  const loadCustomerAndFetchHistory = async () => {
+  const loadOwnerAndFetchHistory = async () => {
     try {
-      console.log("=== Loading Customer ID ===");
+      console.log("=== Loading Owner ID ===");
       
-      // Try to get customerId first
-      let customerId = await AsyncStorage.getItem("customerId");
-      console.log("customerId from storage:", customerId);
+      // Try to get ownerId first
+      let ownerId = await AsyncStorage.getItem("ownerId");
+      console.log("ownerId from storage:", ownerId);
       
       // If not found, try to get from user object
-      if (!customerId) {
-        console.log("customerId not found, checking user object...");
+      if (!ownerId) {
+        console.log("ownerId not found, checking user object...");
         const userStr = await AsyncStorage.getItem("user");
         console.log("User string from storage:", userStr);
         
@@ -50,8 +50,8 @@ export default function OwnerHistory({ title = "Time Duration", backgroundColor 
             const user = JSON.parse(userStr);
             console.log("Parsed user:", user);
             console.log("User ID:", user.id);
-            customerId = user.id?.toString();
-            console.log("Extracted customerId:", customerId);
+            ownerId = user.id?.toString();
+            console.log("Extracted ownerId:", ownerId);
           } catch (parseError) {
             console.error("Error parsing user JSON:", parseError);
           }
@@ -60,35 +60,35 @@ export default function OwnerHistory({ title = "Time Duration", backgroundColor 
         }
       }
       
-      console.log("Final Customer ID:", customerId);
+      console.log("Final Owner ID:", ownerId);
       
-      if (customerId) {
-        await fetchHistory(customerId);
+      if (ownerId) {
+        await fetchHistory(ownerId);
       } else {
-        console.log("No customer ID found in AsyncStorage");
-        setError("Customer ID not found. Please login again.");
-        Alert.alert("Error", "Customer ID not found. Please login again.");
+        console.log("No owner ID found in AsyncStorage");
+        setError("Owner ID not found. Please login again.");
+        Alert.alert("Error", "Owner ID not found. Please login again.");
         setLoading(false);
       }
     } catch (error) {
-      console.error("Error loading customer ID:", error);
+      console.error("Error loading owner ID:", error);
       setError(error.message);
       setLoading(false);
     }
   };
 
-  const fetchHistory = async (customerId) => {
+  const fetchHistory = async (ownerId) => {
     try {
       setLoading(true);
       setError(null);
       
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-      const fullUrl = `${apiUrl}/api/history/owner/${customerId}`;
+      const fullUrl = `${apiUrl}/api/history/owner/${ownerId}`;
       
-      console.log("=== Fetching History ===");
+      console.log("=== Fetching Owner History ===");
       console.log("API URL:", apiUrl);
       console.log("Full URL:", fullUrl);
-      console.log("Customer ID:", customerId);
+      console.log("Owner ID:", ownerId);
       
       const response = await axios.get(fullUrl);
       
@@ -122,21 +122,21 @@ export default function OwnerHistory({ title = "Time Duration", backgroundColor 
   const onRefresh = async () => {
     setRefreshing(true);
     
-    // Try to get customerId first
-    let customerId = await AsyncStorage.getItem("customerId");
+    // Try to get ownerId first
+    let ownerId = await AsyncStorage.getItem("ownerId");
     
     // If not found, try to get from user object
-    if (!customerId) {
+    if (!ownerId) {
       const userStr = await AsyncStorage.getItem("user");
       if (userStr) {
         const user = JSON.parse(userStr);
-        customerId = user.id?.toString();
+        ownerId = user.id?.toString();
       }
     }
     
-    console.log("Refreshing with Customer ID:", customerId);
-    if (customerId) {
-      await fetchHistory(customerId);
+    console.log("Refreshing with Owner ID:", ownerId);
+    if (ownerId) {
+      await fetchHistory(ownerId);
     }
     setRefreshing(false);
   };
@@ -185,9 +185,7 @@ export default function OwnerHistory({ title = "Time Duration", backgroundColor 
         <View style={styles.deviceInfo}>
           <Text style={styles.deviceName}>{item.product || "Unknown Product"}</Text>
           <Text style={styles.categoryText}>{item.category || "Unknown Category"}</Text>
-          <View style={styles.statusTerminated}>
-            <Text style={styles.statusText}>Terminated</Text>
-          </View>
+
         </View>
       </View>
 
@@ -255,7 +253,7 @@ export default function OwnerHistory({ title = "Time Duration", backgroundColor 
             <Text style={styles.emptySubtext}>{error}</Text>
             <Pressable 
               style={styles.retryButton}
-              onPress={loadCustomerAndFetchHistory}
+              onPress={loadOwnerAndFetchHistory}
             >
               <Text style={styles.retryButtonText}>Retry</Text>
             </Pressable>
