@@ -52,8 +52,14 @@ export default function Notifications() {
     try {
       console.log("Fetching notifications for userId:", userId);
 
+      const token = await AsyncStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/notification/${userId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/notification/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
       if (response.data.success) {
@@ -66,6 +72,37 @@ export default function Notifications() {
     } catch (error) {
       console.error("Error fetching notifications:", error);
       setNotifications([]);
+    }
+  };
+
+  // Mark notification as read
+  const markAsRead = async (notificationId) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      
+      await axios.put(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/notification/${notificationId}/read`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      // Update local state immediately
+      setNotifications(prev => 
+        prev.map(section => ({
+          ...section,
+          data: section.data.map(notif => 
+            notif.id === notificationId 
+              ? { ...notif, isRead: true, readAt: new Date() }
+              : notif
+          )
+        }))
+      );
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
     }
   };
 
@@ -149,7 +186,7 @@ export default function Notifications() {
   // Generate notification message
   const getNotificationMessage = (notif) => {
     switch(notif.status?.toLowerCase()) {
-      case 'confongoingirmed':
+      case 'ongoing':
         return `Your rental for "${notif.product}" has been confirmed. Check your email for details and instructions. Safe travels!`;
       case 'pending':
         return `Your payment was processed successfully! Keep using the app.`;
@@ -160,6 +197,20 @@ export default function Notifications() {
       default:
         return `Update for your "${notif.product}" rental. Pickup: ${new Date(notif.pickUpDate).toLocaleDateString()}`;
     }
+  };
+
+  // Handle notification press
+  const handleNotificationPress = async (notif) => {
+    // Mark as read if not already read
+    if (!notif.isRead) {
+      await markAsRead(notif.id);
+    }
+    
+    // Navigate to notification details
+    router.push({
+      pathname: "/customer/notificationDetails",
+      params: { ...notif },
+    });
   };
 
   return (
@@ -194,16 +245,16 @@ export default function Notifications() {
               {/* Notification Cards */}
               {section.data.map((notif) => {
                 const iconData = getNotificationIcon(notif.status);
+                const isUnread = !notif.isRead;
+                
                 return (
                   <Pressable
                     key={notif.id}
-                    style={styles.notificationCard}
-                    onPress={() =>
-                      router.push({
-                        pathname: "/customer/notificationDetails",
-                        params: { ...notif },
-                      })
-                    }
+                    style={[
+                      styles.notificationCard,
+                      isUnread && styles.unreadNotification
+                    ]}
+                    onPress={() => handleNotificationPress(notif)}
                   >
                     {/* Icon */}
                     <View style={[styles.iconCircle, { backgroundColor: iconData.bg }]}>
@@ -213,9 +264,15 @@ export default function Notifications() {
                     {/* Content */}
                     <View style={styles.notifContent}>
                       <View style={styles.notifHeader}>
-                        <Text style={styles.notifTitle}>
-                          {getNotificationTitle(notif)}
-                        </Text>
+                        <View style={styles.titleRow}>
+                          <Text style={[
+                            styles.notifTitle,
+                            isUnread && styles.unreadText
+                          ]}>
+                            {getNotificationTitle(notif)}
+                          </Text>
+                          {isUnread && <View style={styles.unreadDot} />}
+                        </View>
                         <Text style={styles.notifTime}>
                           {formatTime(notif.created_at)}
                         </Text>
@@ -266,6 +323,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
   },
+  unreadNotification: {
+    backgroundColor: "#F0F9F9",
+    borderLeftWidth: 3,
+    borderLeftColor: "#057474",
+  },
   iconCircle: {
     width: 44,
     height: 44,
@@ -283,11 +345,26 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 4,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
   notifTitle: {
     fontSize: 15,
     fontWeight: "600",
     color: "#000",
-    flex: 1,
+  },
+  unreadText: {
+    fontWeight: "700",
+    color: "#057474",
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#057474",
+    marginLeft: 8,
   },
   notifTime: {
     fontSize: 12,

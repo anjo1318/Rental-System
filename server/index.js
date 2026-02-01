@@ -14,7 +14,7 @@ import uploadRouter from './routes/upload.js';
 import paymentRouter from './routes/payment.js';
 import reviewRouter from './routes/review.js';
 import returnRouter from './routes/return.js';
-import historyRouter from './routes/return.js';
+import historyRouter from './routes/history.js';
 import { restoreActiveTimers, setupRentalMonitoring } from './controllers/bookController.js';
 import cors from 'cors';
 import fs from 'fs';

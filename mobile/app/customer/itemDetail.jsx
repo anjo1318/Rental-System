@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   Pressable,
+  RefreshControl
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -20,6 +21,7 @@ import Header from "../components/header";
 import ScreenWrapper from "../components/screenwrapper";
 
 
+
 export default function ItemDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
@@ -27,6 +29,8 @@ export default function ItemDetail() {
   const [loading, setLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
   const [customer, setCustomer] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -162,6 +166,22 @@ export default function ItemDetail() {
     }
   };
 
+  const onRefresh = async () => {
+  setRefreshing(true);
+  try {
+    const res = await axios.get(`${API_URL}/api/item/${id}`);
+    if (res.data.success && res.data.data) {
+      setItem(res.data.data);
+      console.log("Item refreshed successfully");
+    }
+  } catch (err) {
+    console.error("Error refreshing item:", err);
+    Alert.alert("Error", "Failed to refresh item");
+  } finally {
+    setRefreshing(false);
+  }
+};
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -195,6 +215,14 @@ export default function ItemDetail() {
         style={styles.scrollContent} 
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
+        refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={["#007F7F"]}      // Android
+          tintColor="#007F7F"       // iOS
+        />
+      }
       >
         {/* Item Images */}
         <ItemImages images={item.itemImages} />

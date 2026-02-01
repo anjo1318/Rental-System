@@ -53,12 +53,63 @@ export default function TapSearchBar() {
   const [filterLocation, setFilterLocation] = useState("");
   const [brands, setBrands] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [notificationCount, setNotificationCount] = useState(0);
 
 
+  // Fetch notification count function
+  const fetchNotificationCount = async () => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (!userData) return;
+      
+      const user = JSON.parse(userData);
+      const token = await AsyncStorage.getItem('token');
+      
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/notification/${user.id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      
+      if (response.data.success) {
+        // Count only unread notifications
+        const unreadCount = response.data.data.filter(notification => !notification.isRead).length;
+        setNotificationCount(unreadCount);
+      }
+    } catch (error) {
+      console.error('Error fetching notification count:', error);
+    }
+  };
+
+  // Add this function after fetchNotificationCount
+const markNotificationAsRead = async (notificationId) => {
+  try {
+    const token = await AsyncStorage.getItem('token');
+    
+    await axios.put(
+      `${process.env.EXPO_PUBLIC_API_URL}/api/book/notification/${notificationId}/read`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    
+    // Refresh notification count after marking as read
+    await fetchNotificationCount();
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
+};
 
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchItems();
+    await fetchNotificationCount(); // Add this line
     setRefreshing(false);
   };
 
@@ -67,6 +118,8 @@ export default function TapSearchBar() {
       checkAuth();
     }, [])
   );
+
+  
   
   useFocusEffect(
     React.useCallback(() => {
@@ -80,6 +133,15 @@ export default function TapSearchBar() {
       return () => subscription.remove();
     }, [])
   );
+
+  // Add this NEW useFocusEffect to refresh notification count when screen is focused
+useFocusEffect(
+  React.useCallback(() => {
+    if (isAuthenticated) {
+      fetchNotificationCount();
+    }
+  }, [isAuthenticated])
+);
 
   const checkAuth = async () => {
     try {
@@ -141,9 +203,12 @@ export default function TapSearchBar() {
     }
   };
 
+  
+
   useEffect(() => {
     if (isAuthenticated) {
       fetchItems();
+      fetchNotificationCount(); // Add this line
     }
   }, [isAuthenticated]);
 
@@ -234,16 +299,18 @@ export default function TapSearchBar() {
           </View>
 
  <View style={styles.notificationWrapper}>
-              <Pressable onPress={() => router.push("owner/ownerRequest")}>
+              <Pressable onPress={() => router.push("/customer/notifications")}>
                 <Image
                   source={require("../../assets/images/notification.png")}
                   style={{ width: 30, height: 30 }}
                   resizeMode="contain"
                 />
-                {/* Badge */}
-    <View style={styles.badge}>
-      <Text style={styles.badgeText}>3</Text>
-    </View>
+                {/* Badge - Only show if there are unread notifications */}
+                {notificationCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>{notificationCount}</Text>
+                  </View>
+                )}
   </Pressable>
   </View>
 

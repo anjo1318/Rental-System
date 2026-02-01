@@ -40,11 +40,11 @@ export default function Profile() {
         const user = JSON.parse(userData);
         setCurrentUser(user);
         setOwnerId(user.id);
-        console.log('✅ User loaded from storage in Profile:', user);
+        console.log('User loaded from storage in Profile:', user);
         setIsLoading(false);
         return user.id;
       } else {
-        console.log('❌ No user data found, redirecting to login');
+        console.log('No user data found, redirecting to login');
         router.replace('/login');
         return null;
       }
