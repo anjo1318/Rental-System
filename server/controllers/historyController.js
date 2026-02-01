@@ -1,12 +1,14 @@
 import History from "../models/History.js";
 
 export const fetchHistory = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; // id === customerId
 
   try {
-    const history = await History.findByPk(id);
+    const history = await History.findAll({
+      where: { customerId: id },
+    });
 
-    if (!history) {
+    if (!history || history.length === 0) {
       return res.status(404).json({
         success: false,
         message: "History not found",
