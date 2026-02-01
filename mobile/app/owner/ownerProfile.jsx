@@ -164,7 +164,7 @@ export default function ownerProfile() {
 {/* General Section */}
       <View style={styles.historyContainer}>
         <Text style={styles.generalText}>General</Text>
-        <Pressable style={styles.historyRow} onPress={() => router.push("customer/history")}>
+        <Pressable style={styles.historyRow} onPress={() => router.push("owner/ownerHistory")}>
           <View style={styles.historyPhotoWrapper}>
             <Image
               source={require("../../assets/images/history.png")}

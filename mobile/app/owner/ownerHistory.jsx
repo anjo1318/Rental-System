@@ -19,7 +19,7 @@ import CustomerBottomNav from '../components/CustomerBottomNav';
 import Header from "../components/header3";
 import ScreenWrapper from "../components/screenwrapper";
 
-export default function History({ title = "Time Duration", backgroundColor = "#fff" }) {
+export default function OwnerHistory({ title = "Time Duration", backgroundColor = "#fff" }) {
   const router = useRouter();
   const [bookedItems, setBookedItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +83,7 @@ export default function History({ title = "Time Duration", backgroundColor = "#f
       setError(null);
       
       const apiUrl = process.env.EXPO_PUBLIC_API_URL;
-      const fullUrl = `${apiUrl}/api/history/${customerId}`;
+      const fullUrl = `${apiUrl}/api/history/owner/${customerId}`;
       
       console.log("=== Fetching History ===");
       console.log("API URL:", apiUrl);
@@ -185,9 +185,9 @@ export default function History({ title = "Time Duration", backgroundColor = "#f
         <View style={styles.deviceInfo}>
           <Text style={styles.deviceName}>{item.product || "Unknown Product"}</Text>
           <Text style={styles.categoryText}>{item.category || "Unknown Category"}</Text>
-          {/* <View style={styles.statusTerminated}>
+          <View style={styles.statusTerminated}>
             <Text style={styles.statusText}>Terminated</Text>
-          </View> */}
+          </View>
         </View>
       </View>
 
