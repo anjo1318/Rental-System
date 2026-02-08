@@ -169,7 +169,7 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
               console.error('Error parsing image for', item.title, error);
             }
             
-            console.log('Item:', item.title, 'Final Image URL:', imageUrl);
+            console.log('Item:', item.title, 'Available Quantity:', item.availableQuantity);
             
             return {
               id: item.id,
@@ -178,7 +178,8 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
               category: item.category || 'Uncategorized',
               pricePerDay: item.pricePerDay.toString(),
               itemImage: imageUrl,
-              isAvailable: item.availability,
+              availableQuantity: item.availableQuantity || 0,
+              isAvailable: (item.availableQuantity || 0) > 0,
             };
           })
         );
@@ -268,68 +269,10 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
     router.push(`owner/ownerEditItem?id=${id}`);
   };
 
-  // Toggle item availability using correct endpoint
-  const toggleAvailability = async (itemId, currentAvailability) => {
-    try {
-      console.log("Toggling availability for item:", itemId, "from", currentAvailability, "to", !currentAvailability);
-      
-      // Update local state immediately for better UX
-      setItems(prevItems => 
-        prevItems.map(item => 
-          item.id === itemId 
-            ? { ...item, isAvailable: !currentAvailability }
-            : item
-        )
-      );
-
-      const api = await createAPI();
-      
-      // FIXED: Remove duplicate base URL
-      const response = await api.put(`/api/item/${itemId}`, {
-        availability: !currentAvailability
-      });
-      
-      console.log("Toggle response:", {
-        success: response.data.success,
-        message: response.data.message
-      });
-      
-      if (!response.data.success) {
-        // Revert local state if API call failed
-        setItems(prevItems => 
-          prevItems.map(item => 
-            item.id === itemId 
-              ? { ...item, isAvailable: currentAvailability }
-              : item
-          )
-        );
-        Alert.alert("Error", response.data.error || "Failed to update availability");
-      }
-    } catch (error) {
-      console.error("Toggle availability error:", error);
-      
-      // Revert local state if API call failed
-      setItems(prevItems => 
-        prevItems.map(item => 
-          item.id === itemId 
-            ? { ...item, isAvailable: currentAvailability }
-            : item
-        )
-      );
-      
-      if (error.response?.status === 404) {
-        Alert.alert("Error", "Item not found");
-      } else if (error.response?.status === 403) {
-        Alert.alert("Error", "You don't have permission to update this item");
-      } else if (error.response?.status === 401) {
-        Alert.alert("Session Expired", "Please login again", [
-          { text: "OK", onPress: () => router.replace("owner/ownerLogin") }
-        ]);
-      } else {
-        Alert.alert("Error", `Failed to update availability: ${error.message}`);
-      }
-    }
-  };
+  // Toggle item availability - REMOVED
+  // Since availableQuantity is managed through inventory,
+  // this function is no longer needed for simple toggle.
+  // Availability is automatically determined by availableQuantity > 0
 
   // Pull to refresh
   const onRefresh = () => {
@@ -367,7 +310,7 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
           <View style={styles.headerRow}>
             <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
             <View style={styles.badgeContainer}>
-              {/* Available Badge */}
+              {/* Available Badge - Based on availableQuantity */}
               <View style={[
                 styles.availabilityBadge,
                 { backgroundColor: item.isAvailable ? '#4CAF50' : '#E0E0E0' }
@@ -376,7 +319,7 @@ export default function OwnerListing({ title = "Title", backgroundColor = "#0574
                   styles.badgeText,
                   { color: item.isAvailable ? '#FFF' : '#666' }
                 ]}>
-                  {item.isAvailable ? 'Available' : 'Unavailable'}
+                  {item.isAvailable ? `${item.availableQuantity} Available` : 'Out of Stock'}
                 </Text>
               </View>
             </View>

@@ -1,416 +1,467 @@
-  import React, { useState, useRef, useEffect } from "react";
-  import {
-    View,
-    Text,
-    TextInput,
-    Pressable,
-    FlatList,
-    StyleSheet,
-    KeyboardAvoidingView,
-    Platform,
-    Alert,
-    Dimensions,
-    Image,
-    Keyboard,
-  } from "react-native";
-  import { useLocalSearchParams, useRouter } from "expo-router";
-  import Icon from "react-native-vector-icons/MaterialIcons";
-  import axios from "axios";
-  import AsyncStorage from "@react-native-async-storage/async-storage";
-  import ScreenWrapper from "../components/screenwrapper";
-  import { useSafeAreaInsets } from "react-native-safe-area-context";
+import React, { useEffect, useState, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  Pressable,
+  StatusBar,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  keyboardHeight,
+  Image,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import ChatContainer from "../components/chatContainer";
+import ScreenWrapper from "../components/screenwrapper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
+
+const { width, height } = Dimensions.get("window");
+const INPUT_CONTAINER_LIFT = 0; // adjust freely (10–20 is normal)
+
+
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(18, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.04);
+
+
+export default function Chat() {
+  const router = useRouter();
+  const { id: chatId, itemId } = useLocalSearchParams();
+  const scrollViewRef = useRef();
+  const insets = useSafeAreaInsets();
 
 
 
-  const { width, height } = Dimensions.get("window");
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [chatData, setChatData] = useState(null);
+  const [otherUserName, setOtherUserName] = useState("Chat");
 
-  export default function ChatScreen({ BottomNav }) {
-    const { id } = useLocalSearchParams(); // chatId
-    const router = useRouter();
-    const [messages, setMessages] = useState([]);
-    const [input, setInput] = useState("");
-    const [userId, setUserId] = useState(null);
-    const [token, setToken] = useState(null);
-    const [userName, setUserName] = useState("");
-    const [chatDetails, setChatDetails] = useState(null);
-    const flatListRef = useRef(null);
-    const insets = useSafeAreaInsets();
+  const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 
+  useEffect(() => {
+    console.log("🌐 API_URL from env:", API_URL);
+    initializeChat();
+  }, [chatId, itemId]);
 
-    console.log("💬 ChatScreen - Chat ID:", id);
+  // Poll for new messages every 3 seconds
+  useEffect(() => {
+    if (chatData && chatData.id && chatData.id !== 'undefined') {
+      console.log("🔄 Starting message polling for chat:", chatData.id);
+      const interval = setInterval(() => {
+        fetchMessages();
+      }, 3000);
 
-    // Get user ID and token from storage
-    useEffect(() => {
-      const getUserData = async () => {
-        try {
-          console.log("🔑 Getting user data from AsyncStorage");
-          const userStr = await AsyncStorage.getItem("user");
-          const storedToken = await AsyncStorage.getItem("token");
-          
-          if (userStr) {
-            const user = JSON.parse(userStr);
-            console.log("👤 User data:", user);
-            setUserId(user.id);
-            setUserName(`${user.firstName} ${user.lastName}`);
-          }
-          if (storedToken) {
-            console.log("✅ Token retrieved");
-            setToken(storedToken);
-          }
-        } catch (err) {
-          console.error("❌ Error getting user data:", err);
-        }
+      return () => {
+        console.log("🛑 Stopping message polling");
+        clearInterval(interval);
       };
-      getUserData();
-    }, []);
+    } else {
+      console.log("⏸️ Message polling not started - no valid chatData yet");
+    }
+  }, [chatData]);
 
-    // Fetch chat details (to get other user's info)
-    useEffect(() => {
-      if (!userId || !token) return;
+  const initializeChat = async () => {
+    try {
+      setLoading(true);
 
-      const fetchChatDetails = async () => {
-        try {
-          console.log("📡 Fetching chat details for chat ID:", id);
-          const res = await axios.get(
-            `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
+      // Get current user
+      const userData = await AsyncStorage.getItem("user");
+      const token = await AsyncStorage.getItem("token");
 
-          if (res.data.success) {
-            console.log("✅ Chat details fetched");
-            // Find the specific chat
-            const currentChat = res.data.data.find(chat => chat.id === parseInt(id));
-            console.log("💬 Current chat details:", currentChat);
-            setChatDetails(currentChat);
-          }
-        } catch (err) {
-          console.error("❌ Error fetching chat details:", err);
-        }
-      };
-
-      fetchChatDetails();
-    }, [id, userId, token]);
-
-
-    // Fetch messages
-    useEffect(() => {
-      if (!userId || !token) return;
-
-      const fetchMessages = async () => {
-        try {
-          console.log("📡 Fetching messages for chat ID:", id);
-          const res = await axios.get(
-            `${process.env.EXPO_PUBLIC_API_URL}/api/message/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`
-              }
-            }
-          );
-          console.log("✅ Messages fetched:", res.data.length, "messages");
-          setMessages(res.data);
-        } catch (err) {
-          console.error("❌ Error fetching messages:", err);
-          Alert.alert("Error", "Failed to fetch messages");
-        }
-      };
-      fetchMessages();
-    }, [id, userId, token]);
-
-    const handleSend = async () => {
-      if (!input.trim() || !userId || !token) return;
-      
-      console.log("📤 Sending message:", input);
-      
-      try {
-        const res = await axios.post(
-          `${process.env.EXPO_PUBLIC_API_URL}/api/message`,
-          {
-            chatId: id,
-            senderId: userId,
-            content: input,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          }
-        );
-        
-        if (res.data.success) {
-          console.log("✅ Message sent successfully");
-          setMessages((prev) => [...prev, res.data.data]);
-          setInput("");
-          setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-          }, 100);
-        }
-      } catch (err) {
-        console.error("❌ Error sending message:", err);
-        Alert.alert("Error", "Failed to send message");
+      if (!userData || !token) {
+        Alert.alert("Error", "Please login first");
+        router.back();
+        return;
       }
-    };
 
-    const renderMessage = ({ item }) => {
-      const isOwnMessage = item.senderId === userId;
+      const user = JSON.parse(userData);
+      setCurrentUserId(user.id);
+      console.log("👤 Current user ID:", user.id);
+
+      // Parse chatId from params
+      const parsedChatId = chatId && chatId !== 'undefined' && chatId !== 'null' ? parseInt(chatId) : null;
       
-      return (
-        <View style={[styles.messageWrapper, isOwnMessage && styles.ownMessageWrapper]}>
-          <View
-            style={[
-              styles.messageBubble,
-              isOwnMessage ? styles.ownMessage : styles.otherMessage,
-            ]}
-          >
-            <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
-              {item.content}
-            </Text>
-          </View>
-        </View>
-      );
-    };
-
-    return (
-      <ScreenWrapper>
-        <KeyboardAvoidingView
-    style={{ flex: 1 }}
-    behavior={Platform.OS === "ios" ? "padding" : undefined}
-
-    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 25}
-  >
-
-
-    
-    
-      <View style={styles.container}>
+      if (parsedChatId && !isNaN(parsedChatId)) {
+        console.log("✅ Using existing chatId:", parsedChatId);
         
-        {/* Header */}
-        <View style={[styles.header, { paddingTop: insets.top }]}>
-          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
-            <Icon name="arrow-back" size={24} color="#000" />
-          </Pressable>
-          
-          <View style={styles.headerCenter}>
-            {chatDetails?.otherUserImage ? (
-              <Image
-                source={{ uri: chatDetails.otherUserImage }}
-                style={styles.avatarImage}
-              />
-            ) : (
-              <View style={styles.avatar}>
-                <Icon name="person" size={24} color="#666" />
-              </View>
-            )}
-            <Text style={styles.headerName}>
-              {chatDetails?.otherUserName || "Loading..."}
-            </Text>
-          </View>
-          
-          <View style={styles.headerRight} />
-        </View>
+        // Fetch the chat details from backend
+        try {
+          const chatResponse = await axios.get(
+            `${API_URL}/api/chat/${parsedChatId}`,  // ✅ FIXED: Correct URL with slash
+            {
+              headers: { Authorization: `Bearer ${token}` }
+            }
+          );
 
-        <View style={styles.messagesWrapper}>
-  <FlatList
-    ref={flatListRef}
-    data={messages}
-    keyExtractor={(item) => item.id.toString()}
-    renderItem={renderMessage}
-    contentContainerStyle={[
-      styles.messagesList,
-      { paddingBottom: insets.bottom + 20 }
-    ]}
-    keyboardShouldPersistTaps="handled"
-    onContentSizeChange={() =>
-      flatListRef.current?.scrollToEnd({ animated: true })
-    }
-    onLayout={() =>
-      flatListRef.current?.scrollToEnd({ animated: true })
-    }
-  />
-</View>
-
-<View style={[styles.inputContainer, { paddingBottom: insets.bottom + 10 }]}>
-
-
-
-            <Pressable style={styles.addButton}>
-              <Icon name="add-circle-outline" size={28} color="#666" />
-            </Pressable>
+          if (chatResponse.data.success) {
+            setChatData(chatResponse.data.data);
+            console.log("✅ Chat data loaded:", chatResponse.data.data);
             
-            <TextInput
-              style={styles.input}
-              placeholder="Type a message..."
-              placeholderTextColor="#999"
-              value={input}
-              onChangeText={setInput}
-              multiline
-            />
+            // Fetch messages for this chat
+            await fetchMessages(parsedChatId);
             
-            <Pressable onPress={handleSend} style={styles.sendButton}>
-              <Icon name="send" size={24} color="#03A3A3" />
-            </Pressable>
-          </View>
-      </View>
-      </KeyboardAvoidingView>
-      </ScreenWrapper>
+            // Set chat name if available
+            setOtherUserName("Chat");
+          } else {
+            throw new Error("Failed to load chat data");
+          }
+        } catch (chatError) {
+          console.error("❌ Error loading chat:", chatError);
+          Alert.alert(
+            "Error", 
+            "Failed to load chat. Please try again.",
+            [{ text: "OK", onPress: () => router.back() }]
+          );
+          return;
+        }
+      } else {
+        console.error("❌ No valid chatId provided");
+        Alert.alert(
+          "Error", 
+          "Chat session not initialized properly. Please try again.",
+          [{ text: "OK", onPress: () => router.back() }]
+        );
+        return;
+      }
+
+    } catch (error) {
+      console.error("❌ Chat initialization error:", error);
+      Alert.alert(
+        "Error", 
+        error.response?.data?.message || error.message || "Failed to initialize chat",
+        [{ text: "OK", onPress: () => router.back() }]
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMessages = async (chatIdParam) => {
+    try {
+      const id = chatIdParam || chatData?.id;
       
+      console.log("📨 Fetching messages for chatId:", id);
+      
+      if (!id || id === 'undefined' || id === 'null') {
+        console.log("⚠️ Invalid chatId, skipping message fetch");
+        return;
+      }
+
+      const token = await AsyncStorage.getItem("token");
+      
+      const response = await axios.get(
+        `${API_URL}/api/message/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      
+      console.log("✅ Messages fetched:", response.data.length, "messages");
+      setMessages(response.data);
+
+      // Scroll to bottom
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    } catch (error) {
+      console.error("❌ Error fetching messages:", error.response?.data || error.message);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || sending) return;
+
+    const messageText = newMessage.trim();
+    setNewMessage("");
+    setSending(true);
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const response = await axios.post(
+        `${API_URL}/api/message`,
+        {
+          chatId: chatData.id,
+          senderId: currentUserId,
+          content: messageText,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      console.log("✅ Message sent:", response.data);
+
+      // Fetch updated messages
+      await fetchMessages();
+    } catch (error) {
+      console.error("❌ Error sending message:", error);
+      Alert.alert("Error", "Failed to send message");
+      setNewMessage(messageText); // Restore message
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const formatTime = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#057474" />
+        <Text style={styles.loadingText}>Loading chat...</Text>
+      </View>
     );
   }
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: "#F5F5F5",
-    },
+  return (
+   
+  <ScreenWrapper>
+    {/* Status Bar */}
+    <StatusBar
+      barStyle="dark-content"
+      backgroundColor="#fff"
+      translucent={false}
+    />
 
-    header: {
-      marginTop: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#FFF",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      borderBottomWidth: 1,
-      borderBottomColor: "#00000040",
-      borderBottomLeftRadius: 20,
-      borderBottomRightRadius: 20,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.25,   // #40 ≈ 25% opacity
-      shadowRadius: 4,
-      elevation: 4,       
-      overflow: "hidden",
-    },
+<View style={styles.headerWrapper}>
+  <View style={styles.headerContent}>
+    {/* Back button */}
+    <View style={styles.iconBox}>
+      <Pressable
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace("/customer/home");
+          }
+        }}
+        hitSlop={10}
+      >
+        <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
+      </Pressable>
+    </View>
 
-    backButton: {
-      padding: 4,
-    },
+    {/* Avatar + Seller Name */}
+    <View style={styles.userInfo}>
+      <Image
+        source={{
+          uri: "https://i.pravatar.cc/150?img=5", // Random seller avatar
+        }}
+        style={styles.avatar}
+      />
+      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.headerTitle}>
+        John Doe  {/* Random seller name */}
+      </Text>
+    </View>
 
-    headerCenter: {
-      flex: 1,
-      flexDirection: "row",
-      alignItems: "center",
-      marginLeft: 12,
-    },
+    {/* Spacer */}
+    <View style={styles.iconBox} />
+  </View>
+</View>
 
-    avatar: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: "#E0E0E0",
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 8,
-    },
 
-    avatarImage: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      marginRight: 8,
-      backgroundColor: "#E0E0E0",
-    },
+<ChatContainer
+  messages={messages}
+  currentUserId={currentUserId}
+  newMessage={newMessage}
+  setNewMessage={setNewMessage}
+  handleSendMessage={handleSendMessage}
+  sending={sending}
+  scrollViewRef={scrollViewRef}
+  formatTime={formatTime}
+  keyboardHeight={keyboardHeight}
+  insets={insets}
+/>
 
-    headerName: {
-      fontSize: 16,
-      fontWeight: "600",
-      color: "#000",
-    },
 
-    headerRight: {
-      width: 24,
-    },
+    </ScreenWrapper>
+  );
+}
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#E6E1D6",
+  },
+
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#666",
+  },
+
+  headerWrapper: {
+    height: HEADER_HEIGHT,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    borderWidth: 1,
+    borderColor: "#00000040",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
+    shadowRadius: 4,
+    elevation: 4,       
+    overflow: "hidden",
     
-    messagesWrapper: {
-      flex: 1,
-    },
+  },
+  headerContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: PADDING_H,
+    marginTop: MARGIN_TOP,
+    
+  },
+  iconBox: {
+    width: ICON_BOX,
+    alignItems: "center",
+  },
 
-
-
-    messagesList: {
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      paddingBottom: 80,
-    },
-
-    messageWrapper: {
-      marginBottom: 12,
-      alignItems: "flex-start",
-    },
-
-    ownMessageWrapper: {
-      alignItems: "flex-end",
-    },
-
-    messageBubble: {
-      maxWidth: "75%",
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderRadius: 18,
-    },
-
-    ownMessage: {
-      backgroundColor: "#03A3A3",
-      borderBottomRightRadius: 4,
-    },
-
-    otherMessage: {
-      backgroundColor: "#FFF",
-      borderBottomLeftRadius: 4,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
-    },
-
-    messageText: {
-      fontSize: 15,
-      color: "#333",
-      lineHeight: 20,
-    },
-
-    ownMessageText: {
-      color: "#000000",
-    },
-
-    inputContainer: {
+  userInfo: {
   flexDirection: "row",
   alignItems: "center",
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-  backgroundColor: "#FFF",
-  borderTopWidth: 1,
-  borderTopColor: "#E0E0E0",
+  flex: 1,
+  marginLeft: 10, // space from back button
+  
+},
+
+avatar: {
+  width: 33,
+  height: 33,
+  borderRadius: 18,
+  left: 20,
+},
+
+headerTitle: {
+  flex: 1,
+  color: "#000",
+  fontSize: TITLE_FONT,
+  fontWeight: "600",
+  left: 30,
 },
 
 
+  chatBody: {
+    padding: 16,
+    paddingBottom: 90,
+    flexGrow: 1,
+  },
 
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 60,
+  },
 
-    addButton: {
-      padding: 4,
-      marginRight: 4,
-    },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 16,
+  },
 
-    input: {
-      flex: 1,
-      backgroundColor: "#F0F0F0",
-      borderRadius: 20,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-      fontSize: 15,
-      maxHeight: 100,
-      color: "#000",
-    },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 8,
+    textAlign: "center",
+  },
 
-    sendButton: {
-      padding: 8,
-      marginLeft: 4,
-    },
-  });
+  bubble: {
+    maxWidth: "80%",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+
+  buyerBubble: {
+    alignSelf: "flex-end",
+    backgroundColor: "#78CFCB",
+  },
+
+  sellerBubble: {
+    alignSelf: "flex-start",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+
+  buyerText: {
+    color: "#000",
+    fontSize: 15,
+  },
+
+  sellerText: {
+    color: "#000",
+    fontSize: 15,
+  },
+
+  timestamp: {
+    fontSize: 11,
+    color: "#666",
+    marginTop: 4,
+    textAlign: "right",
+  },
+
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 20,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    borderColor: "#057474"
+  },
+
+  input: {
+    flex: 1,
+    marginHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 20,
+    fontSize: 14,
+    maxHeight: 100,
+    borderWidth: 1,
+    borderColor: "#057474"
+  },
+});

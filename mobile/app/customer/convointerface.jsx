@@ -12,20 +12,19 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  Keyboard,
+  keyboardHeight,
   Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-
+import ChatContainer from "../components/chatContainer";
 import ScreenWrapper from "../components/screenwrapper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 const { width, height } = Dimensions.get("window");
-const INPUT_CONTAINER_LIFT = 0; // adjust freely (10–20 is normal)
 
 
 const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
@@ -41,7 +40,6 @@ export default function Chat() {
   const { id: chatId, itemId } = useLocalSearchParams();
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
 
 
@@ -54,22 +52,6 @@ export default function Chat() {
   const [otherUserName, setOtherUserName] = useState("Chat");
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-    // 🔹 KEYBOARD LISTENER (input bar control)
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
 
   useEffect(() => {
@@ -301,102 +283,20 @@ export default function Chat() {
 </View>
 
 
- <KeyboardAvoidingView
-      style={styles.container}
-      behavior={undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-    >
-      {/* Chat Body */}
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={styles.chatBody}
-        onContentSizeChange={() =>
-          scrollViewRef.current?.scrollToEnd({ animated: true })
-        }
-      >
-        {messages.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Icon name="chat-bubble-outline" size={70} color="#ccc" />
-            <Text style={styles.emptyText}>No messages yet</Text>
-            <Text style={styles.emptySubtext}>
-              Start the conversation by sending a message
-            </Text>
-          </View>
-        ) : (
-          messages.map((message) => {
-            const isOwn = message.senderId === currentUserId;
-            return (
-              <View
-                key={message.id}
-                style={[
-                  styles.bubble,
-                  isOwn ? styles.buyerBubble : styles.sellerBubble,
-                ]}
-              >
-                <Text style={isOwn ? styles.buyerText : styles.sellerText}>
-                  {message.content}
-                </Text>
-                <Text style={styles.timestamp}>
-                  {formatTime(message.createdAt)}
-                </Text>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
+<ChatContainer
+  messages={messages}
+  currentUserId={currentUserId}
+  newMessage={newMessage}
+  setNewMessage={setNewMessage}
+  handleSendMessage={handleSendMessage}
+  sending={sending}
+  scrollViewRef={scrollViewRef}
+  formatTime={formatTime}
+  keyboardHeight={keyboardHeight}
+  insets={insets}
+/>
 
-      {/* Input */}
-          <View
-            style={[
-              styles.inputWrapper,
-              {
-            bottom:
-        keyboardHeight > 0
-          ? Math.max(
-              0,
-              keyboardHeight - insets.bottom
-            ) + INPUT_CONTAINER_LIFT
-          : 0,
 
-      paddingBottom: insets.bottom + 20,
-              },
-            ]}
-          >
-        <Pressable disabled>
-          <Icon 
-            name="add-circle-outline" 
-            size={26} 
-            color="#057474" 
-          />
-        </Pressable>
-
-        <TextInput
-          placeholder="Type a message..."
-          style={styles.input}
-          placeholderTextColor="#999"
-          value={newMessage}
-          onChangeText={setNewMessage}
-          multiline
-          maxLength={500}
-          editable={!sending}
-        />
-
-        <Pressable 
-          onPress={handleSendMessage}
-          disabled={!newMessage.trim() || sending}
-        >
-          {sending ? (
-            <ActivityIndicator size="small" color="#057474" />
-          ) : (
-            <Icon 
-              name="send" 
-              size={24} 
-              color={newMessage.trim() ? "#057474" : "#ccc"} 
-            />
-          )}
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 }
