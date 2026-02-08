@@ -609,7 +609,7 @@ settingsRow: {
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#057474", 
+    borderColor: "#FF2125", 
   },
 
   outPhotoWrapper: {

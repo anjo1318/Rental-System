@@ -25,7 +25,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 const { width, height } = Dimensions.get("window");
-const INPUT_CONTAINER_LIFT = 60; // adjust freely (10–20 is normal)
+const INPUT_CONTAINER_LIFT = 0; // adjust freely (10–20 is normal)
 
 
 const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
@@ -358,7 +358,7 @@ export default function Chat() {
             ) + INPUT_CONTAINER_LIFT
           : 0,
 
-      paddingBottom: insets.bottom + 5,
+      paddingBottom: insets.bottom + 20,
               },
             ]}
           >

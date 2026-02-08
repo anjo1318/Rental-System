@@ -72,12 +72,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
      borderWidth: 1,
     borderColor: "#00000040",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
-    shadowRadius: 4,
-    elevation: 4,       
-    overflow: "hidden",
+
   },
   profileContainer: {
     flexDirection: "row",

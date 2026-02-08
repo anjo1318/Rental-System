@@ -91,18 +91,13 @@ try {
 const styles = StyleSheet.create({
   imageContainer: {
     position: "relative",
-    margin: 16,
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-     backgroundColor: "#EDEDED",
+    marginBottom: 10,
+    borderRadius: 0,      // optional: remove rounded corners if you want true edge-to-edge
+  overflow: "hidden",
+  backgroundColor: "#EDEDED",
   },
   imageWrapper: {
-  width: width - 32,
+  width: width,
   height: 280,
   backgroundColor: "#EDEDED",
   overflow: "hidden",
@@ -111,7 +106,7 @@ const styles = StyleSheet.create({
 image: {
   width: "100%",
   height: "100%",
-  resizeMode: "contain",
+  resizeMode: "cover",
 },
 
 

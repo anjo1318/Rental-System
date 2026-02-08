@@ -988,6 +988,8 @@ featuredImage: {
     borderRadius: 20,
     backgroundColor: "transparent",
     marginLeft: width * 0.04,
+    borderWidth: 1,
+    borderColor: "#007F7F39", 
   },
   activeCategory: { 
     backgroundColor: "#007F7F" 
