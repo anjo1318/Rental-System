@@ -28,17 +28,13 @@ const Topbar = () => {
           {/* Messages */}
           <button className="relative">
             <Mail size={20} />
-            <span className="absolute -top-2 -right-2 bg-teal-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-              12
-            </span>
+
           </button>
 
           {/* Notifications */}
           <button className="relative">
             <Bell size={20} />
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
-              20
-            </span>
+
           </button>
 
           {/* User Avatar */}

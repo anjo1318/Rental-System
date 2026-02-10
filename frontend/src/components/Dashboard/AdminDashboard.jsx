@@ -154,27 +154,21 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gray-50">
-      <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-
-
-        {/* DataTable */}
-        <div className="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <DataTable
-              title="All Bookings"
-              columns={columns}
-              data={bookings}
-              progressPending={pending}
-              pagination
-              highlightOnHover
-              striped
-              responsive
-              persistTableHead
-              customStyles={customStyles}
-            />
-          </div>
-        </div>
+    <div className="flex-1 min-h-screen w-full bg-gray-50 p-6">
+      {/* DataTable */}
+      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+        <DataTable
+          title="All Bookings"
+          columns={columns}
+          data={bookings}
+          progressPending={pending}
+          pagination
+          highlightOnHover
+          striped
+          responsive
+          persistTableHead
+          customStyles={customStyles}
+        />
       </div>
     </div>
   );
