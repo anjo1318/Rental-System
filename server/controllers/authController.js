@@ -7,13 +7,9 @@ import Owner from '../models/Owner.js';
 import bcrypt from 'bcryptjs';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
-
+import LoginHistory from '../models/LoginHistory.js';
 // Store reset tokens temporarily (in production, consider using Redis or a database table)
 const resetTokens = new Map();
-
-
-
-
 
 const login = async (req, res) => {
   try {
@@ -54,6 +50,16 @@ const login = async (req, res) => {
 
 const verify = (req, res) => {
   return res.status(200).json({ success: true, admin: req.admin });
+};
+
+
+// Helper function to get IP address
+const getIpAddress = (req) => {
+  return req.headers['x-forwarded-for']?.split(',')[0] || 
+         req.connection.remoteAddress || 
+         req.socket.remoteAddress || 
+         req.connection.socket?.remoteAddress ||
+         'Unknown';
 };
 
 const mobileUserLogin = async (req, res) => {
@@ -116,6 +122,21 @@ const mobileUserLogin = async (req, res) => {
       });
     }
 
+    // 📝 SAVE LOGIN HISTORY
+    try {
+      await LoginHistory.create({
+        name: `${customer.firstName} ${customer.lastName}`,
+        role: 'customer',
+        loginTime: new Date(),
+        ipAddress: getIpAddress(req),
+        userAgent: req.headers['user-agent'] || 'Unknown',
+        platform: platform || 'mobile'
+      });
+    } catch (historyError) {
+      console.error('Error saving login history:', historyError);
+      // Don't fail the login if history save fails
+    }
+
     // Generate JWT
     const token = jwt.sign(
       { id: customer.id, role: 'customer' },
@@ -156,11 +177,10 @@ const mobileUserLogin = async (req, res) => {
   }
 };
 
-
 const mobileOwnerLogin = async (req, res) => {
   console.log("Trying to login using mobileOwnerLogin");
   try {
-    const { email, password } = req.body;
+    const { email, password, platform } = req.body;
 
     console.log("Login attempt:", req.body);
 
@@ -175,6 +195,21 @@ const mobileOwnerLogin = async (req, res) => {
     const isMatch = await bcrypt.compare(password, owner.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, error: 'Wrong password' });
+    }
+
+    // 📝 SAVE LOGIN HISTORY
+    try {
+      await LoginHistory.create({
+        name: `${owner.firstName} ${owner.lastName}`,
+        role: 'owner',
+        loginTime: new Date(),
+        ipAddress: getIpAddress(req),
+        userAgent: req.headers['user-agent'] || 'Unknown',
+        platform: platform || 'mobile'
+      });
+    } catch (historyError) {
+      console.error('Error saving login history:', historyError);
+      // Don't fail the login if history save fails
     }
 
     const token = jwt.sign(
@@ -192,8 +227,8 @@ const mobileOwnerLogin = async (req, res) => {
         id: owner.id, 
         firstName: owner.firstName,
         lastName: owner.lastName,
-        email: owner.email, // ✅ Now works
-        phone: owner.phone, // ✅ Now works
+        email: owner.email,
+        phone: owner.phone,
         address: owner.street 
           ? `${owner.houseNumber || ''} ${owner.street}, ${owner.barangay}, ${owner.town}, ${owner.province}`.trim() 
           : null,
@@ -210,6 +245,7 @@ const mobileOwnerLogin = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 // Configure email transporter
 const transporter = nodemailer.createTransport({

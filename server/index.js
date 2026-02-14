@@ -15,6 +15,8 @@ import paymentRouter from './routes/payment.js';
 import reviewRouter from './routes/review.js';
 import returnRouter from './routes/return.js';
 import historyRouter from './routes/history.js';
+import dashboardRouter from './routes/dashboard.js';
+import loginHistoryRouter from './routes/loginHistory.js';
 import { restoreActiveTimers, setupRentalMonitoring } from './controllers/bookController.js';
 import cors from 'cors';
 import fs from 'fs';
@@ -97,6 +99,8 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/review', reviewRouter);
 app.use('/api/return', returnRouter);
 app.use('/api/history', historyRouter);
+app.use('/api/dashboard', dashboardRouter);
+app.use('/api/login-history',loginHistoryRouter);
 
 // ------------------ 404 Handler ------------------
 
