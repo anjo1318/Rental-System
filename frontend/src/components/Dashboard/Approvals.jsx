@@ -288,35 +288,35 @@ const Approvals = () => {
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">First Name</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.firstName?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Middle Name</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.middleName?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Last Name</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.lastName?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Email Address</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.emailAddress || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Phone Number</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.phoneNumber || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Birthday</p>
                       <p className="font-semibold text-gray-900">{formatDate(selectedCustomer.birthday)}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Gender</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.gender || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Registered On</p>
                       <p className="font-semibold text-gray-900">{formatDate(selectedCustomer.createdAt)}</p>
                     </div>
@@ -335,93 +335,37 @@ const Approvals = () => {
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">House/Building</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.houseNumber || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Street</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.street?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Barangay</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.barangay?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Town</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.town || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Province</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.province?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Country</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.country?.trim() || "N/A"}</p>
                     </div>
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                       <p className="text-sm text-gray-500 mb-1">Zip Code</p>
                       <p className="font-semibold text-gray-900">{selectedCustomer.zipCode || "N/A"}</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Guarantors Information Card */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                      </svg>
-                      Guarantors Information
-                    </h3>
-                  </div>
-                  <div className="space-y-6">
-                    {/* Guarantor 1 */}
-                    <div className="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-lg border border-orange-100">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <span className="bg-orange-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">1</span>
-                        Guarantor 1
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Full Name</p>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.guarantor1FullName?.trim() || "N/A"}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Mobile Number</p>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.guarantor1MobileNumber || "N/A"}</p>
-                        </div>
-                        <div className="md:col-span-2">
-                          <p className="text-sm text-gray-500 mb-1">Address</p>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.guarantor1Address?.trim() || "N/A"}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Guarantor 2 */}
-                    <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-lg border border-red-100">
-                      <h4 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <span className="bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm">2</span>
-                        Guarantor 2
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Full Name</p>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.guarantor2FullName?.trim() || "N/A"}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1">Mobile Number</p>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.guarantor2MobileNumber || "N/A"}</p>
-                        </div>
-                        <div className="md:col-span-2">
-                          <p className="text-sm text-gray-500 mb-1">Address</p>
-                          <p className="font-semibold text-gray-900">{selectedCustomer.guarantor2Address?.trim() || "N/A"}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 {/* ID Verification Card */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
@@ -435,11 +379,11 @@ const Approvals = () => {
                   </div>
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                         <p className="text-sm text-gray-500 mb-1">ID Type</p>
                         <p className="font-semibold text-gray-900">{selectedCustomer.idType || "N/A"}</p>
                       </div>
-                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-orange-500">
                         <p className="text-sm text-gray-500 mb-1">ID Number</p>
                         <p className="font-semibold text-gray-900">{selectedCustomer.idNumber || "N/A"}</p>
                       </div>
