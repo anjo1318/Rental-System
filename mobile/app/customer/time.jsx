@@ -31,7 +31,7 @@ import ScreenWrapper from "../components/screenwrapper";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowBanner: true,  // ✅ New
+    shouldShowBanner: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -39,10 +39,8 @@ Notifications.setNotificationHandler({
 
 const sendRentalEndedNotification = async (productName) => {
   try {
-    // Vibrate the phone
-    Vibration.vibrate([0, 500, 200, 500]); // Pattern: wait 0ms, vibrate 500ms, wait 200ms, vibrate 500ms
+    Vibration.vibrate([0, 500, 200, 500]);
 
-    // Send notification
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "Rental Period Ended",
@@ -56,12 +54,9 @@ const sendRentalEndedNotification = async (productName) => {
   }
 };
 
-
 const { width, height } = Dimensions.get("window");
 
-
-
-export default function TimeDuration({ title = "TIme Duration", backgroundColor = "#fff" }) {
+export default function TimeDuration({ title = "Time Duration", backgroundColor = "#fff" }) {
   const router = useRouter();
   const pathname = usePathname();
   const [bookedItems, setBookedItems] = useState([]);
@@ -71,6 +66,7 @@ export default function TimeDuration({ title = "TIme Duration", backgroundColor 
   const [startingRent, setStartingRent] = useState({});
   const [notifiedItems, setNotifiedItems] = useState(new Set());
   const [refreshing, setRefreshing] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -78,163 +74,161 @@ export default function TimeDuration({ title = "TIme Duration", backgroundColor 
     setRefreshing(false);
   };
 
+  // Timer with immediate notifications
+  useEffect(() => {
+    if (bookedItems.length === 0) return;
 
-// 1. Timer with immediate notifications
-useEffect(() => {
-  if (bookedItems.length === 0) return;
+    const interval = setInterval(() => {
+      const now = new Date();
+      const newTimers = {};
 
-  const interval = setInterval(() => {
-    const now = new Date();
-    const newTimers = {};
+      bookedItems.forEach((item) => {
+        if (item.status === 'ongoing') {
+          const returnDate = new Date(item.returnDate);
+          const diff = returnDate - now;
 
-    bookedItems.forEach((item) => {
-      if (item.status === 'ongoing') {
-        const returnDate = new Date(item.returnDate);
-        const diff = returnDate - now;
+          if (diff <= 0) {
+            newTimers[item.id] = {
+              days: 0,
+              hours: 0,
+              minutes: 0,
+              seconds: 0,
+              expired: true,
+            };
 
-        if (diff <= 0) {
-          newTimers[item.id] = {
-            days: 0,
-            hours: 0,
-            minutes: 0,
-            seconds: 0,
-            expired: true,
-          };
+            if (!notifiedItems.has(item.id)) {
+              sendRentalEndedNotification(item.product);
+              setNotifiedItems(prev => new Set([...prev, item.id]));
+            }
+          } else {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-          if (!notifiedItems.has(item.id)) {
-            sendRentalEndedNotification(item.product);
-            setNotifiedItems(prev => new Set([...prev, item.id]));
+            newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
           }
-        } else {
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-          newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
         }
-      }
-    });
-
-    setTimers(newTimers);
-  }, 1000);
-
-  return () => clearInterval(interval);
-}, [bookedItems, notifiedItems]);
-
-// 2. Request permissions
-useEffect(() => {
-  const requestNotificationPermissions = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(
-        'Notifications Disabled',
-        'Please enable notifications to receive rental reminders.'
-      );
-    }
-  };
-
-  requestNotificationPermissions();
-}, []);
-
-// 3. Load owner
-useEffect(() => {
-  loadOwner();
-}, []);
-
-// 4. Fetch when owner loads
-useEffect(() => {
-  if (ownerId) fetchOngoingAndForApproval();
-}, [ownerId]);
-
-
-  // Schedule notification for when rental ends
-const scheduleRentalEndNotification = async (item) => {
-  try {
-    const returnDate = new Date(item.returnDate);
-    const now = new Date();
-    
-    // Only schedule if return date is in the future
-    if (returnDate > now) {
-      // Cancel any existing notification for this item
-      const existingId = await AsyncStorage.getItem(`notification_${item.id}`);
-      if (existingId) {
-        await Notifications.cancelScheduledNotificationAsync(existingId);
-      }
-
-      // Schedule new notification
-      const notificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Rental Period Ended!",
-          body: `Your rental for "${item.product}" has ended. Please return it to the owner.`,
-          data: { 
-            itemId: item.id, 
-            type: 'rental_ended',
-            product: item.product 
-          },
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.HIGH,
-          badge: 1,
-        },
-        trigger: {
-          date: returnDate,
-        },
       });
 
-      // Also schedule a reminder 1 hour before
-      const oneHourBefore = new Date(returnDate.getTime() - (60 * 60 * 1000));
-      if (oneHourBefore > now) {
-        await Notifications.scheduleNotificationAsync({
+      setTimers(newTimers);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [bookedItems, notifiedItems]);
+
+  // Request permissions
+  useEffect(() => {
+    const requestNotificationPermissions = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Notifications Disabled',
+          'Please enable notifications to receive rental reminders.'
+        );
+      }
+    };
+
+    requestNotificationPermissions();
+  }, []);
+
+  // Load owner
+  useEffect(() => {
+    loadOwner();
+  }, []);
+
+  // Fetch when owner loads
+  useEffect(() => {
+    if (ownerId) fetchOngoingAndForApproval();
+  }, [ownerId]);
+
+  // Schedule notification for when rental ends
+  const scheduleRentalEndNotification = async (item) => {
+    try {
+      const returnDate = new Date(item.returnDate);
+      const now = new Date();
+      
+      if (returnDate > now) {
+        const existingId = await AsyncStorage.getItem(`notification_${item.id}`);
+        if (existingId) {
+          await Notifications.cancelScheduledNotificationAsync(existingId);
+        }
+
+        const notificationId = await Notifications.scheduleNotificationAsync({
           content: {
-            title: "Rental Ending Soon",
-            body: `Your rental for "${item.product}" ends in 1 hour!`,
+            title: "Rental Period Ended!",
+            body: `Your rental for "${item.product}" has ended. Please return it to the owner.`,
             data: { 
               itemId: item.id, 
-              type: 'rental_reminder',
+              type: 'rental_ended',
               product: item.product 
             },
             sound: true,
+            priority: Notifications.AndroidNotificationPriority.HIGH,
+            badge: 1,
           },
           trigger: {
-            date: oneHourBefore,
+            date: returnDate,
           },
         });
+
+        const oneHourBefore = new Date(returnDate.getTime() - (60 * 60 * 1000));
+        if (oneHourBefore > now) {
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: "Rental Ending Soon",
+              body: `Your rental for "${item.product}" ends in 1 hour!`,
+              data: { 
+                itemId: item.id, 
+                type: 'rental_reminder',
+                product: item.product 
+              },
+              sound: true,
+            },
+            trigger: {
+              date: oneHourBefore,
+            },
+          });
+        }
+
+        await AsyncStorage.setItem(`notification_${item.id}`, notificationId);
+        console.log('Scheduled notifications for:', item.product);
       }
-
-      // Store notification ID
-      await AsyncStorage.setItem(`notification_${item.id}`, notificationId);
-      console.log('Scheduled notifications for:', item.product);
+    } catch (error) {
+      console.error("Error scheduling notification:", error);
     }
-  } catch (error) {
-    console.error("Error scheduling notification:", error);
-  }
-};
+  };
 
-// Cancel scheduled notification
-const cancelScheduledNotification = async (itemId) => {
-  try {
-    const notificationId = await AsyncStorage.getItem(`notification_${itemId}`);
-    if (notificationId) {
-      await Notifications.cancelScheduledNotificationAsync(notificationId);
-      await AsyncStorage.removeItem(`notification_${itemId}`);
-      console.log('Cancelled notification for item:', itemId);
+  // Cancel scheduled notification
+  const cancelScheduledNotification = async (itemId) => {
+    try {
+      const notificationId = await AsyncStorage.getItem(`notification_${itemId}`);
+      if (notificationId) {
+        await Notifications.cancelScheduledNotificationAsync(notificationId);
+        await AsyncStorage.removeItem(`notification_${itemId}`);
+        console.log('Cancelled notification for item:', itemId);
+      }
+    } catch (error) {
+      console.error("Error canceling notification:", error);
     }
-  } catch (error) {
-    console.error("Error canceling notification:", error);
-  }
-};
-
+  };
 
   const loadOwner = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
-      if (!userData) return router.replace("customer/login");
+      if (!userData) {
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
 
       const user = JSON.parse(userData);
       setOwnerId(user.id);
+      setIsAuthenticated(true);
     } catch (err) {
       console.error(err);
-      router.replace("customer/login");
+      setIsAuthenticated(false);
+      setLoading(false);
     }
   };
 
@@ -248,15 +242,13 @@ const cancelScheduledNotification = async (itemId) => {
   
       const items = res.data.data || [];
       setBookedItems(items);
-      console.log("API response of ongoing-for-approval-customer",items);
+      console.log("API response of ongoing-for-approval-customer", items);
   
-      // ADD THESE LINES:
       // Schedule notifications for all ongoing rentals
       for (const item of items) {
         if (item.status === 'ongoing') {
           await scheduleRentalEndNotification(item);
         } else {
-          // Cancel notifications for non-ongoing items
           await cancelScheduledNotification(item.id);
         }
       }
@@ -266,8 +258,6 @@ const cancelScheduledNotification = async (itemId) => {
       setLoading(false);
     }
   };
-
-
 
   const getImageUrl = (itemImage) => {
     try {
@@ -312,62 +302,59 @@ const cancelScheduledNotification = async (itemId) => {
           </View>
         </View>
 
-       
+        {isOngoing && (
+          timer.expired ? (
+            <>
+              <View style={styles.expiredContainer}>
+                <MaterialIcons name="access-time" size={40} color="#FF5252" />
+                <Text style={styles.expiredText}>Rental Period Ended</Text>
+              </View>
+              
+              <View style={styles.actionButtonsContainer}>
+                <Pressable 
+                  style={styles.reviewButton}
+                  onPress={() => {
+                    console.log('Navigating with params:', {
+                      itemId: String(item.itemId),
+                      ownerId: String(item.ownerId),
+                      customerId: String(ownerId),
+                      productName: item.product,
+                      productImage: item.itemImage
+                    });
+                    router.push({
+                      pathname: "/customer/reviewProducts",
+                      params: {
+                        itemId: String(item.itemId),
+                        ownerId: String(item.ownerId),
+                        customerId: String(ownerId),
+                        productName: item.product,
+                        productImage: item.itemImage
+                      }
+                    });
+                  }}
+                >
+                  <MaterialIcons name="rate-review" size={20} color="#fff" />
+                  <Text style={styles.reviewButtonText}>Write Review</Text>
+                </Pressable>
 
-    {isOngoing && (
-      timer.expired ? (
-        <>
-          <View style={styles.expiredContainer}>
-            <MaterialIcons name="access-time" size={40} color="#FF5252" />
-            <Text style={styles.expiredText}>Rental Period Ended</Text>
-          </View>
-          
-          {/* Add Action Buttons */}
-          <View style={styles.actionButtonsContainer}>
-          <Pressable 
-            style={styles.reviewButton}
-            onPress={() => {
-              console.log('Navigating with params:', {
-                itemId: String(item.itemId),
-                ownerId: String(item.ownerId),
-                customerId: String(ownerId),
-                productName: item.product,
-                productImage: item.itemImage
-              });
-              router.push({
-                pathname: "/customer/reviewProducts",
-                params: {
-                  itemId: String(item.itemId),
-                  ownerId: String(item.ownerId),
-                  customerId: String(ownerId),
-                  productName: item.product,
-                  productImage: item.itemImage  // Add this line
-                }
-              });
-            }}
-          >
-            <MaterialIcons name="rate-review" size={20} color="#fff" />
-            <Text style={styles.reviewButtonText}>Write Review</Text>
-          </Pressable>
-
-          <Pressable 
-            style={styles.rentAgainButton}
-            onPress={() => {
-              router.push({
-                pathname: "customer/rentingDetails",
-                params: {
-                  itemId: String(item.itemId),
-                  id: String(item.itemId), // Some components use 'id' instead of 'itemId'
-                }
-              });
-            }}
-          >
-            <MaterialIcons name="refresh" size={20} color="#057474" />
-            <Text style={styles.rentAgainButtonText}>Rent Again</Text>
-          </Pressable>
-          </View>
-        </>
-      ) : (
+                <Pressable 
+                  style={styles.rentAgainButton}
+                  onPress={() => {
+                    router.push({
+                      pathname: "customer/rentingDetails",
+                      params: {
+                        itemId: String(item.itemId),
+                        id: String(item.itemId),
+                      }
+                    });
+                  }}
+                >
+                  <MaterialIcons name="refresh" size={20} color="#057474" />
+                  <Text style={styles.rentAgainButtonText}>Rent Again</Text>
+                </Pressable>
+              </View>
+            </>
+          ) : (
             <View style={styles.timerRow}>
               {[
                 { value: String(timer.days).padStart(2, "0"), label: "Days" },
@@ -397,11 +384,8 @@ const cancelScheduledNotification = async (itemId) => {
 
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
-          <MaterialIcons name="payment" size={16} color="#666" />
+            <MaterialIcons name="payment" size={16} color="#666" />
             <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
-            <Text style={styles.detailValue}>
-               
-            </Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Total:</Text>
@@ -420,10 +404,10 @@ const cancelScheduledNotification = async (itemId) => {
 
   return (
     <ScreenWrapper>
-          <Header
-            title="Time Duration"
-            backgroundColor="#fff"
-          />
+      <Header
+        title="Time Duration"
+        backgroundColor="#fff"
+      />
       
       <ScrollView
         style={styles.scrollView}
@@ -433,12 +417,17 @@ const cancelScheduledNotification = async (itemId) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={["#007F7F"]}      // Android
-            tintColor="#007F7F"       // iOS
+            colors={["#007F7F"]}
+            tintColor="#007F7F"
           />
         }
       >
-        {loading ? (
+        {!isAuthenticated ? (
+          <View style={styles.notAuthenticatedContainer}>
+            <Text style={styles.notAuthenticatedText}>Please log in to view</Text>
+
+          </View>
+        ) : loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#057474" />
             <Text style={styles.loadingText}>Loading your bookings...</Text>
@@ -453,16 +442,15 @@ const cancelScheduledNotification = async (itemId) => {
           bookedItems.map(renderBookingCard)
         )}
       </ScrollView>
-    <CustomerBottomNav/>
+      <CustomerBottomNav/>
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
- scrollView: {
+  scrollView: {
     flex: 1,
     backgroundColor: "#fff", 
-
   },
 
   contentWrapper: {
@@ -501,6 +489,40 @@ const styles = StyleSheet.create({
     fontSize: RFValue(12),
     color: "#999",
     marginTop: 8,
+  },
+
+  notAuthenticatedContainer: {
+
+
+
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 50,
+  },
+
+  notAuthenticatedText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
+
+  loginButton: {
+    backgroundColor: "#057474",
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+
+  loginButtonText: {
+    color: "#fff",
+    fontSize: RFValue(14),
+    fontWeight: "600",
   },
 
   card: {
@@ -693,73 +715,6 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
 
-  addButton: {
-    backgroundColor: "#057474",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 25,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  addButtonText: {
-    color: "#FFF",
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 8,
-  },
-  bottomNav: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    flexDirection: "row",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    justifyContent: "space-around",
-    borderTopWidth: 1,
-    borderTopColor: "#00000040",
-    alignItems: "center",
-  },
-
-  addNewButton: {
-    alignItems: "center",
-    flex: 1,
-    position: "relative",
-    top: -20,
-  },
-  addNewCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: "#ffffff",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    borderWidth: 2,
-    borderColor: "#656565",
-  },
-
-  navButton: {
-    alignItems: "center",
-    flex: 1,
-    zIndex: 10,
-  },
-
-  navText: {
-    fontWeight: "bold",
-    fontSize: width * 0.03,
-    marginTop: height * 0.005,
-  },
   actionButtonsContainer: {
     flexDirection: "row",
     gap: 12,

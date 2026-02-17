@@ -319,50 +319,50 @@ export default function PersonalInfo() {
       </View>
 
       <View style={styles.container}>
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("firstName", firstName) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("firstName", firstName) ? "First Name *" : ""}
-          placeholderTextColor="#888"
-          value={firstName}
-          onChangeText={setFirstName}
-          autoCapitalize="sentences"
-          allowFontScaling={false}
-          onFocus={() => setFocusField("firstName")}
-          onBlur={() => setFocusField("")}
-        />
+      <TextInput
+        style={[
+          styles.input,
+          !isTextMode("firstName", firstName) && styles.placeholderInput,
+        ]}
+        placeholder={!isTextMode("firstName", firstName) ? "First Name *" : ""}
+        placeholderTextColor="#888"
+        value={firstName}
+        onChangeText={(text) => setFirstName(text.replace(/[0-9]/g, ''))}
+        autoCapitalize="sentences"
+        allowFontScaling={false}
+        onFocus={() => setFocusField("firstName")}
+        onBlur={() => setFocusField("")}
+      />
 
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("middleName", middleName) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("middleName", middleName) ? "Middle Name *" : ""}
-          placeholderTextColor="#888"
-          value={middleName}
-          onChangeText={setMiddleName}
-          autoCapitalize="sentences"
-          allowFontScaling={false}
-          onFocus={() => setFocusField("middleName")}
-          onBlur={() => setFocusField("")}
-        />
+      <TextInput
+        style={[
+          styles.input,
+          !isTextMode("middleName", middleName) && styles.placeholderInput,
+        ]}
+        placeholder={!isTextMode("middleName", middleName) ? "Middle Name *" : ""}
+        placeholderTextColor="#888"
+        value={middleName}
+        onChangeText={(text) => setMiddleName(text.replace(/[0-9]/g, ''))}
+        autoCapitalize="sentences"
+        allowFontScaling={false}
+        onFocus={() => setFocusField("middleName")}
+        onBlur={() => setFocusField("")}
+      />
 
-        <TextInput
-          style={[
-            styles.input,
-            !isTextMode("lastName", lastName) && styles.placeholderInput,
-          ]}
-          placeholder={!isTextMode("lastName", lastName) ? "Last Name *" : ""}
-          placeholderTextColor="#888"
-          value={lastName}
-          onChangeText={setLastName}
-          autoCapitalize="sentences"
-          allowFontScaling={false}
-          onFocus={() => setFocusField("lastName")}
-          onBlur={() => setFocusField("")}
-        />
+      <TextInput
+        style={[
+          styles.input,
+          !isTextMode("lastName", lastName) && styles.placeholderInput,
+        ]}
+        placeholder={!isTextMode("lastName", lastName) ? "Last Name *" : ""}
+        placeholderTextColor="#888"
+        value={lastName}
+        onChangeText={(text) => setLastName(text.replace(/[0-9]/g, ''))}
+        autoCapitalize="sentences"
+        allowFontScaling={false}
+        onFocus={() => setFocusField("lastName")}
+        onBlur={() => setFocusField("")}
+      />
 
         <TextInput
           style={[
