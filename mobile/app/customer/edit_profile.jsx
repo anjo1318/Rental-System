@@ -532,11 +532,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
     borderRadius: 20,
-    marginHorizontal: 20,
-    marginTop: 60,
+    marginHorizontal: 10,
+    marginTop: 50,
     backgroundColor: "#FFF",
-    top: 50,
-    marginBottom: 200,
+    marginBottom: 80,
   },
 
   avatarWrapper: {

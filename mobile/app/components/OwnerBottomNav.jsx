@@ -166,7 +166,6 @@ bottomNav: {
     backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 8,
     borderWidth: 2,
     borderColor: "#057474",
   },

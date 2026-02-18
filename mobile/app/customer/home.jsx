@@ -796,7 +796,7 @@ header: {
  notificationWrapper: {
     marginLeft: "auto", 
     marginRight: 5,
-    marginBottom: 2,
+    marginBottom: 13,
     position: "relative",
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",

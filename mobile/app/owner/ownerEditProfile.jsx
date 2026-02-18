@@ -317,11 +317,10 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
     borderRadius: 20  ,          
-    marginHorizontal: 20,      // shrink from screen edges
-    marginTop: 60,             // optional vertical spacing
+    marginHorizontal: 10,      // shrink from screen edges
+    marginTop: 50,             // optional vertical spacing
     backgroundColor: "#FFF",
-    top: 50,   // optional to make border visible
-    marginBottom: 200,
+    marginBottom: 100,
   },
 
 

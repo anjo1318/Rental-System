@@ -481,7 +481,7 @@ const styles = StyleSheet.create({
   notificationWrapper: {
     marginLeft: "auto", 
     marginRight: 5,
-    marginTop: 7,
+    marginBottom: 6,
     position: "relative",
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
@@ -511,7 +511,7 @@ badgeText: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginHorizontal: 10,
-    marginTop: 20,
+    marginTop: 5,
     borderWidth: 1,
     borderColor: "#00000020",
     height: 140,
