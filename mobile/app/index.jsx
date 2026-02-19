@@ -298,7 +298,7 @@ export default function Index() {
  
 
       {/* 🔹 Recommendations */}
-      <View style={{ marginTop: 170 }}>
+      <View style={{ marginTop: 140}}>
         <Text style={styles.sectionTitle}>Our Recommendations</Text>
         <ScrollView
           horizontal

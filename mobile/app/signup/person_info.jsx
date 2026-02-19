@@ -682,7 +682,7 @@ export default function PersonalInfo() {
 
       </View>
 
-      <View style={[styles.pickerContainer, { top: 50, width: "84%", alignSelf: "center"  }]}>
+      <View style={[styles.pickerContainer, { top: 30, width: "92%", alignSelf: "center"  }]}>
         {!role && (
           <Text style={styles.pickerOverlayText}>
             Registration Role *
@@ -1059,8 +1059,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    paddingHorizontal: width * 0.08,
-    marginTop: height * 0.07,
+    paddingHorizontal: width * 0.04,
+    marginTop: height * 0.04,
   },
   reviewContainer: {
     flex: 1,
