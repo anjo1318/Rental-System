@@ -272,8 +272,12 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         </View>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 50 }}>
+      <ScrollView
+  showsVerticalScrollIndicator={false}
+  contentContainerStyle={{
+    paddingBottom: 50}}
+>
+
         {/* ✅ Rental Usage Section */}
         <View style={styles.rentalUsageCard}>
           <Text style={styles.cardTitle}>Rental Usage</Text>
@@ -495,12 +499,11 @@ const styles = StyleSheet.create({
 
   // ✅ Rental Usage & Unit Price Cards
   rentalUsageCard: {
-    width: "90%",
+    width: "95%",
     alignSelf: "center",
     padding: 20,
     borderRadius: 12,
     backgroundColor: "#FFF",
-    marginTop: 16,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -509,12 +512,12 @@ const styles = StyleSheet.create({
   },
 
   unitPriceCard: {
-    width: "90%",
+    width: "95%",
     alignSelf: "center",
     padding: 20,
     borderRadius: 12,
     backgroundColor: "#FFF",
-    marginTop: 16,
+    marginTop: 8,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -574,12 +577,12 @@ const styles = StyleSheet.create({
   },
 
   contentWrapper: {
-    width: "90%",
+    width: "95%",
     alignSelf: "center",
     padding: 20,
     borderRadius: 12,
     backgroundColor: "#FFF",
-    marginVertical: 16,
+    marginVertical: 8,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
