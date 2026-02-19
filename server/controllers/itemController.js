@@ -105,13 +105,15 @@ const fetchOwnerItems = async (req, res) => {
     try {
       const { 
         title, 
-        description, 
+        description,
+        brand,
+        specification,
         pricePerDay, 
         category, 
         location,
         availability = true, 
-        itemImages, // Changed from itemImage to itemImages
-        quantity = 1, // Add quantity with default value
+        itemImages,
+        quantity = 1,
         ownerId 
       } = req.body;
 
@@ -161,13 +163,15 @@ const fetchOwnerItems = async (req, res) => {
       const newItem = await Item.create({
         title,
         description,
+        brand,
+        specification,
         pricePerDay: parseFloat(pricePerDay),
         category,
         location,
         availability,
-        itemImages: processedImages, // Store as array
+        itemImages: processedImages,
         quantity: parsedQuantity,
-        availableQuantity: parsedQuantity, // Initially all items are available
+        availableQuantity: parsedQuantity,
         ownerId
       });
 

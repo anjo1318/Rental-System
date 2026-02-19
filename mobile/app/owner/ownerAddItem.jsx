@@ -195,15 +195,17 @@ if (isNaN(parsedPrice) || parsedPrice <= 0) {
     
     // Create item
     const newItem = {
-      title: productName.trim(),                              // Maps to backend 'title'
-      description: productDescription?.trim() || null,        // Maps to backend 'description'
-      pricePerDay: Number(pricePerHour),                      // Maps to backend 'pricePerDay'
+      title: productName.trim(),
+      description: productDescription?.trim() || null,
+      brand: productBrand?.trim() || null,        // 👈 add
+      specification: specification?.trim() || null, // 👈 add
+      pricePerDay: Number(pricePerHour),
       category: category?.trim() || null,
       location: location?.trim() || null,
-      itemImages: uploadedImageUrls,                          // Array of image URLs
+      itemImages: uploadedImageUrls,
       ownerId: parseInt(ownerId),
-      availability: true,                                     // Optional: defaults to true in backend
-      quantity: 1,                                            // Optional: defaults to 1 in backend
+      availability: true,
+      quantity: 1,
     };
 
     console.log('Sending item data:', newItem);
