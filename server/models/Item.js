@@ -73,6 +73,15 @@ const Item = sequelize.define("Item", {
     }
   },
 
+  brand: {
+  type: DataTypes.STRING,
+  allowNull: true,
+},
+specification: {
+  type: DataTypes.TEXT,
+  allowNull: true,
+},
+
   // Available quantity (tracks current availability)
   // Removed the function-based defaultValue that was causing the error
   availableQuantity: {

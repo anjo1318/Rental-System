@@ -735,24 +735,30 @@ export default function RentingDetails() {
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle}>Pick up Date</Text>
                         <TouchableOpacity
-                          style={styles.dateButton}
-                          onPress={() => {
-                            setActiveDateType("pickup");
-                            setShowDateTimeModal(true);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <Icon name="date-range" size={18} color="#666" />
-                          <Text style={styles.dateText}>
-                            {pickupDate.toLocaleString([], { 
-                              month: 'short', 
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </Text>
-                        </TouchableOpacity>
+  style={styles.dateButton}
+  onPress={() => {
+    setActiveDateType("pickup");
+    setShowDateTimeModal(true);
+  }}
+  activeOpacity={0.7}
+>
+  <Icon name="date-range" size={18} color="#666" />
+  <View style={{ marginLeft: 5 }}>
+    <Text style={styles.dateText}>
+      {pickupDate.toLocaleString([], { 
+        month: 'short', 
+        day: 'numeric',
+      })}
+    </Text>
+    <Text style={styles.dateText}>
+      {pickupDate.toLocaleString([], { 
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true 
+      })}
+    </Text>
+  </View>
+</TouchableOpacity>
                     </View>
 
                     <View style={styles.verticalLine} />
@@ -761,25 +767,31 @@ export default function RentingDetails() {
                     {/* Return Date */}
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle1}>Return Date</Text>
-                        <TouchableOpacity
-                          style={styles.dateButton}
-                          onPress={() => {
-                            setActiveDateType("return");
-                            setShowDateTimeModal(true);
-                          }}
-                          activeOpacity={0.7}
-                        >
-                          <Icon name="date-range" size={18} color="#666" />
-                          <Text style={styles.dateText}>
-                            {returnDate.toLocaleString([], { 
-                              month: 'short', 
-                              day: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true 
-                            })}
-                          </Text>
-                        </TouchableOpacity>
+                      <TouchableOpacity
+  style={styles.dateButton}
+  onPress={() => {
+    setActiveDateType("return");
+    setShowDateTimeModal(true);
+  }}
+  activeOpacity={0.7}
+>
+  <Icon name="date-range" size={18} color="#666" />
+  <View style={{ marginLeft: 5 }}>
+    <Text style={styles.dateText}>
+      {returnDate.toLocaleString([], { 
+        month: 'short', 
+        day: 'numeric',
+      })}
+    </Text>
+    <Text style={styles.dateText}>
+      {returnDate.toLocaleString([], { 
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true 
+      })}
+    </Text>
+  </View>
+</TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -1284,7 +1296,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#05747480", 
     borderRadius: 20,
-    overflow: "hidden", // ✅ clip children edges
+    overflow: "hidden",
 },
 
   dateColumn: {
@@ -1298,7 +1310,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    height: 45,
     marginLeft: 13,
   
   },
@@ -1309,7 +1320,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     paddingVertical: 12,
     paddingHorizontal: 16,
-    height: 45,
     marginLeft: 3,
   
   },
@@ -1321,7 +1331,7 @@ const styles = StyleSheet.create({
 
   verticalLine: {
     width: 1.5,              
-    height: 50,           
+    height: 67,           
     backgroundColor: "#05747480", 
     marginHorizontal: 10,  
     marginTop: 13,
