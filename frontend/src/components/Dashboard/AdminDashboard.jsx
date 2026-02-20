@@ -178,7 +178,7 @@ const AdminDashboard = () => {
 
     return (
       <div className="flex flex-col items-center">
-        <div className="relative w-36 h-36 sm:w-44 sm:h-44 mb-3">
+        <div className="relative w-36 h-36 sm:w-44 sm:h-44 mb-3" >
           <svg className="w-full h-full transform -rotate-90" viewBox="0 0 192 192">
             <circle cx="96" cy="96" r="54" stroke={accent} strokeWidth="14" fill="none" />
             <circle
