@@ -283,7 +283,7 @@ export default function ItemDetail() {
         <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
         />
 
-<View style={styles.section}>
+{/* <View style={styles.section}>
   <Text style={styles.sectionTitle}>Review (1)</Text>
 
   <Pressable
@@ -318,7 +318,7 @@ export default function ItemDetail() {
     </Text>
 
   </Pressable>
-</View>
+</View> */}
         <View style={[styles.detailLine3, { borderTopColor: '#00000040' }]} />
 
         

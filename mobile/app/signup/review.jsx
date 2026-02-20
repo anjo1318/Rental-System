@@ -71,7 +71,7 @@ export default function Review() {
         street: customer.street,
         barangay: customer.barangay,
         town: customer.town,
-        province: customer.province,
+        province: customer.province,o
         country: customer.country,
         zipCode: customer.zipCode,
         guarantor1FullName: customer.guarantor1FullName,
@@ -200,7 +200,7 @@ export default function Review() {
 
         {/* ID/Guarantor Section */}
         <View style={styles.address}>
-          <Text style={styles.sectionTitle1}>ID Upload/Guarantor</Text>
+          <Text style={styles.sectionTitle1}>ID Upload</Text>
 
           <Text style={styles.addressText1}>Guarantor 1:</Text>
           <Text style={styles.addressText}>Full Name: {customer.guarantor1FullName || 'N/A'}</Text>

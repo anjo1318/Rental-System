@@ -220,7 +220,6 @@ export default function PersonalInfo() {
     try {
       const formData = new FormData();
 
-      // Personal details
       formData.append("firstName", firstName);
       formData.append("middleName", middleName);
       formData.append("lastName", lastName);
@@ -229,25 +228,21 @@ export default function PersonalInfo() {
       formData.append("gender", gender);
       formData.append("password", password);
       formData.append("birthday", date.toISOString().split("T")[0]);
+      formData.append("houseNumber", houseBuilding || "N/A");
+      formData.append("street", street || "N/A");
+      formData.append("barangay", barangay || "N/A");
+      formData.append("town", town || "N/A");
+      formData.append("province", province || "N/A");
+      formData.append("country", country || "Philippines");
+      formData.append("zipCode", zipCode || "N/A");
+      formData.append("idType", idType || "N/A");
+      formData.append("idNumber", idNumber || "N/A");
+      formData.append("role", role); // ✅ send role
 
-      // Address
-      formData.append("houseNumber", houseBuilding);
-      formData.append("street", street);
-      formData.append("barangay", barangay);
-      formData.append("town", town);
-      formData.append("province", province);
-      formData.append("country", country);
-      formData.append("zipCode", zipCode);
-
-      // ID details
-      formData.append("idType", idType);
-      formData.append("idNumber", idNumber);
-
-      // 📸 Attach files
       if (photoId) {
         formData.append("photoId", {
-          uri: photoId,              // e.g. "file:///..."
-          type: "image/jpeg",        // adjust if png
+          uri: photoId,
+          type: "image/jpeg",
           name: "photo_id.jpg",
         });
       }
@@ -259,7 +254,6 @@ export default function PersonalInfo() {
           name: "selfie.jpg",
         });
       }
-
 
       const response = await fetch(`${API_URL}/api/customer/sign-up`, {
         method: "POST",
@@ -814,7 +808,7 @@ export default function PersonalInfo() {
 
         {/* ID/Guarantor Section */}
         <View style={styles.address}>
-          <Text style={styles.sectionTitle1}>ID Upload/Guarantor</Text>
+          <Text style={styles.sectionTitle1}>ID Upload</Text>
           
           <Text style={styles.addressText1}>ID Upload:</Text>
           <Text style={styles.addressText}>Type of ID: {idType || 'N/A'}</Text>
