@@ -337,7 +337,7 @@ export default function ownerLogin() {
 
               <View style={styles.signupRow}>
                 <Text style={styles.signupText}>Don't have an account? </Text>
-                <Pressable onPress={() => router.push("/owner/ownerSignup")}>
+                <Pressable onPress={() => router.push("/signup/person_info")}>
                   <Text style={styles.signupLink}>Sign Up</Text>
                 </Pressable>
               </View>

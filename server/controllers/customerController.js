@@ -21,123 +21,139 @@ const customerSignUp = async (req, res) => {
     province,
     country,
     zipCode,
-    guarantor1FullName,
-    guarantor1Address,
-    guarantor1MobileNumber,
-    guarantor2FullName,
-    guarantor2Address,
-    guarantor2MobileNumber,
     idType,
     idNumber,
+    role,
   } = req.body;
 
   try {
     console.log("📩 Incoming request to /customer/signup");
     console.log("📌 Request body:", req.body);
     console.log("📂 Request files:", req.files);
+    console.log("👤 Role:", role);
 
     if (!firstName || !lastName || !emailAddress || !phoneNumber || !birthday || !gender || !password) {
-      console.warn("⚠️ Missing required fields");
       return res.status(400).json({
         success: false,
         message: "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password",
       });
     }
 
-    console.log(`🔍 Checking if email exists: ${emailAddress}`);
-    const existingCustomer = await Customer.findOne({ where: { emailAddress } });
-
-    if (existingCustomer) {
-      console.warn("⚠️ Email already exists:", emailAddress);
-      return res.status(409).json({
+    if (!role || !["customer", "owner"].includes(role)) {
+      return res.status(400).json({
         success: false,
-        message: "Email address already exists",
+        message: "Invalid role. Must be 'customer' or 'owner'",
       });
     }
 
-    // ✅ Cloudinary gives full URL in req.file.path
+    // ✅ Cloudinary URLs
     const idPhotoFile = req.files?.photoId?.[0] || null;
     const selfieFile = req.files?.selfie?.[0] || null;
-
-    console.log("📸 ID Photo file object:", idPhotoFile);
-    console.log("🤳 Selfie file object:", selfieFile);
-
     const idPhotoUrl = idPhotoFile ? idPhotoFile.path : null;
     const selfieUrl = selfieFile ? selfieFile.path : null;
 
-    console.log("✅ ID Photo URL:", idPhotoUrl);
-    console.log("✅ Selfie URL:", selfieUrl);
-
-    console.log("🔐 Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log("✅ Password hashed successfully");
 
-    console.log("🛠️ Creating customer in DB...");
-    const response = await Customer.create({
-      firstName,
-      middleName,
-      lastName,
-      emailAddress,
-      phoneNumber,
-      birthday,
-      gender,
-      password: hashedPassword,
-      houseNumber,
-      street,
-      barangay,
-      town,
-      province,
-      country: country || "Philippines",
-      zipCode,
-      guarantor1FullName,
-      guarantor1Address,
-      guarantor1MobileNumber,
-      guarantor2FullName,
-      guarantor2Address,
-      guarantor2MobileNumber,
-      idType,
-      idNumber,
-      idPhoto: idPhotoUrl,
-      selfie: selfieUrl,
-      isActive: true,
-      isVerified: false,
-    });
+    if (role === "owner") {
+      // ✅ Check if email exists in Owner
+      const existingOwner = await Owner.findOne({ where: { emailAddress } });
+      if (existingOwner) {
+        return res.status(409).json({ success: false, message: "Email address already exists" });
+      }
 
-    console.log("✅ Customer created successfully with ID:", response.id);
+      const owner = await Owner.create({
+        firstName,
+        middleName: middleName || "N/A",
+        lastName,
+        email: emailAddress,        // ✅ use 'email' not 'emailAddress'
+        phone: phoneNumber,         // ✅ use 'phone' not 'phoneNumber'
+        birthday,
+        gender,
+        password: hashedPassword,
+        houseNumber: houseNumber || "N/A",
+        street: street || "N/A",
+        barangay: barangay || "N/A",
+        town: town || "N/A",
+        province: province || "N/A",
+        country: country || "Philippines",
+        zipCode: zipCode || "N/A",
+        idType: idType && idType !== "" ? idType : null,
+        idNumber: idNumber || "N/A",
+        idPhoto: idPhotoUrl,
+        selfie: selfieUrl,
+        isActive: true,
+        isVerified: false,
+        gcashQR: "N/A",
+      });
 
-    return res.status(201).json({
-      success: true,
-      message: "Customer signup completed successfully",
-      customerId: response.id,
-      idPhoto: idPhotoUrl,
-      selfie: selfieUrl,
-    });
+      console.log("✅ Owner created successfully with ID:", owner.id);
+
+      return res.status(201).json({
+        success: true,
+        message: "Owner signup completed successfully",
+        ownerId: owner.id,
+        idPhoto: idPhotoUrl,
+        selfie: selfieUrl,
+      });
+
+    } else {
+      // ✅ Check if email exists in Customer
+      const existingCustomer = await Customer.findOne({ where: { emailAddress } });
+      if (existingCustomer) {
+        return res.status(409).json({ success: false, message: "Email address already exists" });
+      }
+
+      const customer = await Customer.create({
+        firstName,
+        middleName: middleName || "N/A",
+        lastName,
+        emailAddress,
+        phoneNumber,
+        birthday,
+        gender,
+        password: hashedPassword,
+        houseNumber: houseNumber || "N/A",
+        street: street || "N/A",
+        barangay: barangay || "N/A",
+        town: town || "N/A",
+        province: province || "N/A",
+        country: country || "Philippines",
+        zipCode: zipCode || "N/A",
+        idType: idType || null,
+        idNumber: idNumber || "N/A",
+        idPhoto: idPhotoUrl,
+        selfie: selfieUrl,
+        isActive: true,
+        isVerified: false,
+      });
+
+      console.log("✅ Customer created successfully with ID:", customer.id);
+
+      return res.status(201).json({
+        success: true,
+        message: "Customer signup completed successfully",
+        customerId: customer.id,
+        idPhoto: idPhotoUrl,
+        selfie: selfieUrl,
+      });
+    }
+
   } catch (error) {
-    console.error("❌ Error during customer signup:", error);
+    console.error("❌ Error during signup:", error);
 
     if (error.name === "SequelizeValidationError") {
       const validationErrors = error.errors.map((err) => ({
         field: err.path,
         message: err.message,
       }));
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationErrors,
-      });
+      return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
     }
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(409).json({
-        success: false,
-        message: "Email address already exists",
-      });
+      return res.status(409).json({ success: false, message: "Email address already exists" });
     }
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error during signup",
-    });
+    return res.status(500).json({ success: false, message: "Internal server error during signup" });
   }
 };
 

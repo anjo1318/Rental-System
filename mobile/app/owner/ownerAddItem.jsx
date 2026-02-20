@@ -478,11 +478,12 @@ const pickMultipleImages = async () => {
     style={{ color: category ? "#000" : "transparent", width: "100%" }}
   >
     <Picker.Item label="Select Category" value="" color="#888" />
-    <Picker.Item label="Personal Electronics" value="Personal Electronics" />
-    <Picker.Item label="Office Equipment" value="Office Equipment" />
-    <Picker.Item label="Photography & Video" value="Photography & Video" />
-    <Picker.Item label="Gaming & Entertainment" value="Gaming & Entertainment" />
-    <Picker.Item label="Presentation Equipment" value="Presentation Equipment" />
+    <Picker.Item label="  " value="Laptop" />
+    <Picker.Item label="Cellphone" value="Cellphone" />
+    <Picker.Item label="Projector" value="Projector" />
+    <Picker.Item label="Camera" value="Camera" />
+    <Picker.Item label="Printer" value="Printer" />
+    <Picker.Item label="Speaker" value="Speaker" />
   </Picker>
 </View>
 
