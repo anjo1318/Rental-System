@@ -114,7 +114,7 @@ return (
       position: "absolute",
       left: 0,
       right: 0,
-      bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom,
+      bottom: keyboardHeight   > 0 ? keyboardHeight - 15 : insets.bottom,
     },
   ]}
 >
