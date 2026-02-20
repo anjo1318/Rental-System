@@ -626,14 +626,14 @@ export default function RentingDetails() {
         />
 
         ) : currentStep === 3 ? (
-          // ✅ Confirmation screen takes full screen
+          // Confirmation screen takes full screen
           <ConfirmationScreen 
             bookingData={bookingData}
             onBack={() => setCurrentStep(2)} // ✅ Add this line
             onContinue={() => console.log("Done!")} 
           />
         ) : (
-        // ✅ Step 1 → Renting Details (form + progress bar)
+        // Step 1 → Renting Details (form + progress bar)
         <>
            
             

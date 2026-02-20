@@ -258,7 +258,7 @@ export default function ItemDetail() {
           {/* Brand */}
             
             <Text style={styles.detailLabel}>Brand</Text>
-            <Text style={styles.detailValue}>Acer</Text>
+            <Text style={styles.detailValue}>{item.brand || "N/A"}</Text>
           </View>
         
         <View style={styles.detailLine2}></View>
@@ -266,43 +266,7 @@ export default function ItemDetail() {
         <View style={styles.detailLine}></View>
         {/* Specifications */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Specification</Text>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Processor:</Text>
-            <Text style={styles.specValue}>Intel Core i7 (10th Gen)</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Graphics:</Text>
-            <Text style={styles.specValue}>NVIDIA GeForce RTX 3060 6GB GDDR6</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Memory:</Text>
-            <Text style={styles.specValue}>16GB DDR4 RAM</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Storage:</Text>
-            <Text style={styles.specValue}>512GB SSD</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Display:</Text>
-            <Text style={styles.specValue}>15.6" Full HD (1920x1080) IPS, 144Hz refresh rate</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Operating System:</Text>
-            <Text style={styles.specValue}>Windows 11 Home (Activated)</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Keyboard:</Text>
-            <Text style={styles.specValue}>RGB backlit gaming keyboard</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Connectivity:</Text>
-            <Text style={styles.specValue}>Wi-Fi 6, Bluetooth 5.0, HDMI, USB 3.2 ports</Text>
-          </View>
-          <View style={styles.specItem}>
-            <Text style={styles.specKey}>Battery:</Text>
-            <Text style={styles.specValue}>Good battery health, lasts 3–5 hours</Text>
-          </View>
+          <Text style={styles.description}>{item.specification || "No specification provided"}</Text>
         </View>
 
 

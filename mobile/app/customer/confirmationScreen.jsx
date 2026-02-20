@@ -410,28 +410,22 @@ const confirmRent = async () => {
         </View>
 
         {/* Guarantors */}
-        {bookingData?.guarantors && bookingData.guarantors.length > 0 && (
-          <>
-            {bookingData.guarantors.map((guarantor, index) => (
-              guarantor.fullName ? (
-                <View key={index} style={styles.detailsContainer}>
-                  <Text style={styles.detailsTitle}>Guarantor {index + 1}</Text>
-                  <Text style={styles.detailItem}>
-                    <Text style={styles.label}>Full Name: </Text>
-                    {guarantor.fullName}
-                  </Text>
-                  <Text style={styles.detailItem}>
-                    <Text style={styles.label}>Phone: </Text>
-                    {guarantor.phoneNumber}
-                  </Text>
-                  <Text style={styles.detailItem}>
-                    <Text style={styles.label}>Address: </Text>
-                    {guarantor.address}
-                  </Text>
-                </View>
-              ) : null
-            ))}
-          </>
+        {bookingData?.guarantors?.[0]?.fullName && (
+          <View style={styles.detailsContainer}>
+            <Text style={styles.detailsTitle}>Guarantor</Text>
+            <Text style={styles.detailItem}>
+              <Text style={styles.label}>Full Name: </Text>
+              {bookingData.guarantors[0].fullName}
+            </Text>
+            <Text style={styles.detailItem}>
+              <Text style={styles.label}>Phone: </Text>
+              {bookingData.guarantors[0].phoneNumber}
+            </Text>
+            <Text style={styles.detailItem}>
+              <Text style={styles.label}>Address: </Text>
+              {bookingData.guarantors[0].address}
+            </Text>
+          </View>
         )}
 
         <View style={styles.actions}>
