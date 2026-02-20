@@ -281,7 +281,6 @@ const Customers = () => {
                                 src={selectedCustomer.idPhoto}
                                 alt="ID Document"
                                 className="w-full h-44 sm:h-52 lg:h-64 object-cover border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                                onError={(e) => { e.target.style.display = "none"; }}
                               />
                             </div>
                           )}
