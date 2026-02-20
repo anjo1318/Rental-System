@@ -16,7 +16,8 @@ const Layout = () => {
       <div className="flex-1 ml-64 flex flex-col">
         {isHomePage && <Topbar />}
         
-        <main className="p-6">
+        <main className="h-screen overflow-hidden">
+
           <Outlet /> {/* <- renders Home, Dashboard, Owners, etc. */}
         </main>
       </div>
