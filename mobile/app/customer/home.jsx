@@ -459,12 +459,6 @@ useFocusEffect(
                 </View>
 
                 <Text style={styles.price}>₱{item.pricePerDay}</Text>
-
-                  {/* Quantity */}
-                { /* <Text style={styles.quantity}>
-                    Quantity: {item.availableQuantity} / {item.quantity}
-                  </Text> 
-                 */}
                 </View>
               </View>
             </Pressable>
@@ -907,11 +901,12 @@ featuredImage: {
     resizeMode: "cover",
   },
   lowerHalf: {
-    flex: 1.5,
+    flex: 1,
     flexDirection: "column",
     paddingHorizontal: 5,
     paddingTop: 5,
     paddingBottom: 10,
+    overflow: "hidden",
     
   },
 
@@ -936,7 +931,7 @@ featuredImage: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: -5,
-    top: 5,
+    marginTop: 5,
   },
 
   iconContainer: {
@@ -960,10 +955,7 @@ featuredImage: {
   price: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    marginTop: 10,
-  },
-  quantity: {
-    marginTop: 5,
+    marginTop: 2,
   },
   availabilityBadge: {
     width: "45%",
@@ -972,7 +964,7 @@ featuredImage: {
     justifyContent: "center",
     marginBottom: 10,
     borderRadius: 10,
-    top: 5,
+    marginTop: 5,
   },
 
   availabilityText: {
@@ -1002,8 +994,6 @@ featuredImage: {
     color: "#fff", 
     fontWeight: "bold" 
   },
-    
-
 
  
   center: { 
