@@ -237,7 +237,7 @@ const AdminDashboard = () => {
       </div>
 
         {/* Tables */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6 mt-4 sm:mt-6">
           {/* Recent Logins */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 sm:p-6 flex flex-col">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
