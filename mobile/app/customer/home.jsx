@@ -917,6 +917,7 @@ featuredImage: {
   ratingRow: {
     flexDirection: "row",
     alignItems: "center",
+    bottom: 2,
   },
   ratingValue: {
     fontSize: width * 0.035,
@@ -931,7 +932,7 @@ featuredImage: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: -5,
-    marginTop: 5,
+    bottom: 2,
   },
 
   iconContainer: {
@@ -955,7 +956,7 @@ featuredImage: {
   price: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    marginTop: 2,
+    bottom: 2,
   },
   availabilityBadge: {
     width: "45%",
