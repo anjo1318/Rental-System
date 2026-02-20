@@ -28,52 +28,60 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// ✅ Safe upload path: use env var (Render disk) or fallback to local
+const uploadDir = process.env.UPLOAD_PATH
+  ? process.env.UPLOAD_PATH
+  : path.join(process.cwd(), 'uploads');
+
+const imageUploadDir = path.join(uploadDir, 'images');
+
+// ✅ Safe directory creation with error handling
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`📁 Created upload directory: ${uploadDir}`);
+  }
+  if (!fs.existsSync(imageUploadDir)) {
+    fs.mkdirSync(imageUploadDir, { recursive: true });
+    console.log(`📁 Created images directory: ${imageUploadDir}`);
+  }
+} catch (err) {
+  console.error(`❌ Failed to create upload directories:`, err.message);
+  process.exit(1);
+}
+
 // ------------------ Middleware ------------------
 
-// Allow everyone to access (all origins)
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // optional, remove if not using cookies
+  credentials: true
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
 });
 
+// ✅ Serve static files from the SAME directory where files are saved
+app.use('/uploads', express.static(uploadDir));
 
-
-const uploadDir = process.env.UPLOAD_PATH || '/persistent_uploads';
-const imageUploadDir = path.join(uploadDir, 'images');
-
-
-
-// Create directories if they don't exist
-if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-if (!fs.existsSync(imageUploadDir)) fs.mkdirSync(imageUploadDir, { recursive: true });
-
-// Serve static files
-app.use(
-  "/uploads",
-  express.static(path.join(process.cwd(), "server", "uploads"))
-);
-
-// Debug routes (optional)
+// ✅ Debug route to verify uploads are working
 app.get('/debug/uploads', (req, res) => {
-  fs.readdir(uploadDir, (err, files) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ files, uploadDir, imageFiles: fs.readdirSync(imageUploadDir) });
-  });
+  try {
+    const files = fs.readdirSync(uploadDir);
+    const imageFiles = fs.readdirSync(imageUploadDir);
+    res.json({ uploadDir, imageUploadDir, files, imageFiles });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ------------------ Health Check ------------------
@@ -103,11 +111,11 @@ app.use('/api/review', reviewRouter);
 app.use('/api/return', returnRouter);
 app.use('/api/history', historyRouter);
 app.use('/api/dashboard', dashboardRouter);
-app.use('/api/login-history',loginHistoryRouter);
+app.use('/api/login-history', loginHistoryRouter);
 
 // ------------------ 404 Handler ------------------
 
-app.use((req, res, next) => {
+app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route not found' });
 });
 
@@ -129,12 +137,11 @@ connectToDatabase()
     app.listen(PORT, async () => {
       const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
       console.log(`✅ Server running on port ${PORT}`);
-      console.log(`📁 Static files served from: ${uploadDir}`);
+      console.log(`📁 Upload directory: ${uploadDir}`);
       console.log(`🖼️  Images directory: ${imageUploadDir}`);
       console.log(`🌐 Health check: ${PUBLIC_URL}`);
       console.log(`📸 Upload endpoint: ${PUBLIC_URL}/api/upload/image`);
       
-      // ✨ Restore deadline timers on server start
       console.log('⏰ Restoring deadline timers...');
       await restoreActiveTimers();
     });
@@ -143,4 +150,4 @@ connectToDatabase()
     console.error('Database connection failed:', err);
   });
 
-  setupRentalMonitoring();
+setupRentalMonitoring();
