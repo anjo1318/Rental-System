@@ -19,39 +19,11 @@ import dashboardRouter from './routes/dashboard.js';
 import loginHistoryRouter from './routes/loginHistory.js';
 import { restoreActiveTimers, setupRentalMonitoring } from './controllers/bookController.js';
 import cors from 'cors';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
-import path from 'path';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ✅ Safe upload path: use env var (Render disk) or fallback to local
-const uploadDir = process.env.UPLOAD_PATH
-  ? process.env.UPLOAD_PATH
-  : path.join(process.cwd(), 'uploads');
-
-const imageUploadDir = path.join(uploadDir, 'images');
-
-// ✅ Safe directory creation with error handling
-try {
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-    console.log(`📁 Created upload directory: ${uploadDir}`);
-  }
-  if (!fs.existsSync(imageUploadDir)) {
-    fs.mkdirSync(imageUploadDir, { recursive: true });
-    console.log(`📁 Created images directory: ${imageUploadDir}`);
-  }
-} catch (err) {
-  console.error(`❌ Failed to create upload directories:`, err.message);
-  process.exit(1);
-}
 
 // ------------------ Middleware ------------------
 
@@ -70,27 +42,13 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ Serve static files from the SAME directory where files are saved
-app.use('/uploads', express.static(uploadDir));
-
-// ✅ Debug route to verify uploads are working
-app.get('/debug/uploads', (req, res) => {
-  try {
-    const files = fs.readdirSync(uploadDir);
-    const imageFiles = fs.readdirSync(imageUploadDir);
-    res.json({ uploadDir, imageUploadDir, files, imageFiles });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 // ------------------ Health Check ------------------
 
 app.get('/', (req, res) => {
   res.json({ 
     message: 'Rental System API is running',
     timestamp: new Date().toISOString(),
-    uploadsEnabled: fs.existsSync(imageUploadDir)
+    storage: 'Cloudinary',
   });
 });
 
@@ -134,15 +92,13 @@ app.use((err, req, res, next) => {
 
 connectToDatabase()
   .then(async () => {
-    app.listen(PORT, async () => {
+    app.listen(PORT, '0.0.0.0', async () => {
       const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`📁 Upload directory: ${uploadDir}`);
-      console.log(`🖼️  Images directory: ${imageUploadDir}`);
-      console.log(`🌐 Health check: ${PUBLIC_URL}`);
-      console.log(`📸 Upload endpoint: ${PUBLIC_URL}/api/upload/image`);
-      
-      console.log('⏰ Restoring deadline timers...');
+      console.log(`Server running on port ${PORT}`);
+      console.log(`Images stored on Cloudinary`);
+      console.log(`Health check: ${PUBLIC_URL}`);
+      console.log(`Upload endpoint: ${PUBLIC_URL}/api/upload/image`);
+      console.log('Restoring deadline timers...');
       await restoreActiveTimers();
     });
   })

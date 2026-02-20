@@ -397,12 +397,10 @@ export default function RentingDetails() {
       newErrors.gender = "Please select your gender";
     }
 
-    // ✅ Check if same day rental
     const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
     const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
     
     if (pickupDay.getTime() === returnDay.getTime()) {
-      // Same day - check 3 hour minimum
       const diffMs = returnDate - pickupDate;
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
       
@@ -479,7 +477,7 @@ export default function RentingDetails() {
       },
       rentalDetails: {
         period: "Flexible",
-        pickupDate,  // ✅ Fixed: was missing this line properly
+        pickupDate,  //Fixed: was missing this line properly
         returnDate,
         duration,
       },
