@@ -51,13 +51,13 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-teal-400 via-teal-300 to-white flex items-center justify-center p-4">
       {/* Centered Container */}
       <div className="w-full max-w-6xl bg-white rounded-2xl shadow-2xl overflow-hidden">
         <div className="flex flex-col lg:flex-row">
           
           {/* Left Side - Logo/Illustration */}
-          <div className="lg:w-1/2 bg-gradient-to-br from-cyan-400 via-blue-400 to-blue-300 relative overflow-hidden flex items-center justify-center p-12 min-h-[300px] lg:min-h-[600px]">
+          <div className="lg:w-1/2 bg-gradient-to-br from-teal-400 via-teal-300 to-white relative overflow-hidden flex items-center justify-center p-12 min-h-[300px] lg:min-h-[600px]">
             {/* Main logo illustration */}
             <div className="flex flex-col items-center">
               <img 
