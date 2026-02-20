@@ -63,8 +63,10 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 if (!fs.existsSync(imageUploadDir)) fs.mkdirSync(imageUploadDir, { recursive: true });
 
 // Serve static files
-app.use('/uploads', express.static(uploadDir));
-
+app.use(
+  "/uploads",
+  express.static(path.join(process.cwd(), "server", "uploads"))
+);
 // Debug routes (optional)
 app.get('/debug/uploads', (req, res) => {
   fs.readdir(uploadDir, (err, files) => {

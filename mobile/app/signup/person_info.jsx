@@ -260,7 +260,6 @@ export default function PersonalInfo() {
         });
       }
 
-      console.log("📤 Uploading to:", `${API_URL}/api/customer/sign-up`);
 
       const response = await fetch(`${API_URL}/api/customer/sign-up`, {
         method: "POST",
