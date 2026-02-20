@@ -232,7 +232,7 @@ const mobileOwnerLogin = async (req, res) => {
         address: owner.street 
           ? `${owner.houseNumber || ''} ${owner.street}, ${owner.barangay}, ${owner.town}, ${owner.province}`.trim() 
           : null,
-        profileImage: owner.profileImage || null,
+        profileImage: owner.profileImage || owner.selfie || null,  // ✅ fallback to selfie
         gcashQR: owner.gcashQR || null,
         bio: owner.bio || null,
         isVerified: owner.isVerified || false,

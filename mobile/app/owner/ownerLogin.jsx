@@ -180,7 +180,7 @@ export default function ownerLogin() {
           email: user.email,
           phone: user.phone || null,
           address: user.address || null,
-          profileImage: user.profileImage || null,
+          profileImage: user.profileImage || user.selfie || null,
           gcashQR: user.gcashQR || null, 
           bio: user.bio || null,
           isVerified: user.isVerified || false,
