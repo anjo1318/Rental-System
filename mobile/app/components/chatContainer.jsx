@@ -28,6 +28,7 @@ export default function ChatBody({
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets()
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const { height: windowHeight } = useWindowDimensions();
 
 
   useEffect(() => {
