@@ -67,6 +67,7 @@ app.use(
   "/uploads",
   express.static(path.join(process.cwd(), "server", "uploads"))
 );
+
 // Debug routes (optional)
 app.get('/debug/uploads', (req, res) => {
   fs.readdir(uploadDir, (err, files) => {

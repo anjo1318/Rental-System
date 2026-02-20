@@ -66,8 +66,14 @@ const customerSignUp = async (req, res) => {
     console.log("🤳 Selfie file object:", selfieFile);
 
     const baseUrl = `${req.protocol}://${req.get("host")}`;
-    const idPhotoUrl = idPhotoFile ? `${baseUrl}/uploads/${idPhotoFile.filename}` : null;
-    const selfieUrl = selfieFile ? `${baseUrl}/uploads/${selfieFile.filename}` : null;
+
+    const idPhotoUrl = idPhotoFile
+      ? `${baseUrl}/uploads/images/${idPhotoFile.filename}`
+      : null;
+
+    const selfieUrl = selfieFile
+      ? `${baseUrl}/uploads/images/${selfieFile.filename}`
+      : null;
 
     console.log("✅ Generated ID Photo URL:", idPhotoUrl);
     console.log("✅ Generated Selfie URL:", selfieUrl);
