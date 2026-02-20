@@ -55,13 +55,21 @@ const hideSub = Keyboard.addListener(hideEvent, () => {
     });
   };
 
- return (
-<View style={{ flex: 1, paddingBottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom }}>
+return (
+  <View style={{ flex: 1 }}>
       {/* MESSAGE LIST */}
-      <ScrollView
+ <ScrollView
   ref={scrollViewRef}
   style={{ flex: 1 }}
-  contentContainerStyle={styles.chatBody}
+  contentContainerStyle={[
+    styles.chatBody,
+    {
+      paddingBottom:
+        keyboardHeight > 0
+          ? keyboardHeight + 64
+          : 64 + insets.bottom,
+    },
+  ]}
   onContentSizeChange={() =>
     scrollViewRef.current?.scrollToEnd({ animated: true })
   }
@@ -100,8 +108,16 @@ const hideSub = Keyboard.addListener(hideEvent, () => {
 
       {/* INPUT BAR */}
       <View
-      style={styles.inputWrapper}
-    >
+  style={[
+    styles.inputWrapper,
+    {
+      position: "absolute",
+      left: 0,
+      right: 0,
+      bottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom,
+    },
+  ]}
+>
         <Pressable disabled>
           <Icon name="add-circle-outline" size={26} color="#057474" />
         </Pressable>
@@ -201,7 +217,6 @@ const styles = StyleSheet.create({
   flexDirection: "row",
   alignItems: "center",
   paddingHorizontal: 10,
-  paddingVertical: 12,   // ⬅ adjustable
   minHeight: 64,         // ⬅ adjustable: prevents bar from collapsing
   backgroundColor: "#fff",
   borderTopWidth: 1,
@@ -210,7 +225,7 @@ const styles = StyleSheet.create({
   input: {
   flex: 1,
   marginHorizontal: 10,
-  paddingVertical: 12,      // ⬅ adjustable
+  paddingVertical: 10,      // ⬅ adjustable
   paddingHorizontal: 12,
   backgroundColor: "#F0F0F0",
   borderRadius: 20,
