@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Keyboard,
   Platform,
-  useWindowDimensions,
 } from "react-native";
 
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -28,7 +27,6 @@ export default function ChatBody({
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets()
   const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const { height: windowHeight } = useWindowDimensions();
 
 
   useEffect(() => {
