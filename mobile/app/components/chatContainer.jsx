@@ -7,16 +7,20 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  Keyboard,
+  KeyboardAvoidingView,
   Platform,
-  useWindowDimensions,
+  Dimensions,
 } from "react-native";
 
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const INPUT_CONTAINER_LIFT = 40;
-const INPUT_BAR_HEIGHT = 90; // Approximate height of input bar
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+const scale = SCREEN_WIDTH / 375;
+const INPUT_ICON_SIZE = Math.round(24 * scale);
+const INPUT_FONT_SIZE = Math.max(13, Math.round(14 * scale));
+const INPUT_BAR_PADDING_V = Math.max(10, Math.round(SCREEN_HEIGHT * 0.018));
 
 export default function ChatBody({
   messages,
@@ -28,25 +32,6 @@ export default function ChatBody({
 }) {
   const scrollViewRef = useRef();
   const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  // Keyboard listeners
-  useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
-
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardHeight(0);
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, []);
 
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
@@ -56,30 +41,28 @@ export default function ChatBody({
     });
   };
 
-  // Calculate the total space needed at the bottom
-  // When keyboard is visible, only add space for the input bar itself plus a small buffer
-  const inputBarTotalHeight = keyboardHeight > 0 
-    ? INPUT_BAR_HEIGHT + 20 // Just enough space for the input bar when keyboard is open
-    : INPUT_BAR_HEIGHT;
-
   return (
-    <View style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
       {/* MESSAGE LIST */}
       <ScrollView
         ref={scrollViewRef}
-        contentContainerStyle={[
-          styles.chatBody,
-          {
-            paddingBottom: inputBarTotalHeight,
-          }
-        ]}
+        contentContainerStyle={styles.chatBody}
         onContentSizeChange={() =>
           scrollViewRef.current?.scrollToEnd({ animated: true })
         }
+        keyboardShouldPersistTaps="handled"
       >
         {messages.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Icon name="chat-bubble-outline" size={70} color="#ccc" />
+            <Icon
+              name="chat-bubble-outline"
+              size={Math.round(SCREEN_WIDTH * 0.17)}
+              color="#ccc"
+            />
             <Text style={styles.emptyText}>No messages yet</Text>
             <Text style={styles.emptySubtext}>
               Start the conversation by sending a message
@@ -99,7 +82,6 @@ export default function ChatBody({
                 <Text style={isOwn ? styles.buyerText : styles.sellerText}>
                   {message.content}
                 </Text>
-
                 <Text style={styles.timestamp}>
                   {formatTime(message.createdAt)}
                 </Text>
@@ -109,23 +91,18 @@ export default function ChatBody({
         )}
       </ScrollView>
 
-      {/* INPUT BAR */}
+      {/* INPUT BAR — no longer absolute, sits naturally at bottom */}
       <View
         style={[
           styles.inputWrapper,
           {
-            bottom:
-              keyboardHeight > 0
-                ? Math.max(0, keyboardHeight - insets.bottom) +
-                  INPUT_CONTAINER_LIFT
-                : 0,
-
-            paddingBottom: insets.bottom + 20,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : INPUT_BAR_PADDING_V,
+            paddingTop: INPUT_BAR_PADDING_V,
           },
         ]}
       >
-        <Pressable disabled>
-          <Icon name="add-circle-outline" size={26} color="#057474" />
+        <Pressable disabled hitSlop={8}>
+          <Icon name="add-circle-outline" size={INPUT_ICON_SIZE} color="#057474" />
         </Pressable>
 
         <TextInput
@@ -142,25 +119,26 @@ export default function ChatBody({
         <Pressable
           onPress={handleSendMessage}
           disabled={!newMessage.trim() || sending}
+          hitSlop={8}
         >
           {sending ? (
             <ActivityIndicator size="small" color="#057474" />
           ) : (
             <Icon
               name="send"
-              size={24}
+              size={INPUT_ICON_SIZE}
               color={newMessage.trim() ? "#057474" : "#ccc"}
             />
           )}
         </Pressable>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   chatBody: {
-    padding: 16,
+    padding: Math.round(SCREEN_WIDTH * 0.04),
     flexGrow: 1,
   },
 
@@ -168,28 +146,29 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 60,
+    paddingVertical: Math.round(SCREEN_HEIGHT * 0.08),
   },
 
   emptyText: {
-    fontSize: 18,
+    fontSize: Math.max(15, Math.round(SCREEN_WIDTH * 0.045)),
     fontWeight: "600",
     color: "#666",
     marginTop: 16,
   },
 
   emptySubtext: {
-    fontSize: 14,
+    fontSize: Math.max(12, Math.round(SCREEN_WIDTH * 0.035)),
     color: "#999",
     marginTop: 8,
     textAlign: "center",
+    paddingHorizontal: Math.round(SCREEN_WIDTH * 0.08),
   },
 
   bubble: {
     maxWidth: "80%",
-    padding: 10,
+    padding: Math.round(SCREEN_WIDTH * 0.026),
     borderRadius: 8,
-    marginBottom: 10,
+    marginBottom: Math.round(SCREEN_HEIGHT * 0.012),
   },
 
   buyerBubble: {
@@ -206,44 +185,40 @@ const styles = StyleSheet.create({
 
   buyerText: {
     color: "#000",
-    fontSize: 15,
+    fontSize: INPUT_FONT_SIZE,
   },
 
   sellerText: {
     color: "#000",
-    fontSize: 15,
+    fontSize: INPUT_FONT_SIZE,
   },
 
   timestamp: {
-    fontSize: 11,
+    fontSize: Math.max(10, Math.round(SCREEN_WIDTH * 0.028)),
     color: "#666",
     marginTop: 4,
     textAlign: "right",
   },
 
+  // No more position: absolute — input bar is part of the normal flow
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 20,
+    paddingHorizontal: Math.round(SCREEN_WIDTH * 0.03),
     backgroundColor: "#fff",
     borderTopWidth: 1,
     borderTopColor: "#ddd",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
   },
 
   input: {
     flex: 1,
-    marginHorizontal: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    marginHorizontal: Math.round(SCREEN_WIDTH * 0.025),
+    paddingVertical: Math.round(SCREEN_HEIGHT * 0.013),
+    paddingHorizontal: Math.round(SCREEN_WIDTH * 0.03),
     backgroundColor: "#F0F0F0",
     borderRadius: 20,
-    fontSize: 14,
-    maxHeight: 100,
+    fontSize: INPUT_FONT_SIZE,
+    maxHeight: Math.round(SCREEN_HEIGHT * 0.13),
     borderWidth: 1,
     borderColor: "#057474",
   },

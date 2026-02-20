@@ -18,8 +18,10 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ScreenWrapper from "../components/screenwrapper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ChatContainer from "../components/chatContainer";
 
 const { width, height } = Dimensions.get("window");
+const INPUT_CONTAINER_LIFT = 0; // adjust freely (10–20 is normal)
 
 export default function OwnerChatScreen({ BottomNav }) {
   const { id } = useLocalSearchParams(); // chatId

@@ -1,228 +1,251 @@
-import React, { useState, useEffect } from "react";
-import { usePathname } from "expo-router";
-
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  ScrollView,
-  StyleSheet,
-  Dimensions,
+  TextInput,
   Pressable,
-  StatusBar,
+  FlatList,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+  Dimensions,
   Image,
-  ActivityIndicator,
-  RefreshControl
 } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter } from "expo-router";
-import OwnerBottomNav from '../components/OwnerBottomNav';
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Header from "../components/header";
 import ScreenWrapper from "../components/screenwrapper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ChatContainer from "../components/chatContainer";
 
 const { width, height } = Dimensions.get("window");
 
-export default function ProfileHeader() {
+
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(18, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.04);
+
+
+export default function OwnerChatScreen({ BottomNav }) {
+  const { id } = useLocalSearchParams(); // chatId
   const router = useRouter();
-  const [chats, setChats] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [token, setToken] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [chatDetails, setChatDetails] = useState(null);
+  const flatListRef = useRef(null);
+  const insets = useSafeAreaInsets();
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchChats();
-    setRefreshing(false);
-  };
+  console.log("💬 Owner ChatScreen - Chat ID:", id);
 
-  console.log("📱 Owner Messages Component Rendered");
-
-
-
-  const fetchChats = async () => {
-    try {
-      console.log("🔑 Attempting to retrieve token from AsyncStorage");
-      const token = await AsyncStorage.getItem("token");
-      
-      if (!token) {
-        console.error("❌ No token found");
-        setLoading(false);
-        return;
-      }
-
-      console.log("✅ Token retrieved successfully");
-      const apiUrl = `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`;
-      console.log("📡 Making API request to:", apiUrl);
-
-      const res = await axios.get(apiUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`
+  // Get user ID and token from storage
+  useEffect(() => {
+    const getUserData = async () => {
+      try {
+        console.log("🔑 Getting user data from AsyncStorage");
+        const userStr = await AsyncStorage.getItem("user");
+        const storedToken = await AsyncStorage.getItem("token");
+        
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          console.log("👤 User data:", user);
+          setUserId(user.id);
+          setUserName(`${user.firstName} ${user.lastName}`);
         }
-      });
+        if (storedToken) {
+          console.log("✅ Token retrieved");
+          setToken(storedToken);
+        }
+      } catch (err) {
+        console.error("❌ Error getting user data:", err);
+      }
+    };
+    getUserData();
+  }, []);
 
-      console.log("📥 API Response status:", res.status);
-      console.log("📦 API Response data:", JSON.stringify(res.data, null, 2));
+  // Fetch chat details (to get other user's info)
+  useEffect(() => {
+    if (!userId || !token) return;
 
+    const fetchChatDetails = async () => {
+      try {
+        console.log("📡 Fetching chat details for chat ID:", id);
+        const res = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+
+        if (res.data.success) {
+          console.log("✅ Chat details fetched");
+          // Find the specific chat
+          const currentChat = res.data.data.find(chat => chat.id === parseInt(id));
+          console.log("💬 Current chat details:", currentChat);
+          setChatDetails(currentChat);
+        }
+      } catch (err) {
+        console.error("❌ Error fetching chat details:", err);
+      }
+    };
+
+    fetchChatDetails();
+  }, [id, userId, token]);
+
+  // Fetch messages
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const fetchMessages = async () => {
+      try {
+        console.log("📡 Fetching messages for chat ID:", id);
+        const res = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/message/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log("✅ Messages fetched:", res.data.length, "messages");
+        setMessages(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching messages:", err);
+        Alert.alert("Error", "Failed to fetch messages");
+      }
+    };
+    fetchMessages();
+  }, [id, userId, token]);
+
+  const handleSend = async () => {
+    if (!input.trim() || !userId || !token) return;
+    
+    console.log("📤 Sending message:", input);
+    
+    try {
+      const res = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/message`,
+        {
+          chatId: id,
+          senderId: userId,
+          content: input,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      
       if (res.data.success) {
-        console.log("✅ Chats fetched successfully");
-        console.log("💬 Number of chats:", res.data.data.length);
-        setChats(res.data.data);
+        console.log("✅ Message sent successfully");
+        setMessages((prev) => [...prev, res.data.data]);
+        setInput("");
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
       }
     } catch (err) {
-      console.error("❌ Error fetching chats:", err);
-      console.error("❌ Error message:", err.message);
-      if (err.response) {
-        console.error("❌ Response status:", err.response.status);
-        console.error("❌ Response data:", err.response.data);
-      }
-    } finally {
-      console.log("🏁 Fetch complete, setting loading to false");
-      setLoading(false);
+      console.error("❌ Error sending message:", err);
+      Alert.alert("Error", "Failed to send message");
     }
   };
 
-  const pathname = usePathname();
-
-  useEffect(() => {
-    console.log("🔁 Route changed — refreshing data");
-    setLoading(true);
-    fetchChats();
-  }, [pathname]);
-
-
-
-
-  const formatDate = (dateString) => {
-    console.log("📅 Formatting date:", dateString);
-    const date = new Date(dateString);
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-
-    // Reset time parts for comparison
-    today.setHours(0, 0, 0, 0);
-    yesterday.setHours(0, 0, 0, 0);
-    const compareDate = new Date(date);
-    compareDate.setHours(0, 0, 0, 0);
-
-    let formattedDate;
-    if (compareDate.getTime() === today.getTime()) {
-      formattedDate = "Today";
-    } else if (compareDate.getTime() === yesterday.getTime()) {
-      formattedDate = "Yesterday";
-    } else {
-      formattedDate = `${date.getMonth() + 1}/${date.getDate()}`;
-    }
+  const renderMessage = ({ item }) => {
+    const isOwnMessage = item.senderId === userId;
     
-    console.log("📅 Formatted date result:", formattedDate);
-    return formattedDate;
+    return (
+      <View style={[styles.messageWrapper, isOwnMessage && styles.ownMessageWrapper]}>
+        <View
+          style={[
+            styles.messageBubble,
+            isOwnMessage ? styles.ownMessage : styles.otherMessage,
+          ]}
+        >
+          <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
+            {item.content}
+          </Text>
+        </View>
+      </View>
+    );
   };
-
-  const handleChatPress = (chat) => {
-    console.log("💬 Chat pressed:", {
-      chatId: chat.id,
-      itemId: chat.itemId,
-      otherUser: chat.otherUserName,
-    });
-    console.log("🔗 Navigating to:", `/owner/ownerChat?id=${chat.id}&itemId=${chat.itemId}`);
-    router.push(`/owner/ownerChat?id=${chat.id}&itemId=${chat.itemId}`);
-  };
-
-  const handleBackPress = () => {
-    console.log("⬅️ Back button pressed");
-    router.back();
-  };
-
-  console.log("🎨 Rendering UI with:", {
-    loading,
-    chatsCount: chats.length,
-  });
 
   return (
-    
+    <ScreenWrapper>
+    <View style={styles.container}>
       
- <ScreenWrapper>
-        <Header
-          title="Messages"
-          backgroundColor="#007F7F"
-        />
-        <View style={styles.container}>
-      {/* Body */}
-      <View style={styles.bodyWrapper}>
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#057474" />
-            {console.log("⏳ Showing loading indicator")}
-          </View>
-        ) : chats.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No messages yet</Text>
-            {console.log("📭 Showing empty state")}
-          </View>
-        ) : (
-          <ScrollView 
-            contentContainerStyle={styles.scrollContent}
-            refreshControl={
-              <RefreshControl
-                refreshing={refreshing}
-                onRefresh={onRefresh}
-                colors={["#007F7F"]}      // Android
-                tintColor="#007F7F"       // iOS
-              />
-            }
-          >
-            {console.log("📜 Rendering chat list")}
-            {chats.map((chat) => {
-              console.log("💬 Rendering chat item:", {
-                id: chat.id,
-                otherUser: chat.otherUserName,
-                hasLastMessage: !!chat.lastMessage,
-                hasImage: !!chat.otherUserImage
-              });
-              
-              return (
-                <Pressable
-                  key={chat.id}
-                  style={styles.messageItem}
-                  onPress={() => handleChatPress(chat)}
-                >
-                  <View style={styles.bottomDivider} />
-                  <Image
-                    source={{ 
-                      uri: chat.otherUserImage 
-                        ? chat.otherUserImage 
-                        : "https://i.pravatar.cc/150?img=3" 
-                    }}
-                    style={styles.avatar}
-                  />
-                  <View style={styles.messageContent}>
-                    <View style={styles.messageHeader}>
-                      <Text style={styles.sender}>
-                        {chat.otherUserName || `Chat #${chat.id}`}
-                      </Text>
-                      <Text style={styles.date}>
-                        {chat.lastMessage 
-                          ? formatDate(chat.lastMessage.createdAt)
-                          : formatDate(chat.updatedAt)
-                        }
-                      </Text>
-                    </View>
-                    <Text style={styles.preview} numberOfLines={1}>
-                      {chat.lastMessage 
-                        ? chat.lastMessage.text 
-                        : `Item ID: ${chat.itemId}`
-                      }
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          
-          </ScrollView>
-        )}
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#000" />
+        </Pressable>
+        
+        <View style={styles.headerCenter}>
+          {chatDetails?.otherUserImage ? (
+            <Image
+              source={{ uri: chatDetails.otherUserImage }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <Icon name="person" size={24} color="#666" />
+            </View>
+          )}
+          <Text style={styles.headerName}>
+            {chatDetails?.otherUserName || "Loading..."}
+          </Text>
+        </View>
+        
+        <View style={styles.headerRight} />
       </View>
+
+      {/* Messages */}
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderMessage}
+        contentContainerStyle={styles.messagesList}
+        style={styles.messagesContainer}
+        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+      />
+      
+      {/* Input */}
+           <KeyboardAvoidingView
+       behavior={Platform.OS === "ios" ? "padding" : "height"}
+       keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0} >
+         <View style={[
+          styles.inputContainer,
+          { paddingBottom: insets.bottom || 10 }
+        ]}>
+          <Pressable style={styles.addButton}>
+            <Icon name="add-circle-outline" size={28} color="#666" />
+          </Pressable>
+          
+          <TextInput
+            style={styles.input}
+            placeholder="Type a message..."
+            placeholderTextColor="#999"
+            value={input}
+            onChangeText={setInput}
+            multiline
+          />
+          
+          <Pressable onPress={handleSend} style={styles.sendButton}>
+            <Icon name="send" size={24} color="#03A3A3" />
+          </Pressable>
+        </View>
+      </KeyboardAvoidingView>
     </View>
-      <OwnerBottomNav/>
     </ScreenWrapper>
   );
 }
@@ -230,80 +253,145 @@ export default function ProfileHeader() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF",
+    backgroundColor: "#F5F5F5",
   },
 
-
-  bodyWrapper: {
-    flex: 1,
-    paddingBottom: height * 0.04,
-  },
-
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  emptyText: {
-    color: "#888",
-    fontSize: 16,
-  },
-
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: height * 0.12,
-  },
-
-  messageItem: {
+  header: {
     flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#FFF",
-    padding: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#00000040",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
+    shadowRadius: 4,
+    elevation: 4,       
+    overflow: "hidden",
+  },
+
+  backButton: {
+    padding: 4,
+  },
+
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
   },
 
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    marginRight: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
   },
 
-  bottomDivider: {
-    position: "absolute",
-    bottom: 0,
-    left: 68,
-    right: 0,
-    height: 1,
-    backgroundColor: "#05747480",
+  avatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 8,
+    backgroundColor: "#E0E0E0",
   },
 
-  messageContent: {
-    flex: 1,
-  },
-
-  messageHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-
-  sender: {
+  headerName: {
+    fontSize: 16,
     fontWeight: "600",
     color: "#000",
   },
 
-  date: {
-    fontSize: 12,
-    color: "#888",
+  headerRight: {
+    width: 24,
   },
 
-  preview: {
-    color: "#666",
-    marginTop: 4,
+  messagesContainer: {
+    flex: 1,
+  },
+
+  messagesList: {
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 80,
+  },
+
+  messageWrapper: {
+    marginBottom: 12,
+    alignItems: "flex-start",
+  },
+
+  ownMessageWrapper: {
+    alignItems: "flex-end",
+  },
+
+  messageBubble: {
+    maxWidth: "75%",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 18,
+  },
+
+  ownMessage: {
+    backgroundColor: "#03A3A3",
+    borderBottomRightRadius: 4,
+  },
+
+  otherMessage: {
+    backgroundColor: "#FFF",
+    borderBottomLeftRadius: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+
+  messageText: {
+    fontSize: 15,
+    color: "#333",
+    lineHeight: 20,
+  },
+
+  ownMessageText: {
+    color: "#FFF",
+  },
+
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "#FFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+  },
+
+  addButton: {
+    padding: 4,
+    marginRight: 4,
+  },
+
+  input: {
+    flex: 1,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    fontSize: 15,
+    maxHeight: 100,
+    color: "#000",
+  },
+
+  sendButton: {
+    padding: 8,
+    marginLeft: 4,
   },
 });

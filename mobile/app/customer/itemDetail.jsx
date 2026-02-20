@@ -447,7 +447,7 @@ export default function ItemDetail() {
               }
 
               if (chatIdToUse && chatIdToUse !== 'undefined') {
-                const navUrl = `/customer/convointerface?id=${chatIdToUse}&itemId=${item.id}`;
+                const navUrl = `/customer/messages?id=${chatIdToUse}&itemId=${item.id}`;
                 console.log("🔗 Navigating to:", navUrl);
                 router.push(navUrl);
               } else {
