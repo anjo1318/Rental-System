@@ -1,14 +1,17 @@
-// routes/upload.js
 import express from 'express';
 import multer from 'multer';
-import path from 'path';
-import fs from 'fs';
 import jwt from 'jsonwebtoken';
-import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
 const router = express.Router();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+
+// ------------------ Cloudinary Config ------------------
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // ------------------ Authentication ------------------
 const authenticateToken = (req, res, next) => {
@@ -16,10 +19,7 @@ const authenticateToken = (req, res, next) => {
   const token = authHeader && authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(401).json({
-      success: false,
-      error: 'Access token required',
-    });
+    return res.status(401).json({ success: false, error: 'Access token required' });
   }
 
   try {
@@ -28,29 +28,17 @@ const authenticateToken = (req, res, next) => {
     console.log(`🔐 Authenticated user for upload:`, decoded.id);
     next();
   } catch (error) {
-    return res.status(403).json({
-      success: false,
-      error: 'Invalid or expired token',
-    });
+    return res.status(403).json({ success: false, error: 'Invalid or expired token' });
   }
 };
 
-// ------------------ Upload Directory Setup ------------------
-
-// Use persistent disk on Render, or fallback to local uploads folder
-const baseUploadPath = process.env.UPLOAD_PATH || '/persistent_uploads';
-const uploadsDir = path.join(baseUploadPath, 'images');
-
-// Ensure directory exists
-
-
-// ------------------ Multer Configuration ------------------
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadsDir),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname).toLowerCase();
-    cb(null, `item-${uniqueSuffix}${extension}`);
+// ------------------ Multer + Cloudinary Storage ------------------
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'uploads',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    resource_type: 'image',
   },
 });
 
@@ -64,7 +52,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 // ------------------ Routes ------------------
@@ -76,14 +64,12 @@ router.post('/image', authenticateToken, upload.single('image'), async (req, res
       return res.status(400).json({ success: false, error: 'No image file provided' });
     }
 
-    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
-
     console.log(`📸 Image uploaded successfully: ${req.file.filename}`);
 
     res.status(200).json({
       success: true,
       message: 'Image uploaded successfully',
-      imageUrl,
+      imageUrl: req.file.path,
       filename: req.file.filename,
       size: req.file.size,
     });
@@ -101,7 +87,7 @@ router.post('/images', authenticateToken, upload.array('images', 5), async (req,
     }
 
     const imageUrls = req.files.map((file) => ({
-      url: `${req.protocol}://${req.get('host')}/uploads/images/${file.filename}`,
+      url: file.path,
       filename: file.filename,
       size: file.size,
     }));
@@ -124,15 +110,12 @@ router.post('/images', authenticateToken, upload.array('images', 5), async (req,
 router.delete('/image/:filename', authenticateToken, async (req, res) => {
   try {
     const { filename } = req.params;
-    const imagePath = path.join(uploadsDir, filename);
 
-    if (!fs.existsSync(imagePath)) {
-      return res.status(404).json({ success: false, error: 'Image not found' });
-    }
+    // filename from Cloudinary is in format "folder/public_id"
+    const publicId = `uploads/${filename}`;
+    await cloudinary.uploader.destroy(publicId);
 
-    fs.unlinkSync(imagePath);
     console.log(`🗑️ Image deleted: ${filename}`);
-
     res.status(200).json({ success: true, message: 'Image deleted successfully' });
   } catch (error) {
     console.error('Image deletion error:', error);
@@ -151,7 +134,7 @@ router.use((error, req, res, next) => {
     }
   }
 
-  if (error.message.includes('Invalid file type')) {
+  if (error.message?.includes('Invalid file type')) {
     return res.status(400).json({ success: false, error: error.message });
   }
 
