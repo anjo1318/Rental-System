@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
 
-export default function ChatBody({
+export default function ChatContainer({
   messages,
   currentUserId,
   newMessage,
@@ -123,7 +123,7 @@ return (
         </Pressable>
 
         <TextInput
-          placeholder="Type a message..."
+          placeholder="Type a messag."
           style={styles.input}
           placeholderTextColor="#999"
           value={newMessage}

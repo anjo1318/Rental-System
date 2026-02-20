@@ -436,31 +436,4 @@ headerTitle: {
     textAlign: "right",
   },
 
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderColor: "#057474"
-  },
-
-  input: {
-    flex: 1,
-    marginHorizontal: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 20,
-    fontSize: 14,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: "#057474"
-  },
 });

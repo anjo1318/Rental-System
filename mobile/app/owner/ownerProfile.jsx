@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header";
 import OwnerBottomNav from '../components/OwnerBottomNav';
 import ScreenWrapper from "../components/screenwrapper";
+import ChatContainer from "../components/chatContainer";
 
 const { width, height } = Dimensions.get("window");
 
