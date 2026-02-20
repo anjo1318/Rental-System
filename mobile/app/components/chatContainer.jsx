@@ -66,7 +66,7 @@ return (
     {
       paddingBottom:
         keyboardHeight > 0
-          ? keyboardHeight + 74
+          ? keyboardHeight + 54
           : 64 + insets.bottom,
     },
   ]}
@@ -114,7 +114,7 @@ return (
       position: "absolute",
       left: 0,
       right: 0,
-      bottom: keyboardHeight   > 0 ? keyboardHeight - 15 : insets.bottom,
+      bottom: keyboardHeight   > 0 ? keyboardHeight + 10 : insets.bottom,
     },
   ]}
 >
