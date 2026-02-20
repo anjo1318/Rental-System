@@ -208,12 +208,12 @@ export default function IdUpload() {
               onValueChange={(itemValue) => setIdType(itemValue)}
               style={{ color: idType ? "#000" : "transparent", width: "100%" }}
             >
-              <Picker.Item label="Select Type of ID " value="" color="#888" /> 
-              <Picker.Item label="Driver's ID" value="drivers" />
-              <Picker.Item label="Postal ID" value="postal" />
-              <Picker.Item label="SSS ID" value="sss" />
-              <Picker.Item label="PhilHealth ID" value="philhealth" />
-              <Picker.Item label="National ID" value="national" />
+              <Picker.Item label="Select Type of ID" value="" color="#888" />
+              <Picker.Item label="Driver's License" value="drivers_license" />
+              <Picker.Item label="Postal ID" value="other" />
+              <Picker.Item label="SSS ID" value="sss_id" />
+              <Picker.Item label="PhilHealth ID" value="philhealth_id" />
+              <Picker.Item label="National ID" value="national_id" />
             </Picker>
           </View>
 

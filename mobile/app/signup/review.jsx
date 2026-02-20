@@ -71,7 +71,7 @@ export default function Review() {
         street: customer.street,
         barangay: customer.barangay,
         town: customer.town,
-        province: customer.province,o
+        province: customer.province,
         country: customer.country,
         zipCode: customer.zipCode,
         guarantor1FullName: customer.guarantor1FullName,

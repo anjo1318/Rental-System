@@ -65,8 +65,8 @@ const customerSignUp = async (req, res) => {
         firstName,
         middleName: middleName || "N/A",
         lastName,
-        emailAddress,
-        phoneNumber,
+        email: emailAddress,        // ✅ use 'email' not 'emailAddress'
+        phone: phoneNumber,         // ✅ use 'phone' not 'phoneNumber'
         birthday,
         gender,
         password: hashedPassword,
@@ -77,7 +77,7 @@ const customerSignUp = async (req, res) => {
         province: province || "N/A",
         country: country || "Philippines",
         zipCode: zipCode || "N/A",
-        idType: idType || null,
+        idType: idType && idType !== "" ? idType : null,
         idNumber: idNumber || "N/A",
         idPhoto: idPhotoUrl,
         selfie: selfieUrl,
