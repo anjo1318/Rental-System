@@ -63,9 +63,17 @@ const Home = () => {
               className="border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 bg-white flex flex-col"
             >
               {/* Item Image */}
-              {item.itemImages && item.itemImages.length > 0 ? (
+            {(() => {
+              let images = [];
+              try {
+                const raw = item.itemImages?.[0];
+                images = typeof raw === "string" ? JSON.parse(raw) : raw || [];
+              } catch {
+                images = [];
+              }
+              return images.length > 0 ? (
                 <img
-                  src={item.itemImages[0]}
+                  src={images[0]}
                   alt={item.title}
                   className="w-full h-48 object-cover rounded-lg mb-3"
                 />
@@ -73,7 +81,8 @@ const Home = () => {
                 <div className="w-full h-48 bg-gray-200 rounded-lg mb-3 flex items-center justify-center">
                   <span className="text-gray-400 text-sm">No Image</span>
                 </div>
-              )}
+              );
+            })()}
 
               {/* Item Info */}
               <div className="flex-1 flex flex-col">

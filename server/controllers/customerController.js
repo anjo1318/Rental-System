@@ -36,17 +36,14 @@ const customerSignUp = async (req, res) => {
     console.log("📌 Request body:", req.body);
     console.log("📂 Request files:", req.files);
 
-    // ✅ Input validation
     if (!firstName || !lastName || !emailAddress || !phoneNumber || !birthday || !gender || !password) {
       console.warn("⚠️ Missing required fields");
       return res.status(400).json({
         success: false,
-        message:
-          "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password",
+        message: "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password",
       });
     }
 
-    // ✅ Check if email already exists
     console.log(`🔍 Checking if email exists: ${emailAddress}`);
     const existingCustomer = await Customer.findOne({ where: { emailAddress } });
 
@@ -58,32 +55,23 @@ const customerSignUp = async (req, res) => {
       });
     }
 
-    // ✅ Handle uploaded files
+    // ✅ Cloudinary gives full URL in req.file.path
     const idPhotoFile = req.files?.photoId?.[0] || null;
     const selfieFile = req.files?.selfie?.[0] || null;
 
     console.log("📸 ID Photo file object:", idPhotoFile);
     console.log("🤳 Selfie file object:", selfieFile);
 
-    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    const idPhotoUrl = idPhotoFile ? idPhotoFile.path : null;
+    const selfieUrl = selfieFile ? selfieFile.path : null;
 
-    const idPhotoUrl = idPhotoFile
-      ? `${baseUrl}/uploads/images/${idPhotoFile.filename}`
-      : null;
+    console.log("✅ ID Photo URL:", idPhotoUrl);
+    console.log("✅ Selfie URL:", selfieUrl);
 
-    const selfieUrl = selfieFile
-      ? `${baseUrl}/uploads/images/${selfieFile.filename}`
-      : null;
-
-    console.log("✅ Generated ID Photo URL:", idPhotoUrl);
-    console.log("✅ Generated Selfie URL:", selfieUrl);
-
-    // ✅ Hash password
     console.log("🔐 Hashing password...");
     const hashedPassword = await bcrypt.hash(password, 10);
     console.log("✅ Password hashed successfully");
 
-    // ✅ Create new customer
     console.log("🛠️ Creating customer in DB...");
     const response = await Customer.create({
       firstName,
@@ -127,14 +115,11 @@ const customerSignUp = async (req, res) => {
   } catch (error) {
     console.error("❌ Error during customer signup:", error);
 
-    // ✅ Handle Sequelize validation errors
     if (error.name === "SequelizeValidationError") {
-      console.warn("⚠️ Validation error:", error.errors);
       const validationErrors = error.errors.map((err) => ({
         field: err.path,
         message: err.message,
       }));
-
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -142,9 +127,7 @@ const customerSignUp = async (req, res) => {
       });
     }
 
-    // ✅ Handle unique constraint errors
     if (error.name === "SequelizeUniqueConstraintError") {
-      console.warn("⚠️ Unique constraint error on email:", emailAddress);
       return res.status(409).json({
         success: false,
         message: "Email address already exists",
@@ -158,25 +141,20 @@ const customerSignUp = async (req, res) => {
   }
 };
 
-
-
-// ✅ ADD THIS NEW FUNCTION - This is what your frontend is calling
 const getCustomerProgress = async (req, res) => {
   try {
     const { id } = req.params;
-    
     console.log(`📊 Fetching customer progress for ID: ${id}`);
-    
+
     const customer = await Customer.findByPk(id);
-    
+
     if (!customer) {
       return res.status(404).json({
         success: false,
-        message: "Customer not found"
+        message: "Customer not found",
       });
     }
 
-    // Return customer data without sensitive info like password
     const customerData = {
       id: customer.id,
       firstName: customer.firstName,
@@ -201,35 +179,34 @@ const getCustomerProgress = async (req, res) => {
       guarantor2MobileNumber: customer.guarantor2MobileNumber,
       idType: customer.idType,
       idNumber: customer.idNumber,
-      // For images, you might need to construct full URLs
-      idPhotoUrl: customer.idPhoto ? `${req.protocol}://${req.get('host')}/uploads/${customer.idPhoto}` : null,
-      selfieUrl: customer.selfie ? `${req.protocol}://${req.get('host')}/uploads/${customer.selfie}` : null,
+      // ✅ Cloudinary URLs are stored directly, no need to build them
+      idPhotoUrl: customer.idPhoto || null,
+      selfieUrl: customer.selfie || null,
       isActive: customer.isActive,
-      isVerified: customer.isVerified
+      isVerified: customer.isVerified,
     };
 
     console.log("✅ Customer data retrieved successfully");
 
     return res.status(200).json({
       success: true,
-      customer: customerData
+      customer: customerData,
     });
-
   } catch (error) {
     console.error("❌ Error fetching customer progress:", error);
     return res.status(500).json({
       success: false,
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 };
 
 const fetchCustomers = async (req, res) => {
-  try{
+  try {
     const response = await Customer.findAll();
-    return res.status(200).json({success:true, data:response});
+    return res.status(200).json({ success: true, data: response });
   } catch (error) {
-    return res.status(500).json({success:false, message:error});
+    return res.status(500).json({ success: false, message: error });
   }
 };
 
@@ -259,15 +236,14 @@ const updateCustomerDetails = async (req, res) => {
       zipCode: req.body.zipCode,
     });
 
-    // ✅ Format the response to match your frontend's expected structure
     const formattedCustomer = {
       id: customer.id,
       firstName: customer.firstName,
       middleName: customer.middleName,
       lastName: customer.lastName,
-      email: customer.emailAddress,        // ✅ Map to "email"
-      phone: customer.phoneNumber,         // ✅ Map to "phone"
-      profileImage: customer.idPhoto,      // ✅ Map to "profileImage"
+      email: customer.emailAddress,
+      phone: customer.phoneNumber,
+      profileImage: customer.idPhoto,
       birthday: customer.birthday,
       gender: customer.gender,
       houseNumber: customer.houseNumber,
@@ -277,19 +253,19 @@ const updateCustomerDetails = async (req, res) => {
       province: customer.province,
       country: customer.country,
       zipCode: customer.zipCode,
-      role: "customer",                    // ✅ Add role
+      role: "customer",
       isVerified: customer.isVerified,
-      address: "",                         // ✅ Add if needed
-      bio: null,                           // ✅ Add if needed
-      gcashQR: customer.gcashQR || "N/A",  // ✅ Add if needed
+      address: "",
+      bio: null,
+      gcashQR: customer.gcashQR || "N/A",
     };
 
     console.log("Customer detail updated successfully");
 
-    return res.status(200).json({ 
-      success: true, 
-      message: "Customer details updated", 
-      updatedCustomer: formattedCustomer  // ✅ Return formatted data
+    return res.status(200).json({
+      success: true,
+      message: "Customer details updated",
+      updatedCustomer: formattedCustomer,
     });
   } catch (error) {
     console.error("Update error:", error);
@@ -300,41 +276,33 @@ const updateCustomerDetails = async (req, res) => {
 const uploadCustomerPhoto = async (req, res) => {
   try {
     const { id } = req.params;
-
     const customer = await Customer.findByPk(id);
+
     if (!customer) {
       return res.status(404).json({ success: false, message: "Customer not found" });
     }
-
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No photo uploaded" });
     }
 
-    // ✅ STORE ONLY THE FILENAME
-    await customer.update({
-      idPhoto: req.file.filename
-    });
-
-    // ✅ BUILD URL ONLY FOR RESPONSE
-    const photoUrl = `${req.protocol}://${req.get("host")}/uploads/images/${req.file.filename}`;
+    // ✅ Store full Cloudinary URL directly
+    await customer.update({ idPhoto: req.file.path });
 
     return res.status(200).json({
       success: true,
       message: "Photo updated successfully",
-      photoUrl
+      photoUrl: req.file.path,
     });
-
   } catch (error) {
     console.error("Upload error:", error);
     return res.status(500).json({ success: false, message: "Upload failed" });
   }
 };
 
-
-export { 
+export {
   fetchCustomers,
   updateCustomerDetails,
   customerSignUp,
-  getCustomerProgress,  // ✅ ADD THIS TO EXPORTS
-  uploadCustomerPhoto
+  getCustomerProgress,
+  uploadCustomerPhoto,
 };
