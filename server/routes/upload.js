@@ -42,12 +42,7 @@ const baseUploadPath = process.env.UPLOAD_PATH || '/persistent_uploads';
 const uploadsDir = path.join(baseUploadPath, 'images');
 
 // Ensure directory exists
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log(`📁 Created images upload directory: ${uploadsDir}`);
-} else {
-  console.log(`📁 Using existing upload directory: ${uploadsDir}`);
-}
+
 
 // ------------------ Multer Configuration ------------------
 const storage = multer.diskStorage({

@@ -12,18 +12,12 @@ import {
 
 const router = express.Router();
 
-// ✅ Match the same upload path used in upload.js (persistent disk or fallback)
-const baseUploadPath = process.env.UPLOAD_PATH || '/persistent_uploads';
+// ✅ Use the SAME env variable — no mkdir here, index.js already handles it
+const baseUploadPath = process.env.UPLOAD_PATH || path.join(process.cwd(), 'uploads');
 const uploadDir = path.join(baseUploadPath, 'images');
 
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-  console.log(`📁 Created upload directory: ${uploadDir}`);
-} else {
-  console.log(`📁 Using existing upload directory: ${uploadDir}`);
-}
+// ✅ No fs.mkdirSync here — directory is created once in index.js
 
-// ✅ Multer storage - filename pattern matches upload.js style
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
@@ -31,22 +25,20 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `item-${uniqueSuffix}${ext}`); // ✅ consistent "item-" prefix
+    cb(null, `item-${uniqueSuffix}${ext}`);
   },
 });
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
-  if (allowedTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only .png, .jpg, .jpeg, .gif, and .webp formats are allowed!'));
-  }
+  allowedTypes.includes(file.mimetype)
+    ? cb(null, true)
+    : cb(new Error('Only .png, .jpg, .jpeg, .gif, and .webp formats are allowed!'));
 };
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter,
 });
 
@@ -54,10 +46,8 @@ const upload = multer({
 //                   ROUTES
 // ─────────────────────────────────────────────
 
-// ✅ Get customer progress by ID
 router.get("/sign-up/progress/:id", getCustomerProgress);
 
-// ✅ Upload guarantor ID photo + selfie only (no DB write)
 router.post(
   "/sign-up/guarantors-id",
   upload.fields([
@@ -81,52 +71,37 @@ router.post(
         success: true,
         message: "Files uploaded successfully",
         files: {
-          photoId: files?.photoId
-            ? {
-                filename: files.photoId[0].filename,
-                url: `${baseUrl}/uploads/images/${files.photoId[0].filename}`, // ✅ full URL
-              }
-            : null,
-          selfie: files?.selfie
-            ? {
-                filename: files.selfie[0].filename,
-                url: `${baseUrl}/uploads/images/${files.selfie[0].filename}`, // ✅ full URL
-              }
-            : null,
+          photoId: files?.photoId ? {
+            filename: files.photoId[0].filename,
+            url: `${baseUrl}/uploads/images/${files.photoId[0].filename}`,
+          } : null,
+          selfie: files?.selfie ? {
+            filename: files.selfie[0].filename,
+            url: `${baseUrl}/uploads/images/${files.selfie[0].filename}`,
+          } : null,
         },
       });
     } catch (error) {
       console.error("File upload error:", error);
-      return res.status(500).json({
-        success: false,
-        message: "File upload failed",
-      });
+      return res.status(500).json({ success: false, message: "File upload failed" });
     }
   }
 );
 
-// ✅ Full customer signup with optional ID photo + selfie
 router.post(
   "/sign-up",
   upload.fields([
     { name: "photoId", maxCount: 1 },
     { name: "selfie", maxCount: 1 },
   ]),
-  customerSignUp  // ← controller handles DB write + URL construction
+  customerSignUp
 );
 
-// ✅ Fetch all customers
 router.get("/", fetchCustomers);
 
-// ✅ Update customer details by ID
 router.put("/update/:id", updateCustomerDetails);
 
-// ✅ Upload/replace customer profile photo by ID
-router.post(
-  "/upload-photo/:id",
-  upload.single("photo"),
-  uploadCustomerPhoto  // ← controller stores filename + returns URL
-);
+router.post("/upload-photo/:id", upload.single("photo"), uploadCustomerPhoto);
 
 // ─────────────────────────────────────────────
 //              MULTER ERROR HANDLER
@@ -134,26 +109,15 @@ router.post(
 router.use((error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === "LIMIT_FILE_SIZE") {
-      return res.status(400).json({
-        success: false,
-        message: "File too large. Maximum size is 5MB.",
-      });
+      return res.status(400).json({ success: false, message: "File too large. Maximum size is 5MB." });
     }
     if (error.code === "LIMIT_FILE_COUNT") {
-      return res.status(400).json({
-        success: false,
-        message: "Too many files uploaded.",
-      });
+      return res.status(400).json({ success: false, message: "Too many files uploaded." });
     }
   }
-
   if (error.message?.includes("formats are allowed")) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    return res.status(400).json({ success: false, message: error.message });
   }
-
   next(error);
 });
 
