@@ -66,7 +66,7 @@ return (
     {
       paddingBottom:
         keyboardHeight > 0
-          ? keyboardHeight + 64
+          ? keyboardHeight + 74
           : 64 + insets.bottom,
     },
   ]}
