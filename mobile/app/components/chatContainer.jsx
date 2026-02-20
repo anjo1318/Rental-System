@@ -15,8 +15,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const INPUT_CONTAINER_LIFT = 40;
-const INPUT_BAR_HEIGHT = 140;
+
 
 export default function ChatBody({
   messages,
@@ -27,22 +26,21 @@ export default function ChatBody({
   sending,
 }) {
   const scrollViewRef = useRef();
-  const insets = useSafeAreaInsets();
-  const { height: windowHeight } = useWindowDimensions();
-
+  const insets = useSafeAreaInsets()
   const [keyboardHeight, setKeyboardHeight] = useState(0);
 
-  // visibleHeight is now AFTER keyboardHeight state
-  const visibleHeight = windowHeight - keyboardHeight - INPUT_BAR_HEIGHT - insets.top;
 
   useEffect(() => {
-    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-    });
+    const showEvent = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+const hideEvent = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
 
-    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
-      setKeyboardHeight(0);
-    });
+const showSub = Keyboard.addListener(showEvent, (e) => {
+  setKeyboardHeight(e.endCoordinates.height);
+});
+
+const hideSub = Keyboard.addListener(hideEvent, () => {
+  setKeyboardHeight(0);
+});
 
     return () => {
       showSub.remove();
@@ -58,27 +56,20 @@ export default function ChatBody({
     });
   };
 
-  return (
-    <View style={{ flex: 1 }}>
+ return (
+<View style={{ flex: 1, paddingBottom: keyboardHeight > 0 ? keyboardHeight : insets.bottom }}>
       {/* MESSAGE LIST */}
       <ScrollView
-        ref={scrollViewRef}
-        style={{ maxHeight: visibleHeight }}
-        contentContainerStyle={[
-          styles.chatBody,
-          { paddingBottom: INPUT_BAR_HEIGHT },
-        ]}
-        onContentSizeChange={() =>
-          scrollViewRef.current?.scrollToEnd({ animated: true })
-        }
-      >
+  ref={scrollViewRef}
+  style={{ flex: 1 }}
+  contentContainerStyle={styles.chatBody}
+  onContentSizeChange={() =>
+    scrollViewRef.current?.scrollToEnd({ animated: true })
+  }
+  keyboardShouldPersistTaps="handled"
+>
         {messages.length === 0 ? (
-          <View
-            style={[
-              styles.emptyContainer,
-              { height: visibleHeight - INPUT_BAR_HEIGHT },
-            ]}
-          >
+          <View style={styles.emptyContainer}>
             <Icon name="chat-bubble-outline" size={70} color="#ccc" />
             <Text style={styles.emptyText}>No messages yet</Text>
             <Text style={styles.emptySubtext}>
@@ -110,18 +101,8 @@ export default function ChatBody({
 
       {/* INPUT BAR */}
       <View
-        style={[
-          styles.inputWrapper,
-          {
-            bottom:
-              keyboardHeight > 0
-                ? Math.max(0, keyboardHeight - insets.bottom) +
-                  INPUT_CONTAINER_LIFT
-                : 0,
-            paddingBottom: insets.bottom + 10,
-          },
-        ]}
-      >
+      style={styles.inputWrapper}
+    >
         <Pressable disabled>
           <Icon name="add-circle-outline" size={26} color="#057474" />
         </Pressable>
@@ -218,29 +199,27 @@ const styles = StyleSheet.create({
   },
 
   inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-
+  flexDirection: "row",
+  alignItems: "center",
+  paddingHorizontal: 10,
+  paddingVertical: 12,   // ⬅ adjustable
+  minHeight: 64,         // ⬅ adjustable: prevents bar from collapsing
+  backgroundColor: "#fff",
+  borderTopWidth: 1,
+  borderTopColor: "#ddd",
+},
   input: {
-    flex: 1,
-    marginHorizontal: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 20,
-    fontSize: 14,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: "#057474",
-  },
+  flex: 1,
+  marginHorizontal: 10,
+  paddingVertical: 12,      // ⬅ adjustable
+  paddingHorizontal: 12,
+  backgroundColor: "#F0F0F0",
+  borderRadius: 20,
+  fontSize: 14,
+  minHeight: 44,            // ⬅ adjustable: prevents input from being too short
+  maxHeight: 120,           // ⬅ adjustable: how tall multiline can grow
+  borderWidth: 1,
+  borderColor: "#057474",
+  textAlignVertical: "center", // fixes Android vertical alignment
+},
 });
