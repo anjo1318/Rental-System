@@ -12,36 +12,25 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  keyboardHeight,
-  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import ChatContainer from "../components/chatContainer";
-import ScreenWrapper from "../components/screenwrapper";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 
 const { width, height } = Dimensions.get("window");
 
-
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
 const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(18, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
+const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
 const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.04);
-
+const MARGIN_TOP = Math.round(height * 0.02);
 
 export default function Chat() {
   const router = useRouter();
   const { id: chatId, itemId } = useLocalSearchParams();
   const scrollViewRef = useRef();
-  const insets = useSafeAreaInsets();
-
-
 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
@@ -52,7 +41,6 @@ export default function Chat() {
   const [otherUserName, setOtherUserName] = useState("Chat");
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
 
   useEffect(() => {
     console.log("🌐 API_URL from env:", API_URL);
@@ -237,74 +225,129 @@ export default function Chat() {
   }
 
   return (
-   
-  <ScreenWrapper>
-    {/* Status Bar */}
-    <StatusBar
-      barStyle="dark-content"
-      backgroundColor="#fff"
-      translucent={false}
-    />
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#057474" />
 
-<View style={styles.headerWrapper}>
-  <View style={styles.headerContent}>
-    {/* Back button */}
-    <View style={styles.iconBox}>
-      <Pressable
-        onPress={() => {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
-            router.replace("/customer/home");
-          }
-        }}
-        hitSlop={10}
+      {/* Header */}
+      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
+        <View style={styles.topBackground}>
+          <View
+            style={[
+              styles.profileContainer,
+              { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
+            ]}
+          >
+            <View style={[styles.iconBox, { width: ICON_BOX }]}>
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={10}
+                style={styles.iconPress}
+              >
+                <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
+              </Pressable>
+            </View>
+
+            <Text
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={[styles.pageName, { fontSize: TITLE_FONT }]}
+            >
+              {otherUserName}
+            </Text>
+
+            <View style={[styles.iconBox, { width: ICON_BOX }]} />
+          </View>
+        </View>
+      </View>
+
+      {/* Chat Body */}
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={styles.chatBody}
+        onContentSizeChange={() =>
+          scrollViewRef.current?.scrollToEnd({ animated: true })
+        }
       >
-        <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
-      </Pressable>
-    </View>
+        {messages.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="chat-bubble-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyText}>No messages yet</Text>
+            <Text style={styles.emptySubtext}>
+              Start the conversation by sending a message
+            </Text>
+          </View>
+        ) : (
+          messages.map((message) => {
+            const isOwn = message.senderId === currentUserId;
+            return (
+              <View
+                key={message.id}
+                style={[
+                  styles.bubble,
+                  isOwn ? styles.buyerBubble : styles.sellerBubble,
+                ]}
+              >
+                <Text style={isOwn ? styles.buyerText : styles.sellerText}>
+                  {message.content}
+                </Text>
+                <Text style={styles.timestamp}>
+                  {formatTime(message.createdAt)}
+                </Text>
+              </View>
+            );
+          })
+        )}
+      </ScrollView>
 
-    {/* Avatar + Seller Name */}
-    <View style={styles.userInfo}>
-      <Image
-        source={{
-          uri: "https://i.pravatar.cc/150?img=5", // Random seller avatar
-        }}
-        style={styles.avatar}
-      />
-      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.headerTitle}>
-        John Doe  {/* Random seller name */}
-      </Text>
-    </View>
+      {/* Input */}
+      <View style={styles.inputWrapper}>
+        <Pressable disabled>
+          <Icon 
+            name="add-circle-outline" 
+            size={26} 
+            color="#ccc" 
+          />
+        </Pressable>
 
-    {/* Spacer */}
-    <View style={styles.iconBox} />
-  </View>
-</View>
+        <TextInput
+          placeholder="Type a message..."
+          style={styles.input}
+          placeholderTextColor="#999"
+          value={newMessage}
+          onChangeText={setNewMessage}
+          multiline
+          maxLength={500}
+          editable={!sending}
+        />
 
-
-<ChatContainer
-  messages={messages}
-  currentUserId={currentUserId}
-  newMessage={newMessage}
-  setNewMessage={setNewMessage}
-  handleSendMessage={handleSendMessage}
-  sending={sending}
-  scrollViewRef={scrollViewRef}
-  formatTime={formatTime}
-  keyboardHeight={keyboardHeight}
-  insets={insets}
-/>
-
-
-    </ScreenWrapper>
+        <Pressable 
+          onPress={handleSendMessage}
+          disabled={!newMessage.trim() || sending}
+        >
+          {sending ? (
+            <ActivityIndicator size="small" color="#057474" />
+          ) : (
+            <Icon 
+              name="send" 
+              size={24} 
+              color={newMessage.trim() ? "#057474" : "#ccc"} 
+            />
+          )}
+        </Pressable>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
+  // ... keep your existing styles
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#E6E1D6",
   },
 
   loadingContainer: {
@@ -321,57 +364,41 @@ const styles = StyleSheet.create({
   },
 
   headerWrapper: {
-    height: HEADER_HEIGHT,
-    backgroundColor: "#fff",
-    justifyContent: "center",
+    width: "100%",
+    backgroundColor: "#007F7F",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    borderWidth: 1,
-    borderColor: "#00000040",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
-    shadowRadius: 4,
-    elevation: 4,       
-    overflow: "hidden",
-    
   },
-  headerContent: {
+
+  topBackground: {
+    backgroundColor: "#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+
+  profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: PADDING_H,
-    marginTop: MARGIN_TOP,
-    
   },
+
   iconBox: {
-    width: ICON_BOX,
     alignItems: "center",
+    justifyContent: "center",
+    top: 10,
   },
 
-  userInfo: {
-  flexDirection: "row",
-  alignItems: "center",
-  flex: 1,
-  marginLeft: 10, // space from back button
-  
-},
+  iconPress: {
+    padding: width * 0.02,
+  },
 
-avatar: {
-  width: 33,
-  height: 33,
-  borderRadius: 18,
-  left: 20,
-},
-
-headerTitle: {
-  flex: 1,
-  color: "#000",
-  fontSize: TITLE_FONT,
-  fontWeight: "600",
-  left: 30,
-},
-
+  pageName: {
+    color: "#FFF",
+    textAlign: "center",
+    flex: 1,
+    fontWeight: "600",
+    top: 10,
+  },
 
   chatBody: {
     padding: 16,
@@ -436,4 +463,28 @@ headerTitle: {
     textAlign: "right",
   },
 
+  inputWrapper: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    paddingVertical: 20,
+    backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#ddd",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+
+  input: {
+    flex: 1,
+    marginHorizontal: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 20,
+    fontSize: 14,
+    maxHeight: 100,
+  },
 });

@@ -123,7 +123,7 @@ return (
         </Pressable>
 
         <TextInput
-          placeholder="Type a messag."
+          placeholder="Type a message..."
           style={styles.input}
           placeholderTextColor="#999"
           value={newMessage}
