@@ -40,6 +40,12 @@ const Item = sequelize.define("Item", {
     defaultValue: true,
   },
 
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false,
+  },
+
   // Updated to handle multiple images as JSON array
   itemImages: {
     type: DataTypes.JSON,

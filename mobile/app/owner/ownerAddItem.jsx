@@ -169,10 +169,10 @@ if (!productName.trim() || !pricePerHour || !ownerId) {
 
 // Price validation
 const parsedPrice = Number(pricePerHour);
-if (isNaN(parsedPrice) || parsedPrice <= 0) {
+if (isNaN(parsedPrice) || parsedPrice < 100) {
   Alert.alert(
     "Validation Error",
-    "Price per hour must be a valid number greater than zero."
+    "Price per hour must be at least ₱100."
   );
   return;
 }

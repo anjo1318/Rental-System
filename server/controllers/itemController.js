@@ -172,7 +172,9 @@ const fetchOwnerItems = async (req, res) => {
         itemImages: processedImages,
         quantity: parsedQuantity,
         availableQuantity: parsedQuantity,
-        ownerId
+        ownerId,
+        isVerified: false,
+
       });
 
       // Fetch the created item with owner details
