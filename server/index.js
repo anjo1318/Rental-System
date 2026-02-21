@@ -92,7 +92,7 @@ app.use((err, req, res, next) => {
 
 connectToDatabase()
   .then(async () => {
-    app.listen(PORT, '0.0.0.0', async () => {
+    app.listen(PORT, async () => {
       const PUBLIC_URL = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
       console.log(`Server running on port ${PORT}`);
       console.log(`Images stored on Cloudinary`);

@@ -111,7 +111,7 @@ const Owners = () => {
                     }`}
                 >
                   <img
-                    src={owner.profileImage || "/placeholder-profile.png"}
+                    src={owner.profileImage || owner.selfie || "/placeholder-profile.png"}
                     alt={`${owner.firstName} ${owner.lastName}`}
                     className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 flex-shrink-0"
                   />
@@ -176,7 +176,7 @@ const Owners = () => {
                   <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between -mt-12 sm:-mt-14 lg:-mt-16 gap-4">
                     <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4">
                       <img
-                        src={selectedOwner.profileImage || "/placeholder-profile.png"}
+                        src={selectedOwner.profileImage || selectedOwner.selfie || "/placeholder-profile.png"}
                         alt="Profile"
                         className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-xl object-cover border-4 border-white shadow-lg flex-shrink-0"
                       />

@@ -6,6 +6,7 @@ const Approvals = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("customers");
 
   useEffect(() => {
     fetchCustomers();
@@ -14,16 +15,42 @@ const Approvals = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${import.meta.env.VITE_APP_URL}/api/customer`
-      );
-      const unverifiedCustomers = Array.isArray(response.data.data)
+      const response = await axios.get(`${import.meta.env.VITE_APP_URL}/api/customer`);
+      const unverified = Array.isArray(response.data.data)
         ? response.data.data.filter((c) => !c.isVerified)
         : [];
-      setCustomers(unverifiedCustomers);
-      setSelectedCustomer(unverifiedCustomers[0] || null);
+      const normalized = unverified.map((c) => ({
+        ...c,
+        _type: "customer",
+        displayEmail: c.emailAddress,
+        displayPhone: c.phoneNumber,
+      }));
+      setCustomers(normalized);
+      setSelectedCustomer(normalized[0] || null);
     } catch (error) {
       console.error("Error fetching customers:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchOwners = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${import.meta.env.VITE_APP_URL}/api/owner/all`);
+      const unverified = Array.isArray(response.data.data)
+        ? response.data.data.filter((c) => !c.isVerified)
+        : [];
+      const normalized = unverified.map((c) => ({
+        ...c,
+        _type: "owner",
+        displayEmail: c.email,
+        displayPhone: c.phone,
+      }));
+      setCustomers(normalized);
+      setSelectedCustomer(normalized[0] || null);
+    } catch (error) {
+      console.error("Error fetching owners:", error);
     } finally {
       setLoading(false);
     }
@@ -52,18 +79,19 @@ const Approvals = () => {
     if (!selectedCustomer) return;
     setActionLoading(true);
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_APP_URL}/api/admin/approve/customer`,
-        { id: selectedCustomer.id }
-      );
+      const endpoint = selectedCustomer._type === "owner"
+        ? `${import.meta.env.VITE_APP_URL}/api/admin/approve/owner`
+        : `${import.meta.env.VITE_APP_URL}/api/admin/approve/customer`;
+
+      const response = await axios.put(endpoint, { id: selectedCustomer.id });
       if (response.data.success) {
-        alert("Customer approved successfully!");
+        alert(`${selectedCustomer._type === "owner" ? "Owner" : "Customer"} approved successfully!`);
         removeAndSelectNext(selectedCustomer.id);
       } else {
-        alert("Failed to approve customer: " + response.data.message);
+        alert("Failed to approve: " + response.data.message);
       }
     } catch (error) {
-      alert("Error approving customer: " + (error.response?.data?.message || error.message));
+      alert("Error approving: " + (error.response?.data?.message || error.message));
     } finally {
       setActionLoading(false);
     }
@@ -71,21 +99,22 @@ const Approvals = () => {
 
   const handleReject = async () => {
     if (!selectedCustomer) return;
-    if (!confirm("Are you sure you want to reject this customer? This action will deactivate their account.")) return;
+    if (!confirm("Are you sure you want to reject this account?")) return;
     setActionLoading(true);
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_APP_URL}/api/admin/reject/customer`,
-        { id: selectedCustomer.id }
-      );
+      const endpoint = selectedCustomer._type === "owner"
+        ? `${import.meta.env.VITE_APP_URL}/api/admin/reject/owner`
+        : `${import.meta.env.VITE_APP_URL}/api/admin/reject/customer`;
+
+      const response = await axios.put(endpoint, { id: selectedCustomer.id });
       if (response.data.success) {
-        alert("Customer rejected successfully!");
+        alert("Account rejected successfully!");
         removeAndSelectNext(selectedCustomer.id);
       } else {
-        alert("Failed to reject customer: " + response.data.message);
+        alert("Failed to reject: " + response.data.message);
       }
     } catch (error) {
-      alert("Error rejecting customer: " + (error.response?.data?.message || error.message));
+      alert("Error rejecting: " + (error.response?.data?.message || error.message));
     } finally {
       setActionLoading(false);
     }
@@ -103,34 +132,49 @@ const Approvals = () => {
   }
 
   return (
-    /*
-      Use h-screen with overflow-hidden so this component fills exactly
-      the viewport height given to it by the parent layout — no fixed
-      positioning that would bleed under the nav sidebar.
-    */
     <div className="flex flex-col bg-gray-50" style={{ height: "100vh", overflow: "hidden" }}>
 
       {/* ── Top Header Bar ── */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Approval Requests</h1>
             <p className="text-sm text-gray-500 mt-0.5">
-              Review and approve pending customer registrations
+              Review and approve pending registrations
             </p>
           </div>
-          <span className="bg-orange-50 text-orange-700 text-sm font-semibold px-4 py-1.5 rounded-full border border-orange-200">
-            {customers.length} Pending
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="bg-orange-50 text-orange-700 text-sm font-semibold px-4 py-1.5 rounded-full border border-orange-200">
+              {customers.length} Pending
+            </span>
+            {/* Tab switcher */}
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => { setActiveTab("customers"); fetchCustomers(); }}
+                className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                  activeTab === "customers"
+                    ? "bg-orange-500 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Customers
+              </button>
+              <button
+                onClick={() => { setActiveTab("owners"); fetchOwners(); }}
+                className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                  activeTab === "owners"
+                    ? "bg-orange-500 text-white"
+                    : "bg-white text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                Owners
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
       {/* ── Body: Sidebar + Main ── */}
-      {/*
-        flex-1 + overflow-hidden here is the key fix:
-        the two children (sidebar & main) each manage their own scroll,
-        so nothing overflows the parent layout boundary.
-      */}
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Sidebar ── */}
@@ -142,10 +186,11 @@ const Approvals = () => {
           `}
         >
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-5 py-4 flex-shrink-0">
-            <h2 className="text-white font-semibold text-base">Pending Approvals</h2>
+            <h2 className="text-white font-semibold text-base">
+              Pending {activeTab === "owners" ? "Owners" : "Customers"}
+            </h2>
           </div>
 
-          {/* Sidebar list scrolls independently */}
           <div className="flex-1 overflow-y-auto p-3 space-y-1.5">
             {customers.length > 0 ? (
               customers.map((customer) => (
@@ -174,7 +219,7 @@ const Approvals = () => {
                     }`}>
                       {customer.firstName} {customer.lastName}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">{customer.emailAddress}</p>
+                    <p className="text-xs text-gray-400 truncate">{customer.displayEmail}</p>
                   </div>
                   {selectedCustomer?.id === customer.id && (
                     <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -189,13 +234,13 @@ const Approvals = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className="text-gray-400 text-sm font-medium">No Pending Approvals</p>
-                <p className="text-gray-300 text-xs mt-1">All customers have been verified</p>
+                <p className="text-gray-300 text-xs mt-1">All have been verified</p>
               </div>
             )}
           </div>
         </aside>
 
-        {/* ── Main Content — scrolls independently ── */}
+        {/* ── Main Content ── */}
         <main className="flex-1 overflow-y-auto min-w-0">
           {selectedCustomer ? (
             <div className="p-6 space-y-5">
@@ -231,10 +276,13 @@ const Approvals = () => {
                           {[selectedCustomer.firstName, selectedCustomer.middleName, selectedCustomer.lastName]
                             .filter(Boolean).map((s) => s.trim()).join(" ")}
                         </h2>
-                        <p className="text-gray-500 text-sm mt-1">{selectedCustomer.emailAddress}</p>
+                        <p className="text-gray-500 text-sm mt-1">{selectedCustomer.displayEmail}</p>
                         <div className="flex flex-wrap items-center gap-2 mt-2">
                           <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
                             ⏳ Pending Verification
+                          </span>
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 capitalize">
+                            {selectedCustomer._type}
                           </span>
                         </div>
                       </div>
@@ -283,8 +331,8 @@ const Approvals = () => {
                     <Field label="First Name" value={selectedCustomer.firstName?.trim()} />
                     <Field label="Middle Name" value={selectedCustomer.middleName?.trim()} />
                     <Field label="Last Name" value={selectedCustomer.lastName?.trim()} />
-                    <Field label="Email Address" value={selectedCustomer.emailAddress} className="break-all" />
-                    <Field label="Phone Number" value={selectedCustomer.phoneNumber} />
+                    <Field label="Email Address" value={selectedCustomer.displayEmail} className="break-all" />
+                    <Field label="Phone Number" value={selectedCustomer.displayPhone} />
                     <Field label="Birthday" value={formatDate(selectedCustomer.birthday)} />
                     <Field label="Gender" value={selectedCustomer.gender} />
                     <Field label="Registered On" value={formatDate(selectedCustomer.createdAt)} />
@@ -332,7 +380,7 @@ const Approvals = () => {
                                 src={selectedCustomer.idPhoto}
                                 alt="ID Document"
                                 className="w-full h-48 lg:h-64 object-cover border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                                onError={(e) => { e.target.style.display = "none"; }}
+                                onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder-profile.png"; }}
                               />
                             </div>
                           )}
@@ -343,7 +391,7 @@ const Approvals = () => {
                                 src={selectedCustomer.selfie}
                                 alt="Customer Selfie"
                                 className="w-full h-48 lg:h-64 object-cover border-2 border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                                onError={(e) => { e.target.style.display = "none"; }}
+                                onError={(e) => { e.target.onerror = null; e.target.src = "/placeholder-profile.png"; }}
                               />
                             </div>
                           )}
@@ -362,7 +410,7 @@ const Approvals = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <h3 className="text-lg font-semibold text-gray-700 mb-1">No Pending Approvals</h3>
-                <p className="text-gray-400 text-sm">All customer registrations have been reviewed</p>
+                <p className="text-gray-400 text-sm">All registrations have been reviewed</p>
               </div>
             </div>
           )}
