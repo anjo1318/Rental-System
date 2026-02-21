@@ -1,32 +1,29 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  Dimensions,
-  Pressable,
-  StatusBar,
-  ScrollView,
   TextInput,
-  ActivityIndicator,
-  Alert,
+  Pressable,
+  FlatList,
+  StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  keyboardHeight,
+  Alert,
+  Dimensions,
   Image,
+  
 } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
-import ChatContainer from "../components/chatContainer";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import ScreenWrapper from "../components/screenwrapper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ChatContainer from "../components/chatContainer";
+
 
 
 const { width, height } = Dimensions.get("window");
-const INPUT_CONTAINER_LIFT = 0; // adjust freely (10–20 is normal)
-
 
 const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
 const ICON_BOX = Math.round(width * 0.10);
@@ -35,269 +32,192 @@ const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
 const PADDING_H = Math.round(width * 0.02);
 const MARGIN_TOP = Math.round(height * 0.04);
 
-
-export default function Chat() {
+export default function ChatScreen() {
+  const { id } = useLocalSearchParams(); // chatId
   const router = useRouter();
-  const { id: chatId, itemId } = useLocalSearchParams();
-  const scrollViewRef = useRef();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [token, setToken] = useState(null);
+  const [userName, setUserName] = useState("");
+  const [chatDetails, setChatDetails] = useState(null);
+  const flatListRef = useRef(null);
   const insets = useSafeAreaInsets();
 
+  console.log("💬 ChatScreen - Chat ID:", id);
 
-
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(null);
-  const [chatData, setChatData] = useState(null);
-  const [otherUserName, setOtherUserName] = useState("Chat");
-
-  const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-
+  // Get user ID and token from storage
   useEffect(() => {
-    console.log("🌐 API_URL from env:", API_URL);
-    initializeChat();
-  }, [chatId, itemId]);
-
-  // Poll for new messages every 3 seconds
-  useEffect(() => {
-    if (chatData && chatData.id && chatData.id !== 'undefined') {
-      console.log("🔄 Starting message polling for chat:", chatData.id);
-      const interval = setInterval(() => {
-        fetchMessages();
-      }, 3000);
-
-      return () => {
-        console.log("🛑 Stopping message polling");
-        clearInterval(interval);
-      };
-    } else {
-      console.log("⏸️ Message polling not started - no valid chatData yet");
-    }
-  }, [chatData]);
-
-  const initializeChat = async () => {
-    try {
-      setLoading(true);
-
-      // Get current user
-      const userData = await AsyncStorage.getItem("user");
-      const token = await AsyncStorage.getItem("token");
-
-      if (!userData || !token) {
-        Alert.alert("Error", "Please login first");
-        router.back();
-        return;
-      }
-
-      const user = JSON.parse(userData);
-      setCurrentUserId(user.id);
-      console.log("👤 Current user ID:", user.id);
-
-      // Parse chatId from params
-      const parsedChatId = chatId && chatId !== 'undefined' && chatId !== 'null' ? parseInt(chatId) : null;
-      
-      if (parsedChatId && !isNaN(parsedChatId)) {
-        console.log("✅ Using existing chatId:", parsedChatId);
+    const getUserData = async () => {
+      try {
+        console.log("🔑 Getting user data from AsyncStorage");
+        const userStr = await AsyncStorage.getItem("user");
+        const storedToken = await AsyncStorage.getItem("token");
         
-        // Fetch the chat details from backend
-        try {
-          const chatResponse = await axios.get(
-            `${API_URL}/api/chat/${parsedChatId}`,  // ✅ FIXED: Correct URL with slash
-            {
-              headers: { Authorization: `Bearer ${token}` }
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          console.log("👤 User data:", user);
+          setUserId(user.id);
+          setUserName(`${user.firstName} ${user.lastName}`);
+        }
+        if (storedToken) {
+          console.log("✅ Token retrieved");
+          setToken(storedToken);
+        }
+      } catch (err) {
+        console.error("❌ Error getting user data:", err);
+      }
+    };
+    getUserData();
+  }, []);
+
+  // Fetch chat details (to get other user's info)
+  useEffect(() => {
+    if (!userId || !token) return;
+
+    const fetchChatDetails = async () => {
+      try {
+        console.log("📡 Fetching chat details for chat ID:", id);
+        const res = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/chat/user-chats`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
             }
-          );
-
-          if (chatResponse.data.success) {
-            setChatData(chatResponse.data.data);
-            console.log("✅ Chat data loaded:", chatResponse.data.data);
-            
-            // Fetch messages for this chat
-            await fetchMessages(parsedChatId);
-            
-            // Set chat name if available
-            setOtherUserName("Chat");
-          } else {
-            throw new Error("Failed to load chat data");
           }
-        } catch (chatError) {
-          console.error("❌ Error loading chat:", chatError);
-          Alert.alert(
-            "Error", 
-            "Failed to load chat. Please try again.",
-            [{ text: "OK", onPress: () => router.back() }]
-          );
-          return;
-        }
-      } else {
-        console.error("❌ No valid chatId provided");
-        Alert.alert(
-          "Error", 
-          "Chat session not initialized properly. Please try again.",
-          [{ text: "OK", onPress: () => router.back() }]
         );
-        return;
-      }
 
-    } catch (error) {
-      console.error("❌ Chat initialization error:", error);
-      Alert.alert(
-        "Error", 
-        error.response?.data?.message || error.message || "Failed to initialize chat",
-        [{ text: "OK", onPress: () => router.back() }]
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchMessages = async (chatIdParam) => {
-    try {
-      const id = chatIdParam || chatData?.id;
-      
-      console.log("📨 Fetching messages for chatId:", id);
-      
-      if (!id || id === 'undefined' || id === 'null') {
-        console.log("⚠️ Invalid chatId, skipping message fetch");
-        return;
-      }
-
-      const token = await AsyncStorage.getItem("token");
-      
-      const response = await axios.get(
-        `${API_URL}/api/message/${id}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
+        if (res.data.success) {
+          console.log("✅ Chat details fetched");
+          // Find the specific chat
+          const currentChat = res.data.data.find(chat => chat.id === parseInt(id));
+          console.log("💬 Current chat details:", currentChat);
+          setChatDetails(currentChat);
         }
-      );
-      
-      console.log("✅ Messages fetched:", response.data.length, "messages");
-      setMessages(response.data);
+      } catch (err) {
+        console.error("❌ Error fetching chat details:", err);
+      }
+    };
 
-      // Scroll to bottom
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
-    } catch (error) {
-      console.error("❌ Error fetching messages:", error.response?.data || error.message);
-    }
-  };
+    fetchChatDetails();
+  }, [id, userId, token]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || sending) return;
+  // Fetch messages
+  useEffect(() => {
+    if (!userId || !token) return;
 
-    const messageText = newMessage.trim();
-    setNewMessage("");
-    setSending(true);
+    const fetchMessages = async () => {
+      try {
+        console.log("📡 Fetching messages for chat ID:", id);
+        const res = await axios.get(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/message/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log("✅ Messages fetched:", res.data.length, "messages");
+        setMessages(res.data);
+      } catch (err) {
+        console.error("❌ Error fetching messages:", err);
+        Alert.alert("Error", "Failed to fetch messages");
+      }
+    };
+    fetchMessages();
+  }, [id, userId, token]);
 
+  const handleSend = async () => {
+    if (!input.trim() || !userId || !token) return;
+    
+    console.log("📤 Sending message:", input);
+    
     try {
-      const token = await AsyncStorage.getItem("token");
-
-      const response = await axios.post(
-        `${API_URL}/api/message`,
+      const res = await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/message`,
         {
-          chatId: chatData.id,
-          senderId: currentUserId,
-          content: messageText,
+          chatId: id,
+          senderId: userId,
+          content: input,
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
-
-      console.log("✅ Message sent:", response.data);
-
-      // Fetch updated messages
-      await fetchMessages();
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
+      
+      if (res.data.success) {
+        console.log("✅ Message sent successfully");
+        setMessages((prev) => [...prev, res.data.data]);
+        setInput("");
+        setTimeout(() => {
+          flatListRef.current?.scrollToEnd({ animated: true });
+        }, 100);
+      }
+    } catch (err) {
+      console.error("❌ Error sending message:", err);
       Alert.alert("Error", "Failed to send message");
-      setNewMessage(messageText); // Restore message
-    } finally {
-      setSending(false);
     }
   };
 
-  const formatTime = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  if (loading) {
+  const renderMessage = ({ item }) => {
+    const isOwnMessage = item.senderId === userId;
+    
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#057474" />
-        <Text style={styles.loadingText}>Loading chat...</Text>
+      <View style={[styles.messageWrapper, isOwnMessage && styles.ownMessageWrapper]}>
+        <View
+          style={[
+            styles.messageBubble,
+            isOwnMessage ? styles.ownMessage : styles.otherMessage,
+          ]}
+        >
+          <Text style={[styles.messageText, isOwnMessage && styles.ownMessageText]}>
+            {item.content}
+          </Text>
+        </View>
       </View>
     );
-  }
+  };
 
   return (
-   
-  <ScreenWrapper>
-    {/* Status Bar */}
-    <StatusBar
-      barStyle="dark-content"
-      backgroundColor="#fff"
-      translucent={false}
-    />
+    <ScreenWrapper>
+    <View style={styles.container}>
+      
+      {/* Header */}
+      <View style={[styles.header, { paddingTop: insets.top }]}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
+          <Icon name="arrow-back" size={24} color="#000" />
+        </Pressable>
+        
+        <View style={styles.headerCenter}>
+          {chatDetails?.otherUserImage ? (
+            <Image
+              source={{ uri: chatDetails.otherUserImage }}
+              style={styles.avatarImage}
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <Icon name="person" size={24} color="#666" />
+            </View>
+          )}
+          <Text style={styles.headerName}>
+            {chatDetails?.otherUserName || "Loading..."}
+          </Text>
+        </View>
+        
+        <View style={styles.headerRight} />
+      </View>
 
-<View style={styles.headerWrapper}>
-  <View style={styles.headerContent}>
-    {/* Back button */}
-    <View style={styles.iconBox}>
-      <Pressable
-        onPress={() => {
-          if (router.canGoBack()) {
-            router.back();
-          } else {
-            router.replace("/customer/home");
-          }
-        }}
-        hitSlop={10}
-      >
-        <Icon name="arrow-back" size={ICON_SIZE} color="#000" />
-      </Pressable>
-    </View>
-
-    {/* Avatar + Seller Name */}
-    <View style={styles.userInfo}>
-      <Image
-        source={{
-          uri: "https://i.pravatar.cc/150?img=5", // Random seller avatar
-        }}
-        style={styles.avatar}
-      />
-      <Text numberOfLines={1} ellipsizeMode="tail" style={styles.headerTitle}>
-        John Doe  {/* Random seller name */}
-      </Text>
-    </View>
-
-    {/* Spacer */}
-    <View style={styles.iconBox} />
-  </View>
-</View>
-
-
-<ChatContainer
+     <ChatContainer
   messages={messages}
-  currentUserId={currentUserId}
-  newMessage={newMessage}
-  setNewMessage={setNewMessage}
-  handleSendMessage={handleSendMessage}
-  sending={sending}
-  scrollViewRef={scrollViewRef}
-  formatTime={formatTime}
-  keyboardHeight={keyboardHeight}
-  insets={insets}
+  currentUserId={userId}
+  newMessage={input}
+  setNewMessage={setInput}
+  handleSendMessage={handleSend}
+  sending={false}
 />
-
-
+    </View>
     </ScreenWrapper>
   );
 }
@@ -307,6 +227,62 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+
+  header: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#FFF",
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  borderBottomWidth: 1,
+  borderBottomColor: "#00000040",
+  borderBottomLeftRadius: 20,
+  borderBottomRightRadius: 20,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 4,
+},
+
+backButton: {
+  padding: 4,
+},
+
+headerCenter: {
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  marginLeft: 12,
+},
+
+avatar: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: "#E0E0E0",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+},
+
+avatarImage: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  marginRight: 8,
+  backgroundColor: "#E0E0E0",
+},
+
+headerName: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#000",
+},
+
+headerRight: {
+  width: 24,
+},
 
   loadingContainer: {
     flex: 1,
@@ -322,57 +298,41 @@ const styles = StyleSheet.create({
   },
 
   headerWrapper: {
-    height: HEADER_HEIGHT,
-    backgroundColor: "#fff",
-    justifyContent: "center",
+    width: "100%",
+    backgroundColor: "#007F7F",
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    borderWidth: 1,
-    borderColor: "#00000040",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.25,   // #40 ≈ 25% opacity
-    shadowRadius: 4,
-    elevation: 4,       
-    overflow: "hidden",
-    
   },
-  headerContent: {
+
+  topBackground: {
+    backgroundColor: "#007F7F",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+  },
+
+  profileContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: PADDING_H,
-    marginTop: MARGIN_TOP,
-    
   },
+
   iconBox: {
-    width: ICON_BOX,
     alignItems: "center",
+    justifyContent: "center",
+    top: 10,
   },
 
-  userInfo: {
-  flexDirection: "row",
-  alignItems: "center",
-  flex: 1,
-  marginLeft: 10, // space from back button
-  
-},
+  iconPress: {
+    padding: width * 0.02,
+  },
 
-avatar: {
-  width: 33,
-  height: 33,
-  borderRadius: 18,
-  left: 20,
-},
-
-headerTitle: {
-  flex: 1,
-  color: "#000",
-  fontSize: TITLE_FONT,
-  fontWeight: "600",
-  left: 30,
-},
-
+  pageName: {
+    color: "#FFF",
+    textAlign: "center",
+    flex: 1,
+    fontWeight: "600",
+    top: 10,
+  },
 
   chatBody: {
     padding: 16,
@@ -436,32 +396,42 @@ headerTitle: {
     marginTop: 4,
     textAlign: "right",
   },
+  backButton: {
+  padding: 4,
+},
 
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    borderColor: "#057474"
-  },
+headerCenter: {
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  marginLeft: 12,
+},
 
-  input: {
-    flex: 1,
-    marginHorizontal: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 20,
-    fontSize: 14,
-    maxHeight: 100,
-    borderWidth: 1,
-    borderColor: "#057474"
-  },
+avatar: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: "#E0E0E0",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+},
+
+avatarImage: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  marginRight: 8,
+  backgroundColor: "#E0E0E0",
+},
+
+headerName: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#000",
+},
+
+headerRight: {
+  width: 24,
+},
 });

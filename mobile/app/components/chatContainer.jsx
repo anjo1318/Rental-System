@@ -185,16 +185,20 @@ const styles = StyleSheet.create({
   },
 
   buyerBubble: {
-    alignSelf: "flex-end",
-    backgroundColor: "#78CFCB",
-  },
+  alignSelf: "flex-end",
+  backgroundColor: "#78CFCB",
+  borderRadius: 18,
+  borderBottomRightRadius: 2, // ← creates the tail effect
+},
 
-  sellerBubble: {
-    alignSelf: "flex-start",
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
+sellerBubble: {
+  alignSelf: "flex-start",
+  backgroundColor: "#fff",
+  borderWidth: 1,
+  borderColor: "#ddd",
+  borderRadius: 18,
+  borderBottomLeftRadius: 2, // ← creates the tail effect
+},
 
   buyerText: {
     color: "#000",

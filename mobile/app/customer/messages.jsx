@@ -17,21 +17,24 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
+import ScreenWrapper from "../components/screenwrapper";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+
 
 const { width, height } = Dimensions.get("window");
 
-const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.09));
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
 const ICON_BOX = Math.round(width * 0.10);
-const ICON_SIZE = Math.max(20, Math.round(width * 0.06));
-const TITLE_FONT = Math.max(16, Math.round(width * 0.045));
+const ICON_SIZE = Math.max(18, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
 const PADDING_H = Math.round(width * 0.02);
-const MARGIN_TOP = Math.round(height * 0.02);
+const MARGIN_TOP = Math.round(height * 0.04);
 
 export default function Chat() {
   const router = useRouter();
   const { id: chatId, itemId } = useLocalSearchParams();
   const scrollViewRef = useRef();
-
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -39,6 +42,7 @@ export default function Chat() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [chatData, setChatData] = useState(null);
   const [otherUserName, setOtherUserName] = useState("Chat");
+  const [chatDetails, setChatDetails] = useState(null);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
@@ -225,121 +229,49 @@ export default function Chat() {
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-    >
-      <StatusBar barStyle="light-content" backgroundColor="#057474" />
 
-      {/* Header */}
-      <View style={[styles.headerWrapper, { height: HEADER_HEIGHT }]}>
-        <View style={styles.topBackground}>
-          <View
-            style={[
-              styles.profileContainer,
-              { paddingHorizontal: PADDING_H, marginTop: MARGIN_TOP },
-            ]}
-          >
-            <View style={[styles.iconBox, { width: ICON_BOX }]}>
-              <Pressable
-                onPress={() => router.back()}
-                hitSlop={10}
-                style={styles.iconPress}
-              >
-                <Icon name="arrow-back" size={ICON_SIZE} color="#FFF" />
-              </Pressable>
+    <ScreenWrapper>
+        <View style={styles.container}>
+          
+          {/* Header */}
+          <View style={[styles.header, { paddingTop: insets.top }]}>
+            <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
+              <Icon name="arrow-back" size={24} color="#000" />
+            </Pressable>
+            
+            <View style={styles.headerCenter}>
+              {chatDetails?.otherUserImage ? (
+                <Image
+                  source={{ uri: chatDetails.otherUserImage }}
+                  style={styles.avatarImage}
+                />
+              ) : (
+                <View style={styles.avatar}>
+                  <Icon name="person" size={24} color="#666" />
+                </View>
+              )}
+              <Text style={styles.headerName}>
+                {chatDetails?.otherUserName || "Loading..."}
+              </Text>
             </View>
-
-            <Text
-              numberOfLines={1}
-              ellipsizeMode="tail"
-              style={[styles.pageName, { fontSize: TITLE_FONT }]}
-            >
-              {otherUserName}
-            </Text>
-
-            <View style={[styles.iconBox, { width: ICON_BOX }]} />
+            
+            <View style={styles.headerRight} />
           </View>
-        </View>
+
+       <ChatContainer
+        messages={messages}
+        currentUserId={currentUserId}
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        handleSendMessage={handleSendMessage}
+        sending={sending}
+        scrollViewRef={scrollViewRef}
+        formatTime={formatTime}
+        keyboardHeight={keyboardHeight}
+        insets={insets}
+      />
       </View>
-
-      {/* Chat Body */}
-      <ScrollView
-        ref={scrollViewRef}
-        contentContainerStyle={styles.chatBody}
-        onContentSizeChange={() =>
-          scrollViewRef.current?.scrollToEnd({ animated: true })
-        }
-      >
-        {messages.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Icon name="chat-bubble-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyText}>No messages yet</Text>
-            <Text style={styles.emptySubtext}>
-              Start the conversation by sending a message
-            </Text>
-          </View>
-        ) : (
-          messages.map((message) => {
-            const isOwn = message.senderId === currentUserId;
-            return (
-              <View
-                key={message.id}
-                style={[
-                  styles.bubble,
-                  isOwn ? styles.buyerBubble : styles.sellerBubble,
-                ]}
-              >
-                <Text style={isOwn ? styles.buyerText : styles.sellerText}>
-                  {message.content}
-                </Text>
-                <Text style={styles.timestamp}>
-                  {formatTime(message.createdAt)}
-                </Text>
-              </View>
-            );
-          })
-        )}
-      </ScrollView>
-
-      {/* Input */}
-      <View style={styles.inputWrapper}>
-        <Pressable disabled>
-          <Icon 
-            name="add-circle-outline" 
-            size={26} 
-            color="#ccc" 
-          />
-        </Pressable>
-
-        <TextInput
-          placeholder="Type a message..."
-          style={styles.input}
-          placeholderTextColor="#999"
-          value={newMessage}
-          onChangeText={setNewMessage}
-          multiline
-          maxLength={500}
-          editable={!sending}
-        />
-
-        <Pressable 
-          onPress={handleSendMessage}
-          disabled={!newMessage.trim() || sending}
-        >
-          {sending ? (
-            <ActivityIndicator size="small" color="#057474" />
-          ) : (
-            <Icon 
-              name="send" 
-              size={24} 
-              color={newMessage.trim() ? "#057474" : "#ccc"} 
-            />
-          )}
-        </Pressable>
-      </View>
-    </KeyboardAvoidingView>
+    </ScreenWrapper>
   );
 }
 
@@ -463,28 +395,4 @@ const styles = StyleSheet.create({
     textAlign: "right",
   },
 
-  inputWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 10,
-    paddingVertical: 20,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-
-  input: {
-    flex: 1,
-    marginHorizontal: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    backgroundColor: "#F0F0F0",
-    borderRadius: 20,
-    fontSize: 14,
-    maxHeight: 100,
-  },
 });

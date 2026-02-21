@@ -18,8 +18,16 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ScreenWrapper from "../components/screenwrapper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ChatContainer from "../components/chatContainer";
 
 const { width, height } = Dimensions.get("window");
+
+const HEADER_HEIGHT = Math.max(64, Math.round(height * 0.10));
+const ICON_BOX = Math.round(width * 0.10);
+const ICON_SIZE = Math.max(18, Math.round(width * 0.06));
+const TITLE_FONT = Math.max(14, Math.round(width * 0.02));
+const PADDING_H = Math.round(width * 0.02);
+const MARGIN_TOP = Math.round(height * 0.04);
 
 export default function OwnerChatScreen({ BottomNav }) {
   const { id } = useLocalSearchParams(); // chatId
@@ -197,44 +205,14 @@ export default function OwnerChatScreen({ BottomNav }) {
         
         <View style={styles.headerRight} />
       </View>
-
-      {/* Messages */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderMessage}
-        contentContainerStyle={styles.messagesList}
-        style={styles.messagesContainer}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: false })}
+      <ChatContainer
+        messages={messages}
+        currentUserId={userId}
+        newMessage={input}
+        setNewMessage={setInput}
+        handleSendMessage={handleSend}
+        sending={false}
       />
-      
-      {/* Input */}
-           <KeyboardAvoidingView
-       behavior={Platform.OS === "ios" ? "padding" : "height"}
-       keyboardVerticalOffset={Platform.OS === "ios" ? 50 : 0} >
-         <View style={[
-          styles.inputContainer,
-          { paddingBottom: insets.bottom || 10 }
-        ]}>
-          <Pressable style={styles.addButton}>
-            <Icon name="add-circle-outline" size={28} color="#666" />
-          </Pressable>
-          
-          <TextInput
-            style={styles.input}
-            placeholder="Type a message..."
-            placeholderTextColor="#999"
-            value={input}
-            onChangeText={setInput}
-            multiline
-          />
-          
-          <Pressable onPress={handleSend} style={styles.sendButton}>
-            <Icon name="send" size={24} color="#03A3A3" />
-          </Pressable>
-        </View>
-      </KeyboardAvoidingView>
     </View>
     </ScreenWrapper>
   );
@@ -243,7 +221,7 @@ export default function OwnerChatScreen({ BottomNav }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "#fff",
   },
 
   header: {
