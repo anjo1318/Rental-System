@@ -128,13 +128,15 @@ const bookedItems = async (req, res) => {
         
         // Fetch owner's profileImage
         const owner = await Owner.findByPk(booking.ownerId, {
-          attributes: ['profileImage', 'firstName', 'lastName']
+          attributes: ['profileImage', 'firstName', 'lastName', 'idPhoto', 'selfie']
         });
         
         // Add owner data to booking
         bookingData.ownerProfileImage = owner?.profileImage || null;
         bookingData.ownerFirstName = owner?.firstName || null;
         bookingData.ownerLastName = owner?.lastName || null;
+        bookingData.ownerIdPhoto = owner?.idPhoto || null;
+        bookingData.ownerSelfie = owner?.selfie || null;
         
         return bookingData;
       })

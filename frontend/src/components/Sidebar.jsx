@@ -8,7 +8,9 @@ import {
   UserSquare,
   Settings,
   LogOut,
-  CheckSquare
+  CheckSquare,
+  ShoppingCart,
+  TicketCheck 
 } from "lucide-react"; // icons
 
 const Sidebar = () => {
@@ -27,6 +29,8 @@ const Sidebar = () => {
     { path: "/customers", label: "Customers", icon: <UserSquare size={18} /> },
     // { path: "/settings", label: "Settings", icon: <Settings size={18} /> },
     { path: "/approvals", label: "Approvals", icon: <CheckSquare size={18} /> }, // 
+    { path: "/item-approval", label: "Items", icon: <ShoppingCart size={18} /> }, // 
+    { path: "/receipts", label: "Receipts", icon: <TicketCheck size={18} /> }, // 
   ];
 
 

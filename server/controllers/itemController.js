@@ -178,7 +178,7 @@ const fetchOwnerItems = async (req, res) => {
       });
 
       // Fetch the created item with owner details
-      const createdItem = await Item.findOne({
+      const createdItem = await Item.findOne ({
         where: { id: newItem.id },
         include: [
         {
@@ -296,11 +296,56 @@ const deleteItem = async (req, res) => {
   }
 };
 
+const approveItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await Item.findByPk(id);
+
+    if (!item) {
+      return res.status(404).json({ success: false, error: "Item not found" });
+    }
+
+    await item.update({ isVerified: true });
+
+    return res.status(200).json({
+      success: true,
+      message: "Item approved successfully",
+      data: item,
+    });
+  } catch (error) {
+    console.error("Approve item error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+const rejectItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await Item.findByPk(id);
+
+    if (!item) {
+      return res.status(404).json({ success: false, error: "Item not found" });
+    }
+
+    await item.destroy();
+
+    return res.status(200).json({
+      success: true,
+      message: "Item rejected and deleted successfully",
+    });
+  } catch (error) {
+    console.error("Reject item error:", error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 export { 
   fetchItems, 
   fetchItemById, 
   fetchOwnerItems,
   createItem, 
   updateItem, 
-  deleteItem 
+  deleteItem,
+  approveItem,
+  rejectItem
 };

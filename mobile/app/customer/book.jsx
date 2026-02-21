@@ -184,7 +184,7 @@ export default function BookedItem() {
                 <View style={styles.cardHeader}>
                   <View style={styles.ownerInfo}>
                     <Image
-                      source={{ uri: getImageUrl(item.ownerProfileImage) }}
+                      source= {item.selfie || item.profileImage}
                       style={styles.ownerAvatar}
                       resizeMode="cover"
                     />

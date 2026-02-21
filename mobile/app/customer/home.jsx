@@ -180,7 +180,9 @@ useFocusEffect(
         `${process.env.EXPO_PUBLIC_API_URL}/api/item`
       );
       if (response.data.success) {
-        const itemsData = Array.isArray(response.data.data) ? response.data.data : [];
+        const itemsData = Array.isArray(response.data.data) 
+          ? response.data.data.filter(item => item.isVerified === true) 
+          : [];
         setItems(itemsData);
         
         // Extract unique categories, brands, and locations

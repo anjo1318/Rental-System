@@ -5,7 +5,9 @@
     createItem, 
     updateItem, 
     deleteItem,
-    fetchOwnerItems 
+    fetchOwnerItems ,
+    approveItem,
+    rejectItem
   } from '../controllers/itemController.js';
   import { authenticateToken } from '../controllers/ownerController.js';
 
@@ -25,5 +27,7 @@
   router.put('/:id', authenticateToken, updateItem);
   router.delete('/:id', deleteItem);
 
-
+  //for approve
+  router.put('/approve/:id', approveItem);
+  router.put('/reject/:id', rejectItem);  
   export default router;
