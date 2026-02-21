@@ -1762,18 +1762,6 @@ const bookItemUpdate = async (req, res) => {
         </div>
       `);
     }
-    if (guarantor2.fullName) {
-      guarantorInfo.push(`
-        <div style="margin-top: 10px;">
-          <h4 style="margin-bottom: 5px;">Guarantor 2:</h4>
-          <p style="margin: 2px 0;"><strong>Name:</strong> ${guarantor2.fullName}</p>
-          <p style="margin: 2px 0;"><strong>Phone:</strong> ${guarantor2.phoneNumber || 'N/A'}</p>
-          <p style="margin: 2px 0;"><strong>Email:</strong> ${guarantor2.email || 'N/A'}</p>
-          <p style="margin: 2px 0;"><strong>Address:</strong> ${guarantor2.address || 'N/A'}</p>
-        </div>
-      `);
-    }
-
     // Send confirmation emails
     const mailOptions = {
       from: process.env.EMAIL_USER,
@@ -1903,48 +1891,6 @@ const bookItemUpdate = async (req, res) => {
         `
       };
       guarantorEmails.push(guarantor1MailOptions);
-    }
-
-    if (guarantor2.email && guarantor2.fullName) {
-      const guarantor2MailOptions = {
-        from: process.env.EMAIL_USER,
-        to: guarantor2.email.trim(),
-        subject: `You are listed as a Guarantor - ${itemDetails.title} Rental`,
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px;">
-            <h2 style="color: #057474;">Guarantor Notification</h2>
-            <p>Dear <strong>${guarantor2.fullName}</strong>,</p>
-            <p>You have been listed as a <strong>Guarantor</strong> for a rental booking made by <strong>${customerDetails.fullName}</strong>.</p>
-            
-            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Rental Details</h3>
-              <p><strong>Item:</strong> ${itemDetails.title}</p>
-              <p><strong>Category:</strong> ${itemDetails.category}</p>
-              <p><strong>Duration:</strong> ${rentalDuration} ${durationLabel} (${rentDuration})</p>
-              <p><strong>Total Amount:</strong> ₱${calculatedAmount.toLocaleString()}</p>
-            </div>
-
-            <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Renter Information</h3>
-              <p><strong>Name:</strong> ${customerDetails.fullName}</p>
-              <p><strong>Email:</strong> ${customerDetails.email}</p>
-              <p><strong>Phone:</strong> ${customerDetails.phone}</p>
-              <p><strong>Address:</strong> ${customerDetails.location}</p>
-            </div>
-
-            <p style="color: #666; margin-top: 20px;">
-              ⚠️ As a guarantor, you may be contacted regarding this rental agreement. 
-              Please ensure the contact information provided is correct.
-            </p>
-            
-            <p style="color: #666;">
-              If you have any questions or did not authorize being listed as a guarantor, 
-              please contact <strong>${customerDetails.fullName}</strong> at ${customerDetails.phone} or ${customerDetails.email}.
-            </p>
-          </div>
-        `
-      };
-      guarantorEmails.push(guarantor2MailOptions);
     }
 
     // Send guarantor emails

@@ -263,7 +263,7 @@ export default function RentingDetails() {
   
   // Gender selection
   const [gender, setGender] = useState("");
-  const genderOptions = ["Male", "Female", "Other"];
+  const genderOptions = ["Male", "Female"];
   
 
   const [showPickupTimePicker, setShowPickupTimePicker] = useState(false);
@@ -335,13 +335,24 @@ export default function RentingDetails() {
         setUserId(user.id || "");
         setFullName(`${user.firstName}  ${user.lastName}` || "");
         setEmailAddress(user.email || "");
-        setPhoneNumber(user.phone|| "");
+        setPhoneNumber(user.phone ? user.phone.slice(0, 11) : "");
+
         setLocation(`${user.street}, ${user.barangay}, ${user.town}, ${user.province}` || "");
-        setGender(user.gender);
+        setGender(user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1).toLowerCase() : "");
       }
+
+      console.log("ito gender",userData);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
+  };
+
+  // Create this reusable handler:
+  const handlePhoneInput = (text, setter) => {
+    if (text.length <= 11) {
+      setter(text);
+    }
+    // if > 11, do nothing — input stays unchanged
   };
 
   const fetchItemDetails = async () => {
@@ -593,19 +604,20 @@ export default function RentingDetails() {
       key={option}
       style={[
         styles.optionButton,
-        gender === option && styles.selectedOptionButton
+        gender.toLowerCase() === option.toLowerCase() && styles.selectedOptionButton
       ]}
       onPress={() => setGender(option)}
       activeOpacity={0.7}
     >
       <Text style={[
         styles.optionText,
-        gender === option && styles.selectedOptionText
+        gender.toLowerCase() === option.toLowerCase() && styles.selectedOptionText
       ]}>
         {option}
       </Text>
     </TouchableOpacity>
   );
+
 
     return (
    <ScreenWrapper>
@@ -710,7 +722,8 @@ export default function RentingDetails() {
                     placeholder="Contact"
                     placeholderTextColor="#999"
                     value={phoneNumber}
-                    onChangeText={setPhoneNumber}
+                    onChangeText={(text) => handlePhoneInput(text, setPhoneNumber)}
+
                     keyboardType="phone-pad"
                   />
                 </View>
@@ -835,7 +848,7 @@ export default function RentingDetails() {
                       placeholder="Phone Number"
                       placeholderTextColor="#999"
                       value={guarantor1PhoneNumber}
-                      onChangeText={setGuarantor1PhoneNumber}
+                      onChangeText={(text) => handlePhoneInput(text, setGuarantor1PhoneNumber)}
                       keyboardType="phone-pad"
                       multiline
                     />

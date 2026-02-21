@@ -147,7 +147,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
     const { period, duration, pickupDate, returnDate } = bookingData.rentalDetails;
     const basePrice = parseFloat(bookingData.itemDetails.pricePerDay);
 
-    let rateLabel = "Rate Per Day";
+    let rateLabel = "Rate Per Hour";
     let rate = basePrice;
     let actualDuration = duration;
     let isSameDayRental = false;
@@ -166,13 +166,13 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
       actualDuration = duration; // duration is already in hours
     } else {
       // Different days - treat as daily
-      rateLabel = "Rate Per Day";
+      rateLabel = "Rate Per Hour";
       rate = basePrice;
       actualDuration = duration; // duration is already in days
     }
 
     const subtotal = rate * actualDuration;
-    const grandTotal = subtotal + Number(deliveryInfo.deliveryFee);
+    const grandTotal = subtotal;
 
     return {
       rateLabel,
@@ -323,12 +323,12 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
           </Text>
         </View>
 
-          <View style={styles.infoRow}>
+          {/* <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Delivery Charge</Text>
             <Text style={styles.infoValue}>
               {isCalculatingFee ? "Calculating..." : `₱ ${pricing.deliveryCharge}`}
             </Text>
-          </View>
+          </View> */}
 
           <View style={styles.divider} />
 
@@ -344,7 +344,7 @@ export default function RentingPaymentMethod({ bookingData, onBack, onContinue }
         <View style={styles.contentWrapper}>
           <Text style={styles.sectionTitle}>Payment Method</Text>
 
-          {["Cash on Delivery", "Gcash"].map((method) => (
+          {["Cash", "Gcash"].map((method) => (
             <TouchableOpacity
               key={method}
               style={[

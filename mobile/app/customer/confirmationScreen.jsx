@@ -211,9 +211,9 @@ const confirmRent = async () => {
         alert("Failed to generate QR code");
       }
 
-    } else if (bookingData?.paymentMethod === "Cash on Delivery") {
+    } else if (bookingData?.paymentMethod === "Cash") {
       // Cash Payment
-      console.log("🔍 Sending booking request for Cash on Delivery...");
+      console.log("🔍 Sending booking request for Cash...");
       console.log("📦 BookingData being sent:", JSON.stringify(bookingData, null, 2));
       
       const response = await axios.put(
@@ -359,10 +359,10 @@ const confirmRent = async () => {
             </Text>
           </View>
 
-          <View style={styles.summaryRow}>
+          {/* <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Delivery Charge</Text>
             <Text style={styles.summaryValue}>₱ {bookingData?.pricing?.deliveryCharge}</Text>
-          </View>
+          </View> */}
 
           <View style={styles.divider} />
 
