@@ -121,7 +121,7 @@ export default function ItemDetailForGuest() {
           <View style={styles.priceRow}>
             <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
             <Text style={styles.price}>{item.pricePerDay}</Text>
-            <Text style={styles.priceUnit}>per hour</Text>
+            <Text style={styles.priceUnit}>per day</Text>
             <View style={styles.ratingContainer}>
               <Text style={styles.rating}>5.0</Text>
               <Icon name="star" size={16} color="#FFD700" />
