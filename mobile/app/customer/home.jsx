@@ -29,7 +29,7 @@ const { width, height } = Dimensions.get("window");
 
 const CARD_MARGIN = 5;
 const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.29;
+const CARD_HEIGHT = height * 0.34;
 
 
 export default function TapSearchBar() {
@@ -420,24 +420,27 @@ useFocusEffect(
                     }}
                     style={styles.featuredImage}
                     resizeMode="cover"
-                  />  
+                  />
+                  {/* Unavailable overlay - dark overlay covering the whole image with centered text */}
+                  {item.availableQuantity <= 0 && (
+                    <View style={styles.unavailableOverlay}>
+                      <Text style={styles.unavailableOverlayText}>Unavailable</Text>
+                    </View>
+                  )}
+                  {/* Available badge - small pill badge on top-right corner */}
+                  {item.availableQuantity > 0 && (
+                    <View style={styles.availableBadge}>
+                      <Text style={styles.availableBadgeText}>Available</Text>
+                    </View>
+                  )}
                   </View>
-                </View>
+                </View>8
                 <View style={styles.lowerHalf}>
                 <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-                {/* Availability Badge */}
-                  <View style={[
-                    styles.availabilityBadge,
-                    { backgroundColor: item.availableQuantity > 0 ? "#4CAF50" : "#FF2125" }
-                  ]}>
-                    <Text style={styles.availabilityText}>
-                      {item.availableQuantity > 0 ? "Available" : "Unavailable"}
-                    </Text>
-                  </View>
-                  <View style={styles.ratingRow}>
+                  {/* <View style={styles.ratingRow}>
                     <Text style={styles.ratingValue}>5.0</Text>
-                    <Text style={styles.starIcon}>⭐</Text>
-                  </View>
+                    <Text style={styles.starIcon}>⭐</Text> 
+                  </View> */}
                   <View style={styles.locationRow}>
                   <View style={styles.iconContainer}>
                     <Image
@@ -870,6 +873,36 @@ featuredImage: {
   resizeMode: "cover",
 },
 
+  // Dark overlay covering the full image area for unavailable items
+  unavailableOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unavailableOverlayText: {
+    color: "#fff",
+    fontSize: width * 0.033,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+
+  // Small pill badge shown on top-right for available items
+  availableBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  availableBadgeText: {
+    color: "#fff",
+    fontSize: width * 0.028,
+    fontWeight: "500",
+  },
+
   card: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
@@ -890,7 +923,7 @@ featuredImage: {
   },
 
   upperHalf: {
-  height: CARD_HEIGHT * 0.45,   // fixed image area
+  height: CARD_HEIGHT * 0.70,   // fixed image area
   width: "100%",
   backgroundColor: "#fff",
 },
@@ -932,7 +965,7 @@ featuredImage: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: -5,
-    bottom: 2,
+    top: 3,
   },
 
   iconContainer: {
@@ -946,7 +979,7 @@ featuredImage: {
     minWidth: 0,
   },
 
-  location: {
+ location: {
     fontSize: width * 0.035,
     color: "#555",
     flexShrink: 1,
@@ -956,24 +989,9 @@ featuredImage: {
   price: {
     fontWeight: "bold",
     fontSize: width * 0.04,
-    bottom: 2,
+    top: 7,
+    color: "#007F7F",
   },
-  availabilityBadge: {
-    width: "45%",
-    paddingVertical: 3,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-    borderRadius: 10,
-    marginTop: 5,
-  },
-
-  availabilityText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "400",
-  },
-
 
   categoryButton: {
     paddingHorizontal: width * 0.04,
@@ -981,8 +999,6 @@ featuredImage: {
     borderRadius: 20,
     backgroundColor: "transparent",
     marginLeft: width * 0.04,
-    borderWidth: 1,
-    borderColor: "#007F7F39", 
   },
   activeCategory: { 
     backgroundColor: "#007F7F" 
