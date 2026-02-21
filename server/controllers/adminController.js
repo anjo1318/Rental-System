@@ -1,6 +1,7 @@
 import Admin from "../models/Admin.js";
 import bcrypt from 'bcrypt';
 import Customer from "../models/Customer.js";
+import Owner from "../models/Owner.js";
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
 
@@ -403,7 +404,5 @@ const rejectOwner = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-
-
 
 export {addAdmin, approveCustomer, rejectCustomer, approveOwner, rejectOwner};
