@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {Modal,View,Text,StyleSheet,Dimensions,TouchableOpacity,StatusBar,Alert,
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+  StatusBar,
+  Alert,
   TextInput,
   KeyboardAvoidingView,
   ScrollView,
@@ -19,9 +27,13 @@ import { HourTimePickerModal } from "./HourTimePickerModal ";
 
 const { width, height } = Dimensions.get("window");
 
-
-
-export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initialDate, mode = "date" }) {
+export function DateTimePickerModalUI({
+  visible = true,
+  onCancel,
+  onDone,
+  initialDate,
+  mode = "date",
+}) {
   const [selectedTime, setSelectedTime] = useState(initialDate || new Date());
   const [selectedDate, setSelectedDate] = useState(initialDate || new Date());
   const [showTimeModal, setShowTimeModal] = useState(false);
@@ -30,7 +42,8 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
   // Generate time slots every 30 minutes
   const generateTimeSlots = () => {
     const slots = [];
-    for (let hour = 6; hour <= 22; hour++) {  // ✅ Changed: 6 AM to 10 PM (22:00)
+    for (let hour = 6; hour <= 22; hour++) {
+      // ✅ Changed: 6 AM to 10 PM (22:00)
       for (let min of [0]) {
         const d = new Date();
         d.setHours(hour, min, 0, 0);
@@ -43,14 +56,19 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
 
   // Select a specific date
   const selectDate = (day) => {
-    const newDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+    const newDate = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      day,
+    );
     // Copy time from selectedTime to preserve it
     newDate.setHours(selectedTime.getHours());
     newDate.setMinutes(selectedTime.getMinutes());
     setSelectedDate(newDate);
   };
 
-  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getDaysInMonth = (year, month) =>
+    new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
   const year = currentMonth.getFullYear();
@@ -64,8 +82,16 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
     currentMonth.getMonth() === today.getMonth();
 
   const isPastDate = (day) => {
-    const checkDate = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-    const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const checkDate = new Date(
+      currentMonth.getFullYear(),
+      currentMonth.getMonth(),
+      day,
+    );
+    const todayMidnight = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+    );
     return checkDate < todayMidnight;
   };
 
@@ -75,7 +101,7 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
         <View style={styles.overlay}>
           <View style={styles.container}>
             {/* Time Section */}
-            
+
             <View style={styles.timeSection}>
               <Text style={styles.timeLabel}>Time</Text>
               <TouchableOpacity
@@ -144,19 +170,19 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
               ))}
               {[...Array(daysInMonth)].map((_, i) => {
                 const day = i + 1;
-                const isSelected = 
+                const isSelected =
                   selectedDate.getDate() === day &&
                   selectedDate.getMonth() === currentMonth.getMonth() &&
                   selectedDate.getFullYear() === currentMonth.getFullYear();
                 const isDisabled = isPastDate(day);
-                
+
                 return (
                   <TouchableOpacity
                     key={day}
                     style={[
                       styles.dayCell,
                       isSelected && styles.daySelected,
-                      isDisabled && styles.dayDisabled
+                      isDisabled && styles.dayDisabled,
                     ]}
                     onPress={() => !isDisabled && selectDate(day)}
                     disabled={isDisabled}
@@ -165,7 +191,7 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
                       style={[
                         styles.dayText,
                         isSelected && styles.dayTextSelected,
-                        isDisabled && styles.dayTextDisabled
+                        isDisabled && styles.dayTextDisabled,
                       ]}
                     >
                       {day}
@@ -184,15 +210,15 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.doneBtn}
-              onPress={() => {
-                const finalDateTime = new Date(selectedDate);
-                finalDateTime.setHours(selectedTime.getHours());
-                finalDateTime.setMinutes(selectedTime.getMinutes());
-                onDone && onDone(finalDateTime);
-              }}
-            >
+              <TouchableOpacity
+                style={styles.doneBtn}
+                onPress={() => {
+                  const finalDateTime = new Date(selectedDate);
+                  finalDateTime.setHours(selectedTime.getHours());
+                  finalDateTime.setMinutes(selectedTime.getMinutes());
+                  onDone && onDone(finalDateTime);
+                }}
+              >
                 <Text style={styles.doneText}>Done</Text>
               </TouchableOpacity>
             </View>
@@ -216,18 +242,18 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
                   minute: "2-digit",
                 });
                 return (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.timeOption}
-                  onPress={() => {
-                    setSelectedTime(time);
-                    const updatedDate = new Date(selectedDate);
-                    updatedDate.setHours(time.getHours());
-                    updatedDate.setMinutes(time.getMinutes());
-                    setSelectedDate(updatedDate);
-                    setShowTimeModal(false);
-                  }}
-                >
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.timeOption}
+                    onPress={() => {
+                      setSelectedTime(time);
+                      const updatedDate = new Date(selectedDate);
+                      updatedDate.setHours(time.getHours());
+                      updatedDate.setMinutes(time.getMinutes());
+                      setSelectedDate(updatedDate);
+                      setShowTimeModal(false);
+                    }}
+                  >
                     <Text style={styles.timeOptionText}>{label}</Text>
                   </TouchableOpacity>
                 );
@@ -242,29 +268,25 @@ export function DateTimePickerModalUI({ visible = true, onCancel, onDone, initia
 
 // Add your full styles here (paste the previous styles from your modal code)
 
-
 export default function RentingDetails() {
   const router = useRouter();
   const { id, itemId } = useLocalSearchParams();
-  
+
   // Step progress
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState(null);
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
   const [userId, setUserId] = useState("");
 
-  
   // Form states
   const [fullName, setFullName] = useState("");
   const [emailAddress, setEmailAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [location, setLocation] = useState("");
 
-  
   // Gender selection
   const [gender, setGender] = useState("");
   const genderOptions = ["Male", "Female"];
-  
 
   const [showPickupTimePicker, setShowPickupTimePicker] = useState(false);
   const [showReturnTimePicker, setShowReturnTimePicker] = useState(false);
@@ -275,7 +297,6 @@ export default function RentingDetails() {
   const [pickupDate, setPickupDate] = useState(new Date());
   const [returnDate, setReturnDate] = useState(new Date());
 
-  
   // Item data
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -303,28 +324,30 @@ export default function RentingDetails() {
 
   useEffect(() => {
     if (item) {
-        console.log("Item state updated:", item);
+      console.log("Item state updated:", item);
     }
-    }, [item]);
+  }, [item]);
 
-    useEffect(() => {
-      const onBackPress = () => {
-        if (currentStep === 2) {
-          setCurrentStep(1);
-          return true; // Prevent default back behavior
-        } else if (currentStep === 3) {
-          setCurrentStep(2);
-          return true;
-        }
-        return false; // Allow default back behavior
-      };
-    
-      // Handle Android hardware back button
-      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    
-      return () => backHandler.remove();
-    }, [currentStep]);
+  useEffect(() => {
+    const onBackPress = () => {
+      if (currentStep === 2) {
+        setCurrentStep(1);
+        return true; // Prevent default back behavior
+      } else if (currentStep === 3) {
+        setCurrentStep(2);
+        return true;
+      }
+      return false; // Allow default back behavior
+    };
 
+    // Handle Android hardware back button
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      onBackPress,
+    );
+
+    return () => backHandler.remove();
+  }, [currentStep]);
 
   const loadUserData = async () => {
     try {
@@ -337,11 +360,19 @@ export default function RentingDetails() {
         setEmailAddress(user.email || "");
         setPhoneNumber(user.phone ? user.phone.slice(0, 11) : "");
 
-        setLocation(`${user.street}, ${user.barangay}, ${user.town}, ${user.province}` || "");
-        setGender(user.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1).toLowerCase() : "");
+        setLocation(
+          `${user.street}, ${user.barangay}, ${user.town}, ${user.province}` ||
+            "",
+        );
+        setGender(
+          user.gender
+            ? user.gender.charAt(0).toUpperCase() +
+                user.gender.slice(1).toLowerCase()
+            : "",
+        );
       }
 
-      console.log("ito gender",userData);
+      console.log("ito gender", userData);
     } catch (error) {
       console.error("Error loading user data:", error);
     }
@@ -362,7 +393,6 @@ export default function RentingDetails() {
         console.log("This is the api/item", response.data.data);
         setItem(response.data.data);
         console.log("data of Item", item);
-
       }
     } catch (error) {
       console.error("Error fetching item:", error);
@@ -371,19 +401,24 @@ export default function RentingDetails() {
 
   const calculateRentalDuration = () => {
     const diffMs = returnDate - pickupDate;
-    
-    // ✅ Check if same day rental
-    const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
-    const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
-    
+
+    const pickupDay = new Date(
+      pickupDate.getFullYear(),
+      pickupDate.getMonth(),
+      pickupDate.getDate(),
+    );
+    const returnDay = new Date(
+      returnDate.getFullYear(),
+      returnDate.getMonth(),
+      returnDate.getDate(),
+    );
+
     if (pickupDay.getTime() === returnDay.getTime()) {
-      // Same day - calculate hours
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-      return diffHours;
+      return { duration: diffHours, period: "Hour" };
     } else {
-      // Different days - calculate days
       const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-      return diffDays;
+      return { duration: diffDays, period: "Day" };
     }
   };
 
@@ -399,7 +434,8 @@ export default function RentingDetails() {
     if (!phoneNumber.trim()) {
       newErrors.phoneNumber = "Please enter your contact number";
     } else if (!/^09\d{9}$/.test(phoneNumber.trim())) {
-      newErrors.phoneNumber = "Phone number must be 11 digits and start with 09";
+      newErrors.phoneNumber =
+        "Phone number must be 11 digits and start with 09";
     }
     if (!location.trim()) {
       newErrors.location = "Please enter your location";
@@ -408,19 +444,28 @@ export default function RentingDetails() {
       newErrors.gender = "Please select your gender";
     }
 
-    const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
-    const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
-    
+    const pickupDay = new Date(
+      pickupDate.getFullYear(),
+      pickupDate.getMonth(),
+      pickupDate.getDate(),
+    );
+    const returnDay = new Date(
+      returnDate.getFullYear(),
+      returnDate.getMonth(),
+      returnDate.getDate(),
+    );
+
     if (pickupDay.getTime() === returnDay.getTime()) {
       const diffMs = returnDate - pickupDate;
       const diffHours = Math.ceil(diffMs / (1000 * 60 * 60));
-      
+
       if (diffHours < 3) {
-        newErrors.rentalDuration = "Minimum rental period for same-day rentals is 3 hours";
+        newErrors.rentalDuration =
+          "Minimum rental period for same-day rentals is 3 hours";
         Alert.alert(
           "Invalid Rental Period",
           "The minimum rental period for same-day rentals is 3 hours. Please adjust your return time.",
-          [{ text: "OK" }]
+          [{ text: "OK" }],
         );
       }
     }
@@ -432,14 +477,17 @@ export default function RentingDetails() {
     if (!guarantor1PhoneNumber.trim()) {
       newErrors.guarantor1PhoneNumber = "Please enter guarantor phone number";
     } else if (!/^09\d{9}$/.test(guarantor1PhoneNumber.trim())) {
-      newErrors.guarantor1PhoneNumber = "Phone number must be 11 digits and start with 09";
+      newErrors.guarantor1PhoneNumber =
+        "Phone number must be 11 digits and start with 09";
     }
     if (!guarantor1Address.trim()) {
       newErrors.guarantor1Address = "Please enter guarantor address";
     }
     if (!guarantor1Email.trim()) {
       newErrors.guarantor1Email = "Please enter guarantor email address";
-    } else if (!/^[^\s@]+@gmail\.com$/.test(guarantor1Email.trim().toLowerCase())) {
+    } else if (
+      !/^[^\s@]+@gmail\.com$/.test(guarantor1Email.trim().toLowerCase())
+    ) {
       newErrors.guarantor1Email = "Email must be a valid Gmail address";
     }
 
@@ -455,9 +503,8 @@ export default function RentingDetails() {
       return;
     }
 
-    const imageUrl = item.itemImages && item.itemImages.length > 0 
-      ? item.itemImages[0] 
-      : null;
+    const imageUrl =
+      item.itemImages && item.itemImages.length > 0 ? item.itemImages[0] : null;
 
     if (!imageUrl) {
       console.error("WARNING: No image found in item object");
@@ -465,7 +512,7 @@ export default function RentingDetails() {
       return;
     }
 
-    const duration = calculateRentalDuration();
+    const { duration, period } = calculateRentalDuration();
 
     const data = {
       itemId: parseInt(itemId),
@@ -487,8 +534,8 @@ export default function RentingDetails() {
         gender,
       },
       rentalDetails: {
-        period: "Flexible",
-        pickupDate,  //Fixed: was missing this line properly
+        period,
+        pickupDate, //Fixed: was missing this line properly
         returnDate,
         duration,
       },
@@ -515,8 +562,8 @@ export default function RentingDetails() {
   };
 
   const proceedWithBooking = (imageUrl) => {
-    const duration = calculateRentalDuration();
-    
+    const { duration, period } = calculateRentalDuration();
+
     const data = {
       itemId: parseInt(itemId),
       ownerId: item.Owner.id,
@@ -537,8 +584,8 @@ export default function RentingDetails() {
         gender,
       },
       rentalDetails: {
-        period: "Flexible",
-        pickupDate,  // ✅ Fixed: was missing this line properly
+        period,
+        pickupDate, // ✅ Fixed: was missing this line properly
         returnDate,
         duration,
       },
@@ -565,35 +612,33 @@ export default function RentingDetails() {
   };
 
   const formatDate = (date) => {
-    return date.toLocaleDateString('en-US', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
     });
   };
 
   const renderProgressStep = (stepNumber, stepName, isActive, isCompleted) => (
     <View style={styles.stepContainer} key={stepNumber}>
-      <View style={[
-        styles.stepCircle,
-        isActive && styles.activeStepCircle,
-        isCompleted && styles.completedStepCircle
-      ]}>
+      <View
+        style={[
+          styles.stepCircle,
+          isActive && styles.activeStepCircle,
+          isCompleted && styles.completedStepCircle,
+        ]}
+      >
         {isCompleted ? (
           <Icon name="check" size={16} color="#FFF" />
         ) : (
-          <Text style={[
-            styles.stepNumber,
-            isActive && styles.activeStepNumber
-          ]}>
+          <Text
+            style={[styles.stepNumber, isActive && styles.activeStepNumber]}
+          >
             {stepNumber}
           </Text>
         )}
       </View>
-      <Text style={[
-        styles.stepName,
-        isActive && styles.activeStepName
-      ]}>
+      <Text style={[styles.stepName, isActive && styles.activeStepName]}>
         {stepName}
       </Text>
     </View>
@@ -604,92 +649,94 @@ export default function RentingDetails() {
       key={option}
       style={[
         styles.optionButton,
-        gender.toLowerCase() === option.toLowerCase() && styles.selectedOptionButton
+        gender.toLowerCase() === option.toLowerCase() &&
+          styles.selectedOptionButton,
       ]}
       onPress={() => setGender(option)}
       activeOpacity={0.7}
     >
-      <Text style={[
-        styles.optionText,
-        gender.toLowerCase() === option.toLowerCase() && styles.selectedOptionText
-      ]}>
+      <Text
+        style={[
+          styles.optionText,
+          gender.toLowerCase() === option.toLowerCase() &&
+            styles.selectedOptionText,
+        ]}
+      >
         {option}
       </Text>
     </TouchableOpacity>
   );
 
+  return (
+    <ScreenWrapper>
+      <Header title="Renting Details" backgroundColor="#fff" />
 
-    return (
-   <ScreenWrapper>
-        <Header
-          title="Renting Details"
-          backgroundColor="#fff"
-        />
-
-        {currentStep === 2 ? (
+      {currentStep === 2 ? (
         // ✅ Payment screen takes full screen
         <RentingPaymentMethod
-        bookingData={bookingData}
-        onBack={() => setCurrentStep(1)}
-        onContinue={(updatedBooking) => {
+          bookingData={bookingData}
+          onBack={() => setCurrentStep(1)}
+          onContinue={(updatedBooking) => {
             setBookingData(updatedBooking); // ✅ update state
             setCurrentStep(3); // go to confirmation screen
-        }}
+          }}
         />
-
-        ) : currentStep === 3 ? (
-          // Confirmation screen takes full screen
-          <ConfirmationScreen 
-            bookingData={bookingData}
-            onBack={() => setCurrentStep(2)} // ✅ Add this line
-            onContinue={() => console.log("Done!")} 
-          />
-        ) : (
+      ) : currentStep === 3 ? (
+        // Confirmation screen takes full screen
+        <ConfirmationScreen
+          bookingData={bookingData}
+          onBack={() => setCurrentStep(2)} // ✅ Add this line
+          onContinue={() => console.log("Done!")}
+        />
+      ) : (
         // Step 1 → Renting Details (form + progress bar)
         <>
-           
-            
-
-            {/* Renting form (Step 1 content) */}
-            <KeyboardAvoidingView
+          {/* Renting form (Step 1 content) */}
+          <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === "ios" ? "padding" : "height"}
-            >
+          >
             <ScrollView
-                contentContainerStyle={styles.scrollContent}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
             >
               {/* Progress Steps */}
-            <View style={styles.progressContainer}>
-            <View style={styles.progressSteps}>
-                {steps.map((stepName, index) => (
-                <React.Fragment key={index}>
-                    {renderProgressStep(
-                    index + 1,
-                    stepName,
-                    currentStep === index + 1,
-                    currentStep > index + 1
-                    )}
-                    {index < steps.length - 1 && (     
-                    <View style={styles.lineWrapper}>
-                    <View 
-                        style={[
-                        styles.progressLine,
-                        currentStep > index + 1 && styles.completedProgressLine,
-                        ]}
-                    />
-                    </View>
-                    )}
-                </React.Fragment>
-                ))}
-            </View>
-            </View>
-          
-                {/* Form Inputs */}
-                <View style={styles.inputContainer}>
+              <View style={styles.progressContainer}>
+                <View style={styles.progressSteps}>
+                  {steps.map((stepName, index) => (
+                    <React.Fragment key={index}>
+                      {renderProgressStep(
+                        index + 1,
+                        stepName,
+                        currentStep === index + 1,
+                        currentStep > index + 1,
+                      )}
+                      {index < steps.length - 1 && (
+                        <View style={styles.lineWrapper}>
+                          <View
+                            style={[
+                              styles.progressLine,
+                              currentStep > index + 1 &&
+                                styles.completedProgressLine,
+                            ]}
+                          />
+                        </View>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </View>
+              </View>
+
+              {/* Form Inputs */}
+              <View style={styles.inputContainer}>
                 <View style={styles.inputGroup}>
-                  <Icon name="person" size={20} color="#666" style={styles.inputIcon} />
+                  <Icon
+                    name="person"
+                    size={20}
+                    color="#666"
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={styles.input}
                     placeholder="Full Name"
@@ -699,10 +746,17 @@ export default function RentingDetails() {
                     autoCapitalize="words"
                   />
                 </View>
-                {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+                {errors.fullName && (
+                  <Text style={styles.errorText}>{errors.fullName}</Text>
+                )}
 
                 <View style={styles.inputGroup}>
-                  <Icon name="email" size={20} color="#666" style={styles.inputIcon} />
+                  <Icon
+                    name="email"
+                    size={20}
+                    color="#666"
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={styles.input}
                     placeholder="Email Address"
@@ -713,21 +767,31 @@ export default function RentingDetails() {
                     autoCapitalize="none"
                   />
                 </View>
-                {errors.emailAddress && <Text style={styles.errorText}>{errors.emailAddress}</Text>}
+                {errors.emailAddress && (
+                  <Text style={styles.errorText}>{errors.emailAddress}</Text>
+                )}
 
                 <View style={styles.inputGroup}>
-                  <Icon name="phone" size={20} color="#666" style={styles.inputIcon} />
+                  <Icon
+                    name="phone"
+                    size={20}
+                    color="#666"
+                    style={styles.inputIcon}
+                  />
                   <TextInput
                     style={styles.input}
                     placeholder="Contact"
                     placeholderTextColor="#999"
                     value={phoneNumber}
-                    onChangeText={(text) => handlePhoneInput(text, setPhoneNumber)}
-
+                    onChangeText={(text) =>
+                      handlePhoneInput(text, setPhoneNumber)
+                    }
                     keyboardType="phone-pad"
                   />
                 </View>
-                {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
+                {errors.phoneNumber && (
+                  <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+                )}
 
                 {/* Gender Selection */}
                 <View style={styles.section}>
@@ -735,9 +799,10 @@ export default function RentingDetails() {
                   <View style={styles.optionsContainer}>
                     {genderOptions.map(renderGenderOption)}
                   </View>
-                  {errors.gender && <Text style={styles.errorText}>{errors.gender}</Text>}
+                  {errors.gender && (
+                    <Text style={styles.errorText}>{errors.gender}</Text>
+                  )}
                 </View>
-
 
                 {/* Date Selection */}
                 <View style={styles.section}>
@@ -745,64 +810,63 @@ export default function RentingDetails() {
                     {/* Pickup Date */}
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle}>Pick up Date</Text>
-                        <TouchableOpacity
-  style={styles.dateButton}
-  onPress={() => {
-    setActiveDateType("pickup");
-    setShowDateTimeModal(true);
-  }}
-  activeOpacity={0.7}
->
-  <Icon name="date-range" size={18} color="#666" />
-  <View style={{ marginLeft: 5 }}>
-    <Text style={styles.dateText}>
-      {pickupDate.toLocaleString([], { 
-        month: 'short', 
-        day: 'numeric',
-      })}
-    </Text>
-    <Text style={styles.dateText}>
-      {pickupDate.toLocaleString([], { 
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true 
-      })}
-    </Text>
-  </View>
-</TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.dateButton}
+                        onPress={() => {
+                          setActiveDateType("pickup");
+                          setShowDateTimeModal(true);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="date-range" size={18} color="#666" />
+                        <View style={{ marginLeft: 5 }}>
+                          <Text style={styles.dateText}>
+                            {pickupDate.toLocaleString([], {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </Text>
+                          <Text style={styles.dateText}>
+                            {pickupDate.toLocaleString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
                     </View>
 
                     <View style={styles.verticalLine} />
-
 
                     {/* Return Date */}
                     <View style={styles.dateColumn}>
                       <Text style={styles.sectionTitle1}>Return Date</Text>
                       <TouchableOpacity
-  style={styles.dateButton}
-  onPress={() => {
-    setActiveDateType("return");
-    setShowDateTimeModal(true);
-  }}
-  activeOpacity={0.7}
->
-  <Icon name="date-range" size={18} color="#666" />
-  <View style={{ marginLeft: 5 }}>
-    <Text style={styles.dateText}>
-      {returnDate.toLocaleString([], { 
-        month: 'short', 
-        day: 'numeric',
-      })}
-    </Text>
-    <Text style={styles.dateText}>
-      {returnDate.toLocaleString([], { 
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true 
-      })}
-    </Text>
-  </View>
-</TouchableOpacity>
+                        style={styles.dateButton}
+                        onPress={() => {
+                          setActiveDateType("return");
+                          setShowDateTimeModal(true);
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="date-range" size={18} color="#666" />
+                        <View style={{ marginLeft: 5 }}>
+                          <Text style={styles.dateText}>
+                            {returnDate.toLocaleString([], {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </Text>
+                          <Text style={styles.dateText}>
+                            {returnDate.toLocaleString([], {
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
                 </View>
@@ -810,7 +874,12 @@ export default function RentingDetails() {
                 <View style={styles.section}>
                   <Text style={styles.sectionTitle3}>Location</Text>
                   <View style={styles.locationContainer}>
-                    <Icon name="location-pin" size={20} color="#666" style={styles.locationIcon} />
+                    <Icon
+                      name="location-pin"
+                      size={20}
+                      color="#666"
+                      style={styles.locationIcon}
+                    />
                     <TextInput
                       style={styles.locationInput}
                       placeholder="Wawa Pinamalayan Oriental Mindoro"
@@ -820,15 +889,20 @@ export default function RentingDetails() {
                       multiline
                     />
                   </View>
-                  {errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
+                  {errors.location && (
+                    <Text style={styles.errorText}>{errors.location}</Text>
+                  )}
                 </View>
-
 
                 {/* Guarantor Input */}
                 <View style={styles.guarantorSection}>
                   <Text style={styles.sectionTitle3}>Guarantor</Text>
                   <View style={styles.locationContainer}>
-                    <FolderPen size={20} color="#666" style={styles.locationIcon} />
+                    <FolderPen
+                      size={20}
+                      color="#666"
+                      style={styles.locationIcon}
+                    />
                     <TextInput
                       style={styles.locationInput}
                       placeholder="Full Name"
@@ -838,26 +912,46 @@ export default function RentingDetails() {
                       multiline
                     />
                   </View>
-                  {errors.guarantor1FullName && <Text style={styles.errorText}>{errors.guarantor1FullName}</Text>}
+                  {errors.guarantor1FullName && (
+                    <Text style={styles.errorText}>
+                      {errors.guarantor1FullName}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.guarantorSection}>
                   <View style={styles.locationContainer}>
-                    <Icon name="phone" size={20} color="#666" style={styles.locationIcon} />
+                    <Icon
+                      name="phone"
+                      size={20}
+                      color="#666"
+                      style={styles.locationIcon}
+                    />
                     <TextInput
                       style={styles.locationInput}
                       placeholder="Phone Number"
                       placeholderTextColor="#999"
                       value={guarantor1PhoneNumber}
-                      onChangeText={(text) => handlePhoneInput(text, setGuarantor1PhoneNumber)}
+                      onChangeText={(text) =>
+                        handlePhoneInput(text, setGuarantor1PhoneNumber)
+                      }
                       keyboardType="phone-pad"
                       multiline
                     />
                   </View>
-                  {errors.guarantor1PhoneNumber && <Text style={styles.errorText}>{errors.guarantor1PhoneNumber}</Text>}
+                  {errors.guarantor1PhoneNumber && (
+                    <Text style={styles.errorText}>
+                      {errors.guarantor1PhoneNumber}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.guarantorSection}>
                   <View style={styles.locationContainer}>
-                    <Icon name="location-pin" size={20} color="#666" style={styles.locationIcon} />
+                    <Icon
+                      name="location-pin"
+                      size={20}
+                      color="#666"
+                      style={styles.locationIcon}
+                    />
                     <TextInput
                       style={styles.locationInput}
                       placeholder="Address"
@@ -867,11 +961,20 @@ export default function RentingDetails() {
                       multiline
                     />
                   </View>
-                  {errors.guarantor1Address && <Text style={styles.errorText}>{errors.guarantor1Address}</Text>}
+                  {errors.guarantor1Address && (
+                    <Text style={styles.errorText}>
+                      {errors.guarantor1Address}
+                    </Text>
+                  )}
                 </View>
                 <View style={styles.guarantorSection}>
                   <View style={styles.locationContainer}>
-                    <Icon name="email" size={20} color="#666" style={styles.locationIcon} />
+                    <Icon
+                      name="email"
+                      size={20}
+                      color="#666"
+                      style={styles.locationIcon}
+                    />
                     <TextInput
                       style={styles.locationInput}
                       placeholder=" Email Address"
@@ -882,7 +985,11 @@ export default function RentingDetails() {
                       multiline
                     />
                   </View>
-                  {errors.guarantor1Email && <Text style={styles.errorText}>{errors.guarantor1Email}</Text>}
+                  {errors.guarantor1Email && (
+                    <Text style={styles.errorText}>
+                      {errors.guarantor1Email}
+                    </Text>
+                  )}
                 </View>
                 {/* Guarantor Input
                 <View style={styles.guarantorSection}>
@@ -944,93 +1051,112 @@ export default function RentingDetails() {
               </View>
               {errors.guarantor2Email && <Text style={styles.errorText}>{errors.guarantor2Email}</Text>}
             </View> */}
-                          
 
- 
                 {/* Proceed Button */}
-                <TouchableOpacity 
-                    style={[styles.proceedButton, loading && styles.disabledButton]}
-                    onPress={handleProceedToPayment}
-                    disabled={loading}
-                    activeOpacity={0.8}
+                <TouchableOpacity
+                  style={[
+                    styles.proceedButton,
+                    loading && styles.disabledButton,
+                  ]}
+                  onPress={handleProceedToPayment}
+                  disabled={loading}
+                  activeOpacity={0.8}
                 >
-                    <Text style={styles.proceedText}>
+                  <Text style={styles.proceedText}>
                     {loading ? "Processing..." : "Proceed to Payment"}
-                    </Text>
+                  </Text>
                 </TouchableOpacity>
-                </View>
+              </View>
             </ScrollView>
-            </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
         </>
-        )}
-    {/* ✅ Always use hour picker */}
-    <HourTimePickerModal
-      visible={showDateTimeModal}
-      initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
-      onCancel={() => setShowDateTimeModal(false)}
-      onDone={(selectedDate) => {
-        if (activeDateType === "pickup") {
-          setPickupDate(selectedDate);
-          
-          // ✅ Check if return date is on the same day
-          const pickupDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-          const returnDay = new Date(returnDate.getFullYear(), returnDate.getMonth(), returnDate.getDate());
-          
-          if (pickupDay.getTime() === returnDay.getTime()) {
-            // Same day - ensure 3 hour minimum
-            const minReturn = new Date(selectedDate);
-            minReturn.setHours(minReturn.getHours() + 3);
-            
-            // If current return time is less than 3 hours from new pickup, adjust it
-            if (returnDate < minReturn) {
-              setReturnDate(minReturn);
-            }
-          }
-        } else {
-          // Setting return date
-          if (selectedDate < pickupDate) {
-            Alert.alert("Invalid Date", "Return time cannot be before pickup time");
-            return;
-          }
-          
-          // ✅ Check if same day rental
-          const pickupDay = new Date(pickupDate.getFullYear(), pickupDate.getMonth(), pickupDate.getDate());
-          const returnDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
-          
-          if (pickupDay.getTime() === returnDay.getTime()) {
-            // Same day - enforce 3 hour minimum
-            const diffMs = selectedDate - pickupDate;
-            const diffHours = diffMs / (1000 * 60 * 60);
-            
-            if (diffHours < 3) {
-              const minReturn = new Date(pickupDate);
+      )}
+      {/* ✅ Always use hour picker */}
+      <HourTimePickerModal
+        visible={showDateTimeModal}
+        initialDate={activeDateType === "pickup" ? pickupDate : returnDate}
+        onCancel={() => setShowDateTimeModal(false)}
+        onDone={(selectedDate) => {
+          if (activeDateType === "pickup") {
+            setPickupDate(selectedDate);
+
+            // ✅ Check if return date is on the same day
+            const pickupDay = new Date(
+              selectedDate.getFullYear(),
+              selectedDate.getMonth(),
+              selectedDate.getDate(),
+            );
+            const returnDay = new Date(
+              returnDate.getFullYear(),
+              returnDate.getMonth(),
+              returnDate.getDate(),
+            );
+
+            if (pickupDay.getTime() === returnDay.getTime()) {
+              // Same day - ensure 3 hour minimum
+              const minReturn = new Date(selectedDate);
               minReturn.setHours(minReturn.getHours() + 3);
-              
+
+              // If current return time is less than 3 hours from new pickup, adjust it
+              if (returnDate < minReturn) {
+                setReturnDate(minReturn);
+              }
+            }
+          } else {
+            // Setting return date
+            if (selectedDate < pickupDate) {
               Alert.alert(
-                "Minimum Rental Period",
-                "The minimum rental period for same-day rentals is 3 hours. Return time has been set to " + 
-                minReturn.toLocaleString([], { 
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true 
-                }),
-                [{ text: "OK" }]
+                "Invalid Date",
+                "Return time cannot be before pickup time",
               );
-              
-              setReturnDate(minReturn);
-              setShowDateTimeModal(false);
               return;
             }
-          }
-          
-          setReturnDate(selectedDate);
-        }
-        setShowDateTimeModal(false);
-      }}
-    />
-  </ScreenWrapper>
-);
 
+            // ✅ Check if same day rental
+            const pickupDay = new Date(
+              pickupDate.getFullYear(),
+              pickupDate.getMonth(),
+              pickupDate.getDate(),
+            );
+            const returnDay = new Date(
+              selectedDate.getFullYear(),
+              selectedDate.getMonth(),
+              selectedDate.getDate(),
+            );
+
+            if (pickupDay.getTime() === returnDay.getTime()) {
+              // Same day - enforce 3 hour minimum
+              const diffMs = selectedDate - pickupDate;
+              const diffHours = diffMs / (1000 * 60 * 60);
+
+              if (diffHours < 3) {
+                const minReturn = new Date(pickupDate);
+                minReturn.setHours(minReturn.getHours() + 3);
+
+                Alert.alert(
+                  "Minimum Rental Period",
+                  "The minimum rental period for same-day rentals is 3 hours. Return time has been set to " +
+                    minReturn.toLocaleString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    }),
+                  [{ text: "OK" }],
+                );
+
+                setReturnDate(minReturn);
+                setShowDateTimeModal(false);
+                return;
+              }
+            }
+
+            setReturnDate(selectedDate);
+          }
+          setShowDateTimeModal(false);
+        }}
+      />
+    </ScreenWrapper>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -1038,14 +1164,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFF",
   },
-    helperText: {
+  helperText: {
     fontSize: 12,
     color: "#666",
     marginTop: 8,
     marginLeft: 12,
     fontStyle: "italic",
   },
-  
+
   overlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.4)",
@@ -1057,7 +1183,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 16,
     padding: 16,
-    
   },
   headerWrapper: {
     backgroundColor: "#FFF",
@@ -1091,7 +1216,12 @@ const styles = StyleSheet.create({
     width: 40,
   },
   timeSection: { marginBottom: 16 },
-  timeLabel: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 8 },
+  timeLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
   timeRow: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
   timeBoxActive: {
     flexDirection: "row",
@@ -1110,15 +1240,14 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     gap: 6,
-    
   },
-  timeTextActive: { 
-    color: "#FFF", 
+  timeTextActive: {
+    color: "#FFF",
     fontWeight: "600",
   },
-  timeText: { 
-    color: "#057474", 
-    fontWeight: "600" 
+  timeText: {
+    color: "#057474",
+    fontWeight: "600",
   },
   monthRow: {
     flexDirection: "row",
@@ -1127,25 +1256,61 @@ const styles = StyleSheet.create({
     marginVertical: 12,
   },
   monthText: { fontSize: 16, fontWeight: "600" },
-  weekRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 8 },
+  weekRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   weekText: { width: 36, textAlign: "center", color: "#777", fontSize: 12 },
   calendarGrid: { flexDirection: "row", flexWrap: "wrap" },
-  dayCell: { width: 36, height: 36, justifyContent: "center", alignItems: "center", marginVertical: 6, borderRadius: 18 },
+  dayCell: {
+    width: 36,
+    height: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    marginVertical: 6,
+    borderRadius: 18,
+  },
   daySelected: { backgroundColor: "#057474" },
   dayText: { color: "#333" },
   dayTextSelected: { color: "#FFF", fontWeight: "600" },
   dayDisabled: { opacity: 0.3 },
   dayTextDisabled: { color: "#ccc" },
-  actionRow: { flexDirection: "row", justifyContent: "space-between", marginTop: 20 },
-  cancelBtn: { borderWidth: 1, borderColor: "#057474", paddingVertical: 10, paddingHorizontal: 24, borderRadius: 20 },
+  actionRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  cancelBtn: {
+    borderWidth: 1,
+    borderColor: "#057474",
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+  },
   cancelText: { color: "#057474", fontWeight: "600" },
-  doneBtn: { backgroundColor: "#057474", paddingVertical: 10, paddingHorizontal: 28, borderRadius: 20 },
+  doneBtn: {
+    backgroundColor: "#057474",
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+    borderRadius: 20,
+  },
   doneText: { color: "#FFF", fontWeight: "600" },
-  timeModal: { width: "80%", backgroundColor: "#FFF", borderRadius: 16, padding: 16 },
-  modalTitle: { fontSize: 16, fontWeight: "600", textAlign: "center", marginBottom: 12 },
+  timeModal: {
+    width: "80%",
+    backgroundColor: "#FFF",
+    borderRadius: 16,
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+    marginBottom: 12,
+  },
   timeOption: { paddingVertical: 14, alignItems: "center" },
   timeOptionText: { fontSize: 18, color: "#057474" },
-  
+
   // Progress Steps
   progressContainer: {
     backgroundColor: "#FFF",
@@ -1196,12 +1361,12 @@ const styles = StyleSheet.create({
   progressLine: {
     height: 2,
     backgroundColor: "#ccc",
-    width: 94,            
+    width: 94,
     marginBottom: 25,
   },
 
   lineWrapper: {
-    width: 40,            // same as line width to reserve space
+    width: 40, // same as line width to reserve space
     alignItems: "center", // center the line
   },
 
@@ -1209,11 +1374,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#4CAF50",
   },
 
-
   // Content
   scrollContent: {
     paddingBottom: 50,
-   
   },
   inputContainer: {
     paddingHorizontal: 17,
@@ -1228,13 +1391,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingHorizontal: 16,
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     borderWidth: 1,
     borderColor: "#057474",
-        
   },
   inputIcon: {
     marginRight: 12,
@@ -1244,7 +1406,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
     paddingVertical: 16,
-    
   },
 
   section: {
@@ -1285,14 +1446,14 @@ const styles = StyleSheet.create({
   },
 
   // Date Selection
-   sectionTitle: {
+  sectionTitle: {
     fontSize: 14,
     fontWeight: "600",
     color: "#333",
     marginTop: 10,
     marginLeft: 12,
   },
-   sectionTitle1: {
+  sectionTitle1: {
     flexDirection: "row",
     fontSize: 14,
     fontWeight: "600",
@@ -1305,10 +1466,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
     borderWidth: 1,
-    borderColor: "#05747480", 
+    borderColor: "#05747480",
     borderRadius: 20,
     overflow: "hidden",
-},
+  },
 
   dateColumn: {
     flex: 1,
@@ -1322,7 +1483,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginLeft: 13,
-  
   },
   dateButton1: {
     flex: 1,
@@ -1332,7 +1492,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginLeft: 3,
-  
   },
   dateText: {
     marginLeft: 5, // space between icon and text
@@ -1341,12 +1500,11 @@ const styles = StyleSheet.create({
   },
 
   verticalLine: {
-    width: 1.5,              
-    height: 67,           
-    backgroundColor: "#05747480", 
-    marginHorizontal: 10,  
+    width: 1.5,
+    height: 67,
+    backgroundColor: "#05747480",
+    marginHorizontal: 10,
     marginTop: 13,
-    
   },
 
   // Location
@@ -1388,7 +1546,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     top: 30,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -1396,7 +1554,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
-
   },
   proceedText: {
     color: "#FFF",
@@ -1410,6 +1567,4 @@ const styles = StyleSheet.create({
     marginBottom: 1,
     marginLeft: 16,
   },
-  
 });
-

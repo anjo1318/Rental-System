@@ -10,49 +10,49 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-  Image
+  Image,
 } from "react-native";
-import { Picker } from '@react-native-picker/picker';
+import { Picker } from "@react-native-picker/picker";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as ImagePicker from 'expo-image-picker';
-import axios from 'axios';
+import * as ImagePicker from "expo-image-picker";
+import axios from "axios";
 import Header from "../components/header";
 import ScreenWrapper from "../components/screenwrapper";
 
 export default function OwnerEditItem() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [item, setItem] = useState({
-    title: '',
-    description: '',
-    category: '',
-    pricePerDay: '',
-    itemImage: '',
-    availability: true
+    title: "",
+    description: "",
+    category: "",
+    pricePerDay: "",
+    itemImage: "",
+    availability: true,
   });
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const categories = [
-    'Cellphone',
-    'Laptop',
-    'Projector',
-    'Camera',
-    'Printer',
-    'Speaker'
+    "Cellphone",
+    "Laptop",
+    "Projector",
+    "Camera",
+    "Printer",
+    "Speaker",
   ];
 
   // Fetch item details
   const fetchItemDetails = async () => {
     try {
       setLoading(true);
-      console.log('Fetching item details for ID:', id);
-      
+      console.log("Fetching item details for ID:", id);
+
       if (!id) {
         Alert.alert("Error", "No item ID provided");
         router.back();
@@ -62,54 +62,64 @@ export default function OwnerEditItem() {
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         Alert.alert("Session Expired", "Please login again", [
-          { text: "OK", onPress: () => router.replace("owner/ownerLogin") }
+          { text: "OK", onPress: () => router.replace("owner/ownerLogin") },
         ]);
         return;
       }
 
       const response = await axios.get(`${API_URL}/api/item/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       console.log("Fetch item response:", {
         success: response.data.success,
-        item: response.data.data
+        item: response.data.data,
       });
 
       if (response.data.success) {
         const itemData = response.data.data;
         setItem({
-          title: itemData.title || '',
-          description: itemData.description || '',
-          category: itemData.category || '',
-          pricePerDay: itemData.pricePerDay?.toString() || '',
-          itemImage: itemData.itemImage || '',
-          availability: itemData.availability !== undefined ? itemData.availability : true
+          title: itemData.title || "",
+          description: itemData.description || "",
+          category: itemData.category || "",
+          pricePerDay: itemData.pricePerDay?.toString() || "",
+          itemImage: itemData.itemImage || "",
+          availability:
+            itemData.availability !== undefined ? itemData.availability : true,
         });
       } else {
         Alert.alert("Error", response.data.message || "Failed to load item");
         router.back();
       }
     } catch (error) {
-      console.error("❌ Error fetching item:", error.response?.data || error.message);
-      
+      console.error(
+        "❌ Error fetching item:",
+        error.response?.data || error.message,
+      );
+
       if (error.response?.status === 401) {
         Alert.alert("Session Expired", "Please login again", [
-          { text: "OK", onPress: () => router.replace("owner/ownerLogin") }
+          { text: "OK", onPress: () => router.replace("owner/ownerLogin") },
         ]);
       } else if (error.response?.status === 404) {
         Alert.alert("Error", "Item not found", [
-          { text: "OK", onPress: () => router.back() }
+          { text: "OK", onPress: () => router.back() },
         ]);
       } else if (error.response?.status === 403) {
         Alert.alert("Error", "You don't have permission to view this item");
-      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      } else if (
+        error.code === "ECONNABORTED" ||
+        error.message.includes("timeout")
+      ) {
         Alert.alert("Timeout", "Request timed out. Please try again.");
-      } else if (error.message.includes('Network Error')) {
-        Alert.alert("Network Error", "Please check your internet connection and try again");
+      } else if (error.message.includes("Network Error")) {
+        Alert.alert(
+          "Network Error",
+          "Please check your internet connection and try again",
+        );
       } else {
         Alert.alert("Error", `Failed to load item: ${error.message}`);
       }
@@ -133,19 +143,19 @@ export default function OwnerEditItem() {
       Alert.alert("Validation Error", "Please select a category");
       return;
     }
-    if (!item.pricePerDay || parseFloat(item.pricePerDay) <= 0) {
-      Alert.alert("Validation Error", "Please enter a valid price per day");
+    if (!item.pricePerDay || parseFloat(item.pricePerDay) < 100) {
+      Alert.alert("Validation Error", "Minimum price per day is ₱100");
       return;
     }
 
     try {
       setSaving(true);
-      console.log('Updating item with ID:', id);
+      console.log("Updating item with ID:", id);
 
       const token = await AsyncStorage.getItem("token");
       if (!token) {
         Alert.alert("Session Expired", "Please login again", [
-          { text: "OK", onPress: () => router.replace("owner/ownerLogin") }
+          { text: "OK", onPress: () => router.replace("owner/ownerLogin") },
         ]);
         return;
       }
@@ -156,45 +166,58 @@ export default function OwnerEditItem() {
         category: item.category,
         pricePerDay: parseFloat(item.pricePerDay),
         itemImage: item.itemImage,
-        availability: item.availability
+        availability: item.availability,
       };
 
-      console.log('Update data:', updateData);
+      console.log("Update data:", updateData);
 
-      const response = await axios.put(`${API_URL}/api/item/${id}`, updateData, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      const response = await axios.put(
+        `${API_URL}/api/item/${id}`,
+        updateData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
 
       console.log("✅ Update response:", {
         success: response.data.success,
-        message: response.data.message
+        message: response.data.message,
       });
 
       if (response.data.success) {
         Alert.alert("Success", "Item updated successfully!", [
-          { text: "OK", onPress: () => router.back() }
+          { text: "OK", onPress: () => router.replace("owner/ownerHome") },
         ]);
       } else {
         Alert.alert("Error", response.data.error || "Failed to update item");
       }
     } catch (error) {
-      console.error("❌ Error updating item:", error.response?.data || error.message);
-      
+      console.error(
+        "❌ Error updating item:",
+        error.response?.data || error.message,
+      );
+
       if (error.response?.status === 401) {
         Alert.alert("Session Expired", "Please login again", [
-          { text: "OK", onPress: () => router.replace("owner/ownerLogin") }
+          { text: "OK", onPress: () => router.replace("owner/ownerLogin") },
         ]);
       } else if (error.response?.status === 403) {
         Alert.alert("Error", "You don't have permission to update this item");
       } else if (error.response?.status === 404) {
         Alert.alert("Error", "Item not found");
-      } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      } else if (
+        error.code === "ECONNABORTED" ||
+        error.message.includes("timeout")
+      ) {
         Alert.alert("Timeout", "Request timed out. Please try again.");
-      } else if (error.message.includes('Network Error')) {
-        Alert.alert("Network Error", "Please check your internet connection and try again");
+      } else if (error.message.includes("Network Error")) {
+        Alert.alert(
+          "Network Error",
+          "Please check your internet connection and try again",
+        );
       } else {
         Alert.alert("Error", `Failed to update item: ${error.message}`);
       }
@@ -206,10 +229,14 @@ export default function OwnerEditItem() {
   // Pick image
   const pickImage = async () => {
     try {
-      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (status !== 'granted') {
-        Alert.alert('Permission needed', 'Please grant camera roll permissions to upload images.');
+      const { status } =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission needed",
+          "Please grant camera roll permissions to upload images.",
+        );
         return;
       }
 
@@ -221,14 +248,14 @@ export default function OwnerEditItem() {
       });
 
       if (!result.canceled && result.assets[0]) {
-        setItem(prev => ({
+        setItem((prev) => ({
           ...prev,
-          itemImage: result.assets[0].uri
+          itemImage: result.assets[0].uri,
         }));
       }
     } catch (error) {
-      console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image');
+      console.error("Image picker error:", error);
+      Alert.alert("Error", "Failed to pick image");
     }
   };
 
@@ -246,154 +273,189 @@ export default function OwnerEditItem() {
   }
 
   return (
-   
-        <ScreenWrapper backgroundColor="#fff" >
-            <Header
-              title="Edit Item"
-              backgroundColor="#007F7F"
-            />
-             <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={90}
-    >
-      <ScrollView 
-        style={styles.content} 
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <ScreenWrapper backgroundColor="#fff">
+      <Header title="Edit Item" backgroundColor="#007F7F" />
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        keyboardVerticalOffset={90}
       >
-        {/* Image Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Item Image</Text>
-          <TouchableOpacity 
-            style={styles.imageContainer} 
-            onPress={pickImage}
-            activeOpacity={0.8}
-          >
-            {item.itemImage ? (
-              <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
-            ) : (
-              <View style={styles.imagePlaceholder}>
-                <Icon name="add-a-photo" size={48} color="#999" />
-                <Text style={styles.imagePlaceholderText}>Tap to add image</Text>
-              </View>
+        <ScrollView
+          style={styles.content}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Image Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Item Image</Text>
+            <TouchableOpacity
+              style={styles.imageContainer}
+              onPress={pickImage}
+              activeOpacity={0.8}
+            >
+              {item.itemImage ? (
+                <Image
+                  source={{ uri: item.itemImage }}
+                  style={styles.itemImage}
+                />
+              ) : (
+                <View style={styles.imagePlaceholder}>
+                  <Icon name="add-a-photo" size={48} color="#999" />
+                  <Text style={styles.imagePlaceholderText}>
+                    Tap to add image
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Title */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Item Title *</Text>
+            <TextInput
+              style={styles.input}
+              value={item.title}
+              onChangeText={(text) =>
+                setItem((prev) => ({ ...prev, title: text }))
+              }
+              placeholder="Enter item title"
+              placeholderTextColor="#999"
+              maxLength={100}
+            />
+          </View>
+
+          {/* Description */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Description *</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={item.description}
+              onChangeText={(text) =>
+                setItem((prev) => ({ ...prev, description: text }))
+              }
+              placeholder="Enter item description"
+              placeholderTextColor="#999"
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              maxLength={500}
+            />
+          </View>
+
+          {/* Category */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Category *</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={item.category}
+                onValueChange={(value) =>
+                  setItem((prev) => ({ ...prev, category: value }))
+                }
+                style={styles.picker}
+              >
+                <Picker.Item label="Select category" value="" />
+                {categories.map((category) => (
+                  <Picker.Item
+                    key={category}
+                    label={category}
+                    value={category}
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          {/* Price */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Price Per Day (₱) *</Text>
+            <TextInput
+              style={[
+                styles.input,
+                parseFloat(item.pricePerDay) < 100 &&
+                  item.pricePerDay !== "" &&
+                  styles.inputError,
+              ]}
+              value={item.pricePerDay}
+              onChangeText={(text) =>
+                setItem((prev) => ({ ...prev, pricePerDay: text }))
+              }
+              onBlur={() => {
+                const value = parseFloat(item.pricePerDay);
+                if (item.pricePerDay !== "" && value < 100) {
+                  setItem((prev) => ({ ...prev, pricePerDay: "100" }));
+                }
+              }}
+              placeholder="0.00"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+              maxLength={10}
+            />
+            {parseFloat(item.pricePerDay) < 100 && item.pricePerDay !== "" && (
+              <Text style={styles.errorText}>Minimum price is ₱100</Text>
             )}
-          </TouchableOpacity>
-        </View>
-
-        {/* Title */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Item Title *</Text>
-          <TextInput
-            style={styles.input}
-            value={item.title}
-            onChangeText={(text) => setItem(prev => ({ ...prev, title: text }))}
-            placeholder="Enter item title"
-            placeholderTextColor="#999"
-            maxLength={100}
-          />
-        </View>
-
-        {/* Description */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Description *</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={item.description}
-            onChangeText={(text) => setItem(prev => ({ ...prev, description: text }))}
-            placeholder="Enter item description"
-            placeholderTextColor="#999"
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            maxLength={500}
-          />
-        </View>
-
-        {/* Category */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Category *</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={item.category}
-              onValueChange={(value) => setItem(prev => ({ ...prev, category: value }))}
-              style={styles.picker}
-            >
-              <Picker.Item label="Select category" value="" />
-              {categories.map((category) => (
-                <Picker.Item key={category} label={category} value={category} />
-              ))}
-            </Picker>
           </View>
-        </View>
 
-        {/* Price */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Price Per Day (₱) *</Text>
-          <TextInput
-            style={styles.input}
-            value={item.pricePerDay}
-            onChangeText={(text) => setItem(prev => ({ ...prev, pricePerDay: text }))}
-            placeholder="0.00"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-            maxLength={10}
-          />
-        </View>
+          {/* Availability */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Availability</Text>
+            <View style={styles.availabilityContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.availabilityButton,
+                  item.availability && styles.availabilityButtonActive,
+                ]}
+                onPress={() =>
+                  setItem((prev) => ({ ...prev, availability: true }))
+                }
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.availabilityButtonText,
+                    item.availability && styles.availabilityButtonTextActive,
+                  ]}
+                >
+                  Available
+                </Text>
+              </TouchableOpacity>
 
-        {/* Availability */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Availability</Text>
-          <View style={styles.availabilityContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.availabilityButton,
+                  !item.availability && styles.availabilityButtonActive,
+                ]}
+                onPress={() =>
+                  setItem((prev) => ({ ...prev, availability: false }))
+                }
+                activeOpacity={0.7}
+              >
+                <Text
+                  style={[
+                    styles.availabilityButtonText,
+                    !item.availability && styles.availabilityButtonTextActive,
+                  ]}
+                >
+                  Not Available
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
-              style={[
-                styles.availabilityButton,
-                item.availability && styles.availabilityButtonActive
-              ]}
-              onPress={() => setItem(prev => ({ ...prev, availability: true }))}
-              activeOpacity={0.7}
+              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+              onPress={updateItem}
+              activeOpacity={0.8}
+              disabled={saving}
             >
-              <Text style={[
-                styles.availabilityButtonText,
-                item.availability && styles.availabilityButtonTextActive
-              ]}>
-                Available
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[
-                styles.availabilityButton,
-                !item.availability && styles.availabilityButtonActive
-              ]}
-              onPress={() => setItem(prev => ({ ...prev, availability: false }))}
-              activeOpacity={0.7}
-            >
-              <Text style={[
-                styles.availabilityButtonText,
-                !item.availability && styles.availabilityButtonTextActive
-              ]}>
-                Not Available
-              </Text>
+              {saving ? (
+                <ActivityIndicator color="#FFF" />
+              ) : (
+                <Text style={styles.saveButtonText}>Save</Text>
+              )}
             </TouchableOpacity>
           </View>
-           <TouchableOpacity
-  style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-  onPress={updateItem}
-  activeOpacity={0.8}
-  disabled={saving}
->
-  {saving ? (
-    <ActivityIndicator color="#FFF" />
-  ) : (
-    <Text style={styles.saveButtonText}>Save</Text>
-  )}
-</TouchableOpacity>
-        </View>
 
-        <View style={styles.bottomPadding} />
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={styles.bottomPadding} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenWrapper>
   );
 }
@@ -409,21 +471,21 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-  marginTop: 20,
-  backgroundColor: '#057474',
-  paddingVertical: 14,
-  borderRadius: 12,
-  alignItems: 'center',
-  justifyContent: 'center',
-},
-saveButtonDisabled: {
-  opacity: 0.6,
-},
-saveButtonText: {
-  color: '#FFF',
-  fontSize: 16,
-  fontWeight: '600',
-},
+    marginTop: 20,
+    backgroundColor: "#057474",
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    color: "#FFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
   content: {
     flex: 1,
     padding: 16,
@@ -433,26 +495,26 @@ saveButtonText: {
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 12,
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
@@ -462,12 +524,12 @@ saveButtonText: {
     paddingTop: 14,
   },
   pickerContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
@@ -476,34 +538,34 @@ saveButtonText: {
     height: 52,
   },
   imageContainer: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
     height: 200,
-    overflow: 'hidden',
+    overflow: "hidden",
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
   },
   itemImage: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
   },
   imagePlaceholder: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
   },
   imagePlaceholderText: {
     marginTop: 8,
     fontSize: 14,
-    color: '#999',
+    color: "#999",
   },
   availabilityContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   availabilityButton: {
@@ -511,35 +573,43 @@ saveButtonText: {
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderWidth: 2,
-    borderColor: '#E0E0E0',
-    alignItems: 'center',
+    borderColor: "#E0E0E0",
+    alignItems: "center",
     elevation: 1,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
   },
   availabilityButtonActive: {
-    backgroundColor: '#057474',
-    borderColor: '#057474',
+    backgroundColor: "#057474",
+    borderColor: "#057474",
   },
   availabilityButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
   },
   availabilityButtonTextActive: {
-    color: '#FFF',
+    color: "#FFF",
   },
   loadingText: {
     marginTop: 16,
-    color: '#666',
+    color: "#666",
     fontSize: 16,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   bottomPadding: {
     height: 50,
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
   },
 });

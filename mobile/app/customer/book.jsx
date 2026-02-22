@@ -1,15 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Dimensions, Pressable, Image, RefreshControl } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  Dimensions,
+  Pressable,
+  Image,
+  RefreshControl,
+} from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
 import axios from "axios";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header2";
-import CustomerBottomNav from '../components/CustomerBottomNav';
 import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
-
 
 export default function BookedItem() {
   const router = useRouter();
@@ -41,30 +48,42 @@ export default function BookedItem() {
       if (userData) {
         const user = JSON.parse(userData);
         const userIdValue = user.id || user.userId || user._id || "";
-        
-        if (userIdValue && userIdValue !== "N/A" && userIdValue !== "null" && userIdValue !== "undefined") {
+
+        if (
+          userIdValue &&
+          userIdValue !== "N/A" &&
+          userIdValue !== "null" &&
+          userIdValue !== "undefined"
+        ) {
           setUserId(userIdValue);
         }
       }
     } catch (error) {
-    console.error("Error loading user data:", error);
+      console.error("Error loading user data:", error);
     }
   };
 
   const fetchBookedItems = async () => {
-    if (!userId || userId === "N/A" || userId === "null" || userId === "undefined") {
+    if (
+      !userId ||
+      userId === "N/A" ||
+      userId === "null" ||
+      userId === "undefined"
+    ) {
       console.log("walang user id");
       return;
     }
-    
+
     try {
       setLoading(true);
-      const response = await axios.get(`${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`);
-      
+      const response = await axios.get(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/booked-items/${userId}`,
+      );
+
       if (response.data.success) {
         // FIX: Change back to "pending" status
         const bookedItems = (response.data.data || []).filter(
-          item => item.status?.toLowerCase() === "pending"
+          (item) => item.status?.toLowerCase() === "pending",
         );
         setBookedItem(bookedItems);
         console.log("Fetch booked items in book.jsx", bookedItems);
@@ -84,22 +103,28 @@ export default function BookedItem() {
       alert("Please select an item to delete");
       return;
     }
-    
+
     try {
       const response = await axios.delete(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/delete/${selectedItemId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/delete/${selectedItemId}`,
       );
-      
+
       if (response.data.success) {
         alert("Booking deleted successfully!");
         setSelectedItemId(null);
         fetchBookedItems();
       } else {
-        alert("Failed to delete booking: " + (response.data.message || "Unknown error"));
+        alert(
+          "Failed to delete booking: " +
+            (response.data.message || "Unknown error"),
+        );
       }
     } catch (error) {
       console.error("Error deleting booking:", error);
-      alert("Error deleting booking: " + (error.response?.data?.message || error.message));
+      alert(
+        "Error deleting booking: " +
+          (error.response?.data?.message || error.message),
+      );
     }
   };
 
@@ -109,15 +134,17 @@ export default function BookedItem() {
       return;
     }
 
-    const selectedItem = bookedItem.find(item => item.id === selectedItemId);
-    
+    const selectedItem = bookedItem.find((item) => item.id === selectedItemId);
+
     if (!selectedItem) {
       alert("Selected item not found");
       return;
     }
 
     if (selectedItem.status?.toLowerCase() === "booked") {
-      alert("Cannot proceed. Item is still in Booked status. Please request for rent first.");
+      alert(
+        "Cannot proceed. Item is still in Booked status. Please request for rent first.",
+      );
       return;
     }
 
@@ -125,8 +152,8 @@ export default function BookedItem() {
       pathname: "customer/rentingDetails",
       params: {
         itemId: selectedItem.itemId || selectedItem.id,
-        fromBookedItems: "true"
-      }
+        fromBookedItems: "true",
+      },
     });
   };
 
@@ -135,6 +162,8 @@ export default function BookedItem() {
   };
 
   const getImageUrl = (imageString) => {
+    console.log("imageString raw:", imageString);
+
     try {
       if (typeof imageString === "string" && imageString.startsWith("http")) {
         return imageString.replace(/^http:\/\//, "https://");
@@ -151,21 +180,18 @@ export default function BookedItem() {
 
   return (
     <ScreenWrapper>
-      <Header
-          title="Booked Item"
-          backgroundColor="#007F7F"
-        />
+      <Header title="Booked Item" backgroundColor="#007F7F" />
 
       <View style={styles.bodyWrapper}>
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#007F7F"]}      // Android
-              tintColor="#007F7F"       // iOS
+              colors={["#007F7F"]} // Android
+              tintColor="#007F7F" // iOS
             />
           }
         >
@@ -176,7 +202,9 @@ export default function BookedItem() {
           ) : bookedItem.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                {userId ? "No booked items found" : "Please log in to view booked items"}
+                {userId
+                  ? "No booked items found"
+                  : "Please log in to view booked items"}
               </Text>
             </View>
           ) : (
@@ -189,7 +217,10 @@ export default function BookedItem() {
                       style={styles.ownerAvatar}
                       resizeMode="cover"
                     />
-                    <Text style={styles.ownerName}>{item.ownerFirstName || "Owner"} {item.ownerLastName || "Owner"}</Text>
+                    <Text style={styles.ownerName}>
+                      {item.ownerFirstName || "Owner"}{" "}
+                      {item.ownerLastName || "Owner"}
+                    </Text>
                   </View>
                 </View>
 
@@ -198,10 +229,12 @@ export default function BookedItem() {
                     style={styles.checkboxContainer}
                     onPress={() => handleRadioSelect(item.id)}
                   >
-                    <View style={[
-                      styles.checkbox,
-                      selectedItemId === item.id && styles.checkboxSelected
-                    ]}>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        selectedItemId === item.id && styles.checkboxSelected,
+                      ]}
+                    >
                       {selectedItemId === item.id && (
                         <Icon name="check" size={14} color="#007F7F" />
                       )}
@@ -216,43 +249,36 @@ export default function BookedItem() {
 
                   <View style={styles.productInfo}>
                     <Text style={styles.productName} numberOfLines={2}>
-                      {item.product || 'Unknown Product'}
+                      {item.product || "Unknown Product"}
                     </Text>
                     <Text style={styles.productPrice}>
-                      ₱ {item.pricePerDay || '0'}
+                      ₱ {item.pricePerDay || "0"}
                     </Text>
                   </View>
                 </View>
               </View>
             ))
           )}
-        
-       
 
-        {bookedItem.length > 0 && (
-          <View style={styles.bottomContainer}>
-            <Pressable 
-              style={styles.deleteButton}
-              onPress={handleDelete}
-            >
-              <Text style={styles.deleteText}>Remove</Text>
-            </Pressable>
+          {bookedItem.length > 0 && (
+            <View style={styles.bottomContainer}>
+              <Pressable style={styles.deleteButton} onPress={handleDelete}>
+                <Text style={styles.deleteText}>Remove</Text>
+              </Pressable>
 
-            <Pressable 
-              style={[
-                styles.proceedButton,
-                !selectedItemId && styles.disabledButton
-              ]}
-              onPress={handleProceed}
-              disabled={!selectedItemId}
-            >
-              <Text style={styles.proceedText}>Proceed to Renting</Text>
-            </Pressable>
-          </View>
-          
-        )}
+              <Pressable
+                style={[
+                  styles.proceedButton,
+                  !selectedItemId && styles.disabledButton,
+                ]}
+                onPress={handleProceed}
+                disabled={!selectedItemId}
+              >
+                <Text style={styles.proceedText}>Proceed to Renting</Text>
+              </Pressable>
+            </View>
+          )}
         </ScrollView>
-         <CustomerBottomNav />
       </View>
     </ScreenWrapper>
   );
@@ -301,18 +327,17 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 5,
     borderWidth: 1,
-    borderColor: '#D0D0D0', 
+    borderColor: "#D0D0D0",
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    overflow: 'hidden',
-    
+    overflow: "hidden",
   },
   cardHeader: {
     flexDirection: "row",

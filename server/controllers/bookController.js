@@ -1734,7 +1734,6 @@ const bookItemUpdate = async (req, res) => {
     const customer = await Customer.findOne({
       where: { id: customerDetails.customerId },
       attributes: ["id", "isRenting", "isActive", "isVerified"],
-      raw: true,
     });
 
     console.log("ito yung customer na nahanap gamit customer id", customer);
