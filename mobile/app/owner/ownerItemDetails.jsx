@@ -312,41 +312,7 @@ export default function OwnerItemDetail() {
           <Text style={styles.description}>{item.description}</Text>
         </View>
 
-        {/* ── Reviews ── */}
-        <View style={styles.dividerBold} />
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Review (1)</Text>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.reviewCard,
-              pressed && { opacity: 0.85 },
-            ]}
-            onPress={() => router.push("/customer/review")}
-          >
-            <View style={styles.reviewHeader}>
-              <Image
-                source={{ uri: "https://via.placeholder.com/40" }}
-                style={styles.reviewAvatar}
-              />
-              <View style={styles.reviewHeaderText}>
-                <Text style={styles.reviewerName}>Mr. Kenneth</Text>
-                <View style={styles.stars}>
-                  <Icon name="star" size={scale(14)} color="#FFD700" />
-                  <Icon name="star" size={scale(14)} color="#FFD700" />
-                  <Icon name="star" size={scale(14)} color="#FFD700" />
-                  <Icon name="star" size={scale(14)} color="#FFD700" />
-                  <Icon name="star-border" size={scale(14)} color="#FFD700" />
-                </View>
-              </View>
-            </View>
-            {/* thin line inside review card */}
-            <View style={styles.dividerThinInCard} />
-            <Text style={styles.reviewText}>
-              Great item! Very well maintained and works perfectly. Highly recommended for anyone looking to rent quality equipment.
-            </Text>
-          </Pressable>
-        </View>
+        
 
         <View style={styles.dividerBold} />
 
