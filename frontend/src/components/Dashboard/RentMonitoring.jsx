@@ -180,7 +180,7 @@ const BookingModal = ({ booking, onClose }) => {
               {/* Guarantor 1 */}
               <div className="border border-gray-200 rounded-xl p-4 space-y-2">
                 <p className="text-xs font-bold text-blue-600 uppercase">
-                  Guarantor 1
+                  Guarantor
                 </p>
                 <Field label="Full Name" value={booking.guarantor1FullName} />
                 <Field label="Phone" value={booking.guarantor1PhoneNumber} />
@@ -188,15 +188,6 @@ const BookingModal = ({ booking, onClose }) => {
                 <Field label="Email" value={booking.guarantor1Email} />
               </div>
               {/* Guarantor 2 */}
-              <div className="border border-gray-200 rounded-xl p-4 space-y-2">
-                <p className="text-xs font-bold text-blue-600 uppercase">
-                  Guarantor 2
-                </p>
-                <Field label="Full Name" value={booking.guarantor2FullName} />
-                <Field label="Phone" value={booking.guarantor2PhoneNumber} />
-                <Field label="Address" value={booking.guarantor2Address} />
-                <Field label="Email" value={booking.guarantor2Email} />
-              </div>
             </div>
           </div>
 
@@ -208,7 +199,7 @@ const BookingModal = ({ booking, onClose }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="border border-gray-200 rounded-xl p-4">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-2">
-                  📸 Pickup Photo
+                  Pickup Photo
                 </p>
                 {booking.pickupPhoto ? (
                   <img
@@ -224,7 +215,7 @@ const BookingModal = ({ booking, onClose }) => {
               </div>
               <div className="border border-gray-200 rounded-xl p-4">
                 <p className="text-xs font-bold text-gray-500 uppercase mb-2">
-                  📷 Return Photo
+                  Return Photo
                 </p>
                 {booking.returnPhoto ? (
                   <img

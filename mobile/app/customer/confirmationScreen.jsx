@@ -10,7 +10,7 @@ import {
   Modal,
   ActivityIndicator,
   StatusBar,
-  Linking
+  Linking,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useRouter } from "expo-router";
@@ -18,10 +18,14 @@ import axios from "axios";
 
 const { width } = Dimensions.get("window");
 
-export default function ConfirmationScreen({ bookingData, onBack, onContinue }) {
+export default function ConfirmationScreen({
+  bookingData,
+  onBack,
+  onContinue,
+}) {
   const [currentStep, setCurrentStep] = useState(3);
   const [selectedMethod, setSelectedMethod] = useState(
-    bookingData?.paymentMethod || null
+    bookingData?.paymentMethod || null,
   );
   const steps = ["Booking Details", "Payment Details", "Confirmed"];
   const router = useRouter();
@@ -33,24 +37,23 @@ export default function ConfirmationScreen({ bookingData, onBack, onContinue }) 
   const [checkingPayment, setCheckingPayment] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
 
-
   // Format date/time based on period
   const formatDateTime = (date, period) => {
     if (!date) return "N/A";
-    
+
     const dateObj = new Date(date);
-    
+
     if (period === "Hour") {
-      return dateObj.toLocaleTimeString([], { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
+      return dateObj.toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
       });
     } else {
-      return dateObj.toLocaleDateString('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric'
+      return dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "2-digit",
+        year: "numeric",
       });
     }
   };
@@ -68,31 +71,28 @@ export default function ConfirmationScreen({ bookingData, onBack, onContinue }) 
 
   const renderProgressStep = (stepNumber, stepName, isActive, isCompleted) => (
     <View style={styles.stepContainer} key={stepNumber}>
-      <View style={[
-        styles.stepCircle,
-        isActive && styles.activeStepCircle,
-        isCompleted && styles.completedStepCircle
-      ]}>
+      <View
+        style={[
+          styles.stepCircle,
+          isActive && styles.activeStepCircle,
+          isCompleted && styles.completedStepCircle,
+        ]}
+      >
         {isCompleted ? (
           <Icon name="check" size={16} color="#FFF" />
         ) : (
-          <Text style={[
-            styles.stepNumber,
-            isActive && styles.activeStepNumber
-          ]}>
+          <Text
+            style={[styles.stepNumber, isActive && styles.activeStepNumber]}
+          >
             {stepNumber}
           </Text>
         )}
       </View>
-      <Text style={[
-        styles.stepName,
-        isActive && styles.activeStepName
-      ]}>
+      <Text style={[styles.stepName, isActive && styles.activeStepName]}>
         {stepName}
       </Text>
     </View>
   );
-
 
   // Key changes in the payment check function:
 
@@ -101,7 +101,7 @@ export default function ConfirmationScreen({ bookingData, onBack, onContinue }) 
       if (!silent) setCheckingPayment(true);
 
       const response = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/status/${intentId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/status/${intentId}`,
       );
 
       if (response.data.success) {
@@ -110,17 +110,19 @@ export default function ConfirmationScreen({ bookingData, onBack, onContinue }) 
         if (status === "succeeded") {
           // ✅ 1. Close QR modal first
           setQrModalVisible(false);
-          
+
           // ✅ 2. Show success modal immediately
           setPaymentCompleted(true);
           setModalVisible(true);
-          
+
           // ✅ 3. Update booking in background
           await saveBookingAfterPayment(intentId);
-          
+
           return true;
         } else if (!silent) {
-          alert(`Payment Status: ${status}\n\nPlease scan the QR code to complete payment.`);
+          alert(
+            `Payment Status: ${status}\n\nPlease scan the QR code to complete payment.`,
+          );
         }
       }
       return false;
@@ -139,14 +141,14 @@ export default function ConfirmationScreen({ bookingData, onBack, onContinue }) 
   const saveBookingAfterPayment = async (intentId) => {
     try {
       console.log("Saving booking after successful payment...");
-      
+
       const response = await axios.put(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
         {
           ...bookingData,
           paymentIntentId: intentId,
-          paymentStatus: "paid"
-        }
+          paymentStatus: "paid",
+        },
       );
 
       if (response.data.success) {
@@ -154,102 +156,119 @@ export default function ConfirmationScreen({ bookingData, onBack, onContinue }) 
         return true;
       } else {
         console.error("❌ Booking update failed:", response.data);
-        alert("Payment successful but booking update failed. Please contact support.");
+        alert(
+          "Payment successful but booking update failed. Please contact support.",
+        );
         return false;
       }
     } catch (error) {
-      console.error("❌ Error updating booking:", error.response?.data || error.message);
-      alert("Payment successful but booking update failed. Please contact support with reference: " + intentId);
+      console.error(
+        "❌ Error updating booking:",
+        error.response?.data || error.message,
+      );
+      alert(
+        "Payment successful but booking update failed. Please contact support with reference: " +
+          intentId,
+      );
       return false;
     }
   };
 
   // ✅ Updated confirmRent for QRPh payment
-// ✅ Updated confirmRent for QRPh payment
-const confirmRent = async () => {
-  if (loading) return;
-  setLoading(true);
+  // ✅ Updated confirmRent for QRPh payment
+  const confirmRent = async () => {
+    if (loading) return;
+    setLoading(true);
 
-  try {
-    if (bookingData?.paymentMethod === "QRPh") {
-      // GCash redirect payment
-      const response = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/gcash`,
-        {
-          amount: parseFloat(bookingData.pricing.grandTotal) * 100,
-          description: `Rental for ${bookingData.itemDetails.title}`,
-          bookingData
+    try {
+      if (bookingData?.paymentMethod === "QRPh") {
+        // GCash redirect payment
+        const response = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/payment/gcash`,
+          {
+            amount: parseFloat(bookingData.pricing.grandTotal) * 100,
+            description: `Rental for ${bookingData.itemDetails.title}`,
+            bookingData,
+          },
+        );
+
+        const checkoutUrl =
+          response.data.checkout_url || response.data.checkoutUrl;
+        console.log("Redirecting to PayMongo GCash:", checkoutUrl);
+        await Linking.openURL(checkoutUrl);
+      } else if (bookingData?.paymentMethod === "Gcash") {
+        // QRPh Payment - Generate QR Code
+        console.log("🔍 Sending QRPh payment request...");
+        console.log(
+          "📦 BookingData being sent:",
+          JSON.stringify(bookingData, null, 2),
+        );
+
+        const response = await axios.post(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/payment/qrph`,
+          {
+            amount: parseFloat(bookingData.pricing.grandTotal) * 100,
+            description: `Rental for ${bookingData.itemDetails.title}`,
+            bookingData,
+          },
+        );
+
+        console.log("✅ QRPh Response:", response.data);
+
+        if (response.data.success && response.data.qrCode) {
+          setQrCodeData(response.data.qrCode);
+          setPaymentIntentId(response.data.paymentIntentId);
+          setQrModalVisible(true);
+          // ✅ Auto-check will start via useEffect
+        } else {
+          alert("Failed to generate QR code");
         }
-      );
+      } else if (bookingData?.paymentMethod === "Cash") {
+        // Cash Payment
+        console.log("🔍 Sending booking request for Cash...");
+        console.log(
+          "📦 BookingData being sent:",
+          JSON.stringify(bookingData, null, 2),
+        );
 
-      const checkoutUrl = response.data.checkout_url || response.data.checkoutUrl;
-      console.log("Redirecting to PayMongo GCash:", checkoutUrl);
-      await Linking.openURL(checkoutUrl);
+        const response = await axios.put(
+          `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
+          bookingData,
+        );
 
-    } else if (bookingData?.paymentMethod === "Gcash") {
-      // QRPh Payment - Generate QR Code
-      console.log("🔍 Sending QRPh payment request...");
-      console.log("📦 BookingData being sent:", JSON.stringify(bookingData, null, 2));
-      
-      const response = await axios.post(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/payment/qrph`,
-        {
-          amount: parseFloat(bookingData.pricing.grandTotal) * 100,
-          description: `Rental for ${bookingData.itemDetails.title}`,
-          bookingData
+        console.log("✅ Booking Response:", response.data);
+
+        if (response.data.success) {
+          setModalVisible(true);
+        } else {
+          alert("Booking failed, please try again.");
         }
-      );
-
-      console.log("✅ QRPh Response:", response.data);
-
-      if (response.data.success && response.data.qrCode) {
-        setQrCodeData(response.data.qrCode);
-        setPaymentIntentId(response.data.paymentIntentId);
-        setQrModalVisible(true);
-        // ✅ Auto-check will start via useEffect
       } else {
-        alert("Failed to generate QR code");
+        alert(`Unknown payment method: ${bookingData?.paymentMethod}`);
       }
-
-    } else if (bookingData?.paymentMethod === "Cash") {
-      // Cash Payment
-      console.log("🔍 Sending booking request for Cash...");
-      console.log("📦 BookingData being sent:", JSON.stringify(bookingData, null, 2));
-      
-      const response = await axios.put(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/book-item/update/${bookingData.itemId}`,
-        bookingData
+    } catch (error) {
+      // ✅ Enhanced error logging
+      console.error("❌ Booking/Payment error:");
+      console.error("Error message:", error.message);
+      console.error(
+        "Error response:",
+        JSON.stringify(error.response?.data, null, 2),
       );
+      console.error("Error status:", error.response?.status);
+      console.error("Full error object:", error);
 
-      console.log("✅ Booking Response:", response.data);
+      // Show detailed error to user
+      const errorMessage =
+        error.response?.data?.error?.errors?.[0]?.detail ||
+        error.response?.data?.error?.message ||
+        error.response?.data?.message ||
+        "Error processing your request. Please try again.";
 
-      if (response.data.success) {
-        setModalVisible(true);
-      } else {
-        alert("Booking failed, please try again.");
-      }
-    } else {
-      alert(`Unknown payment method: ${bookingData?.paymentMethod}`);
+      alert(`Notice: ${errorMessage}`);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    // ✅ Enhanced error logging
-    console.error("❌ Booking/Payment error:");
-    console.error("Error message:", error.message);
-    console.error("Error response:", JSON.stringify(error.response?.data, null, 2));
-    console.error("Error status:", error.response?.status);
-    console.error("Full error object:", error);
-    
-    // Show detailed error to user
-    const errorMessage = error.response?.data?.error?.errors?.[0]?.detail 
-      || error.response?.data?.error?.message 
-      || error.response?.data?.message 
-      || "Error processing your request. Please try again.";
-    
-    alert(`Payment Error: ${errorMessage}`);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   // ✅ Updated Success Modal to show different messages
   <Modal
@@ -258,31 +277,31 @@ const confirmRent = async () => {
     visible={modalVisible}
     onRequestClose={() => setModalVisible(false)}
   >
-  <View style={styles.modalOverlay}>
-    <View style={styles.modalContent}>
-      <Icon name="check-circle" size={60} color="#4CAF50" />
-      <Text style={styles.modalText}>
-        {paymentCompleted 
-          ? "Your booking is confirmed. Please wait for the product to be delivered"
-          : bookingData?.paymentMethod === "Cash" 
-            ? "Request sent, please wait for the reply."
-            : "Booking confirmed!"}
-      </Text>
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <Icon name="check-circle" size={60} color="#4CAF50" />
+        <Text style={styles.modalText}>
+          {paymentCompleted
+            ? "Your booking is confirmed. Please wait for the product to be delivered"
+            : bookingData?.paymentMethod === "Cash"
+              ? "Request sent, please wait for the reply."
+              : "Booking confirmed!"}
+        </Text>
 
-      <TouchableOpacity
-        style={styles.modalButton}
-        onPress={() => {
-          setModalVisible(false);
-          setPaymentCompleted(false);
-          setLoading(false);
-          router.replace("customer/home");
-        }}
-      >
-        <Text style={styles.modalButtonText}>Go to Home</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.modalButton}
+          onPress={() => {
+            setModalVisible(false);
+            setPaymentCompleted(false);
+            setLoading(false);
+            router.replace("customer/home");
+          }}
+        >
+          <Text style={styles.modalButtonText}>Go to Home</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-</Modal>
+  </Modal>;
 
   return (
     <View style={styles.safe}>
@@ -301,7 +320,7 @@ const confirmRent = async () => {
                   index + 1,
                   stepName,
                   currentStep === index + 1,
-                  currentStep > index + 1
+                  currentStep > index + 1,
                 )}
                 {index < steps.length - 1 && (
                   <View style={styles.lineWrapper}>
@@ -318,44 +337,58 @@ const confirmRent = async () => {
           </View>
         </View>
 
-
-
         {/* Rental Summary */}
         <View style={styles.summaryCard}>
           <Text style={styles.cardTitle}>Rental Summary</Text>
-          
+
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>
-              {bookingData?.rentalDetails?.period === "Hour" ? "Time Picked-Up" : "Date Picked-Up"}
+              {bookingData?.rentalDetails?.period === "Hour"
+                ? "Time Picked-Up"
+                : "Date Picked-Up"}
             </Text>
             <Text style={styles.summaryValue}>
-              {formatDateTime(bookingData?.rentalDetails?.pickupDate, bookingData?.rentalDetails?.period)}
+              {formatDateTime(
+                bookingData?.rentalDetails?.pickupDate,
+                bookingData?.rentalDetails?.period,
+              )}
             </Text>
           </View>
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>
-              {bookingData?.rentalDetails?.period === "Hour" ? "Time Return" : "Date Return"}
+              {bookingData?.rentalDetails?.period === "Hour"
+                ? "Time Return"
+                : "Date Return"}
             </Text>
             <Text style={styles.summaryValue}>
-              {formatDateTime(bookingData?.rentalDetails?.returnDate, bookingData?.rentalDetails?.period)}
+              {formatDateTime(
+                bookingData?.rentalDetails?.returnDate,
+                bookingData?.rentalDetails?.period,
+              )}
             </Text>
           </View>
 
           <View style={styles.divider} />
 
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{bookingData?.pricing?.rateLabel}</Text>
-            <Text style={styles.summaryValue}>₱ {bookingData?.pricing?.rate}</Text>
+            <Text style={styles.summaryLabel}>
+              {bookingData?.pricing?.rateLabel}
+            </Text>
+            <Text style={styles.summaryValue}>
+              ₱ {bookingData?.pricing?.rate}
+            </Text>
           </View>
 
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Rental Duration</Text>
             <Text style={styles.summaryValue}>
-              {bookingData?.pricing?.duration} {
-                bookingData?.pricing?.period === "Hour" ? "hours" : 
-                bookingData?.pricing?.period === "Week" ? "weeks" : "days"
-              }
+              {bookingData?.pricing?.duration}{" "}
+              {bookingData?.pricing?.period === "Hour"
+                ? "hours"
+                : bookingData?.pricing?.period === "Week"
+                  ? "weeks"
+                  : "days"}
             </Text>
           </View>
 
@@ -368,7 +401,9 @@ const confirmRent = async () => {
 
           <View style={styles.summaryRow}>
             <Text style={styles.grandTotalLabel}>Grand Total</Text>
-            <Text style={styles.grandTotalValue}>₱ {bookingData?.pricing?.grandTotal}</Text>
+            <Text style={styles.grandTotalValue}>
+              ₱ {bookingData?.pricing?.grandTotal}
+            </Text>
           </View>
         </View>
 
@@ -429,19 +464,21 @@ const confirmRent = async () => {
         )}
 
         <View style={styles.actions}>
-        <TouchableOpacity 
-          onPress={() => {
-            if (onBack) {
-              onBack(); // Call the onBack callback passed from parent
-            } else {
-              router.back();
-            }
-          }} 
-          style={styles.backBtn}
-        >
-          <Text style={{ color: "#057474", fontWeight: "700"}}>Previous</Text>
-        </TouchableOpacity>
-          
+          <TouchableOpacity
+            onPress={() => {
+              if (onBack) {
+                onBack(); // Call the onBack callback passed from parent
+              } else {
+                router.back();
+              }
+            }}
+            style={styles.backBtn}
+          >
+            <Text style={{ color: "#057474", fontWeight: "700" }}>
+              Previous
+            </Text>
+          </TouchableOpacity>
+
           <TouchableOpacity
             onPress={confirmRent}
             style={[styles.continueBtn, loading && styles.disabledBtn]}
@@ -450,7 +487,7 @@ const confirmRent = async () => {
             {loading ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <Text style={{ color: "#FFF", fontWeight: "700"}}>
+              <Text style={{ color: "#FFF", fontWeight: "700" }}>
                 ₱ {bookingData?.pricing?.grandTotal} Rent Now
               </Text>
             )}
@@ -467,7 +504,7 @@ const confirmRent = async () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.qrModalContent}>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.closeButton}
               onPress={() => setQrModalVisible(false)}
             >
@@ -476,7 +513,10 @@ const confirmRent = async () => {
 
             <Text style={styles.qrTitle}>Scan to Pay</Text>
             <Text style={styles.qrSubtitle}>
-              ₱ {qrCodeData?.amount ? (qrCodeData.amount / 100).toFixed(2) : "0.00"}
+              ₱{" "}
+              {qrCodeData?.amount
+                ? (qrCodeData.amount / 100).toFixed(2)
+                : "0.00"}
             </Text>
 
             {qrCodeData?.imageUrl ? (
@@ -491,10 +531,18 @@ const confirmRent = async () => {
 
             <View style={styles.qrInstructions}>
               <Text style={styles.instructionTitle}>How to pay:</Text>
-              <Text style={styles.instructionText}>1. Open your e-wallet app (GCash, Maya, etc.)</Text>
-              <Text style={styles.instructionText}>2. Go to "Scan QR" or "Pay via QR"</Text>
-              <Text style={styles.instructionText}>3. Scan the QR code above</Text>
-              <Text style={styles.instructionText}>4. After successful payment wait for the system to sync</Text>
+              <Text style={styles.instructionText}>
+                1. Open your e-wallet app (GCash, Maya, etc.)
+              </Text>
+              <Text style={styles.instructionText}>
+                2. Go to "Scan QR" or "Pay via QR"
+              </Text>
+              <Text style={styles.instructionText}>
+                3. Scan the QR code above
+              </Text>
+              <Text style={styles.instructionText}>
+                4. After successful payment wait for the system to sync
+              </Text>
             </View>
           </View>
         </View>
@@ -511,7 +559,7 @@ const confirmRent = async () => {
           <View style={styles.modalContent}>
             <Icon name="check-circle" size={60} color="#4CAF50" />
             <Text style={styles.modalText}>
-              {bookingData?.paymentMethod === "Cash" 
+              {bookingData?.paymentMethod === "Cash"
                 ? "Request sent, please wait for the reply."
                 : "Payment successful! Your booking is confirmed."}
             </Text>
@@ -641,7 +689,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
