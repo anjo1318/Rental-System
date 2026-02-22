@@ -55,21 +55,7 @@ export default function Header({ title = "Title", backgroundColor = "#057474" })
           >
             {title}
           </Text>
-            
-          {/* Notification */}
-           <View style={styles.notificationWrapper}>
-                        <Pressable onPress={() => router.push("owner/ownerRequest")}>
-                          <Image
-                            source={require("../../assets/images/notification.png")}
-                            style={{ width: 25, height: 25}}
-                            resizeMode="contain"
-                          />
-                          {/* Badge */}
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>3</Text>
-              </View>
-            </Pressable>
-          </View>
+          
 
         </View>
       </View>
@@ -94,7 +80,7 @@ const styles = StyleSheet.create({
   profileContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
   },
   iconBox: {
     alignItems: "center",
@@ -109,37 +95,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
     fontWeight: "600",
-  },
-notificationWrapper: {
-    marginLeft: "auto", 
-    marginRight: 7,
-    marginTop: 3,
-    position: "relative",
-    borderRadius: (width * 0.12) / 2,
-    justifyContent: "center",
-    alignItems: "center",
-
+    marginRight: 30,
   },
 
-  badge: {
-    position: "absolute",
-    right: -2,
-    bottom: 15,
-    backgroundColor: "#007F7F",
-    borderRadius: 10,
-    width: 14,
-    height: 14,
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#fff",
-  },
-
-  badgeText: {
-    color: "#fff",
-    fontSize: 8,
-    fontWeight: "700",
-    
-  },
 
 });

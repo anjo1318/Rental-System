@@ -172,13 +172,13 @@ export default function ProfileHeader() {
             }
           >
             {console.log("📜 Rendering chat list")}
-            {chats.map((chat) => {
-              console.log("💬 Rendering chat item:", {
-                id: chat.id,
-                otherUser: chat.otherUserName,
-                hasLastMessage: !!chat.lastMessage,
-                hasImage: !!chat.otherUserImage
-              });
+              {chats.map((chat) => {
+                console.log("💬 Rendering chat item:", {
+                  id: chat.id,
+                  otherUser: chat.otherUserName,
+                  hasLastMessage: !!chat.lastMessage,
+                  hasImage: !!chat.otherUserImage
+                });
               
               return (
                 <Pressable
@@ -186,7 +186,6 @@ export default function ProfileHeader() {
                   style={styles.messageItem}
                   onPress={() => handleChatPress(chat)}
                 >
-                  <View style={styles.bottomDivider} />
                   <Image
                     source={{ 
                       uri: chat.otherUserImage 
@@ -209,9 +208,7 @@ export default function ProfileHeader() {
                     </View>
                     <Text style={styles.preview} numberOfLines={1}>
                       {chat.lastMessage 
-                        ? chat.lastMessage.text 
-                        : `Item ID: ${chat.itemId}`
-                      }
+                        ? chat.lastMessage.text : ""}
                     </Text>
                   </View>
                 </Pressable>
@@ -265,6 +262,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#FFF",
     padding: 20,
+    paddingBottom: 3,
+
   },
 
   avatar: {
@@ -274,14 +273,6 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  bottomDivider: {
-    position: "absolute",
-    bottom: 0,
-    left: 68,
-    right: 0,
-    height: 1,
-    backgroundColor: "#05747480",
-  },
 
   messageContent: {
     flex: 1,
@@ -295,6 +286,7 @@ const styles = StyleSheet.create({
   sender: {
     fontWeight: "600",
     color: "#000",
+    top: 2,
   },
 
   date: {
@@ -304,6 +296,6 @@ const styles = StyleSheet.create({
 
   preview: {
     color: "#666",
-    marginTop: 4,
+    marginTop: 2,
   },
 });

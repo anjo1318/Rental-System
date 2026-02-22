@@ -261,7 +261,7 @@ export default function ItemDetail() {
           <View style={styles.priceRow}>
             <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
             <Text style={styles.price}>{item.pricePerDay}</Text>
-            <Text style={styles.priceUnit}>per day</Text>
+            <Text style={styles.priceUnit}>per hour</Text>
             <View style={styles.ratingContainer}>
               <Text style={styles.rating}>5.0</Text>
               <Icon name="star" size={16} color="#FFD700" />
@@ -275,7 +275,7 @@ export default function ItemDetail() {
            
           <View style={styles.ownerContainer}>
             <Image
-              source={{ uri: "https://via.placeholder.com/40" }}
+              source={{ uri: customer.profileImage || "https://via.placeholder.com/40" }}
               style={styles.avatar}
             />
             <View style={styles.ownerInfo}>
@@ -556,7 +556,7 @@ ownerContainer: {
     borderRadius: scale(16),
     backgroundColor: '#E0E0E0',
     marginRight: scale(8),
-    bottom: scale(15),
+    bottom: scale(10),
   },
   ownerInfo: {
     flex: 1,
@@ -582,7 +582,7 @@ ownerContainer: {
     paddingTop: scale(12),
     borderTopWidth: 0.3,
     borderTopColor: '#0574744D',
-    bottom: scale(112),
+    bottom: scale(125),
   },
   detailLine4: {
     paddingTop: scale(12),

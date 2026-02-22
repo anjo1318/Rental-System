@@ -26,9 +26,9 @@ import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
 
-const CARD_MARGIN = 7;
-const CARD_WIDTH = (width - 16 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.33;
+const CARD_MARGIN = 5;
+const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
+const CARD_HEIGHT = height * 0.34;
 
 
 export default function OwnerHome() {
@@ -49,7 +49,6 @@ export default function OwnerHome() {
   const [OWNER_ID, setOwnerId] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  // ✅ FIXED: Now uses the stored OWNER_ID state
   const onRefresh = async () => {
     setRefreshing(true);
     if (OWNER_ID) {
@@ -58,7 +57,6 @@ export default function OwnerHome() {
     setRefreshing(false);
   };
 
-  // Handle back button to exit app
   useFocusEffect(
     React.useCallback(() => {
       const onBackPress = () => {
@@ -72,7 +70,6 @@ export default function OwnerHome() {
     }, [])
   );
 
-  // Load user data from AsyncStorage
   const loadUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem("user");
@@ -96,7 +93,6 @@ export default function OwnerHome() {
 
   const categories = ["All", "Cellphone", "Projector", "Laptop", "Speaker"];
 
-  // ✅ FIXED: Added proper validation and error handling
   const fetchOwnerItems = async (userId) => {
     if (!userId) {
       console.log("❌ No user ID provided");
@@ -183,7 +179,6 @@ export default function OwnerHome() {
     }
   };
 
-  // ✅ FIXED: Simplified initialization
   useEffect(() => {
     const initializeApp = async () => {
       const userId = await loadUserData();
@@ -192,24 +187,21 @@ export default function OwnerHome() {
       }
     };
     initializeApp();
-  }, []); // Empty dependency array - only runs once on mount
+  }, []);
 
   const handleNavigation = (route) => {
     router.push(`/${route}`);
   };
 
-  // ✅ FIXED: Added filtering by category and search
   const getFilteredItems = () => {
     let filtered = items;
 
-    // Filter by category
     if (activeCategory !== "All") {
       filtered = filtered.filter(item => 
         item.category.toLowerCase() === activeCategory.toLowerCase()
       );
     }
 
-    // Filter by search
     if (search.trim()) {
       filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -228,23 +220,23 @@ export default function OwnerHome() {
       >
         <View style={styles.upperHalf}>
           <View style={styles.imageWrapper}>
-          <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
+            <Image source={{ uri: item.itemImage }} style={styles.itemImage} />
+            {/* Unavailable overlay - dark overlay covering the full image with centered text */}
+            {!item.isAvailable && (
+              <View style={styles.unavailableOverlay}>
+                <Text style={styles.unavailableOverlayText}>Rented</Text>
+              </View>
+            )}
+            {/* Available badge - small pill badge on top-right corner */}
+            {item.isAvailable && (
+              <View style={styles.availableBadge}>
+                <Text style={styles.availableBadgeText}>Available</Text>
+              </View>
+            )}
           </View>
         </View>
         <View style={styles.lowerHalf}>
           <Text style={styles.title}>{item.title}</Text>
-          <View style={styles.statusRow}>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: item.isAvailable ? "#4CAF50" : "#FF2125" },
-              ]}
-            >
-              <Text style={styles.statusText}>
-                {item.isAvailable ? "Available" : "Rented"}
-              </Text>
-            </View>
-          </View>
           <Text style={styles.location}>{item.location}</Text>
           <Text style={styles.price}>₱{item.pricePerDay}</Text>
         </View>
@@ -369,8 +361,6 @@ export default function OwnerHome() {
           </View>
         </View>
 
-      
-
         <View style={styles.lowerCard}>
           {/* Search */}
           <View style={styles.searchContainer}>
@@ -412,7 +402,7 @@ export default function OwnerHome() {
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderItem}
               numColumns={2}
-              columnWrapperStyle={{ justifyContent: "center", marginBottom: 16 }}
+              columnWrapperStyle={{ justifyContent: "flex-start", marginBottom: 16 }}
               scrollEnabled={false}
               contentContainerStyle={{ paddingHorizontal: 16 }}
             />
@@ -563,7 +553,7 @@ badgeText: {
     borderRadius: 20,
     paddingBottom: 20,
     top: 15,
-    marginHorizontal: -5, // smaller = wider
+    marginHorizontal: -5,
     
   },
   searchContainer: {
@@ -608,8 +598,6 @@ badgeText: {
     borderRadius: 20,
     marginRight: 10,
     marginLeft: 16,
-    borderWidth: 1,
-    borderColor: "#007F7F39", 
     marginBottom: 20,
     
   },
@@ -626,41 +614,80 @@ badgeText: {
     fontWeight: "500",
   },
   card: {
-    width: (width - 25) / 2,
-    marginHorizontal: 3, 
-    backgroundColor: "#FFF",
-    borderRadius: 15,
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
+    backgroundColor: "#fff",
+    borderRadius: 5,
     overflow: "hidden",
+    borderWidth: 0,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    borderWidth: 1,
-    borderColor: "#007F7F39"
-
+    borderColor: "transparent",
+    marginHorizontal: 3,
+    
   },
+
   imageWrapper: {
-  width: "100%",
-  height: "100%",
-  justifyContent: "center",
-  alignItems: "center",
-  backgroundColor: "#f2f2f2",
-},
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#EDEDED",
+  },
 
   upperHalf: {
-  height: 120,
-  backgroundColor: "#f2f2f2",
+  height: CARD_HEIGHT * 0.70,   // fixed image area
+  width: "100%",
+  backgroundColor: "#fff",
 },
 
-itemImage: {
-  width: "100%",
-  height: "100%",
-  resizeMode: "contain",   // 🔥 MAIN FIX
-},
+  itemImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+
+  // Dark overlay covering the full image area for rented/unavailable items
+  unavailableOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  unavailableOverlayText: {
+    color: "#fff",
+    fontSize: width * 0.033,
+    fontWeight: "600",
+    letterSpacing: 0.5,
+  },
+
+  // Small pill badge shown on top-right for available items
+  availableBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  availableBadgeText: {
+    color: "#fff",
+    fontSize: width * 0.028,
+    fontWeight: "500",
+  },
 
   lowerHalf: {
-    padding: 12,
+    flex: 1,
+    flexDirection: "column",
+    paddingHorizontal: 5,
+    paddingTop: 5,
+    paddingBottom: 10,
+    overflow: "hidden",
+    
   },
   title: {
     fontSize: 14,
@@ -686,11 +713,13 @@ itemImage: {
     fontSize: 12,
     color: "#666",
     marginBottom: 6,
+    bottom: 3,
   },
   price: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#057474",
+    bottom: 7,
   },
   noItemsContainer: {
     alignItems: "center",

@@ -26,7 +26,7 @@ const { width, height } = Dimensions.get("window");
 
 const CARD_MARGIN = 5;
 const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
-const CARD_HEIGHT = height * 0.29;
+const CARD_HEIGHT = height * 0.34;
 
 export default function Index() {
   const router = useRouter();
@@ -179,30 +179,30 @@ export default function Index() {
               })()
             : "https://via.placeholder.com/150",
       }} style={styles.featuredImage} />
-        </View>
-      </View>
+        resizeMode="cover"
+              {/* Unavailable overlay - dark overlay covering the whole image with centered text */}
+                          {item.availableQuantity <= 0 && (
+                            <View style={styles.unavailableOverlay}>
+                              <Text style={styles.unavailableOverlayText}>Unavailable</Text>
+                            </View>
+                          )}
+                          {/* Available badge - small pill badge on top-right corner */}
+                          {item.availableQuantity > 0 && (
+                            <View style={styles.availableBadge}>
+                              <Text style={styles.availableBadgeText}>Available</Text>
+                            </View>
+                          )}
+                          </View>
+                        </View>
     
       <View style={styles.lowerHalf}>
         <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
 
-        {/* Availability Badge - positioned at bottom of image */}
-        <View
-          style={[
-            styles.availabilityBadge,
-            { backgroundColor: item.availability && item.availableQuantity > 0 ? "#4CAF50" : "#FF5722" }
-          ]}
-        >
-          <Text style={styles.availabilityText}>
-            {item.availability && item.availableQuantity > 0 ? "Available" : "Unavailable"}
-          </Text>
-        </View>
-
-        
-        {/* Rating Row */}
-        <View style={styles.ratingRow}>
-          <Text style={styles.ratingValue}>5.0</Text>
-          <Text style={styles.starIcon}>⭐</Text>
-        </View>
+      
+        {/* <View style={styles.ratingRow}>
+                    <Text style={styles.ratingValue}>5.0</Text>
+                    <Text style={styles.starIcon}>⭐</Text> 
+                  </View> */}
     
         {/* Location */}
         <View style={styles.locationRow}>
@@ -336,7 +336,7 @@ export default function Index() {
           renderItem={renderItem}
           numColumns={2}
           columnWrapperStyle={{
-            justifyContent: "space-between",
+            justifyContent: "flex-start",
             marginBottom: 7,
           }}
           scrollEnabled={false}
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginHorizontal: -3,
     marginVertical: 5,
-    height: 45,
+    height: 37,
     backgroundColor: "#fff",
     top: 12,
   },
@@ -435,6 +435,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: "#000",
+    top: 2,
   },
 
   rightIcon: { 
@@ -495,7 +496,7 @@ featuredImage: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#fff",
-    borderRadius: 15,
+    borderRadius: 5,
     overflow: "hidden",
     borderWidth: 0,
     borderColor: "transparent",
@@ -505,14 +506,12 @@ featuredImage: {
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    borderWidth: 1,
-    borderColor: "#007F7F39",
-    top: 8,
+    marginTop: 8,
     right: 9,
   },
 
   upperHalf: {
-  height: CARD_HEIGHT * 0.45,   // fixed image area
+  height: CARD_HEIGHT * 0.70,   // fixed image area
   width: "100%",
   backgroundColor: "#fff",
 },
@@ -582,20 +581,33 @@ featuredImage: {
   quantity: {
     marginTop: 5,
   },
-  availabilityBadge: {
-    width: "45%",
-    paddingVertical: 3,
-    alignItems: "center",
+    // Dark overlay covering the full image area for unavailable items
+  unavailableOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.55)",
     justifyContent: "center",
-    marginBottom: 10,
-    borderRadius: 10,
-    marginTop: 5,
+    alignItems: "center",
+  },
+  unavailableOverlayText: {
+    color: "#fff",
+    fontSize: width * 0.033,
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
 
-  availabilityText: {
+  availableBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(0, 0, 0, 0.45)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+  },
+  availableBadgeText: {
     color: "#fff",
-    fontSize: 10,
-    fontWeight: "400",
+    fontSize: width * 0.028,
+    fontWeight: "500",
   },
 
 
