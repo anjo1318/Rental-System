@@ -24,6 +24,7 @@ import {
   setupRentalMonitoring,
 } from "./controllers/bookController.js";
 import cors from "cors";
+import EmailNotificationLog from "./models/EmailNotificationLog.js";
 
 dotenv.config();
 

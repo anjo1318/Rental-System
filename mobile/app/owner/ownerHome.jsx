@@ -12,15 +12,15 @@ import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  BackHandler
+  BackHandler,
 } from "react-native";
 import { useRouter, usePathname } from "expo-router";
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from "@react-navigation/native";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import FeatherIcon from "react-native-vector-icons/Feather";
 import MaterialCommunityIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import OwnerBottomNav from '../components/OwnerBottomNav';
+import OwnerBottomNav from "../components/OwnerBottomNav";
 import SubHeader from "../components/subheader";
 import ScreenWrapper from "../components/screenwrapper";
 
@@ -29,7 +29,6 @@ const { width, height } = Dimensions.get("window");
 const CARD_MARGIN = 5;
 const CARD_WIDTH = (width - 10 * 2 - CARD_MARGIN) / 2;
 const CARD_HEIGHT = height * 0.34;
-
 
 export default function OwnerHome() {
   const router = useRouter();
@@ -64,10 +63,13 @@ export default function OwnerHome() {
         return true;
       };
 
-      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        onBackPress,
+      );
 
       return () => subscription.remove();
-    }, [])
+    }, []),
   );
 
   const loadUserData = async () => {
@@ -124,7 +126,9 @@ export default function OwnerHome() {
       console.log("🔍 API Response:", data);
 
       if (response.status === 401) {
-        console.log("❌ Token expired, clearing storage and redirecting to login");
+        console.log(
+          "❌ Token expired, clearing storage and redirecting to login",
+        );
         await AsyncStorage.multiRemove(["token", "user", "isLoggedIn"]);
         router.replace("/ownerLogin");
         return;
@@ -140,7 +144,11 @@ export default function OwnerHome() {
                 imageUrl = parsedImages[0];
               }
             } catch (e) {
-              console.warn("⚠️ Could not parse itemImages for item:", item.id, e);
+              console.warn(
+                "⚠️ Could not parse itemImages for item:",
+                item.id,
+                e,
+              );
             }
           }
 
@@ -158,7 +166,9 @@ export default function OwnerHome() {
         setItems(fetchedItems);
 
         const totalItems = fetchedItems.length;
-        const availableItems = fetchedItems.filter((item) => item.isAvailable).length;
+        const availableItems = fetchedItems.filter(
+          (item) => item.isAvailable,
+        ).length;
         const rentedItems = totalItems - availableItems;
 
         setStats({
@@ -197,32 +207,34 @@ export default function OwnerHome() {
     let filtered = items;
 
     if (activeCategory !== "All") {
-      filtered = filtered.filter(item => 
-        item.category.toLowerCase() === activeCategory.toLowerCase()
+      filtered = filtered.filter(
+        (item) => item.category.toLowerCase() === activeCategory.toLowerCase(),
       );
     }
 
     if (search.trim()) {
-      filtered = filtered.filter(item =>
-        item.title.toLowerCase().includes(search.toLowerCase()) ||
-        item.location.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(
+        (item) =>
+          item.title.toLowerCase().includes(search.toLowerCase()) ||
+          item.location.toLowerCase().includes(search.toLowerCase()),
       );
     }
 
     const getColumnWrapperStyle = (index) => {
-  const totalItems = filteredItems.length;
-  const numColumns = 2;
-  
-  // Is this the last row?
-  const isLastRow = index >= totalItems - (totalItems % numColumns || numColumns);
+      const totalItems = filteredItems.length;
+      const numColumns = 2;
 
-  // If last row has only 1 item
-  if (isLastRow && totalItems % numColumns === 1) {
-    return { justifyContent: 'flex-start', marginBottom: 7 };
-  }
+      // Is this the last row?
+      const isLastRow =
+        index >= totalItems - (totalItems % numColumns || numColumns);
 
-  return { justifyContent: 'center', marginBottom: 7 };
-};
+      // If last row has only 1 item
+      if (isLastRow && totalItems % numColumns === 1) {
+        return { justifyContent: "flex-start", marginBottom: 7 };
+      }
+
+      return { justifyContent: "center", marginBottom: 7 };
+    };
 
     return filtered;
   };
@@ -231,7 +243,12 @@ export default function OwnerHome() {
     return (
       <Pressable
         style={styles.card}
-        onPress={() => router.push({ pathname: "owner/ownerItemDetails", params: { id: item.id } })}
+        onPress={() =>
+          router.push({
+            pathname: "owner/ownerItemDetails",
+            params: { id: item.id },
+          })
+        }
       >
         <View style={styles.upperHalf}>
           <View style={styles.imageWrapper}>
@@ -261,9 +278,16 @@ export default function OwnerHome() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { justifyContent: "center", alignItems: "center" }]}>
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
         <ActivityIndicator size="large" color="#057474" />
-        <Text style={{ marginTop: 10, color: "#666" }}>Loading your items...</Text>
+        <Text style={{ marginTop: 10, color: "#666" }}>
+          Loading your items...
+        </Text>
       </View>
     );
   }
@@ -272,14 +296,15 @@ export default function OwnerHome() {
 
   return (
     <>
-     <ScreenWrapper backgroundColor="#fff">
+      <ScreenWrapper backgroundColor="#fff">
         <View style={styles.header}>
           <View style={styles.profileContainer}>
             <Pressable onPress={() => router.push("owner/ownerProfile")}>
               <Image
                 source={{
                   uri:
-                    currentUser?.profileImage && currentUser.profileImage !== "N/A"
+                    currentUser?.profileImage &&
+                    currentUser.profileImage !== "N/A"
                       ? currentUser.profileImage
                       : "https://i.pravatar.cc/150?img=3",
                 }}
@@ -293,8 +318,8 @@ export default function OwnerHome() {
               <Text style={styles.email}>
                 {currentUser?.email || currentUser?.emailAddress}
               </Text>
-          </View>
-           
+            </View>
+
             <View style={styles.notificationWrapper}>
               <Pressable onPress={() => router.push("owner/ownerRequest")}>
                 <Image
@@ -302,148 +327,180 @@ export default function OwnerHome() {
                   style={{ width: 30, height: 30 }}
                   resizeMode="contain"
                 />
-                {/* Badge */}
-    <View style={styles.badge}>
-      <Text style={styles.badgeText}>3</Text>
-    </View>
               </Pressable>
             </View>
           </View>
         </View>
 
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 140 }}
-        showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#007F7F"]}
-            tintColor="#007F7F"
-          />
-        }
-      >
-        {/* Stats */}
-        <View style={styles.statsContainer}>
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: "#3D7BFF", borderWidth: 1, borderColor: "white", right: -5 },
-            ]}
-          >
-            <Text style={[styles.statLabel, { color: "white" }]}>Total Unit</Text>
-            <View style={styles.numberContainer}>
-              <Text style={[styles.statNumber, { color: "white" }]}>{stats.total}</Text>
-              <Image
-                source={require("../../assets/images/total.png")}
-                style={styles.lowerLeftIcon}
-              />
-            </View>
-          </View>
-              
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: "#00CA2C", borderWidth: 1, borderColor: "white" },
-            ]}
-          >
-            <Text style={[styles.statLabel, { color: "white" }]}>Vacant Unit</Text>
-            <View style={styles.numberContainer}>
-              <Text style={[styles.statNumber, { color: "white" }]}>{stats.available}</Text>
-              <Image
-                source={require("../../assets/images/occupied.png")}
-                style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}
-              />
-            </View>
-          </View>
-
-          <View
-            style={[
-              styles.statCard,
-              { backgroundColor: "#FF2125", borderWidth: 1, borderColor: "white", right: 5 },
-            ]}
-          >
-            <Text style={[styles.statLabel, { color: "white" }]}>Occupied Unit</Text>
-            <View style={styles.numberContainer}>
-              <Text style={[styles.statNumber, { color: "white" }]}>{stats.rented}</Text>
-              <Image
-                source={require("../../assets/images/vacant.png")}
-                style={styles.lowerLeftIcon}
-              />
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.lowerCard}>
-          {/* Search */}
-          <View style={styles.searchContainer}>
-            <MaterialIcon name="search" size={20} color="#057474" style={styles.leftIcon} />
-            <TextInput
-              placeholder="Search your items.."
-              value={search}
-              onChangeText={setSearch}
-              style={styles.searchInput}
-              placeholderTextColor="#057474"
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={{ paddingBottom: 140 }}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#007F7F"]}
+              tintColor="#007F7F"
             />
-          </View>
-
-          {/* Categories */}
-          <Text style={styles.sectionTitle}>Manage Your Items</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {categories.map((cat) => (
-              <Pressable
-                key={cat}
-                style={[styles.categoryButton, activeCategory === cat && styles.activeCategory]}
-                onPress={() => setActiveCategory(cat)}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    activeCategory === cat && styles.activeCategoryText,
-                  ]}
-                >
-                  {cat}
-                </Text>
-              </Pressable>
-            ))}
-          </ScrollView>
-
-          {/* Items List */}
-          {filteredItems.length > 0 ? (
-            <FlatList
-              data={filteredItems}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={renderItem}
-              numColumns={2}
-                columnWrapperStyle={{
-              justifyContent:
-              "flex-start",
-              marginBottom: 7, right: 4,
-            }}
-              scrollEnabled={false}
-              contentContainerStyle={{ paddingHorizontal: 16 }}
-            />
-          ) : (
-            <View style={styles.noItemsContainer}>
-              <MaterialIcon name="inventory" size={64} color="#ccc" />
-              <Text style={styles.noItemsText}>
-                {search || activeCategory !== "All"
-                  ? "No items match your search"
-                  : "You haven't added any items yet"}
+          }
+        >
+          {/* Stats */}
+          <View style={styles.statsContainer}>
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: "#3D7BFF",
+                  borderWidth: 1,
+                  borderColor: "white",
+                  right: -5,
+                },
+              ]}
+            >
+              <Text style={[styles.statLabel, { color: "white" }]}>
+                Total Unit
               </Text>
-              <Pressable
-                style={styles.addItemButton}
-                onPress={() => router.push("owner/ownerAddItem")}
-              >
-                <Text style={styles.addItemButtonText}>Add Your First Item</Text>
-              </Pressable>
+              <View style={styles.numberContainer}>
+                <Text style={[styles.statNumber, { color: "white" }]}>
+                  {stats.total}
+                </Text>
+                <Image
+                  source={require("../../assets/images/total.png")}
+                  style={styles.lowerLeftIcon}
+                />
+              </View>
             </View>
-          )}
-        </View>
-      </ScrollView>
-      <OwnerBottomNav/>
+
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: "#00CA2C",
+                  borderWidth: 1,
+                  borderColor: "white",
+                },
+              ]}
+            >
+              <Text style={[styles.statLabel, { color: "white" }]}>
+                Vacant Unit
+              </Text>
+              <View style={styles.numberContainer}>
+                <Text style={[styles.statNumber, { color: "white" }]}>
+                  {stats.available}
+                </Text>
+                <Image
+                  source={require("../../assets/images/occupied.png")}
+                  style={[styles.lowerLeftIcon, { height: 20, width: 20 }]}
+                />
+              </View>
+            </View>
+
+            <View
+              style={[
+                styles.statCard,
+                {
+                  backgroundColor: "#FF2125",
+                  borderWidth: 1,
+                  borderColor: "white",
+                  right: 5,
+                },
+              ]}
+            >
+              <Text style={[styles.statLabel, { color: "white" }]}>
+                Occupied Unit
+              </Text>
+              <View style={styles.numberContainer}>
+                <Text style={[styles.statNumber, { color: "white" }]}>
+                  {stats.rented}
+                </Text>
+                <Image
+                  source={require("../../assets/images/vacant.png")}
+                  style={styles.lowerLeftIcon}
+                />
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.lowerCard}>
+            {/* Search */}
+            <View style={styles.searchContainer}>
+              <MaterialIcon
+                name="search"
+                size={20}
+                color="#057474"
+                style={styles.leftIcon}
+              />
+              <TextInput
+                placeholder="Search your items.."
+                value={search}
+                onChangeText={setSearch}
+                style={styles.searchInput}
+                placeholderTextColor="#057474"
+              />
+            </View>
+
+            {/* Categories */}
+            <Text style={styles.sectionTitle}>Manage Your Items</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {categories.map((cat) => (
+                <Pressable
+                  key={cat}
+                  style={[
+                    styles.categoryButton,
+                    activeCategory === cat && styles.activeCategory,
+                  ]}
+                  onPress={() => setActiveCategory(cat)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      activeCategory === cat && styles.activeCategoryText,
+                    ]}
+                  >
+                    {cat}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+
+            {/* Items List */}
+            {filteredItems.length > 0 ? (
+              <FlatList
+                data={filteredItems}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderItem}
+                numColumns={2}
+                columnWrapperStyle={{
+                  justifyContent: "flex-start",
+                  marginBottom: 7,
+                  right: 4,
+                }}
+                scrollEnabled={false}
+                contentContainerStyle={{ paddingHorizontal: 16 }}
+              />
+            ) : (
+              <View style={styles.noItemsContainer}>
+                <MaterialIcon name="inventory" size={64} color="#ccc" />
+                <Text style={styles.noItemsText}>
+                  {search || activeCategory !== "All"
+                    ? "No items match your search"
+                    : "You haven't added any items yet"}
+                </Text>
+                <Pressable
+                  style={styles.addItemButton}
+                  onPress={() => router.push("owner/ownerAddItem")}
+                >
+                  <Text style={styles.addItemButtonText}>
+                    Add Your First Item
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </ScrollView>
+        <OwnerBottomNav />
       </ScreenWrapper>
     </>
   );
@@ -474,53 +531,52 @@ const styles = StyleSheet.create({
     color: "#e0f2f2",
     marginLeft: 13,
   },
-  avatar: { 
-    width: width * 0.16, 
-    height: width * 0.16, 
+  avatar: {
+    width: width * 0.16,
+    height: width * 0.16,
     borderRadius: width * 0.1,
-    borderColor:"#e0f2f2",
-    borderWidth: 2,      
+    borderColor: "#e0f2f2",
+    borderWidth: 2,
   },
-  username: { 
-    marginLeft: width * 0.03, 
-    fontWeight: "bold", 
+  username: {
+    marginLeft: width * 0.03,
+    fontWeight: "bold",
     fontSize: width * 0.035,
     color: "#e0f2f2",
   },
   notificationWrapper: {
-    marginLeft: "auto", 
+    marginLeft: "auto",
     marginRight: 5,
     marginBottom: 6,
     position: "relative",
     borderRadius: (width * 0.12) / 2,
     justifyContent: "center",
     top: 15,
-    },
+  },
 
   badge: {
-  position: "relative",
-  bottom: 38,
-  left: 13,
-  backgroundColor: "#fff",
-  height: 20,
-  width: 20,
-  borderRadius: 20,
-  justifyContent: "center",
-  alignItems: "center",
-},
+    position: "relative",
+    bottom: 38,
+    left: 13,
+    backgroundColor: "#fff",
+    height: 20,
+    width: 20,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
-badgeText: {
-  color: "#000",
-  fontSize: 11,
-  fontWeight: "bold",
-},
+  badgeText: {
+    color: "#000",
+    fontSize: 11,
+    fontWeight: "bold",
+  },
 
-  
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginHorizontal: 10,
-    alignItems: "center", 
+    alignItems: "center",
     marginTop: 5,
     borderWidth: 1,
     borderColor: "#00000020",
@@ -573,7 +629,6 @@ badgeText: {
     paddingBottom: 20,
     top: 15,
     marginHorizontal: -5,
-    
   },
   searchContainer: {
     flexDirection: "row",
@@ -588,7 +643,7 @@ badgeText: {
     shadowRadius: 2,
     elevation: 2,
     borderWidth: 1,
-    borderColor: "#007F7F39"
+    borderColor: "#007F7F39",
   },
   leftIcon: {
     marginRight: 10,
@@ -618,7 +673,6 @@ badgeText: {
     marginRight: 10,
     marginLeft: 16,
     marginBottom: 20,
-    
   },
   activeCategory: {
     backgroundColor: "#057474",
@@ -646,8 +700,6 @@ badgeText: {
     elevation: 3,
     borderColor: "transparent",
     marginHorizontal: 3,
-  
-    
   },
 
   imageWrapper: {
@@ -659,10 +711,10 @@ badgeText: {
   },
 
   upperHalf: {
-  height: CARD_HEIGHT * 0.70,   // fixed image area
-  width: "100%",
-  backgroundColor: "#fff",
-},
+    height: CARD_HEIGHT * 0.7, // fixed image area
+    width: "100%",
+    backgroundColor: "#fff",
+  },
 
   itemImage: {
     width: "100%",
@@ -707,7 +759,6 @@ badgeText: {
     paddingTop: 5,
     paddingBottom: 10,
     overflow: "hidden",
-    
   },
   title: {
     fontSize: 14,
