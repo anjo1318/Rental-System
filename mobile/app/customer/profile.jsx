@@ -124,7 +124,7 @@ export default function Profile() {
         title="Profile"
         backgroundColor="#007F7F"
       />
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 0 }}>
       {/* User Profile Section */}
       <View style={styles.userContainer}>
         <View style={styles.userRow}>
@@ -225,7 +225,13 @@ export default function Profile() {
       </View>    
 
       {/* Logout Section */}
-      <Pressable style={styles.outContainer} onPress={handleLogout}>
+<Pressable
+  style={({ pressed }) => [
+    styles.outContainer,
+    { borderColor: pressed ? "#FF2125" : "#007F7F" }
+  ]}
+  onPress={handleLogout}
+>
   <View style={styles.outRow}>
     <Text style={styles.outText}>Log out</Text>
   </View>
@@ -601,14 +607,14 @@ settingsRow: {
 
   outContainer: {
     width: "92%",
-    marginTop: 100,
     alignSelf: "center",
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#FF2125", 
+    borderColor: "#007F7F", // default state
+    top: 150,
   },
 
   outPhotoWrapper: {

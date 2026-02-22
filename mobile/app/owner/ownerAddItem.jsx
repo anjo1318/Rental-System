@@ -480,6 +480,7 @@ const pickMultipleImages = async () => {
     <Picker.Item label="Select Category" value="" color="#888" />
     <Picker.Item label="  " value="Laptop" />
     <Picker.Item label="Cellphone" value="Cellphone" />
+     <Picker.Item label="Laptop" value="Laptop" />
     <Picker.Item label="Projector" value="Projector" />
     <Picker.Item label="Camera" value="Camera" />
     <Picker.Item label="Printer" value="Printer" />
