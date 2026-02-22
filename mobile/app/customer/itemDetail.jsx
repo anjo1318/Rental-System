@@ -9,7 +9,8 @@ import {
   StyleSheet,
   Alert,
   Pressable,
-  RefreshControl
+  RefreshControl,
+  Dimensions,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -271,18 +272,25 @@ export default function ItemDetail() {
 
     {/* Owner Info */}
           
+           
           <View style={styles.ownerContainer}>
             <Image
               source={{ uri: "https://via.placeholder.com/40" }}
               style={styles.avatar}
             />
-            <Text style={styles.ownerText}>
-              Hello, {customer?.firstName || 'User'}{" "}
-              <Icon name="verified" size={16} color="#3498db" />
-            </Text>
+            <View style={styles.ownerInfo}>
+              <Text style={styles.ownerText}>
+                Kenneth Senorin{" "}
+                <Icon name="verified" size={16} color="#3498db" />
+              </Text>
+              <Text style={styles.ownerAddress}>
+                Wawa, Pinamalayan, Mindoro
+              </Text>
+            </View>
           </View>
+        
 
-          {/* Brand */}
+          {/* Brand */}   
             
             <Text style={styles.detailLabel}>Brand:</Text>
             <Text style={styles.detailValue}>{item.brand || "N/A"}</Text>
@@ -306,7 +314,7 @@ export default function ItemDetail() {
         </View>
 
         {/* Reviews */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: scale(72) }]}
+        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: scale(75) }]}
         />
 
  <View style={styles.section}>
@@ -536,9 +544,9 @@ const styles = StyleSheet.create({
     color: '#333',
     bottom: scale(12),
   },
-  ownerContainer: {
+ownerContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: scale(12),
     top: scale(25),
   },
@@ -550,11 +558,19 @@ const styles = StyleSheet.create({
     marginRight: scale(8),
     bottom: scale(15),
   },
+  ownerInfo: {
+    flex: 1,
+    bottom: scale(15),
+  },
   ownerText: {
     fontSize: ms(14),
     color: '#333',
     fontWeight: '500',
-    bottom: scale(15),
+  },
+  ownerAddress: {
+    fontSize: ms(12),
+    color: '#888',
+    marginTop: scale(2),
   },
   detailLine: {
     paddingTop: scale(12),
@@ -688,7 +704,7 @@ const styles = StyleSheet.create({
 
   actionContainer: {
     position: 'absolute',
-    bottom: scale(40),
+    bottom: scale(50),
     left: 0,
     right: 0,
     flexDirection: 'row',

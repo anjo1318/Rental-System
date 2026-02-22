@@ -234,7 +234,7 @@ export default function BookedItem() {
               style={styles.deleteButton}
               onPress={handleDelete}
             >
-              <Text style={styles.deleteText}>Delete</Text>
+              <Text style={styles.deleteText}>Remove</Text>
             </Pressable>
 
             <Pressable 
@@ -410,13 +410,13 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: "#D40004",
     borderWidth: 1.5,
-    borderColor: "#D40004",
+    borderColor: "#FFF",
   },
 
   proceedButton: {
-    flex: 2,
+    flex: 1,
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
@@ -429,7 +429,7 @@ const styles = StyleSheet.create({
   },
 
   deleteText: {
-    color: "#D40004",
+    color: "#fff",
     fontSize: 14,
     fontWeight: "600",
   },
