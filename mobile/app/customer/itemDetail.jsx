@@ -17,7 +17,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import ItemImages from "./itemImages";
-import Header from "../components/header";
+import Header from "../components/header4";
 import ScreenWrapper from "../components/screenwrapper";
 
 
