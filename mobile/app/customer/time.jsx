@@ -305,15 +305,24 @@ export default function TimeDuration({
     });
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book-photos/pickup-photo/${bookId}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: 30000,
+        },
       );
+      console.log("Pickup response:", response.data);
       Alert.alert("Success", "Pickup photo saved!");
     } catch (error) {
-      console.error("Pickup photo error:", error);
-      Alert.alert("Error", "Failed to save pickup photo.");
+      console.error("Pickup photo error:", error.message);
+      console.error("Status:", error.response?.status);
+      console.error("Server response:", JSON.stringify(error.response?.data));
+      Alert.alert(
+        "Error",
+        `${error.response?.status} - ${JSON.stringify(error.response?.data) || error.message}`,
+      );
     }
   };
 
@@ -390,7 +399,7 @@ export default function TimeDuration({
             <Text style={styles.categoryText}>{item.category}</Text>
             <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
               <Text style={styles.statusText}>
-                {isBooked ? "Out for Delivery" : "Ongoing"}
+                {isBooked ? "For Pickup" : "Ongoing"}
               </Text>
             </View>
           </View>
@@ -509,21 +518,25 @@ export default function TimeDuration({
           <Text style={styles.paymentText}>{item.address}</Text>
         </View>
 
-        <Pressable
-          style={styles.pickUpButton}
-          onPress={() => takePickupPhoto(item.id)} // ✅ wire up
-        >
-          <MaterialIcons name="camera-alt" size={18} color="#fff" />
-          <Text style={styles.pickUpButtonText}>📸 Take Pickup Photo</Text>
-        </Pressable>
+        {isBooked && (
+          <Pressable
+            style={styles.pickUpButton}
+            onPress={() => takePickupPhoto(item.id)}
+          >
+            <MaterialIcons name="camera-alt" size={18} color="#fff" />
+            <Text style={styles.pickUpButtonText}>Take Pickup Photo</Text>
+          </Pressable>
+        )}
 
-        <Pressable
-          style={styles.returnButton}
-          onPress={() => takeReturnPhoto(item.id)} // ✅ wire up
-        >
-          <MaterialIcons name="camera-alt" size={18} color="#057474" />
-          <Text style={styles.returnButtonText}>📷 Take Return Photo</Text>
-        </Pressable>
+        {isOngoing && (
+          <Pressable
+            style={styles.returnButton}
+            onPress={() => takeReturnPhoto(item.id)}
+          >
+            <MaterialIcons name="camera-alt" size={18} color="#057474" />
+            <Text style={styles.returnButtonText}>Take Return Photo</Text>
+          </Pressable>
+        )}
       </View>
     );
   };

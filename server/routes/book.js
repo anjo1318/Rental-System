@@ -29,6 +29,10 @@ import {
   fetchBookingReceiptsData,
   fetchOnGoingBookForAdmin,
 } from "../controllers/bookController.js";
+import {
+  savePickupPhoto,
+  saveReturnPhoto,
+} from "../controllers/bookPhotoController.js";
 
 const router = express.Router();
 
@@ -54,9 +58,6 @@ router.get(
   "/ongoing-for-approval-customer/:id",
   ongoingBookAndForApprovalCustomer,
 );
-
-router.post("/pickup-photo/:id");
-router.post("/return-photo/:id");
 
 //for admin
 router.get("/fetch-bookings", fetchAllBooking);

@@ -1,7 +1,7 @@
 // config/cloudinary.js
-import { v2 as cloudinary } from 'cloudinary';
-import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import multer from 'multer';
+import { v2 as cloudinary } from "cloudinary";
+import { CloudinaryStorage } from "multer-storage-cloudinary";
+import multer from "multer";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -12,9 +12,9 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
-    folder: 'uploads',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-    resource_type: 'image',
+    folder: "uploads",
+    allowed_formats: ["jpg", "jpeg", "png", "gif", "webp"],
+    resource_type: "image",
   },
 });
 

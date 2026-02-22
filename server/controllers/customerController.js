@@ -1,7 +1,7 @@
 import Customer from "../models/Customer.js";
-import Owner from '../models/Owner.js';
+import Owner from "../models/Owner.js";
 import bcrypt from "bcryptjs";
-import { validationResult } from 'express-validator';
+import { validationResult } from "express-validator";
 import sequelize from "../database/database.js";
 
 const customerSignUp = async (req, res) => {
@@ -32,10 +32,19 @@ const customerSignUp = async (req, res) => {
     console.log("📂 Request files:", req.files);
     console.log("👤 Role:", role);
 
-    if (!firstName || !lastName || !emailAddress || !phoneNumber || !birthday || !gender || !password) {
+    if (
+      !firstName ||
+      !lastName ||
+      !emailAddress ||
+      !phoneNumber ||
+      !birthday ||
+      !gender ||
+      !password
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password",
+        message:
+          "Required fields are missing: firstName, lastName, emailAddress, phoneNumber, birthday, gender, password",
       });
     }
 
@@ -58,15 +67,17 @@ const customerSignUp = async (req, res) => {
       // ✅ Check if email exists in Owner
       const existingOwner = await Owner.findOne({ where: { emailAddress } });
       if (existingOwner) {
-        return res.status(409).json({ success: false, message: "Email address already exists" });
+        return res
+          .status(409)
+          .json({ success: false, message: "Email address already exists" });
       }
 
       const owner = await Owner.create({
         firstName,
         middleName: middleName || "N/A",
         lastName,
-        email: emailAddress,        // ✅ use 'email' not 'emailAddress'
-        phone: phoneNumber,         // ✅ use 'phone' not 'phoneNumber'
+        email: emailAddress, // ✅ use 'email' not 'emailAddress'
+        phone: phoneNumber, // ✅ use 'phone' not 'phoneNumber'
         birthday,
         gender,
         password: hashedPassword,
@@ -95,12 +106,15 @@ const customerSignUp = async (req, res) => {
         idPhoto: idPhotoUrl,
         selfie: selfieUrl,
       });
-
     } else {
       // ✅ Check if email exists in Customer
-      const existingCustomer = await Customer.findOne({ where: { emailAddress } });
+      const existingCustomer = await Customer.findOne({
+        where: { emailAddress },
+      });
       if (existingCustomer) {
-        return res.status(409).json({ success: false, message: "Email address already exists" });
+        return res
+          .status(409)
+          .json({ success: false, message: "Email address already exists" });
       }
 
       const customer = await Customer.create({
@@ -125,6 +139,7 @@ const customerSignUp = async (req, res) => {
         selfie: selfieUrl,
         isActive: true,
         isVerified: false,
+        isRenting: false,
       });
 
       console.log("✅ Customer created successfully with ID:", customer.id);
@@ -137,7 +152,6 @@ const customerSignUp = async (req, res) => {
         selfie: selfieUrl,
       });
     }
-
   } catch (error) {
     console.error("❌ Error during signup:", error);
 
@@ -146,14 +160,22 @@ const customerSignUp = async (req, res) => {
         field: err.path,
         message: err.message,
       }));
-      return res.status(400).json({ success: false, message: "Validation failed", errors: validationErrors });
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors,
+      });
     }
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(409).json({ success: false, message: "Email address already exists" });
+      return res
+        .status(409)
+        .json({ success: false, message: "Email address already exists" });
     }
 
-    return res.status(500).json({ success: false, message: "Internal server error during signup" });
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error during signup" });
   }
 };
 
@@ -232,7 +254,9 @@ const updateCustomerDetails = async (req, res) => {
     const customer = await Customer.findByPk(id);
 
     if (!customer) {
-      return res.status(404).json({ success: false, message: "Customer not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer not found" });
     }
 
     await customer.update({
@@ -295,10 +319,14 @@ const uploadCustomerPhoto = async (req, res) => {
     const customer = await Customer.findByPk(id);
 
     if (!customer) {
-      return res.status(404).json({ success: false, message: "Customer not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Customer not found" });
     }
     if (!req.file) {
-      return res.status(400).json({ success: false, message: "No photo uploaded" });
+      return res
+        .status(400)
+        .json({ success: false, message: "No photo uploaded" });
     }
 
     // ✅ Store full Cloudinary URL directly
