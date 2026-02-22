@@ -436,7 +436,7 @@ useFocusEffect(
                     </View>
                   )}
                   </View>
-                </View>8
+                </View>
                 <View style={styles.lowerHalf}>
                 <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
                   {/* <View style={styles.ratingRow}>
@@ -472,10 +472,9 @@ useFocusEffect(
             numColumns={2}
             scrollEnabled={false}
             columnWrapperStyle={{
-              justifyContent:
-              filteredItems.length === 1 ? "flex-start" : "center",
-              marginBottom: 7,
-            }}
+  justifyContent: "flex-start",
+  marginBottom: 7,
+}}
            contentContainerStyle={{
     paddingHorizontal:
       filteredItems.length === 1 ? 7 : 20,
@@ -851,17 +850,7 @@ badgeText: {
 
   },
 
-  featuredCard: {
-    width: width * 0.65,
-    height: height * 0.30,
-    borderRadius: width * 0.03,
-    marginLeft: width * 0.04,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#007F7F99",
-    
-  
-  },
+
   imageWrapper: {
   width: "100%",
   height: "100%",

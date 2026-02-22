@@ -39,16 +39,12 @@ export default function OwnerEditItem() {
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
   const categories = [
-    'Electronics',
-    'Tools',
-    'Sports',
-    'Furniture',
-    'Vehicles',
-    'Clothing',
-    'Books',
-    'Kitchen',
-    'Garden',
-    'Other'
+    'Cellphone',
+    'Laptop',
+    'Projector',
+    'Camera',
+    'Printer',
+    'Speaker'
   ];
 
   // Fetch item details
@@ -251,9 +247,9 @@ export default function OwnerEditItem() {
 
   return (
    
-        <ScreenWrapper backgroundColor="#E6E1D6" >
+        <ScreenWrapper backgroundColor="#fff" >
             <Header
-              title="Messages"
+              title="Edit Item"
               backgroundColor="#007F7F"
             />
              <KeyboardAvoidingView
@@ -381,6 +377,18 @@ export default function OwnerEditItem() {
               </Text>
             </TouchableOpacity>
           </View>
+           <TouchableOpacity
+  style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+  onPress={updateItem}
+  activeOpacity={0.8}
+  disabled={saving}
+>
+  {saving ? (
+    <ActivityIndicator color="#FFF" />
+  ) : (
+    <Text style={styles.saveButtonText}>Save</Text>
+  )}
+</TouchableOpacity>
         </View>
 
         <View style={styles.bottomPadding} />
@@ -393,7 +401,7 @@ export default function OwnerEditItem() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#fff",
   },
   centered: {
     justifyContent: "center",
@@ -401,29 +409,27 @@ const styles = StyleSheet.create({
   },
 
   saveButton: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    minWidth: 70,
-    minHeight: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  saveButtonDisabled: {
-    opacity: 0.6,
-  },
-  saveButtonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  marginTop: 20,
+  backgroundColor: '#057474',
+  paddingVertical: 14,
+  borderRadius: 12,
+  alignItems: 'center',
+  justifyContent: 'center',
+},
+saveButtonDisabled: {
+  opacity: 0.6,
+},
+saveButtonText: {
+  color: '#FFF',
+  fontSize: 16,
+  fontWeight: '600',
+},
   content: {
     flex: 1,
     padding: 16,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 10,
   },
   sectionTitle: {
     fontSize: 18,

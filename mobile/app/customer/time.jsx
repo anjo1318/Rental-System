@@ -548,7 +548,7 @@ export default function TimeDuration({
         {!isAuthenticated ? (
           <View style={styles.notAuthenticatedContainer}>
             <Text style={styles.notAuthenticatedText}>
-              Please log in to view
+              Please log in to view time duration
             </Text>
           </View>
         ) : loading ? (
@@ -581,6 +581,7 @@ const styles = StyleSheet.create({
 
   contentWrapper: {
     padding: 16,
+    flexGrow: 1,  
     paddingBottom: 80,
   },
 
@@ -601,7 +602,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 100,
   },
 
   emptyText: {
@@ -609,6 +609,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#666",
     marginTop: 16,
+    textAlign: "center",
   },
 
   emptySubtext: {

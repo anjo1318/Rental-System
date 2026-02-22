@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import axios from "axios";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Header from "../components/header2";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 import ScreenWrapper from "../components/screenwrapper";
 
 const { width, height } = Dimensions.get("window");
@@ -251,6 +252,7 @@ export default function BookedItem() {
           
         )}
         </ScrollView>
+         <CustomerBottomNav />
       </View>
     </ScreenWrapper>
   );
