@@ -15,6 +15,7 @@ import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header2";
 import ScreenWrapper from "../components/screenwrapper";
+import CustomerBottomNav from '../components/CustomerBottomNav';
 
 const { width, height } = Dimensions.get("window");
 
@@ -48,7 +49,6 @@ export default function BookedItem() {
       if (userData) {
         const user = JSON.parse(userData);
         const userIdValue = user.id || user.userId || user._id || "";
-
         if (
           userIdValue &&
           userIdValue !== "N/A" &&
@@ -81,7 +81,6 @@ export default function BookedItem() {
       );
 
       if (response.data.success) {
-        // FIX: Change back to "pending" status
         const bookedItems = (response.data.data || []).filter(
           (item) => item.status?.toLowerCase() === "pending",
         );
@@ -182,103 +181,111 @@ export default function BookedItem() {
     <ScreenWrapper>
       <Header title="Booked Item" backgroundColor="#007F7F" />
 
-      <View style={styles.bodyWrapper}>
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              colors={["#007F7F"]} // Android
-              tintColor="#007F7F" // iOS
-            />
-          }
-        >
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Loading...</Text>
-            </View>
-          ) : bookedItem.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                {userId
-                  ? "No booked items found"
-                  : "Please log in to view booked items"}
-              </Text>
-            </View>
-          ) : (
-            bookedItem.map((item) => (
-              <View key={item.id} style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <View style={styles.ownerInfo}>
+      {/* outerWrapper: flex column filling all space below header */}
+      <View style={styles.outerWrapper}>
+
+        {/* scrollable card list */}
+        <View style={styles.bodyWrapper}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#007F7F"]}
+                tintColor="#007F7F"
+              />
+            }
+          >
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading...</Text>
+              </View>
+            ) : bookedItem.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {userId
+                    ? "No booked items found"
+                    : "Please log in to view booked items"}
+                </Text>
+              </View>
+            ) : (
+              bookedItem.map((item) => (
+                <View key={item.id} style={styles.card}>
+                  <View style={styles.cardHeader}>
+                    <View style={styles.ownerInfo}>
+                      <Image
+                        source={{ uri: getImageUrl(item.ownerSelfie) }}
+                        style={styles.ownerAvatar}
+                        resizeMode="cover"
+                      />
+                      <Text style={styles.ownerName}>
+                        {item.ownerFirstName || "Owner"}{" "}
+                        {item.ownerLastName || "Owner"}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.cardBody}>
+                    <Pressable
+                      style={styles.checkboxContainer}
+                      onPress={() => handleRadioSelect(item.id)}
+                    >
+                      <View
+                        style={[
+                          styles.checkbox,
+                          selectedItemId === item.id && styles.checkboxSelected,
+                        ]}
+                      >
+                        {selectedItemId === item.id && (
+                          <Icon name="check" size={14} color="#007F7F" />
+                        )}
+                      </View>
+                    </Pressable>
+
                     <Image
-                      source={{ uri: getImageUrl(item.ownerSelfie) }}
-                      style={styles.ownerAvatar}
+                      source={{ uri: getImageUrl(item.itemImage) }}
+                      style={styles.productImage}
                       resizeMode="cover"
                     />
-                    <Text style={styles.ownerName}>
-                      {item.ownerFirstName || "Owner"}{" "}
-                      {item.ownerLastName || "Owner"}
-                    </Text>
-                  </View>
-                </View>
 
-                <View style={styles.cardBody}>
-                  <Pressable
-                    style={styles.checkboxContainer}
-                    onPress={() => handleRadioSelect(item.id)}
-                  >
-                    <View
-                      style={[
-                        styles.checkbox,
-                        selectedItemId === item.id && styles.checkboxSelected,
-                      ]}
-                    >
-                      {selectedItemId === item.id && (
-                        <Icon name="check" size={14} color="#007F7F" />
-                      )}
+                    <View style={styles.productInfo}>
+                      <Text style={styles.productName} numberOfLines={2}>
+                        {item.product || "Unknown Product"}
+                      </Text>
+                      <Text style={styles.productPrice}>
+                        ₱ {item.pricePerDay || "0"}
+                      </Text>
                     </View>
-                  </Pressable>
-
-                  <Image
-                    source={{ uri: getImageUrl(item.itemImage) }}
-                    style={styles.productImage}
-                    resizeMode="cover"
-                  />
-
-                  <View style={styles.productInfo}>
-                    <Text style={styles.productName} numberOfLines={2}>
-                      {item.product || "Unknown Product"}
-                    </Text>
-                    <Text style={styles.productPrice}>
-                      ₱ {item.pricePerDay || "0"}
-                    </Text>
                   </View>
                 </View>
-              </View>
-            ))
-          )}
+              ))
+            )}
+          </ScrollView>
+        </View>
 
-          {bookedItem.length > 0 && (
-            <View style={styles.bottomContainer}>
-              <Pressable style={styles.deleteButton} onPress={handleDelete}>
-                <Text style={styles.deleteText}>Remove</Text>
-              </Pressable>
+        {/* Sits between scroll area and CustomerBottomNav — always visible */}
+        {bookedItem.length > 0 && (
+          <View style={styles.bottomContainer}>
+            <Pressable style={styles.deleteButton} onPress={handleDelete}>
+              <Text style={styles.deleteText}>Remove</Text>
+            </Pressable>
 
-              <Pressable
-                style={[
-                  styles.proceedButton,
-                  !selectedItemId && styles.disabledButton,
-                ]}
-                onPress={handleProceed}
-                disabled={!selectedItemId}
-              >
-                <Text style={styles.proceedText}>Proceed to Renting</Text>
-              </Pressable>
-            </View>
-          )}
-        </ScrollView>
+            <Pressable
+              style={[
+                styles.proceedButton,
+                !selectedItemId && styles.disabledButton,
+              ]}
+              onPress={handleProceed}
+              disabled={!selectedItemId}
+            >
+              <Text style={styles.proceedText}>Proceed to Renting</Text>
+            </Pressable>
+          </View>
+        )}
+
+        <CustomerBottomNav />
       </View>
     </ScreenWrapper>
   );
@@ -290,6 +297,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#E8E8E8",
   },
 
+  // fills all space below Header, stacks scroll + buttons + nav in a column
+  outerWrapper: {
+    flex: 1,
+    flexDirection: "column",
+  },
+
+  // flex: 1 so it takes remaining space, leaving room for buttons + nav
   bodyWrapper: {
     flex: 1,
     paddingHorizontal: 7,
@@ -298,7 +312,7 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 100,
+    paddingBottom: 150,  // space for bottomContainer (79) + nav (79) stacked
   },
 
   loadingContainer: {
@@ -339,6 +353,7 @@ const styles = StyleSheet.create({
     elevation: 3,
     overflow: "hidden",
   },
+
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -421,15 +436,16 @@ const styles = StyleSheet.create({
   },
 
   bottomContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 12,
     gap: 12,
-    marginBottom: 25,
+    backgroundColor: "#fff",
+    position: "absolute",
+    bottom: 79,
+    left: 0,
+    right: 0,
+    zIndex: 998,
   },
 
   deleteButton: {

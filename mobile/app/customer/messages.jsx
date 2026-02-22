@@ -41,6 +41,7 @@ export default function Chat() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // NEW: track auth state
   const [chatData, setChatData] = useState(null);
   const [otherUserName, setOtherUserName] = useState("Chat");
   const [chatDetails, setChatDetails] = useState(null);
@@ -77,11 +78,15 @@ export default function Chat() {
       const userData = await AsyncStorage.getItem("user");
       const token = await AsyncStorage.getItem("token");
 
+      // NEW: If not logged in, mark as unauthenticated and stop
       if (!userData || !token) {
-        Alert.alert("Error", "Please login first");
-        router.back();
+        setIsAuthenticated(false);
+        setLoading(false);
         return;
       }
+
+      // NEW: Mark as authenticated
+      setIsAuthenticated(true);
 
       const user = JSON.parse(userData);
       setCurrentUserId(user.id);
@@ -96,7 +101,7 @@ export default function Chat() {
         // Fetch the chat details from backend
         try {
           const chatResponse = await axios.get(
-            `${API_URL}/api/chat/${parsedChatId}`,  // ✅ FIXED: Correct URL with slash
+            `${API_URL}/api/chat/${parsedChatId}`,
             {
               headers: { Authorization: `Bearer ${token}` }
             }
@@ -229,8 +234,42 @@ export default function Chat() {
     );
   }
 
-  return (
+  // NEW: Not logged in — show please login screen
+  if (!isAuthenticated) {
+    return (
+      <ScreenWrapper>
+        <View style={[styles.header, { paddingTop: insets.top }]}>
+          <Pressable onPress={() => router.back()} hitSlop={10} style={styles.backButton}>
+            <Icon name="arrow-back" size={24} color="#000" />
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <View style={styles.avatar}>
+              <Icon name="person" size={24} color="#666" />
+            </View>
+            <Text style={styles.headerName}>Messages</Text>
+          </View>
+          <View style={styles.headerRight} />
+        </View>
 
+        <View style={styles.unauthContainer}>
+          <Icon name="lock-outline" size={64} color="#ccc" />
+          <Text style={styles.unauthTitle}>Please Log In</Text>
+          <Text style={styles.unauthSubtext}>
+            You need to be logged in to view messages.
+          </Text>
+          <Pressable
+            style={styles.loginButton}
+            onPress={() => router.push("/customer/loginInterface")}
+          >
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </Pressable>
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  // Authenticated — show full chat
+  return (
     <ScreenWrapper>
         <View style={styles.container}>
           
@@ -276,67 +315,66 @@ export default function Chat() {
 }
 
 const styles = StyleSheet.create({
-  // ... keep your existing styles
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
 
   header: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#FFF",
-  paddingHorizontal: 16,
-  paddingVertical: 12,
-  borderBottomWidth: 1,
-  borderBottomColor: "#00000040",
-  borderBottomLeftRadius: 20,
-  borderBottomRightRadius: 20,
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.1,
-  shadowRadius: 4,
-  elevation: 4,
-},
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#00000040",
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+  },
 
-backButton: {
-  padding: 4,
-},
+  backButton: {
+    padding: 4,
+  },
 
-headerCenter: {
-  flex: 1,
-  flexDirection: "row",
-  alignItems: "center",
-  marginLeft: 12,
-},
+  headerCenter: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: 12,
+  },
 
-avatar: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  backgroundColor: "#E0E0E0",
-  alignItems: "center",
-  justifyContent: "center",
-  marginRight: 8,
-},
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#E0E0E0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
 
-avatarImage: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  marginRight: 8,
-  backgroundColor: "#E0E0E0",
-},
+  avatarImage: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 8,
+    backgroundColor: "#E0E0E0",
+  },
 
-headerName: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#000",
-},
+  headerName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
 
-headerRight: {
-  width: 24,
-},
+  headerRight: {
+    width: 24,
+  },
 
   loadingContainer: {
     flex: 1,
@@ -349,6 +387,44 @@ headerRight: {
     marginTop: 16,
     fontSize: 16,
     color: "#666",
+  },
+
+  // NEW: unauthenticated screen styles
+  unauthContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+    backgroundColor: "#fff",
+  },
+
+  unauthTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+
+  unauthSubtext: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginBottom: 28,
+    lineHeight: 20,
+  },
+
+  loginButton: {
+    backgroundColor: "#057474",
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+
+  loginButtonText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "600",
   },
 
   headerWrapper: {
@@ -434,7 +510,7 @@ headerRight: {
     borderColor: "#ddd",
   },
 
-  buyerText: {
+buyerText: {
     color: "#000",
     fontSize: 15,
   },
@@ -450,43 +526,4 @@ headerRight: {
     marginTop: 4,
     textAlign: "right",
   },
-  backButton: {
-  padding: 4,
-},
-
-headerCenter: {
-  flex: 1,
-  flexDirection: "row",
-  alignItems: "center",
-  marginLeft: 12,
-},
-
-avatar: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  backgroundColor: "#E0E0E0",
-  alignItems: "center",
-  justifyContent: "center",
-  marginRight: 8,
-},
-
-avatarImage: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  marginRight: 8,
-  backgroundColor: "#E0E0E0",
-},
-
-headerName: {
-  fontSize: 16,
-  fontWeight: "600",
-  color: "#000",
-},
-
-headerRight: {
-  width: 24,
-},
-
 });

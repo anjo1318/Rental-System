@@ -13,6 +13,7 @@ import {
   Dimensions,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
@@ -21,30 +22,17 @@ import ItemImages from "./itemImages";
 import Header from "../components/header4";
 import ScreenWrapper from "../components/screenwrapper";
 
-// ─── Responsive helpers ──────────────────────────────────────────────────────
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-// Base width used when the styles were originally designed (typical ~375 pt phone)
 const BASE_WIDTH = 375;
 
-/**
- * Scale a size linearly relative to screen width.
- * Clamps so extreme tablets/phones don't go wild.
- */
 const scale = (size) => {
   const scaled = (SCREEN_WIDTH / BASE_WIDTH) * size;
-  // Allow ±40 % from original value
   return Math.round(Math.min(size * 1.4, Math.max(size * 0.7, scaled)));
 };
 
-/**
- * Moderate scale – less aggressive than full linear scale.
- * Good for font sizes and padding.
- */
 const ms = (size, factor = 0.5) =>
   Math.round(size + (scale(size) - size) * factor);
 
-// Convenience shorthands
 const vw = (pct) => (SCREEN_WIDTH * pct) / 100;
 const vh = (pct) => (SCREEN_HEIGHT * pct) / 100;
 
@@ -58,6 +46,7 @@ export default function ItemDetail() {
   const [refreshing, setRefreshing] = useState(false);
 
   const API_URL = process.env.EXPO_PUBLIC_API_URL;
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const loadCustomer = async () => {
@@ -71,7 +60,6 @@ export default function ItemDetail() {
         console.error("Error loading customer:", err);
       }
     };
-
     loadCustomer();
   }, []);
 
@@ -80,7 +68,6 @@ export default function ItemDetail() {
       try {
         console.log("Fetching item with ID:", id);
         const res = await axios.get(`${API_URL}/api/item/${id}`);
-
         if (res.data.success && res.data.data) {
           setItem(res.data.data);
           console.log("Item fetched successfully:", res.data.data.title);
@@ -89,10 +76,7 @@ export default function ItemDetail() {
           router.back();
         }
       } catch (err) {
-        console.error(
-          "❌ Error fetching item:",
-          err.response?.data || err.message,
-        );
+        console.error("❌ Error fetching item:", err.response?.data || err.message);
         Alert.alert("Error", "Failed to fetch item");
         router.back();
       } finally {
@@ -112,7 +96,6 @@ export default function ItemDetail() {
   const handleBooking = async () => {
     try {
       setIsBooking(true);
-
       const userData = await AsyncStorage.getItem("user");
       if (!userData) {
         Alert.alert("Error", "Please login first");
@@ -121,23 +104,13 @@ export default function ItemDetail() {
       }
 
       const customer = JSON.parse(userData);
-
       const fullAddress = [
-        customer.houseNumber,
-        customer.street,
-        customer.barangay,
-        customer.town,
-        customer.province,
-        customer.country,
-        customer.zipCode,
-      ]
-        .filter(Boolean)
-        .join(", ");
+        customer.houseNumber, customer.street, customer.barangay,
+        customer.town, customer.province, customer.country, customer.zipCode,
+      ].filter(Boolean).join(", ");
 
       const pickupDate = new Date().toISOString().split("T")[0];
-      const returnDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0];
+      const returnDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
 
       const bookingData = {
         itemId: item.id,
@@ -168,30 +141,19 @@ export default function ItemDetail() {
       };
 
       console.log("Sending booking:", bookingData);
-
-      const response = await axios.post(
-        `${API_URL}/api/book/book-item`,
-        bookingData,
-      );
-
+      const response = await axios.post(`${API_URL}/api/book/book-item`, bookingData);
       console.log("Response data:", response.data);
       router.push("/customer/book");
     } catch (error) {
       console.error("❌ Booking error:", error.message);
-
       if (error.response?.data?.success) {
         Alert.alert("Success", "Item booked successfully!", [
-          {
-            text: "View Bookings",
-            onPress: () => router.push("/customer/book"),
-          },
+          { text: "View Bookings", onPress: () => router.push("/customer/book") },
         ]);
       } else {
         Alert.alert(
           "Booking Error",
-          error.response?.data?.message ||
-            error.message ||
-            "Failed to book item",
+          error.response?.data?.message || error.message || "Failed to book item",
         );
       }
     } finally {
@@ -229,10 +191,7 @@ export default function ItemDetail() {
       <View style={styles.center}>
         <Icon name="error-outline" size={scale(64)} color="#ccc" />
         <Text style={styles.errorText}>Item not found</Text>
-        <TouchableOpacity
-          onPress={() => router.back()}
-          style={styles.goBackButton}
-        >
+        <TouchableOpacity onPress={() => router.back()} style={styles.goBackButton}>
           <Text style={styles.goBackText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -243,150 +202,122 @@ export default function ItemDetail() {
     <ScreenWrapper>
       <Header title="Gadget Detail" backgroundColor="#007F7F" />
 
-      <ScrollView
-        style={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContainer}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={["#007F7F"]} // Android
-            tintColor="#007F7F" // iOS
-          />
-        }
-      >
-        {/* Item Images */}
-        <ItemImages images={item.itemImages} />
-
-        {/* Price and Title Section */}
-        <View
-          style={[
-            styles.detailLine,
-            { borderTopColor: "#00000040", bottom: 6 },
-          ]}
-        />
-        <View style={styles.infoSection}>
-          <View style={styles.priceRow}>
-            <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
-            <Text style={styles.price}>{item.pricePerDay}</Text>
-            <Text style={styles.priceUnit}>per hour</Text>
-            <View style={styles.ratingContainer}>
-              <Text style={styles.rating}>
-                {parseFloat(item.averageRating || 0).toFixed(1)}
-              </Text>
-              <Icon name="star" size={16} color="#FFD700" />
-            </View>
-          </View>
-
-          <Text style={styles.title}>{item.title}</Text>
-
-          {/* Owner Info */}
-
-          <View style={styles.ownerContainer}>
-            <Image
-              source={{
-                uri: customer.profileImage || "https://via.placeholder.com/40",
-              }}
-              style={styles.avatar}
+      {/* Outer wrapper: flex column so ScrollView + actionContainer stack properly */}
+      <View style={styles.outerWrapper}>
+        <ScrollView
+          style={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={["#007F7F"]}
+              tintColor="#007F7F"
             />
-            <View style={styles.ownerInfo}>
-              <Text style={styles.ownerText}>
-                {item.Owner?.firstName} {item.Owner?.lastName}{" "}
-                <Icon name="verified" size={16} color="#3498db" />
-              </Text>
-              <Text style={styles.ownerAddress}>{item.location}</Text>
+          }
+        >
+          {/* Item Images */}
+          <ItemImages images={item.itemImages} />
+
+          {/* Price and Title Section */}
+          <View style={[styles.detailLine, { borderTopColor: "#00000040", bottom: 6 }]} />
+          <View style={styles.infoSection}>
+            <View style={styles.priceRow}>
+              <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
+              <Text style={styles.price}>{item.pricePerDay}</Text>
+              <Text style={styles.priceUnit}>per hour</Text>
+              <View style={styles.ratingContainer}>
+                <Text style={styles.rating}>
+                  {parseFloat(item.averageRating || 0).toFixed(1)}
+                </Text>
+                <Icon name="star" size={16} color="#FFD700" />
+              </View>
             </View>
+
+            <Text style={styles.title}>{item.title}</Text>
+
+            <View style={styles.ownerContainer}>
+              <Image
+                source={{ uri: customer.profileImage || "https://via.placeholder.com/40" }}
+                style={styles.avatar}
+              />
+              <View style={styles.ownerInfo}>
+                <Text style={styles.ownerText}>
+                  {item.Owner?.firstName} {item.Owner?.lastName}{" "}
+                  <Icon name="verified" size={16} color="#3498db" />
+                </Text>
+                <Text style={styles.ownerAddress}>{item.location}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.detailLabel}>Brand:</Text>
+            <Text style={styles.detailValue}>{item.brand || "N/A"}</Text>
           </View>
 
-          {/* Brand */}
+          <View style={styles.detailLine2}></View>
+          <View style={styles.detailLine4}></View>
+          <View style={styles.detailLine}></View>
 
-          <Text style={styles.detailLabel}>Brand:</Text>
-          <Text style={styles.detailValue}>{item.brand || "N/A"}</Text>
-        </View>
+          {/* Specifications */}
+          <View style={styles.section1}>
+            <Text style={styles.sectionTitle1}>Specifications</Text>
+            <Text style={styles.description}>
+              {item.specification || "No specification provided"}
+            </Text>
+          </View>
 
-        <View style={styles.detailLine2}></View>
-        <View style={styles.detailLine4}></View>
-        <View style={styles.detailLine}></View>
-        {/* Specifications */}
-        <View style={styles.section1}>
-          <Text style={styles.sectionTitle1}>Specifications</Text>
-          <Text style={styles.description}>
-            {item.specification || "No specification provided"}
-          </Text>
-        </View>
+          {/* Description */}
+          <View style={styles.detailLine}></View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Description (actual condition)</Text>
+            <Text style={styles.description1}>{item.description}</Text>
+          </View>
 
-        {/* Description */}
-        <View style={styles.detailLine}></View>
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Description (actual condition)
-          </Text>
-          <Text style={styles.description1}>{item.description}</Text>
-        </View>
-
-        {/* Reviews */}
-        <View
-          style={[
-            styles.detailLine,
-            { borderTopColor: "#00000040", bottom: scale(75) },
-          ]}
-        />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle2}>
-            Review ({item.totalReviews || 0})
-          </Text>
-          {item.reviews && item.reviews.length > 0 ? (
-            item.reviews.map((review) => (
-              <Pressable
-                key={review.id}
-                style={({ pressed }) => [
-                  styles.reviewCard,
-                  pressed && { opacity: 0.85 },
-                ]}
-                onPress={() => router.push("/customer/review")}
-              >
-                <View style={styles.reviewHeader}>
-                  <Image
-                    source={{ uri: "https://via.placeholder.com/40" }}
-                    style={styles.reviewAvatar}
-                  />
-                  <View style={styles.reviewHeaderText}>
-                    <Text style={styles.reviewerName}>
-                      {review.firstName} {review.lastName}
-                    </Text>
-                    <View style={styles.stars}>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Icon
-                          key={star}
-                          name={
-                            star <= review.starRating ? "star" : "star-border"
-                          }
-                          size={scale(14)}
-                          color="#FFD700"
-                        />
-                      ))}
+          {/* Reviews */}
+          <View style={[styles.detailLine, { borderTopColor: "#00000040", bottom: scale(75) }]} />
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle2}>Review ({item.totalReviews || 0})</Text>
+            {item.reviews && item.reviews.length > 0 ? (
+              item.reviews.map((review) => (
+                <Pressable
+                  key={review.id}
+                  style={({ pressed }) => [styles.reviewCard, pressed && { opacity: 0.85 }]}
+                  onPress={() => router.push("/customer/review")}
+                >
+                  <View style={styles.reviewHeader}>
+                    <Image
+                      source={{ uri: "https://via.placeholder.com/40" }}
+                      style={styles.reviewAvatar}
+                    />
+                    <View style={styles.reviewHeaderText}>
+                      <Text style={styles.reviewerName}>
+                        {review.firstName} {review.lastName}
+                      </Text>
+                      <View style={styles.stars}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Icon
+                            key={star}
+                            name={star <= review.starRating ? "star" : "star-border"}
+                            size={scale(14)}
+                            color="#FFD700"
+                          />
+                        ))}
+                      </View>
                     </View>
                   </View>
-                </View>
-                <Text style={styles.reviewText}>{review.description}</Text>
-              </Pressable>
-            ))
-          ) : (
-            <Text style={[styles.reviewText, { bottom: scale(60) }]}>
-              No reviews yet.
-            </Text>
-          )}
-        </View>
-        <View
-          style={[
-            styles.detailLine,
-            { borderTopColor: "#00000040", bottom: 72 },
-          ]}
-        />
+                  <Text style={styles.reviewText}>{review.description}</Text>
+                </Pressable>
+              ))
+            ) : (
+              <Text style={[styles.reviewText, { bottom: scale(60) }]}>No reviews yet.</Text>
+            )}
+          </View>
+          <View style={[styles.detailLine, { borderTopColor: "#00000040", bottom: 72 }]} />
+        </ScrollView>
 
-        <View style={styles.actionContainer}>
+        {/* Action bar — outside ScrollView, always visible at the bottom */}
+        <View style={[styles.actionContainer, { paddingBottom: scale(12) + insets.bottom }]}>
           <TouchableOpacity
             style={styles.chatButton}
             onPress={async () => {
@@ -395,16 +326,13 @@ export default function ItemDetail() {
                 const userData = await AsyncStorage.getItem("user");
 
                 if (!token || !userData) {
-                  Alert.alert(
-                    "Authentication Required",
-                    "Please login to chat",
-                    [{ text: "OK", onPress: () => router.push("/auth/login") }],
-                  );
+                  Alert.alert("Authentication Required", "Please login to chat", [
+                    { text: "OK", onPress: () => router.push("/auth/login") },
+                  ]);
                   return;
                 }
 
                 const user = JSON.parse(userData);
-
                 console.log("🔍 Starting chat flow for item:", item.id);
                 console.log("👤 Current user ID:", user.id);
                 console.log("🏠 Item owner ID:", item.ownerId);
@@ -414,18 +342,11 @@ export default function ItemDetail() {
                 try {
                   const checkUrl = `${API_URL}/api/chat/check/${item.id}`;
                   console.log("🔍 Checking URL:", checkUrl);
-
                   const checkRes = await axios.get(checkUrl, {
                     headers: { Authorization: `Bearer ${token}` },
                   });
-
                   console.log("📝 Check response:", checkRes.data);
-
-                  if (
-                    checkRes.data.success &&
-                    checkRes.data.exists &&
-                    checkRes.data.chatId
-                  ) {
+                  if (checkRes.data.success && checkRes.data.exists && checkRes.data.chatId) {
                     chatIdToUse = checkRes.data.chatId;
                     console.log("✅ Found existing chat ID:", chatIdToUse);
                   }
@@ -435,58 +356,30 @@ export default function ItemDetail() {
 
                 if (!chatIdToUse) {
                   console.log("📝 Creating new chat...");
-
                   try {
                     const createUrl = `${API_URL}/api/chat/get-or-create`;
-                    console.log("📝 Create URL:", createUrl);
-
                     const createPayload = {
                       itemId: item.id,
                       customerId: user.id,
                       ownerId: item.ownerId,
                     };
-                    console.log(
-                      "📝 Create payload:",
-                      JSON.stringify(createPayload),
-                    );
-
-                    const createRes = await axios.post(
-                      createUrl,
-                      createPayload,
-                      {
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                          "Content-Type": "application/json",
-                        },
+                    const createRes = await axios.post(createUrl, createPayload, {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
                       },
-                    );
-
+                    });
                     console.log("✅ Create response:", createRes.data);
-
                     if (createRes.data && createRes.data.id) {
                       chatIdToUse = createRes.data.id;
-                      console.log("✅ New chat created with ID:", chatIdToUse);
                     } else {
                       throw new Error("No chat ID in response");
                     }
                   } catch (createError) {
-                    console.error(
-                      "❌ Create error:",
-                      createError.response?.data || createError.message,
-                    );
-                    console.error(
-                      "❌ Create error status:",
-                      createError.response?.status,
-                    );
-                    console.error(
-                      "❌ Create error URL:",
-                      createError.config?.url,
-                    );
-
+                    console.error("❌ Create error:", createError.response?.data || createError.message);
                     Alert.alert(
                       "Error",
-                      createError.response?.data?.message ||
-                        "Failed to create chat. Please try again.",
+                      createError.response?.data?.message || "Failed to create chat. Please try again.",
                     );
                     return;
                   }
@@ -494,18 +387,13 @@ export default function ItemDetail() {
 
                 if (chatIdToUse && chatIdToUse !== "undefined") {
                   const navUrl = `/customer/messages?id=${chatIdToUse}&itemId=${item.id}`;
-                  console.log("🔗 Navigating to:", navUrl);
                   router.push(navUrl);
                 } else {
-                  console.error("❌ Invalid chatId:", chatIdToUse);
                   Alert.alert("Error", "Failed to initialize chat");
                 }
               } catch (err) {
                 console.error("❌ Unexpected chat error:", err);
-                Alert.alert(
-                  "Error",
-                  "An unexpected error occurred. Please try again.",
-                );
+                Alert.alert("Error", "An unexpected error occurred. Please try again.");
               }
             }}
             activeOpacity={0.8}
@@ -534,7 +422,7 @@ export default function ItemDetail() {
             )}
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </ScreenWrapper>
   );
 }
@@ -551,11 +439,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     padding: scale(20),
   },
+
+  // Fills space below Header, stacks ScrollView + actionContainer
+  outerWrapper: {
+    flex: 1,
+  },
+
   scrollContent: {
     flex: 1,
   },
+  // Removed large paddingBottom — action bar is no longer inside scroll
   scrollContainer: {
-    paddingBottom: scale(40),
+    paddingBottom: scale(20),
   },
   infoSection: {
     backgroundColor: "#FFF",
@@ -762,16 +657,15 @@ const styles = StyleSheet.create({
     lineHeight: ms(20),
   },
 
+  // Moved outside ScrollView — normal flow, always visible at bottom
   actionContainer: {
-    position: "absolute",
-    bottom: scale(50),
-    left: 0,
-    right: 0,
     flexDirection: "row",
     paddingHorizontal: scale(16),
     paddingVertical: scale(12),
     gap: scale(12),
     backgroundColor: "#fff",
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
   },
   chatButton: {
     flex: 1,

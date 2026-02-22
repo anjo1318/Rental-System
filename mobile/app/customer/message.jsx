@@ -13,7 +13,6 @@ import {
   RefreshControl
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {  } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Header from "../components/header";
@@ -27,7 +26,7 @@ export default function Messages() {
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // NEW
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -36,7 +35,6 @@ export default function Messages() {
   };
 
   console.log("📱 Messages Component Rendered");
-
   console.log("🔄 useEffect triggered - Starting to fetch chats");
 
   const fetchChats = async () => {
@@ -85,18 +83,31 @@ export default function Messages() {
     }
   };
 
-
-
   const pathname = usePathname();
 
   useEffect(() => {
-    console.log("🔁 Route changed — refreshing data");
-    setLoading(true);
-    fetchChats();
+    console.log("🔁 Route changed — checking auth then refreshing data");
+    const checkAuthAndFetch = async () => {
+      const userData = await AsyncStorage.getItem("user");
+      const token = await AsyncStorage.getItem("token");
+
+      if (!userData || !token) {
+        // Not logged in — show login prompt immediately
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      // Logged in — fetch chats
+      setIsAuthenticated(true);
+      setLoading(true);
+      await fetchChats();
+    };
+
+    checkAuthAndFetch();
   }, [pathname]);
 
   console.log("📍 Current pathname:", pathname);
-
 
   const formatDate = (dateString) => {
     console.log("📅 Formatting date:", dateString);
@@ -105,7 +116,6 @@ export default function Messages() {
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    // Reset time parts for comparison
     today.setHours(0, 0, 0, 0);
     yesterday.setHours(0, 0, 0, 0);
     const compareDate = new Date(date);
@@ -141,35 +151,47 @@ export default function Messages() {
 
   console.log("🎨 Rendering UI with:", {
     loading,
+    isAuthenticated,
     chatsCount: chats.length,
   });
- 
+
   return (
-      <ScreenWrapper>
-        <Header
-          title="Messages"
-          backgroundColor="#007F7F"
-        />
-      {/* Messages List */}
-      {loading ? (
+    <ScreenWrapper>
+      <Header
+        title="Messages"
+        backgroundColor="#007F7F"
+      />
+
+      {/* NOT LOGGED IN — show login prompt */}
+      {!isAuthenticated && !loading ? (
+        <View style={styles.unauthContainer}>
+          <Text style={styles.unauthTitle}>Please log in to view messages</Text>
+        </View>
+
+      /* LOADING */
+      ) : loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#057474" />
           {console.log("⏳ Showing loading indicator")}
         </View>
+
+      /* EMPTY */
       ) : chats.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>No messages yet</Text>
           {console.log("📭 Showing empty state")}
         </View>
+
+      /* CHAT LIST */
       ) : (
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.messageList}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={["#007F7F"]}      // Android
-              tintColor="#007F7F"       // iOS
+              colors={["#007F7F"]}
+              tintColor="#007F7F"
             />
           }
         >
@@ -217,7 +239,8 @@ export default function Messages() {
           })}
         </ScrollView>
       )}
-      <CustomerBottomNav/>
+
+      <CustomerBottomNav />
     </ScreenWrapper>
   );
 }
@@ -241,7 +264,7 @@ const styles = StyleSheet.create({
   },
 
   emptyText: {
-    color: "#FFF",
+    color: "#666",
     fontSize: 16,
   },
 
@@ -262,8 +285,6 @@ const styles = StyleSheet.create({
     borderRadius: 21,
     marginRight: 12,
   },
-
-
 
   messageContent: {
     flex: 1,
@@ -291,5 +312,44 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
 
+  // NEW: unauthenticated screen styles
+  unauthContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 32,
+    backgroundColor: "#fff",
+  },
 
+  unauthTitle: {
+    fontSize: 16,
+    fontWeight: "400",
+    color: "#333",
+    marginBottom: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+
+
+  },
+
+  unauthSubtext: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginBottom: 28,
+    lineHeight: 20,
+  },
+
+  loginButton: {
+    backgroundColor: "#057474",
+    paddingHorizontal: 32,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+
+  loginButtonText: {
+    color: "#FFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
 });

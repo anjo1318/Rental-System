@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
 
   outContainer: {
     width: "92%",
-    marginTop: 150,
+    marginTop: 120,
     marginBottom: 10,
     alignSelf: "center",
     alignItems: "center",
