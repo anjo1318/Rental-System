@@ -1,6 +1,7 @@
 import Books from "../models/Book.js";
 import Owner from "../models/Owner.js";
 import Item from '../models/Item.js'
+import History from "../models/History.js";
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 import { Op } from "sequelize";
@@ -1032,6 +1033,22 @@ const ongoingBook = async (req, res) => {
 
   } catch (error) {
     console.error("Error in ongoingBook:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const fetchOnGoingBookForAdmin = async (req, res) => {
+
+  try {
+    const response = await Books.findAll({
+    where: {status: "ongoing" },
+      order: [["created_at", "DESC"]],
+    });
+
+    return res.status(200).json({ success: true, data: response });
+
+  } catch (error) {
+    console.error("Error in ongoingBook for admin:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
@@ -2598,6 +2615,37 @@ const setupRentalMonitoring = () => {
   console.log('✅ Rental monitoring scheduled (every hour)');
 };
 
+const fetchBookingReceiptsData = async (req, res) => {
+  try {
+    const [bookings, history] = await Promise.all([
+      Books.findAll({
+        where: {
+          status: ["ongoing", "terminated"],
+        },
+      }),
+      History.findAll({
+        where: {
+          status: ["ongoing", "terminated"],
+        },
+      }),
+    ]);
+
+    const combined = [
+      ...bookings.map((b) => ({ ...b.toJSON(), _source: "books" })),
+      ...history.map((h) => ({ ...h.toJSON(), _source: "history" })),
+    ];
+
+    return res.status(200).json({
+      success: true,
+      data: combined,
+    });
+  } catch (error) {
+    console.error("Error fetching booking receipts:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 // ====================================
 // EXPORTS
 // ====================================
@@ -2638,5 +2686,7 @@ export {
   bookedItemForApproval,
   startBookedItem,
   ongoingBookAndForApproval,
-  ongoingBookAndForApprovalCustomer
+  ongoingBookAndForApprovalCustomer,
+  fetchBookingReceiptsData,
+  fetchOnGoingBookForAdmin
 };

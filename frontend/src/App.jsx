@@ -11,6 +11,7 @@ import Settings from "./components/Dashboard/Settings";
 import Approvals from "./components/Dashboard/Approvals";
 import ItemApproval from "./components/Dashboard/ItemApproval";
 import Receipts from "./components/Dashboard/Receipts";
+import RentMonitoring from "./components/Dashboard/RentMonitoring";
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path="/approvals" element={<Approvals />} />
           <Route path="/item-approval" element={<ItemApproval />} />
           <Route path="/receipts" element={<Receipts />} />
+          <Route path="/rent-monitoring" element={<RentMonitoring />} />
         </Route>
       </Routes>
     </div>

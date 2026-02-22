@@ -10,7 +10,8 @@ import {
   LogOut,
   CheckSquare,
   ShoppingCart,
-  TicketCheck 
+  TicketCheck,
+  Clock  
 } from "lucide-react"; // icons
 
 const Sidebar = () => {
@@ -31,6 +32,7 @@ const Sidebar = () => {
     { path: "/approvals", label: "Approvals", icon: <CheckSquare size={18} /> }, // 
     { path: "/item-approval", label: "Items", icon: <ShoppingCart size={18} /> }, // 
     { path: "/receipts", label: "Receipts", icon: <TicketCheck size={18} /> }, // 
+    { path: "/rent-monitoring", label: "Ongoing Rent", icon: <Clock size={18} /> }, // 
   ];
 
 

@@ -24,7 +24,9 @@ import { approveBooking,
     bookedItemForApproval,
     startBookedItem,
     ongoingBookAndForApproval,
-    ongoingBookAndForApprovalCustomer
+    ongoingBookAndForApprovalCustomer,
+    fetchBookingReceiptsData,
+    fetchOnGoingBookForAdmin
 } from '../controllers/bookController.js';
 
 const router = express.Router()
@@ -49,6 +51,10 @@ router.get('/notification/:userId/unread-count', getUnreadCount);
 router.delete('/notification/cleanup/:userId', cleanupOldNotifications);
 router.get("/ongoing-for-approval-customer/:id", ongoingBookAndForApprovalCustomer);
 
+//for admin
+router.get("/fetch-bookings", fetchAllBooking);
+router.get("/ongoing-terminated/admin", fetchBookingReceiptsData);
+router.get("/ongoing-book/admin", fetchOnGoingBookForAdmin);
 
 //for owners
 router.get("/book-request/:id", fetchBookRequest);
@@ -61,8 +67,8 @@ router.put('/approve-booking/:id', approveBooking);
 router.put('/reject-booking/:id',rejectBooking);
 router.put('/terminate-booking/:id',terminateBooking);
 
-//for admin
-router.get("/fetch-bookings", fetchAllBooking);
+
+
 
 // Check specific rental status
 router.get('/rental-status/:bookingId', getRentalStatus);
