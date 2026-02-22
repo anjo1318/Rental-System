@@ -159,9 +159,10 @@ const styles = StyleSheet.create({
   },
 
   emptyContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  flex: 1,
+  justifyContent: "center",
+  alignItems: "center",
+},
 
   emptyText: {
     fontSize: 18,

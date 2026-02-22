@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import ScreenWrapper from "../components/screenwrapper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import ChatContainer from "../components/chatContainer";
 
 
 const { width, height } = Dimensions.get("window");
@@ -267,7 +268,6 @@ export default function Chat() {
         sending={sending}
         scrollViewRef={scrollViewRef}
         formatTime={formatTime}
-        keyboardHeight={keyboardHeight}
         insets={insets}
       />
       </View>
@@ -279,8 +279,64 @@ const styles = StyleSheet.create({
   // ... keep your existing styles
   container: {
     flex: 1,
-    backgroundColor: "#E6E1D6",
+    backgroundColor: "#fff",
   },
+
+  header: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#FFF",
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  borderBottomWidth: 1,
+  borderBottomColor: "#00000040",
+  borderBottomLeftRadius: 20,
+  borderBottomRightRadius: 20,
+  shadowColor: "#000",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.1,
+  shadowRadius: 4,
+  elevation: 4,
+},
+
+backButton: {
+  padding: 4,
+},
+
+headerCenter: {
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  marginLeft: 12,
+},
+
+avatar: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: "#E0E0E0",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+},
+
+avatarImage: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  marginRight: 8,
+  backgroundColor: "#E0E0E0",
+},
+
+headerName: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#000",
+},
+
+headerRight: {
+  width: 24,
+},
 
   loadingContainer: {
     flex: 1,
@@ -394,5 +450,43 @@ const styles = StyleSheet.create({
     marginTop: 4,
     textAlign: "right",
   },
+  backButton: {
+  padding: 4,
+},
+
+headerCenter: {
+  flex: 1,
+  flexDirection: "row",
+  alignItems: "center",
+  marginLeft: 12,
+},
+
+avatar: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  backgroundColor: "#E0E0E0",
+  alignItems: "center",
+  justifyContent: "center",
+  marginRight: 8,
+},
+
+avatarImage: {
+  width: 36,
+  height: 36,
+  borderRadius: 18,
+  marginRight: 8,
+  backgroundColor: "#E0E0E0",
+},
+
+headerName: {
+  fontSize: 16,
+  fontWeight: "600",
+  color: "#000",
+},
+
+headerRight: {
+  width: 24,
+},
 
 });
