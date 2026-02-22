@@ -1,27 +1,27 @@
 import Books from "../models/Book.js";
 import Owner from "../models/Owner.js";
-import Item from '../models/Item.js'
+import Item from "../models/Item.js";
 import History from "../models/History.js";
-import nodemailer from 'nodemailer';
-import dotenv from 'dotenv';
+import nodemailer from "nodemailer";
+import dotenv from "dotenv";
 import { Op } from "sequelize";
-import sequelize from '../database/database.js'
+import sequelize from "../database/database.js";
 
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  service:"gmail",
-  auth:{
-    user:process.env.EMAIL_USER,
-    pass:process.env.EMAIL_PASS,
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
   tls: {
-    rejectUnauthorized:false,
-  }
+    rejectUnauthorized: false,
+  },
 });
 
-transporter.verify((error, success)=>{
-  if(error){
+transporter.verify((error, success) => {
+  if (error) {
     console.error("SMTP Connection failer", error);
   } else {
     console.log("SMTP Server Ready");
@@ -44,15 +44,17 @@ const bookItem = async (req, res) => {
 
     const pickupDate = new Date(rentalDetails.pickupDate);
     const returnDate = new Date(rentalDetails.returnDate);
-    
+
     const timeDifference = returnDate.getTime() - pickupDate.getTime();
     const numberOfDays = Math.ceil(timeDifference / (1000 * 60 * 60 * 24));
     const rentalDays = Math.max(numberOfDays, 1);
-    
+
     const pricePerDay = parseFloat(itemDetails.pricePerDay);
     const totalAmount = rentalDays * pricePerDay;
 
-    console.log(`Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`);
+    console.log(
+      `Rental calculation: ${rentalDays} days × ₱${pricePerDay} = ₱${totalAmount}`,
+    );
 
     const response = await Books.create({
       itemId,
@@ -77,7 +79,9 @@ const bookItem = async (req, res) => {
     });
 
     console.log("Success in adding request for booking");
-    console.log(`Total amount calculated: ₱${totalAmount} for ${rentalDays} days`);
+    console.log(
+      `Total amount calculated: ₱${totalAmount} for ${rentalDays} days`,
+    );
 
     return res.status(200).json({
       success: true,
@@ -86,22 +90,22 @@ const bookItem = async (req, res) => {
         bookingId: response.id,
         rentalDays: rentalDays,
         totalAmount: totalAmount,
-        pricePerDay: pricePerDay
-      }
+        pricePerDay: pricePerDay,
+      },
     });
   } catch (error) {
     console.error("Booking error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
-      
+
 const bookNotification = async (req, res) => {
   const { id } = req.params;
 
   try {
     const response = await Books.findAll({
-      where: { customerId: id }, 
-      order: [["created_at", "DESC"]]
+      where: { customerId: id },
+      order: [["created_at", "DESC"]],
     });
 
     return res.status(200).json({ success: true, data: response });
@@ -112,38 +116,49 @@ const bookNotification = async (req, res) => {
 };
 
 const bookedItems = async (req, res) => {
-  const { id } = req.params; // this will be the customerId coming from the mobile 
+  const { id } = req.params; // this will be the customerId coming from the mobile
   console.log("Incoming data", req.params);
-  console.log("Ito yung specific na booking item para sa time tas sa right side ay yung id nung user", req.params);
-  
+  console.log(
+    "Ito yung specific na booking item para sa time tas sa right side ay yung id nung user",
+    req.params,
+  );
+
   try {
     const bookings = await Books.findAll({
       where: { customerId: id },
-      order: [["created_at", "DESC"]]
+      order: [["created_at", "DESC"]],
     });
 
     // ✅ Fetch owner profile images for each booking
     const bookingsWithOwnerImages = await Promise.all(
       bookings.map(async (booking) => {
         const bookingData = booking.toJSON();
-        
+
         // Fetch owner's profileImage
         const owner = await Owner.findByPk(booking.ownerId, {
-          attributes: ['profileImage', 'firstName', 'lastName', 'idPhoto', 'selfie']
+          attributes: [
+            "profileImage",
+            "firstName",
+            "lastName",
+            "idPhoto",
+            "selfie",
+          ],
         });
-        
+
         // Add owner data to booking
         bookingData.ownerProfileImage = owner?.profileImage || null;
         bookingData.ownerFirstName = owner?.firstName || null;
         bookingData.ownerLastName = owner?.lastName || null;
         bookingData.ownerIdPhoto = owner?.idPhoto || null;
         bookingData.ownerSelfie = owner?.selfie || null;
-        
+
         return bookingData;
-      })
+      }),
     );
 
-    return res.status(200).json({ success: true, data: bookingsWithOwnerImages });
+    return res
+      .status(200)
+      .json({ success: true, data: bookingsWithOwnerImages });
   } catch (error) {
     console.error("Booking fetch error:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -152,17 +167,18 @@ const bookedItems = async (req, res) => {
 
 const requestBooking = async (req, res) => {
   try {
-
     console.log("requestBooking function in bookController.js is hit");
-    const {id} = req.params;
+    const { id } = req.params;
 
-    const booking = await Books.findOne({where:{id}});
+    const booking = await Books.findOne({ where: { id } });
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status: "booked"});
+    await booking.update({ status: "booked" });
 
     // Extract all booking details from the database record
     const {
@@ -178,7 +194,7 @@ const requestBooking = async (req, res) => {
       location,
       phone,
       address,
-      amount
+      amount,
     } = booking;
 
     // Format dates for display
@@ -187,7 +203,9 @@ const requestBooking = async (req, res) => {
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
     // Calculate total days and amount
-    const totalDays = Math.ceil((new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24),
+    );
     const totalAmount = totalDays * Number(pricePerDay);
 
     // Generate request number (you might want to use the booking ID or create a proper request number)
@@ -239,7 +257,7 @@ const requestBooking = async (req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -315,43 +333,43 @@ const requestBooking = async (req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Booking approved successfully", 
+      success: true,
+      message: "Booking approved successfully",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
         status: booking.status,
-        totalAmount: totalAmount
-      }
+        totalAmount: totalAmount,
+      },
     });
-
-  } catch(error) {
-    console.error('Error approving booking:', error);
-    return res.status(500).json({success:false, message:error.message});
+  } catch (error) {
+    console.error("Error approving booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 const approveBookingRequest = async (req, res) => {
   try {
-
     console.log("requestBooking function in bookController.js is hit");
-    const {id} = req.params;
+    const { id } = req.params;
 
-    const booking = await Books.findOne({where:{id}});
+    const booking = await Books.findOne({ where: { id } });
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status: "Approved to Rent"});
+    await booking.update({ status: "Approved to Rent" });
 
     // Extract all booking details from the database record
     const {
@@ -367,7 +385,7 @@ const approveBookingRequest = async (req, res) => {
       location,
       phone,
       address,
-      amount
+      amount,
     } = booking;
 
     // Format dates for display
@@ -376,7 +394,9 @@ const approveBookingRequest = async (req, res) => {
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
     // Calculate total days and amount
-    const totalDays = Math.ceil((new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24),
+    );
     const totalAmount = totalDays * Number(pricePerDay);
 
     // Generate request number (you might want to use the booking ID or create a proper request number)
@@ -428,7 +448,7 @@ const approveBookingRequest = async (req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -504,43 +524,43 @@ const approveBookingRequest = async (req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Booking approved successfully", 
+      success: true,
+      message: "Booking approved successfully",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
         status: booking.status,
-        totalAmount: totalAmount
-      }
+        totalAmount: totalAmount,
+      },
     });
-
-  } catch(error) {
-    console.error('Error approving booking:', error);
-    return res.status(500).json({success:false, message:error.message});
+  } catch (error) {
+    console.error("Error approving booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 const rejectBookingRequest = async (req, res) => {
   try {
-
     console.log("requestBooking function in bookController.js is hit");
-    const {id} = req.params;
+    const { id } = req.params;
 
-    const booking = await Books.findOne({where:{id}});
+    const booking = await Books.findOne({ where: { id } });
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status: "Rejected to Rent"});
+    await booking.update({ status: "Rejected to Rent" });
 
     // Extract all booking details from the database record
     const {
@@ -556,7 +576,7 @@ const rejectBookingRequest = async (req, res) => {
       location,
       phone,
       address,
-      amount
+      amount,
     } = booking;
 
     // Format dates for display
@@ -565,7 +585,9 @@ const rejectBookingRequest = async (req, res) => {
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
     // Calculate total days and amount
-    const totalDays = Math.ceil((new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24),
+    );
     const totalAmount = totalDays * Number(pricePerDay);
 
     // Generate request number (you might want to use the booking ID or create a proper request number)
@@ -617,7 +639,7 @@ const rejectBookingRequest = async (req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -693,41 +715,42 @@ const rejectBookingRequest = async (req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Booking approved successfully", 
+      success: true,
+      message: "Booking approved successfully",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
         status: booking.status,
-        totalAmount: totalAmount
-      }
+        totalAmount: totalAmount,
+      },
     });
-
-  } catch(error) {
-    console.error('Error approving booking:', error);
-    return res.status(500).json({success:false, message:error.message});
+  } catch (error) {
+    console.error("Error approving booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
-const cancelBooking = async(req, res) => {
+const cancelBooking = async (req, res) => {
   try {
-    const {id} = req.params;
-    
-    const booking = await Books.findOne({where:{id}});
+    const { id } = req.params;
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    const booking = await Books.findOne({ where: { id } });
+
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status:"cancelled"});
+    await booking.update({ status: "cancelled" });
 
     // Extract all booking details from the database record
     const {
@@ -739,7 +762,7 @@ const cancelBooking = async(req, res) => {
       paymentMethod,
       pickUpDate,
       returnDate,
-      amount
+      amount,
     } = booking;
 
     console.log(booking);
@@ -784,7 +807,7 @@ const cancelBooking = async(req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -834,40 +857,41 @@ const cancelBooking = async(req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Successfully rejected the request", 
+      success: true,
+      message: "Successfully rejected the request",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
-        status: booking.status
-      }
+        status: booking.status,
+      },
     });
-
   } catch (error) {
-    console.error('Error rejecting booking:', error);
-    return res.status(500).json({success:false, message: error.message});
+    console.error("Error rejecting booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
-const rejectBooking = async(req, res) => {
+const rejectBooking = async (req, res) => {
   try {
-    const {id} = req.params;
-    
-    const booking = await Books.findOne({where:{id}});
+    const { id } = req.params;
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    const booking = await Books.findOne({ where: { id } });
+
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status:"rejected"});
+    await booking.update({ status: "rejected" });
 
     // Extract all booking details from the database record
     const {
@@ -879,7 +903,7 @@ const rejectBooking = async(req, res) => {
       paymentMethod,
       pickUpDate,
       returnDate,
-      amount
+      amount,
     } = booking;
 
     console.log(booking);
@@ -924,7 +948,7 @@ const rejectBooking = async(req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -974,28 +998,27 @@ const rejectBooking = async(req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Successfully rejected the request", 
+      success: true,
+      message: "Successfully rejected the request",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
-        status: booking.status
-      }
+        status: booking.status,
+      },
     });
-
   } catch (error) {
-    console.error('Error rejecting booking:', error);
-    return res.status(500).json({success:false, message: error.message});
+    console.error("Error rejecting booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 const fetchBookRequest = async (req, res) => {
   console.log("Using fetchBookRequest");
@@ -1010,7 +1033,6 @@ const fetchBookRequest = async (req, res) => {
     });
 
     return res.status(200).json({ success: true, data: response });
-
   } catch (error) {
     console.error("Error in fetchBookRequest:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -1026,11 +1048,10 @@ const ongoingBook = async (req, res) => {
 
     const response = await Books.findAll({
       where: { ownerId: id, status: "ongoing" },
-      order: [["created_at", "DESC"]], 
+      order: [["created_at", "DESC"]],
     });
 
     return res.status(200).json({ success: true, data: response });
-
   } catch (error) {
     console.error("Error in ongoingBook:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -1038,15 +1059,13 @@ const ongoingBook = async (req, res) => {
 };
 
 const fetchOnGoingBookForAdmin = async (req, res) => {
-
   try {
     const response = await Books.findAll({
-    where: {status: "ongoing" },
+      where: { status: "ongoing" },
       order: [["created_at", "DESC"]],
     });
 
     return res.status(200).json({ success: true, data: response });
-
   } catch (error) {
     console.error("Error in ongoingBook for admin:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -1063,8 +1082,8 @@ const ongoingBookAndForApproval = async (req, res) => {
       where: {
         ownerId: id,
         status: {
-          [Op.in]: ["ongoing", "booked"]
-        }
+          [Op.in]: ["ongoing", "booked"],
+        },
       },
       order: [["created_at", "DESC"]],
     });
@@ -1086,8 +1105,9 @@ const ongoingBookAndForApprovalCustomer = async (req, res) => {
       where: {
         customerId: id,
         status: {
-          [Op.in]: ["ongoing", "booked"]
-        }      },
+          [Op.in]: ["ongoing", "booked"],
+        },
+      },
       order: [["created_at", "DESC"]],
     });
 
@@ -1098,7 +1118,6 @@ const ongoingBookAndForApprovalCustomer = async (req, res) => {
   }
 };
 
-
 const bookedItemForApproval = async (req, res) => {
   console.log("Using bookedItemForApproval");
 
@@ -1108,35 +1127,35 @@ const bookedItemForApproval = async (req, res) => {
 
     const response = await Books.findAll({
       where: { ownerId: id, status: "booked" },
-      order: [["created_at", "DESC"]], 
+      order: [["created_at", "DESC"]],
     });
 
     return res.status(200).json({ success: true, data: response });
-
   } catch (error) {
     console.error("Error in bookedItemForApproval:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
 const approveBooking = async (req, res) => {
   try {
-    const {id} = req.params;
+    const { id } = req.params;
 
-    const booking = await Books.findOne({where:{id}});
+    const booking = await Books.findOne({ where: { id } });
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status: "approved"});
+    await booking.update({ status: "approved" });
     startDeadlineTimer({
       id: booking.id,
       product: booking.product,
       email: booking.email,
       returnDate: booking.returnDate,
-      userId: booking.customerId
+      userId: booking.customerId,
     });
 
     // Extract all booking details from the database record
@@ -1153,7 +1172,7 @@ const approveBooking = async (req, res) => {
       location,
       phone,
       address,
-      amount
+      amount,
     } = booking;
 
     // Format dates for display
@@ -1162,7 +1181,9 @@ const approveBooking = async (req, res) => {
     const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
 
     // Calculate total days and amount
-    const totalDays = Math.ceil((new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24));
+    const totalDays = Math.ceil(
+      (new Date(returnDate) - new Date(pickUpDate)) / (1000 * 60 * 60 * 24),
+    );
     const totalAmount = totalDays * Number(pricePerDay);
 
     // Generate request number (you might want to use the booking ID or create a proper request number)
@@ -1214,7 +1235,7 @@ const approveBooking = async (req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -1290,42 +1311,42 @@ const approveBooking = async (req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Booking approved successfully", 
+      success: true,
+      message: "Booking approved successfully",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
         status: booking.status,
-        totalAmount: totalAmount
-      }
+        totalAmount: totalAmount,
+      },
     });
-
-  } catch(error) {
-    console.error('Error approving booking:', error);
-    return res.status(500).json({success:false, message:error.message});
+  } catch (error) {
+    console.error("Error approving booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
-
-const terminateBooking = async(req, res) => {
+const terminateBooking = async (req, res) => {
   try {
-    const {id} = req.params;
-    
-    const booking = await Books.findOne({where:{id}});
+    const { id } = req.params;
 
-    if(!booking){
-      return res.status(404).json({success:false, message: "Booking not found"});
+    const booking = await Books.findOne({ where: { id } });
+
+    if (!booking) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found" });
     }
 
-    await booking.update({status:"terminated"});
+    await booking.update({ status: "terminated" });
 
     // Extract all booking details from the database record
     const {
@@ -1337,7 +1358,7 @@ const terminateBooking = async(req, res) => {
       paymentMethod,
       pickUpDate,
       returnDate,
-      amount
+      amount,
     } = booking;
 
     console.log(booking);
@@ -1382,7 +1403,7 @@ const terminateBooking = async(req, res) => {
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Payment Method:</td>
-                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || 'Not specified'}</td>
+                  <td style="padding: 8px 0; border-top: 1px solid #ddd;">${paymentMethod || "Not specified"}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; font-weight: bold; border-top: 1px solid #ddd;">Rental Period:</td>
@@ -1432,76 +1453,78 @@ const terminateBooking = async(req, res) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
 
     return res.status(200).json({
-      success: true, 
-      message: "Successfully rejected the request", 
+      success: true,
+      message: "Successfully rejected the request",
       booking: {
         id: booking.id,
         product: booking.product,
         name: booking.name,
         email: booking.email,
-        status: booking.status
-      }
+        status: booking.status,
+      },
     });
-
   } catch (error) {
-    console.error('Error rejecting booking:', error);
-    return res.status(500).json({success:false, message: error.message});
+    console.error("Error rejecting booking:", error);
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 const fetchAllBooking = async (req, res) => {
   try {
     const response = await Books.findAll();
 
-    return res.status(200).json({success:true, message: "Success in fetching all booking", data: response});
-  }catch (error) {
-    return res.status(500).json({success:false, message:error.message});
+    return res.status(200).json({
+      success: true,
+      message: "Success in fetching all booking",
+      data: response,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
   }
-}
+};
 
 const deleteBooking = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // ✅ Correct: where clause should be an object with the field name
     const booking = await Books.findOne({ where: { id: id } });
     // Or shorter: { where: { id } }
-    
+
     if (!booking) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "Booking not found" 
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
       });
     }
 
     await booking.destroy();
 
-    return res.status(200).json({ 
-      success: true, 
-      message: "Success deleting booking" 
+    return res.status(200).json({
+      success: true,
+      message: "Success deleting booking",
     });
-    
   } catch (error) {
     console.error("Error deleting booking:", error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message 
+    return res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
-}
+};
 
 const activeTimers = new Map();
 
 const sendDeadlineNotification = async (booking, message) => {
   try {
     console.log(`🔔 Deadline alert for booking ${booking.id}: ${message}`);
-    
+
     // Send email to customer
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -1514,41 +1537,40 @@ const sendDeadlineNotification = async (booking, message) => {
           <p><strong>Item:</strong> ${booking.product}</p>
           <p><strong>Return Date:</strong> ${new Date(booking.returnDate).toLocaleDateString()}</p>
         </div>
-      `
+      `,
     });
 
-    console.log('✅ Notification sent successfully');
-
+    console.log("✅ Notification sent successfully");
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error("Error sending notification:", error);
   }
 };
 
 const startDeadlineTimer = (booking) => {
   const bookingId = booking.id;
-  
+
   // Clear existing timer if any
   if (activeTimers.has(bookingId)) {
     const timers = activeTimers.get(bookingId);
-    timers.forEach(timer => clearTimeout(timer));
+    timers.forEach((timer) => clearTimeout(timer));
     activeTimers.delete(bookingId);
   }
 
   const returnDate = new Date(booking.returnDate);
   const now = new Date();
-  
+
   // Calculate when to send notifications
   const threeDaysBefore = new Date(returnDate);
   threeDaysBefore.setDate(threeDaysBefore.getDate() - 3);
   threeDaysBefore.setHours(8, 0, 0, 0); // 8 AM
-  
+
   const oneDayBefore = new Date(returnDate);
   oneDayBefore.setDate(oneDayBefore.getDate() - 1);
   oneDayBefore.setHours(8, 0, 0, 0); // 8 AM
-  
+
   const dueDate = new Date(returnDate);
   dueDate.setHours(8, 0, 0, 0); // 8 AM on due date
-  
+
   const oneDayAfter = new Date(returnDate);
   oneDayAfter.setDate(oneDayAfter.getDate() + 1);
   oneDayAfter.setHours(8, 0, 0, 0); // 8 AM
@@ -1558,30 +1580,37 @@ const startDeadlineTimer = (booking) => {
   // Schedule: 3 days before
   if (threeDaysBefore > now) {
     const timer1 = setTimeout(() => {
-      sendDeadlineNotification(booking, 
-        '📅 Reminder: Your rental is due in 3 days. Please prepare for return.'
+      sendDeadlineNotification(
+        booking,
+        "📅 Reminder: Your rental is due in 3 days. Please prepare for return.",
       );
     }, threeDaysBefore - now);
     timers.push(timer1);
-    console.log(`⏰ Timer set: 3 days before (${threeDaysBefore.toLocaleString()})`);
+    console.log(
+      `⏰ Timer set: 3 days before (${threeDaysBefore.toLocaleString()})`,
+    );
   }
 
   // Schedule: 1 day before
   if (oneDayBefore > now) {
     const timer2 = setTimeout(() => {
-      sendDeadlineNotification(booking, 
-        '⚠️ Important: Your rental is due tomorrow! Please arrange return.'
+      sendDeadlineNotification(
+        booking,
+        "⚠️ Important: Your rental is due tomorrow! Please arrange return.",
       );
     }, oneDayBefore - now);
     timers.push(timer2);
-    console.log(`⏰ Timer set: 1 day before (${oneDayBefore.toLocaleString()})`);
+    console.log(
+      `⏰ Timer set: 1 day before (${oneDayBefore.toLocaleString()})`,
+    );
   }
 
   // Schedule: Due date
   if (dueDate > now) {
     const timer3 = setTimeout(() => {
-      sendDeadlineNotification(booking, 
-        '🚨 Your rental is due TODAY! Please return the item by end of day.'
+      sendDeadlineNotification(
+        booking,
+        "🚨 Your rental is due TODAY! Please return the item by end of day.",
       );
     }, dueDate - now);
     timers.push(timer3);
@@ -1591,12 +1620,15 @@ const startDeadlineTimer = (booking) => {
   // Schedule: 1 day overdue
   if (oneDayAfter > now) {
     const timer4 = setTimeout(() => {
-      sendDeadlineNotification(booking, 
-        '🔴 OVERDUE: Your rental was due yesterday. Please return immediately to avoid additional charges.'
+      sendDeadlineNotification(
+        booking,
+        "🔴 OVERDUE: Your rental was due yesterday. Please return immediately to avoid additional charges.",
       );
     }, oneDayAfter - now);
     timers.push(timer4);
-    console.log(`⏰ Timer set: 1 day overdue (${oneDayAfter.toLocaleString()})`);
+    console.log(
+      `⏰ Timer set: 1 day overdue (${oneDayAfter.toLocaleString()})`,
+    );
   }
 
   // Store timers
@@ -1604,7 +1636,9 @@ const startDeadlineTimer = (booking) => {
     activeTimers.set(bookingId, timers);
     console.log(`✅ Started ${timers.length} timers for booking ${bookingId}`);
   } else {
-    console.log(`⚠️ No timers needed for booking ${bookingId} (return date passed)`);
+    console.log(
+      `⚠️ No timers needed for booking ${bookingId} (return date passed)`,
+    );
   }
 };
 
@@ -1614,7 +1648,7 @@ const startDeadlineTimer = (booking) => {
 const cancelDeadlineTimer = (bookingId) => {
   if (activeTimers.has(bookingId)) {
     const timers = activeTimers.get(bookingId);
-    timers.forEach(timer => clearTimeout(timer));
+    timers.forEach((timer) => clearTimeout(timer));
     activeTimers.delete(bookingId);
     console.log(`🛑 Cancelled timers for booking ${bookingId}`);
   }
@@ -1625,17 +1659,17 @@ const cancelDeadlineTimer = (bookingId) => {
  */
 const restoreActiveTimers = async () => {
   try {
-    console.log('🔄 Restoring deadline timers...');
-    
-    const { Op } = await import('sequelize');
-    
+    console.log("🔄 Restoring deadline timers...");
+
+    const { Op } = await import("sequelize");
+
     const activeBookings = await Books.findAll({
       where: {
-        status: ['pending', 'confirmed', 'active'],
+        status: ["pending", "confirmed", "active"],
         returnDate: {
-          [Op.gte]: new Date() // Only future/current rentals
-        }
-      }
+          [Op.gte]: new Date(), // Only future/current rentals
+        },
+      },
     });
 
     console.log(`Found ${activeBookings.length} active bookings`);
@@ -1646,13 +1680,13 @@ const restoreActiveTimers = async () => {
         product: booking.product,
         email: booking.email,
         returnDate: booking.returnDate,
-        userId: booking.customerId
+        userId: booking.customerId,
       });
     }
 
-    console.log('✅ Timers restored successfully');
+    console.log("✅ Timers restored successfully");
   } catch (error) {
-    console.error('Error restoring timers:', error);
+    console.error("Error restoring timers:", error);
   }
 };
 
@@ -1673,7 +1707,9 @@ const bookItemUpdate = async (req, res) => {
     const existingBooking = await Books.findOne({ where: { itemId } });
 
     if (!existingBooking) {
-      return res.status(404).json({ success: false, message: "Booking not found." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Booking not found." });
     }
 
     const pickupDate = new Date(rentalDetails.pickupDate);
@@ -1681,8 +1717,12 @@ const bookItemUpdate = async (req, res) => {
     const rentalPeriod = rentalDetails.period;
     const rentalDuration = rentalDetails.duration;
 
-    const ratePerPeriod = pricing?.rate ? parseFloat(pricing.rate) : parseFloat(itemDetails.pricePerDay);
-    const deliveryCharge = pricing?.deliveryCharge ? parseFloat(pricing.deliveryCharge) : 25.00;
+    const ratePerPeriod = pricing?.rate
+      ? parseFloat(pricing.rate)
+      : parseFloat(itemDetails.pricePerDay);
+    const deliveryCharge = pricing?.deliveryCharge
+      ? parseFloat(pricing.deliveryCharge)
+      : 25.0;
     const grandTotal = pricing?.grandTotal ? parseFloat(pricing.grandTotal) : 0;
 
     let calculatedAmount = grandTotal;
@@ -1694,16 +1734,21 @@ const bookItemUpdate = async (req, res) => {
         if (rentalPeriod === "Hour") {
           duration = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60)), 1);
         } else if (rentalPeriod === "Week") {
-          duration = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)), 1);
+          duration = Math.max(
+            Math.ceil(timeDiff / (1000 * 60 * 60 * 24 * 7)),
+            1,
+          );
         } else {
           duration = Math.max(Math.ceil(timeDiff / (1000 * 60 * 60 * 24)), 1);
         }
       }
 
-      calculatedAmount = (ratePerPeriod * duration) + deliveryCharge;
+      calculatedAmount = ratePerPeriod * duration + deliveryCharge;
     }
 
-    console.log(`Rental calculation: ${rentalDuration} ${rentalPeriod}(s) × ₱${ratePerPeriod} + ₱${deliveryCharge} delivery = ₱${calculatedAmount}`);
+    console.log(
+      `Rental calculation: ${rentalDuration} ${rentalPeriod}(s) × ₱${ratePerPeriod} + ₱${deliveryCharge} delivery = ₱${calculatedAmount}`,
+    );
 
     const guarantor1 = guarantors && guarantors[0] ? guarantors[0] : {};
     const guarantor2 = guarantors && guarantors[1] ? guarantors[1] : {};
@@ -1762,22 +1807,53 @@ const bookItemUpdate = async (req, res) => {
     // ✅ Fire and forget — emails send in background after response
     setImmediate(async () => {
       try {
-        const ownerDetails = await Owner.findOne({ where: { id: itemDetails.ownerId } });
+        const ownerDetails = await Owner.findOne({
+          where: { id: itemDetails.ownerId },
+        });
         if (!ownerDetails) {
           console.error("Owner not found, skipping owner email");
           return;
         }
 
-        const formattedPickupDate = rentalPeriod === "Hour"
-          ? pickupDate.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
-          : pickupDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const formattedPickupDate =
+          rentalPeriod === "Hour"
+            ? pickupDate.toLocaleString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : pickupDate.toLocaleDateString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+              });
 
-        const formattedReturnDate = rentalPeriod === "Hour"
-          ? returnDate.toLocaleString('en-US', { month: 'short', day: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true })
-          : returnDate.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+        const formattedReturnDate =
+          rentalPeriod === "Hour"
+            ? returnDate.toLocaleString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })
+            : returnDate.toLocaleDateString("en-US", {
+                month: "short",
+                day: "2-digit",
+                year: "numeric",
+              });
 
         const rentDuration = `${formattedPickupDate} to ${formattedReturnDate}`;
-        const durationLabel = rentalPeriod === "Hour" ? "hours" : rentalPeriod === "Week" ? "weeks" : "days";
+        const durationLabel =
+          rentalPeriod === "Hour"
+            ? "hours"
+            : rentalPeriod === "Week"
+              ? "weeks"
+              : "days";
 
         const guarantorInfo = [];
         if (guarantor1.fullName) {
@@ -1785,9 +1861,9 @@ const bookItemUpdate = async (req, res) => {
             <div style="margin-top: 10px;">
               <h4 style="margin-bottom: 5px;">Guarantor 1:</h4>
               <p style="margin: 2px 0;"><strong>Name:</strong> ${guarantor1.fullName}</p>
-              <p style="margin: 2px 0;"><strong>Phone:</strong> ${guarantor1.phoneNumber || 'N/A'}</p>
-              <p style="margin: 2px 0;"><strong>Email:</strong> ${guarantor1.email || 'N/A'}</p>
-              <p style="margin: 2px 0;"><strong>Address:</strong> ${guarantor1.address || 'N/A'}</p>
+              <p style="margin: 2px 0;"><strong>Phone:</strong> ${guarantor1.phoneNumber || "N/A"}</p>
+              <p style="margin: 2px 0;"><strong>Email:</strong> ${guarantor1.email || "N/A"}</p>
+              <p style="margin: 2px 0;"><strong>Address:</strong> ${guarantor1.address || "N/A"}</p>
             </div>
           `);
         }
@@ -1808,12 +1884,16 @@ const bookItemUpdate = async (req, res) => {
                 <p style="font-size: 18px; color: #057474;"><strong>Grand Total:</strong> ₱${calculatedAmount.toLocaleString()}</p>
               </div>
               <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-              ${guarantorInfo.length > 0 ? `
+              ${
+                guarantorInfo.length > 0
+                  ? `
                 <div style="margin-top: 20px;">
                   <h3>Guarantor Information</h3>
-                  ${guarantorInfo.join('')}
+                  ${guarantorInfo.join("")}
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
               <p style="color: #666; margin-top: 20px;">⏰ You will receive reminders before your return date.</p>
             </div>
           `,
@@ -1842,22 +1922,34 @@ const bookItemUpdate = async (req, res) => {
                 <p><strong>Address:</strong> ${customerDetails.location}</p>
                 <p><strong>Payment Method:</strong> ${paymentMethod}</p>
               </div>
-              ${guarantorInfo.length > 0 ? `
+              ${
+                guarantorInfo.length > 0
+                  ? `
                 <div style="background-color: #e7f3ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
                   <h3 style="margin-top: 0;">Guarantor Information</h3>
-                  ${guarantorInfo.join('')}
+                  ${guarantorInfo.join("")}
                 </div>
-              ` : ''}
+              `
+                  : ""
+              }
               <p style="margin-top: 20px;">Please review and approve/reject this booking request in your dashboard.</p>
             </div>
           `,
         };
 
-        try { await transporter.sendMail(mailOptions); console.log("Customer email sent"); }
-        catch (err) { console.error("Error sending customer email:", err.message); }
+        try {
+          await transporter.sendMail(mailOptions);
+          console.log("Customer email sent");
+        } catch (err) {
+          console.error("Error sending customer email:", err.message);
+        }
 
-        try { await transporter.sendMail(ownerMailOptions); console.log("Owner email sent"); }
-        catch (err) { console.error("Error sending owner email:", err.message); }
+        try {
+          await transporter.sendMail(ownerMailOptions);
+          console.log("Owner email sent");
+        } catch (err) {
+          console.error("Error sending owner email:", err.message);
+        }
 
         // Guarantor email
         if (guarantor1.email && guarantor1.fullName) {
@@ -1890,14 +1982,17 @@ const bookItemUpdate = async (req, res) => {
             `,
           };
 
-          try { await transporter.sendMail(guarantor1MailOptions); console.log(`Guarantor email sent to ${guarantor1.email}`); }
-          catch (err) { console.error(`Error sending guarantor email:`, err.message); }
+          try {
+            await transporter.sendMail(guarantor1MailOptions);
+            console.log(`Guarantor email sent to ${guarantor1.email}`);
+          } catch (err) {
+            console.error(`Error sending guarantor email:`, err.message);
+          }
         }
       } catch (err) {
         console.error("Background email error:", err.message);
       }
     });
-
   } catch (error) {
     console.error("Booking update error:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -1911,33 +2006,31 @@ const getUserNotifications = async (req, res) => {
     if (!userId) {
       return res.status(400).json({
         success: false,
-        message: "User ID is required"
+        message: "User ID is required",
       });
     }
 
     // Fetch all bookings for this customer, ordered by newest first
     const notifications = await Books.findAll({
       where: {
-        customerId: userId
+        customerId: userId,
       },
-      order: [['created_at', 'DESC']], // Newest first
+      order: [["created_at", "DESC"]], // Newest first
       // Optionally limit to recent notifications
       // limit: 50
     });
 
-
     return res.status(200).json({
       success: true,
       data: notifications,
-      count: notifications.length
+      count: notifications.length,
     });
-
   } catch (error) {
     console.error("Error fetching notifications:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch notifications",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -1951,28 +2044,27 @@ const markAsRead = async (req, res) => {
     if (!notification) {
       return res.status(404).json({
         success: false,
-        message: "Notification not found"
+        message: "Notification not found",
       });
     }
 
     // If you want to add a 'read' status, add this column to your database
     await notification.update({
       isRead: true,
-      readAt: new Date()
+      readAt: new Date(),
     });
 
     return res.status(200).json({
       success: true,
       message: "Notification marked as read",
-      data: notification
+      data: notification,
     });
-
   } catch (error) {
     console.error("Error marking notification as read:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to mark notification as read",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -1984,21 +2076,20 @@ const getUnreadCount = async (req, res) => {
     const count = await Books.count({
       where: {
         customerId: userId,
-        isRead: false // Requires 'isRead' column in database
-      }
+        isRead: false, // Requires 'isRead' column in database
+      },
     });
 
     return res.status(200).json({
       success: true,
-      unreadCount: count
+      unreadCount: count,
     });
-
   } catch (error) {
     console.error("Error getting unread count:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to get unread count",
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -2015,48 +2106,46 @@ const cleanupOldNotifications = async (req, res) => {
       where: {
         customerId: userId,
         created_at: {
-          [Op.lt]: cutoffDate
+          [Op.lt]: cutoffDate,
         },
-        status: ['completed', 'cancelled'] // Only delete completed/cancelled
-      }
+        status: ["completed", "cancelled"], // Only delete completed/cancelled
+      },
     });
 
     return res.status(200).json({
       success: true,
       message: `Deleted ${deleted} old notifications`,
-      deletedCount: deleted
+      deletedCount: deleted,
     });
-
   } catch (error) {
     console.error("Error cleaning up notifications:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to cleanup notifications",
-      error: error.message
+      error: error.message,
     });
   }
 };
 
 const addNotificationReadStatus = {
   up: async (queryInterface, Sequelize) => {
-    await queryInterface.addColumn('bookings', 'isRead', {
+    await queryInterface.addColumn("bookings", "isRead", {
       type: Sequelize.BOOLEAN,
       defaultValue: false,
-      allowNull: false
+      allowNull: false,
     });
-    
-    await queryInterface.addColumn('bookings', 'readAt', {
+
+    await queryInterface.addColumn("bookings", "readAt", {
       type: Sequelize.DATE,
-      allowNull: true
+      allowNull: true,
     });
   },
 
   down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeColumn('bookings', 'isRead');
-    await queryInterface.removeColumn('bookings', 'readAt');
-  }
+    await queryInterface.removeColumn("bookings", "isRead");
+    await queryInterface.removeColumn("bookings", "readAt");
+  },
 };
-
 
 const startBookedItem = async (req, res) => {
   const transaction = await sequelize.transaction();
@@ -2101,7 +2190,7 @@ const startBookedItem = async (req, res) => {
         status: "ongoing",
         isRead: false,
       },
-      { transaction }
+      { transaction },
     );
 
     // 5. Decrement available quantity
@@ -2110,7 +2199,7 @@ const startBookedItem = async (req, res) => {
         availableQuantity: item.availableQuantity - 1,
         availability: item.availableQuantity - 1 > 0, // optional auto-toggle
       },
-      { transaction }
+      { transaction },
     );
 
     // 6. Commit transaction
@@ -2129,30 +2218,29 @@ const startBookedItem = async (req, res) => {
   }
 };
 
-
 // ====================================
 // CONFIGURATION
 // ====================================
 const VIOLATION_CONFIG = {
   // Grace period in hours before marking as late
   gracePeriodHours: 2,
-  
+
   // Late fee structure
   lateFees: {
-    perDay: 50,      // ₱50 per day late
-    perHour: 10,     // ₱10 per hour late (for hourly rentals)
-    perWeek: 300,    // ₱300 per week late
+    perDay: 50, // ₱50 per day late
+    perHour: 10, // ₱10 per hour late (for hourly rentals)
+    perWeek: 300, // ₱300 per week late
   },
-  
+
   // Maximum late fee cap (optional)
-  maxLateFee: 5000,  // ₱5000 maximum late fee
-  
+  maxLateFee: 5000, // ₱5000 maximum late fee
+
   // Penalty multiplier after certain days
   penaltyMultiplier: {
-    after7Days: 1.5,   // 1.5x fee after 7 days
-    after14Days: 2.0,  // 2x fee after 14 days
-    after30Days: 3.0,  // 3x fee after 30 days
-  }
+    after7Days: 1.5, // 1.5x fee after 7 days
+    after14Days: 2.0, // 2x fee after 14 days
+    after30Days: 3.0, // 3x fee after 30 days
+  },
 };
 
 // ====================================
@@ -2164,18 +2252,20 @@ const VIOLATION_CONFIG = {
  */
 const monitorActiveRentals = async () => {
   try {
-    console.log('🔍 Starting rental monitoring check...');
-    
+    console.log("🔍 Starting rental monitoring check...");
+
     const now = new Date();
-    const gracePeriod = new Date(now.getTime() + (VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000));
-    
+    const gracePeriod = new Date(
+      now.getTime() + VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000,
+    );
+
     // Find all active/ongoing rentals
     const activeRentals = await Books.findAll({
       where: {
         status: {
-          [Op.in]: ['approved', 'ongoing', 'Approved to Rent']
-        }
-      }
+          [Op.in]: ["approved", "ongoing", "Approved to Rent"],
+        },
+      },
     });
 
     console.log(`📊 Found ${activeRentals.length} active rentals to monitor`);
@@ -2183,12 +2273,12 @@ const monitorActiveRentals = async () => {
     for (const rental of activeRentals) {
       const returnDate = new Date(rental.returnDate);
       const daysLate = calculateDaysLate(returnDate, now);
-      
+
       // Check if rental is approaching due date (within 24 hours)
       if (returnDate > now && returnDate <= gracePeriod) {
         await sendDueDateReminder(rental, returnDate);
       }
-      
+
       // Check if rental is overdue
       if (returnDate < now && daysLate > 0) {
         const violationFee = calculateViolationFee(rental, daysLate);
@@ -2196,11 +2286,10 @@ const monitorActiveRentals = async () => {
       }
     }
 
-    console.log('✅ Rental monitoring completed');
+    console.log("✅ Rental monitoring completed");
     return { success: true, checked: activeRentals.length };
-
   } catch (error) {
-    console.error('❌ Error monitoring rentals:', error);
+    console.error("❌ Error monitoring rentals:", error);
     return { success: false, error: error.message };
   }
 };
@@ -2214,14 +2303,14 @@ const monitorActiveRentals = async () => {
 const calculateDaysLate = (returnDate, currentDate = new Date()) => {
   const gracePeriodMs = VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000;
   const returnWithGrace = new Date(returnDate.getTime() + gracePeriodMs);
-  
+
   if (currentDate <= returnWithGrace) {
     return 0; // Not late yet (within grace period)
   }
-  
+
   const msLate = currentDate - returnWithGrace;
   const daysLate = Math.ceil(msLate / (1000 * 60 * 60 * 24));
-  
+
   return Math.max(0, daysLate);
 };
 
@@ -2231,14 +2320,14 @@ const calculateDaysLate = (returnDate, currentDate = new Date()) => {
 const calculateHoursLate = (returnDate, currentDate = new Date()) => {
   const gracePeriodMs = VIOLATION_CONFIG.gracePeriodHours * 60 * 60 * 1000;
   const returnWithGrace = new Date(returnDate.getTime() + gracePeriodMs);
-  
+
   if (currentDate <= returnWithGrace) {
     return 0;
   }
-  
+
   const msLate = currentDate - returnWithGrace;
   const hoursLate = Math.ceil(msLate / (1000 * 60 * 60));
-  
+
   return Math.max(0, hoursLate);
 };
 
@@ -2251,32 +2340,32 @@ const calculateHoursLate = (returnDate, currentDate = new Date()) => {
 const calculateViolationFee = (rental, daysLate = null) => {
   const now = new Date();
   const returnDate = new Date(rental.returnDate);
-  
+
   // Calculate days late if not provided
   if (daysLate === null) {
     daysLate = calculateDaysLate(returnDate, now);
   }
-  
+
   if (daysLate <= 0) {
     return 0; // No violation
   }
 
   let baseFee = 0;
-  const rentalPeriod = rental.rentalPeriod || 'Day';
+  const rentalPeriod = rental.rentalPeriod || "Day";
 
   // Calculate base fee based on rental period type
   switch (rentalPeriod.toLowerCase()) {
-    case 'hour':
+    case "hour":
       const hoursLate = calculateHoursLate(returnDate, now);
       baseFee = hoursLate * VIOLATION_CONFIG.lateFees.perHour;
       break;
-      
-    case 'week':
+
+    case "week":
       const weeksLate = Math.ceil(daysLate / 7);
       baseFee = weeksLate * VIOLATION_CONFIG.lateFees.perWeek;
       break;
-      
-    case 'day':
+
+    case "day":
     default:
       baseFee = daysLate * VIOLATION_CONFIG.lateFees.perDay;
       break;
@@ -2312,27 +2401,28 @@ const handleLateReturn = async (rental, daysLate, violationFee) => {
   try {
     // Update booking with late status and violation fee
     await rental.update({
-      status: 'late',
+      status: "late",
       daysLate: daysLate,
       violationFee: violationFee,
       lateNotificationSent: true,
-      lateDetectedAt: new Date()
+      lateDetectedAt: new Date(),
     });
 
     // Send late notification email
     await sendLateNotificationEmail(rental, daysLate, violationFee);
 
-    console.log(`⚠️ Booking ${rental.id} marked as LATE: ${daysLate} days, Fee: ₱${violationFee}`);
+    console.log(
+      `⚠️ Booking ${rental.id} marked as LATE: ${daysLate} days, Fee: ₱${violationFee}`,
+    );
 
     return {
       success: true,
       bookingId: rental.id,
       daysLate,
-      violationFee
+      violationFee,
     };
-
   } catch (error) {
-    console.error('Error handling late return:', error);
+    console.error("Error handling late return:", error);
     return { success: false, error: error.message };
   }
 };
@@ -2415,14 +2505,13 @@ const sendLateNotificationEmail = async (rental, daysLate, violationFee) => {
             </p>
           </div>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
     console.log(`✅ Late notification sent to ${rental.email}`);
-
   } catch (error) {
-    console.error('Error sending late notification:', error);
+    console.error("Error sending late notification:", error);
   }
 };
 
@@ -2431,14 +2520,19 @@ const sendLateNotificationEmail = async (rental, daysLate, violationFee) => {
  */
 const sendDueDateReminder = async (rental, returnDate) => {
   // Check if we've already sent a reminder in the last 12 hours
-  const twelveHoursAgo = new Date(Date.now() - (12 * 60 * 60 * 1000));
-  if (rental.lastReminderSent && new Date(rental.lastReminderSent) > twelveHoursAgo) {
+  const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000);
+  if (
+    rental.lastReminderSent &&
+    new Date(rental.lastReminderSent) > twelveHoursAgo
+  ) {
     return; // Don't spam reminders
   }
 
   try {
-    const hoursUntilDue = Math.floor((returnDate - new Date()) / (1000 * 60 * 60));
-    
+    const hoursUntilDue = Math.floor(
+      (returnDate - new Date()) / (1000 * 60 * 60),
+    );
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: rental.email.trim(),
@@ -2455,18 +2549,17 @@ const sendDueDateReminder = async (rental, returnDate) => {
           </p>
           <p>Please arrange to return the item on time to avoid late fees.</p>
         </div>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
-    
+
     // Update last reminder sent time
     await rental.update({ lastReminderSent: new Date() });
-    
-    console.log(`📧 Due date reminder sent for booking ${rental.id}`);
 
+    console.log(`📧 Due date reminder sent for booking ${rental.id}`);
   } catch (error) {
-    console.error('Error sending due date reminder:', error);
+    console.error("Error sending due date reminder:", error);
   }
 };
 
@@ -2480,13 +2573,13 @@ const sendDueDateReminder = async (rental, returnDate) => {
 const getRentalStatus = async (req, res) => {
   try {
     const { bookingId } = req.params;
-    
+
     const booking = await Books.findByPk(bookingId);
-    
+
     if (!booking) {
       return res.status(404).json({
         success: false,
-        message: 'Booking not found'
+        message: "Booking not found",
       });
     }
 
@@ -2494,11 +2587,11 @@ const getRentalStatus = async (req, res) => {
     const returnDate = new Date(booking.returnDate);
     const daysLate = calculateDaysLate(returnDate, now);
     const violationFee = calculateViolationFee(booking, daysLate);
-    
+
     // Calculate time remaining or overdue
     const msRemaining = returnDate - now;
     const daysRemaining = Math.ceil(msRemaining / (1000 * 60 * 60 * 24));
-    
+
     const status = {
       bookingId: booking.id,
       product: booking.product,
@@ -2512,19 +2605,18 @@ const getRentalStatus = async (req, res) => {
       originalAmount: parseFloat(booking.amount),
       currentViolationFee: violationFee,
       totalAmountDue: parseFloat(booking.amount) + violationFee,
-      rentalPeriod: booking.rentalPeriod
+      rentalPeriod: booking.rentalPeriod,
     };
 
     return res.status(200).json({
       success: true,
-      data: status
+      data: status,
     });
-
   } catch (error) {
-    console.error('Error getting rental status:', error);
+    console.error("Error getting rental status:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -2535,18 +2627,17 @@ const getRentalStatus = async (req, res) => {
 const triggerRentalMonitoring = async (req, res) => {
   try {
     const result = await monitorActiveRentals();
-    
+
     return res.status(200).json({
       success: true,
-      message: 'Rental monitoring completed',
-      data: result
+      message: "Rental monitoring completed",
+      data: result,
     });
-
   } catch (error) {
-    console.error('Error triggering monitoring:', error);
+    console.error("Error triggering monitoring:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -2559,35 +2650,34 @@ const getLateRentals = async (req, res) => {
     const lateRentals = await Books.findAll({
       where: {
         status: {
-          [Op.in]: ['late', 'overdue']
-        }
+          [Op.in]: ["late", "overdue"],
+        },
       },
-      order: [['returnDate', 'ASC']]
+      order: [["returnDate", "ASC"]],
     });
 
-    const enrichedRentals = lateRentals.map(rental => {
+    const enrichedRentals = lateRentals.map((rental) => {
       const daysLate = calculateDaysLate(new Date(rental.returnDate));
       const violationFee = calculateViolationFee(rental, daysLate);
-      
+
       return {
         ...rental.toJSON(),
         daysLate,
         violationFee,
-        totalAmountDue: parseFloat(rental.amount) + violationFee
+        totalAmountDue: parseFloat(rental.amount) + violationFee,
       };
     });
 
     return res.status(200).json({
       success: true,
       count: enrichedRentals.length,
-      data: enrichedRentals
+      data: enrichedRentals,
     });
-
   } catch (error) {
-    console.error('Error getting late rentals:', error);
+    console.error("Error getting late rentals:", error);
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -2599,66 +2689,88 @@ const getLateRentals = async (req, res) => {
  * Set up automatic monitoring (call this when server starts)
  */
 const setupRentalMonitoring = () => {
-  console.log('🚀 Setting up automatic rental monitoring...');
-  
+  console.log("🚀 Setting up automatic rental monitoring...");
+
   // Run every hour
   const intervalMs = 60 * 60 * 1000; // 1 hour
-  
+
   setInterval(async () => {
-    console.log('⏰ Running scheduled rental monitoring...');
+    console.log("⏰ Running scheduled rental monitoring...");
     await monitorActiveRentals();
   }, intervalMs);
-  
+
   // Run immediately on startup
   monitorActiveRentals();
-  
-  console.log('✅ Rental monitoring scheduled (every hour)');
+
+  console.log("✅ Rental monitoring scheduled (every hour)");
 };
 
 const fetchBookingReceiptsData = async (req, res) => {
   try {
     const [bookings, history] = await Promise.all([
       Books.findAll({
-        where: {
-          status: ["ongoing", "terminated"],
-        },
+        where: { status: ["ongoing", "terminated"] },
       }),
       History.findAll({
-        where: {
-          status: ["ongoing", "terminated"],
-        },
+        where: { status: ["ongoing", "terminated"] },
       }),
     ]);
 
-    const combined = [
-      ...bookings.map((b) => ({ ...b.toJSON(), _source: "books" })),
-      ...history.map((h) => ({ ...h.toJSON(), _source: "history" })),
+    // ✅ Collect all unique ownerIds from both results
+    const ownerIds = [
+      ...new Set(
+        [...bookings, ...history]
+          .map((record) => record.ownerId)
+          .filter(Boolean),
+      ),
     ];
 
-    return res.status(200).json({
-      success: true,
-      data: combined,
+    // ✅ Single query to fetch all relevant owners
+    const owners = await Owner.findAll({
+      where: { id: ownerIds },
+      attributes: ["id", "firstName", "middleName", "lastName"],
     });
+
+    // ✅ Build a lookup map: { [ownerId]: fullName }
+    const ownerMap = owners.reduce((map, owner) => {
+      const { id, firstName, middleName, lastName } = owner.toJSON();
+      map[id] = [firstName, middleName, lastName].filter(Boolean).join(" ");
+      return map;
+    }, {});
+
+    const combined = [
+      ...bookings.map((b) => ({
+        ...b.toJSON(),
+        ownerName: ownerMap[b.ownerId] ?? "Unknown Owner",
+        _source: "books",
+      })),
+      ...history.map((h) => ({
+        ...h.toJSON(),
+        ownerName: ownerMap[h.ownerId] ?? "Unknown Owner",
+        _source: "history",
+      })),
+    ];
+
+    return res.status(200).json({ success: true, data: combined });
   } catch (error) {
     console.error("Error fetching booking receipts:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
 // ====================================
 // EXPORTS
 // ====================================
 
-export { 
-  bookItem, 
-  bookNotification, 
-  bookedItems, 
-  cancelBooking, 
-  fetchBookRequest, 
-  approveBooking, 
-  rejectBooking, 
-  terminateBooking, 
+export {
+  bookItem,
+  bookNotification,
+  bookedItems,
+  cancelBooking,
+  fetchBookRequest,
+  approveBooking,
+  rejectBooking,
+  terminateBooking,
   requestBooking,
   approveBookingRequest,
   rejectBookingRequest,
@@ -2688,5 +2800,5 @@ export {
   ongoingBookAndForApproval,
   ongoingBookAndForApprovalCustomer,
   fetchBookingReceiptsData,
-  fetchOnGoingBookForAdmin
+  fetchOnGoingBookForAdmin,
 };
