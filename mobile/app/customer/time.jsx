@@ -13,7 +13,7 @@ import {
   StatusBar,
   Dimensions,
   Alert,
-  RefreshControl
+  RefreshControl,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
@@ -23,11 +23,12 @@ import { useRouter, usePathname } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { RFValue } from "react-native-responsive-fontsize";
-import * as Notifications from 'expo-notifications';
-import { Vibration } from 'react-native';
-import CustomerBottomNav from '../components/CustomerBottomNav';
+import * as Notifications from "expo-notifications";
+import { Vibration } from "react-native";
+import CustomerBottomNav from "../components/CustomerBottomNav";
 import Header from "../components/header3";
 import ScreenWrapper from "../components/screenwrapper";
+import * as ImagePicker from "expo-image-picker";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -56,7 +57,10 @@ const sendRentalEndedNotification = async (productName) => {
 
 const { width, height } = Dimensions.get("window");
 
-export default function TimeDuration({ title = "Time Duration", backgroundColor = "#fff" }) {
+export default function TimeDuration({
+  title = "Time Duration",
+  backgroundColor = "#fff",
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [bookedItems, setBookedItems] = useState([]);
@@ -83,7 +87,7 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
       const newTimers = {};
 
       bookedItems.forEach((item) => {
-        if (item.status === 'ongoing') {
+        if (item.status === "ongoing") {
           const returnDate = new Date(item.returnDate);
           const diff = returnDate - now;
 
@@ -98,15 +102,23 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
 
             if (!notifiedItems.has(item.id)) {
               sendRentalEndedNotification(item.product);
-              setNotifiedItems(prev => new Set([...prev, item.id]));
+              setNotifiedItems((prev) => new Set([...prev, item.id]));
             }
           } else {
             const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const hours = Math.floor(
+              (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+            );
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-            newTimers[item.id] = { days, hours, minutes, seconds, expired: false };
+            newTimers[item.id] = {
+              days,
+              hours,
+              minutes,
+              seconds,
+              expired: false,
+            };
           }
         }
       });
@@ -121,10 +133,10 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
   useEffect(() => {
     const requestNotificationPermissions = async () => {
       const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
+      if (status !== "granted") {
         Alert.alert(
-          'Notifications Disabled',
-          'Please enable notifications to receive rental reminders.'
+          "Notifications Disabled",
+          "Please enable notifications to receive rental reminders.",
         );
       }
     };
@@ -147,9 +159,11 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
     try {
       const returnDate = new Date(item.returnDate);
       const now = new Date();
-      
+
       if (returnDate > now) {
-        const existingId = await AsyncStorage.getItem(`notification_${item.id}`);
+        const existingId = await AsyncStorage.getItem(
+          `notification_${item.id}`,
+        );
         if (existingId) {
           await Notifications.cancelScheduledNotificationAsync(existingId);
         }
@@ -158,10 +172,10 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
           content: {
             title: "Rental Period Ended!",
             body: `Your rental for "${item.product}" has ended. Please return it to the owner.`,
-            data: { 
-              itemId: item.id, 
-              type: 'rental_ended',
-              product: item.product 
+            data: {
+              itemId: item.id,
+              type: "rental_ended",
+              product: item.product,
             },
             sound: true,
             priority: Notifications.AndroidNotificationPriority.HIGH,
@@ -172,16 +186,16 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
           },
         });
 
-        const oneHourBefore = new Date(returnDate.getTime() - (60 * 60 * 1000));
+        const oneHourBefore = new Date(returnDate.getTime() - 60 * 60 * 1000);
         if (oneHourBefore > now) {
           await Notifications.scheduleNotificationAsync({
             content: {
               title: "Rental Ending Soon",
               body: `Your rental for "${item.product}" ends in 1 hour!`,
-              data: { 
-                itemId: item.id, 
-                type: 'rental_reminder',
-                product: item.product 
+              data: {
+                itemId: item.id,
+                type: "rental_reminder",
+                product: item.product,
               },
               sound: true,
             },
@@ -192,7 +206,7 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
         }
 
         await AsyncStorage.setItem(`notification_${item.id}`, notificationId);
-        console.log('Scheduled notifications for:', item.product);
+        console.log("Scheduled notifications for:", item.product);
       }
     } catch (error) {
       console.error("Error scheduling notification:", error);
@@ -202,11 +216,13 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
   // Cancel scheduled notification
   const cancelScheduledNotification = async (itemId) => {
     try {
-      const notificationId = await AsyncStorage.getItem(`notification_${itemId}`);
+      const notificationId = await AsyncStorage.getItem(
+        `notification_${itemId}`,
+      );
       if (notificationId) {
         await Notifications.cancelScheduledNotificationAsync(notificationId);
         await AsyncStorage.removeItem(`notification_${itemId}`);
-        console.log('Cancelled notification for item:', itemId);
+        console.log("Cancelled notification for item:", itemId);
       }
     } catch (error) {
       console.error("Error canceling notification:", error);
@@ -235,18 +251,18 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
   const fetchOngoingAndForApproval = async () => {
     try {
       setLoading(true);
-  
+
       const res = await axios.get(
-        `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${ownerId}`
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book/ongoing-for-approval-customer/${ownerId}`,
       );
-  
+
       const items = res.data.data || [];
       setBookedItems(items);
       console.log("API response of ongoing-for-approval-customer", items);
-  
+
       // Schedule notifications for all ongoing rentals
       for (const item of items) {
-        if (item.status === 'ongoing') {
+        if (item.status === "ongoing") {
           await scheduleRentalEndNotification(item);
         } else {
           await cancelScheduledNotification(item.id);
@@ -268,6 +284,72 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
     }
   };
 
+  const takePickupPhoto = async (bookId) => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission Denied",
+        "Camera access is required to take photos.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
+    if (result.canceled) return;
+
+    const formData = new FormData();
+    formData.append("photo", {
+      uri: result.assets[0].uri,
+      name: "pickup.jpg",
+      type: "image/jpeg",
+    });
+
+    try {
+      await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book-photos/pickup-photo/${bookId}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      Alert.alert("Success", "Pickup photo saved!");
+    } catch (error) {
+      console.error("Pickup photo error:", error);
+      Alert.alert("Error", "Failed to save pickup photo.");
+    }
+  };
+
+  const takeReturnPhoto = async (bookId) => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert(
+        "Permission Denied",
+        "Camera access is required to take photos.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
+    if (result.canceled) return;
+
+    const formData = new FormData();
+    formData.append("photo", {
+      uri: result.assets[0].uri,
+      name: "return.jpg",
+      type: "image/jpeg",
+    });
+
+    try {
+      await axios.post(
+        `${process.env.EXPO_PUBLIC_API_URL}/api/book-photos/return-photo/${bookId}`,
+        formData,
+        { headers: { "Content-Type": "multipart/form-data" } },
+      );
+      Alert.alert("Success", "Return photo saved!");
+    } catch (error) {
+      console.error("Return photo error:", error);
+      Alert.alert("Error", "Failed to save return photo.");
+    }
+  };
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
@@ -278,97 +360,120 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
   };
 
   const renderBookingCard = (item) => {
-    const timer = timers[item.id] || { days: 0, hours: 0, minutes: 0, seconds: 0, expired: false };
-    const isBooked = item.status === 'booked';
-    const isOngoing = item.status === 'ongoing';
+    const timer = timers[item.id] || {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      expired: false,
+    };
+    const isBooked = item.status === "booked";
+    const isOngoing = item.status === "ongoing";
 
     return (
       <View key={item.id} style={styles.card}>
         <View style={styles.deviceRow}>
           <Image
             source={{
-              uri: getImageUrl(item.itemImage) || "https://via.placeholder.com/150",
+              uri:
+                getImageUrl(item.itemImage) ||
+                "https://via.placeholder.com/150",
             }}
             style={styles.deviceImage}
-            onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+            onError={(e) =>
+              console.log("Image load error:", e.nativeEvent.error)
+            }
           />
 
           <View style={styles.deviceInfo}>
             <Text style={styles.deviceName}>{item.product}</Text>
             <Text style={styles.categoryText}>{item.category}</Text>
             <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
-              <Text style={styles.statusText}>{isBooked ? 'Out for Delivery' : 'Ongoing'}</Text>
+              <Text style={styles.statusText}>
+                {isBooked ? "Out for Delivery" : "Ongoing"}
+              </Text>
             </View>
           </View>
         </View>
 
         {isOngoing && (
-          timer.expired ? (
-            <>
-              <View style={styles.expiredContainer}>
-                <MaterialIcons name="access-time" size={40} color="#FF5252" />
-                <Text style={styles.expiredText}>Rental Period Ended</Text>
-              </View>
-              
-              <View style={styles.actionButtonsContainer}>
-                <Pressable 
-                  style={styles.reviewButton}
-                  onPress={() => {
-                    console.log('Navigating with params:', {
-                      itemId: String(item.itemId),
-                      ownerId: String(item.ownerId),
-                      customerId: String(ownerId),
-                      productName: item.product,
-                      productImage: item.itemImage
-                    });
-                    router.push({
-                      pathname: "/customer/reviewProducts",
-                      params: {
-                        itemId: String(item.itemId),
-                        ownerId: String(item.ownerId),
-                        customerId: String(ownerId),
-                        productName: item.product,
-                        productImage: item.itemImage
-                      }
-                    });
-                  }}
-                >
-                  <MaterialIcons name="rate-review" size={20} color="#fff" />
-                  <Text style={styles.reviewButtonText}>Write Review</Text>
-                </Pressable>
-
-                <Pressable 
-                  style={styles.rentAgainButton}
-                  onPress={() => {
-                    router.push({
-                      pathname: "customer/rentingDetails",
-                      params: {
-                        itemId: String(item.itemId),
-                        id: String(item.itemId),
-                      }
-                    });
-                  }}
-                >
-                  <MaterialIcons name="refresh" size={20} color="#057474" />
-                  <Text style={styles.rentAgainButtonText}>Rent Again</Text>
-                </Pressable>
-              </View>
-            </>
-          ) : (
-            <View style={styles.timerRow}>
-              {[
-                { value: String(timer.days).padStart(2, "0"), label: "Days" },
-                { value: String(timer.hours).padStart(2, "0"), label: "Hours" },
-                { value: String(timer.minutes).padStart(2, "0"), label: "Minutes" },
-                { value: String(timer.seconds).padStart(2, "0"), label: "Seconds" },
-              ].map((timeItem, index) => (
-                <View key={index} style={styles.timeBox}>
-                  <Text style={styles.timeValue}>{timeItem.value}</Text>
-                  <Text style={styles.timeLabel}>{timeItem.label}</Text>
+          <>
+            {/* Timer or Expired block */}
+            {timer.expired ? (
+              <>
+                <View style={styles.expiredContainer}>
+                  <MaterialIcons name="access-time" size={40} color="#FF5252" />
+                  <Text style={styles.expiredText}>Rental Period Ended</Text>
                 </View>
-              ))}
-            </View>
-          )
+
+                <View style={styles.actionButtonsContainer}>
+                  <Pressable
+                    style={styles.reviewButton}
+                    onPress={() => {
+                      router.push({
+                        pathname: "/customer/reviewProducts",
+                        params: {
+                          itemId: String(item.itemId),
+                          ownerId: String(item.ownerId),
+                          customerId: String(ownerId),
+                          productName: item.product,
+                          productImage: item.itemImage,
+                        },
+                      });
+                    }}
+                  >
+                    <MaterialIcons name="rate-review" size={20} color="#fff" />
+                    <Text style={styles.reviewButtonText}>Write Review</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={styles.rentAgainButton}
+                    onPress={() => {
+                      router.push({
+                        pathname: "customer/rentingDetails",
+                        params: {
+                          itemId: String(item.itemId),
+                          id: String(item.itemId),
+                        },
+                      });
+                    }}
+                  >
+                    <MaterialIcons name="refresh" size={20} color="#057474" />
+                    <Text style={styles.rentAgainButtonText}>Rent Again</Text>
+                  </Pressable>
+                </View>
+              </>
+            ) : (
+              <>
+                {/* Countdown Timer */}
+                <View style={styles.timerRow}>
+                  {[
+                    {
+                      value: String(timer.days).padStart(2, "0"),
+                      label: "Days",
+                    },
+                    {
+                      value: String(timer.hours).padStart(2, "0"),
+                      label: "Hours",
+                    },
+                    {
+                      value: String(timer.minutes).padStart(2, "0"),
+                      label: "Minutes",
+                    },
+                    {
+                      value: String(timer.seconds).padStart(2, "0"),
+                      label: "Seconds",
+                    },
+                  ].map((timeItem, index) => (
+                    <View key={index} style={styles.timeBox}>
+                      <Text style={styles.timeValue}>{timeItem.value}</Text>
+                      <Text style={styles.timeLabel}>{timeItem.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </>
+            )}
+          </>
         )}
 
         <View style={styles.dateRow}>
@@ -385,12 +490,17 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
         <View style={styles.detailsRow}>
           <View style={styles.detailItem}>
             <MaterialIcons name="payment" size={16} color="#666" />
-            <Text style={styles.detailValue}>{item.paymentMethod || "N/A"}</Text>
+            <Text style={styles.detailValue}>
+              {item.paymentMethod || "N/A"}
+            </Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Total:</Text>
             <Text style={styles.detailValue}>
-              ₱{item.grandTotal ? parseFloat(item.grandTotal).toFixed(2) : item.amount}
+              ₱
+              {item.grandTotal
+                ? parseFloat(item.grandTotal).toFixed(2)
+                : item.amount}
             </Text>
           </View>
         </View>
@@ -398,17 +508,30 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
         <View style={styles.paymentRow}>
           <Text style={styles.paymentText}>{item.address}</Text>
         </View>
+
+        <Pressable
+          style={styles.pickUpButton}
+          onPress={() => takePickupPhoto(item.id)} // ✅ wire up
+        >
+          <MaterialIcons name="camera-alt" size={18} color="#fff" />
+          <Text style={styles.pickUpButtonText}>📸 Take Pickup Photo</Text>
+        </Pressable>
+
+        <Pressable
+          style={styles.returnButton}
+          onPress={() => takeReturnPhoto(item.id)} // ✅ wire up
+        >
+          <MaterialIcons name="camera-alt" size={18} color="#057474" />
+          <Text style={styles.returnButtonText}>📷 Take Return Photo</Text>
+        </Pressable>
       </View>
     );
   };
 
   return (
     <ScreenWrapper>
-      <Header
-        title="Time Duration"
-        backgroundColor="#fff"
-      />
-      
+      <Header title="Time Duration" backgroundColor="#fff" />
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.contentWrapper}
@@ -424,8 +547,9 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
       >
         {!isAuthenticated ? (
           <View style={styles.notAuthenticatedContainer}>
-            <Text style={styles.notAuthenticatedText}>Please log in to view</Text>
-
+            <Text style={styles.notAuthenticatedText}>
+              Please log in to view
+            </Text>
           </View>
         ) : loading ? (
           <View style={styles.loadingContainer}>
@@ -436,13 +560,15 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
           <View style={styles.emptyContainer}>
             <MaterialIcons name="schedule" size={60} color="#ccc" />
             <Text style={styles.emptyText}>No ongoing rentals</Text>
-            <Text style={styles.emptySubtext}>Your active rental timers will appear here</Text>
+            <Text style={styles.emptySubtext}>
+              Your active rental timers will appear here
+            </Text>
           </View>
         ) : (
           bookedItems.map(renderBookingCard)
         )}
       </ScrollView>
-      <CustomerBottomNav/>
+      <CustomerBottomNav />
     </ScreenWrapper>
   );
 }
@@ -450,12 +576,12 @@ export default function TimeDuration({ title = "Time Duration", backgroundColor 
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: "#fff", 
+    backgroundColor: "#fff",
   },
 
   contentWrapper: {
     padding: 16,
-    paddingBottom: 80
+    paddingBottom: 80,
   },
 
   loadingContainer: {
@@ -492,9 +618,6 @@ const styles = StyleSheet.create({
   },
 
   notAuthenticatedContainer: {
-
-
-
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -720,7 +843,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 12,
   },
-  
+
   reviewButton: {
     flex: 1,
     flexDirection: "row",
@@ -731,13 +854,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 6,
   },
-  
+
   reviewButtonText: {
     color: "#fff",
     fontSize: RFValue(12),
     fontWeight: "600",
   },
-  
+
   rentAgainButton: {
     flex: 1,
     flexDirection: "row",
@@ -750,8 +873,43 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     gap: 6,
   },
-  
+
   rentAgainButtonText: {
+    color: "#057474",
+    fontSize: RFValue(12),
+    fontWeight: "600",
+  },
+  pickUpButton: {
+    marginTop: 12,
+    backgroundColor: "#057474",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+  },
+
+  pickUpButtonText: {
+    color: "#fff",
+    fontSize: RFValue(12),
+    fontWeight: "600",
+  },
+
+  returnButton: {
+    marginTop: 8,
+    backgroundColor: "#fff",
+    padding: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    borderWidth: 2,
+    borderColor: "#057474",
+  },
+
+  returnButtonText: {
     color: "#057474",
     fontSize: RFValue(12),
     fontWeight: "600",
