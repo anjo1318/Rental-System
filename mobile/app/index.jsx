@@ -335,10 +335,11 @@ export default function Index() {
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
           numColumns={2}
-          columnWrapperStyle={{
-            justifyContent: "flex-start",
-            marginBottom: 7,
-          }}
+            columnWrapperStyle={{
+              justifyContent:
+              "flex-start",
+              marginBottom: 7, right: 9,
+            }}
           scrollEnabled={false}
           contentContainerStyle={{ paddingHorizontal: 16, }}
         />
@@ -506,8 +507,9 @@ featuredImage: {
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-    marginTop: 8,
-    right: 9,
+    marginTop: 2,
+    top: 3,
+
   },
 
   upperHalf: {

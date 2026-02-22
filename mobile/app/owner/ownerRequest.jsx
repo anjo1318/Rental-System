@@ -143,7 +143,7 @@ export default function ownerItem() {
   
  <ScreenWrapper>
          <Header
-           title="Request"
+           title="Notifications"
            backgroundColor="#007F7F"
          />
   <View style={styles.container}>
