@@ -305,15 +305,24 @@ export default function TimeDuration({
     });
 
     try {
-      await axios.post(
+      const response = await axios.post(
         `${process.env.EXPO_PUBLIC_API_URL}/api/book-photos/pickup-photo/${bookId}`,
         formData,
-        { headers: { "Content-Type": "multipart/form-data" } },
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          timeout: 30000,
+        },
       );
+      console.log("Pickup response:", response.data);
       Alert.alert("Success", "Pickup photo saved!");
     } catch (error) {
-      console.error("Pickup photo error:", error);
-      Alert.alert("Error", "Failed to save pickup photo.");
+      console.error("Pickup photo error:", error.message);
+      console.error("Status:", error.response?.status);
+      console.error("Server response:", JSON.stringify(error.response?.data));
+      Alert.alert(
+        "Error",
+        `${error.response?.status} - ${JSON.stringify(error.response?.data) || error.message}`,
+      );
     }
   };
 

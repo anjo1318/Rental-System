@@ -2,6 +2,7 @@ import Books from "../models/Book.js";
 import Owner from "../models/Owner.js";
 import Item from "../models/Item.js";
 import History from "../models/History.js";
+import BookPhoto from "../models/BookPhoto.js";
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 import { Op } from "sequelize";
@@ -1060,12 +1061,36 @@ const ongoingBook = async (req, res) => {
 
 const fetchOnGoingBookForAdmin = async (req, res) => {
   try {
-    const response = await Books.findAll({
+    const bookings = await Books.findAll({
       where: { status: "ongoing" },
       order: [["created_at", "DESC"]],
     });
 
-    return res.status(200).json({ success: true, data: response });
+    // Get all bookIds
+    const bookIds = bookings.map((b) => b.id);
+
+    // Fetch photos for those bookIds
+    const photos = await BookPhoto.findAll({
+      where: { bookId: bookIds },
+    });
+
+    // Map photos by bookId for quick lookup
+    const photoMap = {};
+    photos.forEach((p) => {
+      photoMap[p.bookId] = {
+        pickupPhoto: p.pickupPhoto || null,
+        returnPhoto: p.returnPhoto || null,
+      };
+    });
+
+    // Merge photos into each booking
+    const data = bookings.map((b) => ({
+      ...b.toJSON(),
+      pickupPhoto: photoMap[b.id]?.pickupPhoto || null,
+      returnPhoto: photoMap[b.id]?.returnPhoto || null,
+    }));
+
+    return res.status(200).json({ success: true, data });
   } catch (error) {
     console.error("Error in ongoingBook for admin:", error);
     return res.status(500).json({ success: false, message: error.message });
