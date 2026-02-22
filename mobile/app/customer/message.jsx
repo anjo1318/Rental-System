@@ -187,7 +187,6 @@ export default function Messages() {
                 style={styles.messageItem}
                 onPress={() => handleChatPress(chat)}
               >
-                <View style={styles.bottomDivider} />
                 <Image
                   source={{ 
                     uri: chat.otherUserImage 
@@ -209,10 +208,7 @@ export default function Messages() {
                     </Text>
                   </View>
                   <Text style={styles.preview} numberOfLines={1}>
-                    {chat.lastMessage 
-                      ? chat.lastMessage.text 
-                      : `Item ID: ${chat.itemId}`
-                    }
+                    {chat.lastMessage ? chat.lastMessage.text : ""}
                   </Text>
                 </View>
               </Pressable>
@@ -256,6 +252,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     backgroundColor: "#ffffff",
     padding: 20,
+    paddingBottom: 2,
   },
 
   avatar: {
@@ -265,14 +262,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
 
-  bottomDivider: {
-    position: "absolute",
-    bottom: 5,
-    left: 68,
-    right: 0,
-    height: 1,
-    backgroundColor: "#05747480",
-  },
+
 
   messageContent: {
     flex: 1,
