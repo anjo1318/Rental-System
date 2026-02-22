@@ -17,7 +17,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import ItemImages from "./itemImages";
-import Header from "../components/header";
+import Header from "../components/header4";
 import ScreenWrapper from "../components/screenwrapper";
 
 
@@ -250,14 +250,14 @@ export default function ItemDetail() {
               style={styles.avatar}
             />
             <Text style={styles.ownerText}>
-              Hello {customer?.firstName || 'User'}{" "}
+              Hello, {customer?.firstName || 'User'}{" "}
               <Icon name="verified" size={16} color="#3498db" />
             </Text>
           </View>
 
           {/* Brand */}
             
-            <Text style={styles.detailLabel}>Brand</Text>
+            <Text style={styles.detailLabel}>Brand:</Text>
             <Text style={styles.detailValue}>{item.brand || "N/A"}</Text>
           </View>
         
@@ -265,7 +265,8 @@ export default function ItemDetail() {
         <View style={styles.detailLine4}></View>
         <View style={styles.detailLine}></View>
         {/* Specifications */}
-        <View style={styles.section}>
+        <View style={styles.section1}>
+          <Text style={styles.sectionTitle1}>Specifications</Text>
           <Text style={styles.description}>{item.specification || "No specification provided"}</Text>
         </View>
 
@@ -274,17 +275,15 @@ export default function ItemDetail() {
         <View style={styles.detailLine}></View>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Description (actual condition)</Text>
-          <Text style={styles.description}>{item.description}</Text>
+          <Text style={styles.description1}>{item.description}</Text>
         </View>
 
         {/* Reviews */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
-        />
-        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]}
+        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 65 }]}
         />
 
-{/* <View style={styles.section}>
-  <Text style={styles.sectionTitle}>Review (1)</Text>
+ <View style={styles.section}>
+  <Text style={styles.sectionTitle2}>Review (1)</Text>
 
   <Pressable
   style={({ pressed }) => [
@@ -318,8 +317,8 @@ export default function ItemDetail() {
     </Text>
 
   </Pressable>
-</View> */}
-        <View style={[styles.detailLine3, { borderTopColor: '#00000040' }]} />
+</View> 
+        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 72 }]} />
 
         
       
@@ -466,7 +465,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContainer: {
-    paddingBottom: 150,
+    paddingBottom: 40,
   },
   infoSection: {
     backgroundColor: '#FFF',
@@ -476,10 +475,10 @@ const styles = StyleSheet.create({
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    bottom: 10,
   },
   price: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '700',
     color: '#057474',
     marginLeft: 4,
@@ -504,10 +503,10 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   title: {
-    fontSize: 18,
+    fontSize: 15,
     fontWeight: '700',
     color: '#333',
-    marginBottom: 12,
+    bottom: 12,
   },
   ownerContainer: {
     flexDirection: 'row',
@@ -521,59 +520,81 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#E0E0E0',
     marginRight: 8,
+    bottom: 15,
   },
   ownerText: {
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+    bottom: 15,
   },
   detailLine: {
     paddingTop: 12,
-    borderTopWidth: 1,
+    borderTopWidth: .3,
     borderTopColor: '#0574744D',
+    bottom: 44,
   },
   detailLine2: {
     paddingTop: 12,
-    borderTopWidth: 1,
+    borderTopWidth: .3,
     borderTopColor: '#0574744D',
-    bottom: 105,
+    bottom: 112,
     
   },
  detailLine4: {
     paddingTop: 12,
     borderTopColor: '#0574744D',
-    bottom: 50,
-    borderTopWidth: 1,
+    bottom: 70,
+    borderTopWidth: .3,
     
   },
    detailLine3: {
     paddingTop: 12,
-    borderTopWidth: 1,
+    borderTopWidth: .3,
     borderTopColor: '#0574744D',
     top: 15,
+
+    
   },
   detailLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: '#333',
-    top: 45,
+    top: 20,
   },
   detailValue: {
     fontSize: 14,
     color: '#666',
-    top: 45,
-    left: 5,
+    top: 1,
+    left: 50,
+  },
+  section1: {
+    backgroundColor: '#FFF',
+    padding: 16,
+    bottom: 47,
   },
   section: {
     backgroundColor: '#FFF',
     padding: 16,
-    marginBottom: 2,
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
     color: '#333',
-    marginBottom: 12,
+    bottom: 55,
+  },
+  sectionTitle1: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    bottom: 12,
+  },
+  sectionTitle2: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#333',
+    bottom: 78,
   },
   specItem: {
     flexDirection: 'row',
@@ -595,11 +616,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 22,
+    left: 10,
+  },
+  description1: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 22,
+    left: 10,
+    bottom: 45,
   },
   reviewCard: {
     backgroundColor: '#F9F9F9',
     padding: 12,
     borderRadius: 12,
+    bottom: 60,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -634,7 +664,7 @@ const styles = StyleSheet.create({
 
   actionContainer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 40,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -642,7 +672,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 12,
     backgroundColor: "#fff",
-    bottom: 50,
   },
   chatButton: {
     flex: 1,

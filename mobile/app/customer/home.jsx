@@ -909,7 +909,7 @@ featuredImage: {
     width: CARD_WIDTH,
     height: CARD_HEIGHT,
     backgroundColor: "#fff",
-    borderRadius: 15,
+    borderRadius: 5,
     overflow: "hidden",
     borderWidth: 0,
     shadowColor: "#000",
@@ -919,8 +919,6 @@ featuredImage: {
     elevation: 3,
     borderColor: "transparent",
     marginHorizontal: 3,
-    borderWidth: 1,
-    borderColor: "#007F7F39"  
     
   },
 
