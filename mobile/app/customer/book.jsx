@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
 
   bodyWrapper: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: 7,
     paddingTop: 16,
   },
 
@@ -299,29 +299,30 @@ const styles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: "#FFF",
-    borderRadius: 12,
+    backgroundColor: '#FFF',
+    borderRadius: 5,
     borderWidth: 1,
-    borderColor: "#007F7F",
-    marginBottom: 16,
-    shadowColor: "#000",
+    borderColor: '#D0D0D0', 
+    marginBottom: 10,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    overflow: 'hidden',
+    
   },
-
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#F0F0F0",
+    padding: 5,
   },
 
   ownerInfo: {
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: 38,
+    top: 10,
   },
 
   ownerAvatar: {
@@ -371,6 +372,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 12,
     backgroundColor: "#F0F0F0",
+    right: 8,
   },
 
   productInfo: {
@@ -380,7 +382,7 @@ const styles = StyleSheet.create({
 
   productName: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "800",
     color: "#000",
     marginBottom: 4,
   },
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
   productPrice: {
     fontSize: 14,
     fontWeight: "500",
-    color: "#333",
+    color: "#007F7F",
   },
 
   bottomContainer: {
