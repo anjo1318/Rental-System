@@ -20,6 +20,33 @@ import ItemImages from "./itemImages";
 import Header from "../components/header4";
 import ScreenWrapper from "../components/screenwrapper";
 
+// ─── Responsive helpers ──────────────────────────────────────────────────────
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+// Base width used when the styles were originally designed (typical ~375 pt phone)
+const BASE_WIDTH = 375;
+
+/**
+ * Scale a size linearly relative to screen width.
+ * Clamps so extreme tablets/phones don't go wild.
+ */
+const scale = (size) => {
+  const scaled = (SCREEN_WIDTH / BASE_WIDTH) * size;
+  // Allow ±40 % from original value
+  return Math.round(Math.min(size * 1.4, Math.max(size * 0.7, scaled)));
+};
+
+/**
+ * Moderate scale – less aggressive than full linear scale.
+ * Good for font sizes and padding.
+ */
+const ms = (size, factor = 0.5) =>
+  Math.round(size + (scale(size) - size) * factor);
+
+// Convenience shorthands
+const vw = (pct) => (SCREEN_WIDTH * pct) / 100;
+const vh = (pct) => (SCREEN_HEIGHT * pct) / 100;
+
 
 
 export default function ItemDetail() {
@@ -194,7 +221,7 @@ export default function ItemDetail() {
   if (!item) {
     return (
       <View style={styles.center}>
-        <Icon name="error-outline" size={64} color="#ccc" />
+        <Icon name="error-outline" size={scale(64)} color="#ccc" />
         <Text style={styles.errorText}>Item not found</Text>
         <TouchableOpacity onPress={() => router.back()} style={styles.goBackButton}>
           <Text style={styles.goBackText}>Go Back</Text>
@@ -224,7 +251,7 @@ export default function ItemDetail() {
         />
       }
       >
-        {/* Item Images */}
+  {/* Item Images */}
         <ItemImages images={item.itemImages} />
 
         {/* Price and Title Section */}
@@ -242,7 +269,7 @@ export default function ItemDetail() {
 
           <Text style={styles.title}>{item.title}</Text>
 
-          {/* Owner Info */}
+    {/* Owner Info */}
           
           <View style={styles.ownerContainer}>
             <Image
@@ -279,7 +306,7 @@ export default function ItemDetail() {
         </View>
 
         {/* Reviews */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 65 }]}
+        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: scale(72) }]}
         />
 
  <View style={styles.section}>
@@ -300,12 +327,12 @@ export default function ItemDetail() {
       <View style={styles.reviewHeaderText}>
         <Text style={styles.reviewerName}>Mr. Kenneth</Text>
 
-        <View style={styles.stars}>
-          <Icon name="star" size={14} color="#FFD700" />
-          <Icon name="star" size={14} color="#FFD700" />
-          <Icon name="star" size={14} color="#FFD700" />
-          <Icon name="star" size={14} color="#FFD700" />
-          <Icon name="star-border" size={14} color="#FFD700" />
+       <View style={styles.stars}>
+          <Icon name="star" size={scale(14)} color="#FFD700" />
+          <Icon name="star" size={scale(14)} color="#FFD700" />
+          <Icon name="star" size={scale(14)} color="#FFD700" />
+          <Icon name="star" size={scale(14)} color="#FFD700" />
+          <Icon name="star-border" size={scale(14)} color="#FFD700" />
         </View>
       </View>
     </View>
@@ -318,7 +345,8 @@ export default function ItemDetail() {
 
   </Pressable>
 </View> 
-        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 72 }]} />
+       <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 72 }]} />
+
 
         
       
@@ -424,7 +452,7 @@ export default function ItemDetail() {
           }}
           activeOpacity={0.8}
         >
-          <Icon name="chat-bubble-outline" size={20} color="#057474" />
+          <Icon name="chat-bubble-outline" size={scale(20)} color="#057474" />
           <Text style={styles.chatButtonText}>Chat Now</Text>
         </TouchableOpacity>
 
@@ -459,218 +487,214 @@ const styles = StyleSheet.create({
     justifyContent: "center", 
     alignItems: "center",
     backgroundColor: "#F5F5F5",
-    padding: 20
+    padding: scale(20),
   },
   scrollContent: {
     flex: 1,
   },
   scrollContainer: {
-    paddingBottom: 40,
+    paddingBottom: scale(40),
   },
   infoSection: {
     backgroundColor: '#FFF',
-    padding: 16,
-    bottom: 15,
+    padding: scale(16),
+    bottom: scale(15),
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    bottom: 10,
+    bottom: scale(10),
   },
   price: {
-    fontSize: 15,
+    fontSize: ms(15),
     fontWeight: '700',
     color: '#057474',
-    marginLeft: 4,
+    marginLeft: scale(4),
   },
   priceUnit: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    marginLeft: 4,
+    marginLeft: scale(4),
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 'auto',
     backgroundColor: '#FFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: scale(8),
+    paddingVertical: scale(4),
   },
   rating: {
-    fontSize: 14,
+    fontSize: ms(14),
     fontWeight: '600',
     color: '#333',
-    marginRight: 4,
+    marginRight: scale(4),
   },
   title: {
-    fontSize: 15,
+    fontSize: ms(15),
     fontWeight: '700',
     color: '#333',
-    bottom: 12,
+    bottom: scale(12),
   },
   ownerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    top: 25,
+    marginBottom: scale(12),
+    top: scale(25),
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     backgroundColor: '#E0E0E0',
-    marginRight: 8,
-    bottom: 15,
+    marginRight: scale(8),
+    bottom: scale(15),
   },
   ownerText: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#333',
     fontWeight: '500',
-    bottom: 15,
+    bottom: scale(15),
   },
   detailLine: {
-    paddingTop: 12,
-    borderTopWidth: .3,
+    paddingTop: scale(12),
+    borderTopWidth: 0.3,
     borderTopColor: '#0574744D',
-    bottom: 44,
+    bottom: scale(44),
   },
   detailLine2: {
-    paddingTop: 12,
-    borderTopWidth: .3,
+    paddingTop: scale(12),
+    borderTopWidth: 0.3,
     borderTopColor: '#0574744D',
-    bottom: 112,
-    
+    bottom: scale(112),
   },
- detailLine4: {
-    paddingTop: 12,
+  detailLine4: {
+    paddingTop: scale(12),
     borderTopColor: '#0574744D',
-    bottom: 70,
-    borderTopWidth: .3,
-    
+    bottom: scale(70),
+    borderTopWidth: 0.3,
   },
-   detailLine3: {
-    paddingTop: 12,
-    borderTopWidth: .3,
+  detailLine3: {
+    paddingTop: scale(12),
+    borderTopWidth: 0.3,
     borderTopColor: '#0574744D',
-    top: 15,
-
-    
+    top: scale(15),
   },
   detailLabel: {
-    fontSize: 14,
+    fontSize: ms(14),
     fontWeight: '600',
     color: '#333',
-    top: 20,
+    top: scale(20),
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    top: 1,
-    left: 50,
+    top: scale(1),
+    left: scale(50),
   },
   section1: {
     backgroundColor: '#FFF',
-    padding: 16,
-    bottom: 47,
+    padding: scale(16),
+    bottom: scale(47),
   },
   section: {
     backgroundColor: '#FFF',
-    padding: 16,
-    marginBottom: 20,
+    padding: scale(16),
+    marginBottom: scale(20),
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: ms(16),
     fontWeight: '700',
     color: '#333',
-    bottom: 55,
+    bottom: scale(55),
   },
   sectionTitle1: {
-    fontSize: 16,
+    fontSize: ms(16),
     fontWeight: '700',
     color: '#333',
-    bottom: 12,
+    bottom: scale(12),
   },
   sectionTitle2: {
-    fontSize: 16,
+    fontSize: ms(16),
     fontWeight: '700',
     color: '#333',
-    bottom: 78,
+    bottom: scale(78),
   },
   specItem: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: scale(8),
   },
   specKey: {
-    fontSize: 13,
+    fontSize: ms(13),
     fontWeight: '600',
     color: '#555',
-    width: 130,
+    width: scale(130),
   },
   specValue: {
     flex: 1,
-    fontSize: 13,
+    fontSize: ms(13),
     color: '#666',
-    lineHeight: 18,
+    lineHeight: ms(18),
   },
   description: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    lineHeight: 22,
-    left: 10,
+    lineHeight: ms(22),
+    left: scale(10),
   },
   description1: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    lineHeight: 22,
-    left: 10,
-    bottom: 45,
+    lineHeight: ms(22),
+    left: scale(10),
+    bottom: scale(45),
   },
   reviewCard: {
     backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 12,
-    bottom: 60,
+    padding: scale(12),
+    borderRadius: scale(12),
+    bottom: scale(60),
   },
   reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: scale(8),
   },
   reviewAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     backgroundColor: '#E0E0E0',
-    marginRight: 8,
+    marginRight: scale(8),
   },
   reviewHeaderText: {
     flex: 1,
   },
   reviewerName: {
-    fontSize: 14,
+    fontSize: ms(14),
     fontWeight: '600',
     color: '#333',
-    marginBottom: 2,
+    marginBottom: scale(2),
   },
   stars: {
     flexDirection: 'row',
-    gap: 2,
+    gap: scale(2),
   },
   reviewText: {
-    fontSize: 13,
+    fontSize: ms(13),
     color: '#555',
-    lineHeight: 20,
+    lineHeight: ms(20),
   },
 
   actionContainer: {
     position: 'absolute',
-    bottom: 40,
+    bottom: scale(40),
     left: 0,
     right: 0,
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(12),
+    gap: scale(12),
     backgroundColor: "#fff",
   },
   chatButton: {
@@ -678,60 +702,60 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: 12,
+    paddingVertical: scale(10),
+    borderRadius: scale(12),
     backgroundColor: '#FFF',
-    borderWidth: 1  ,
+    borderWidth: 1,
     borderColor: '#057474',
   },
   chatButtonText: {
     color: '#057474',
-    fontSize: 15,
+    fontSize: ms(15),
     fontWeight: '400',
-    marginLeft: 6,
+    marginLeft: scale(6),
   },
   bookButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: scale(12),
+    borderRadius: scale(12),
     backgroundColor: '#057474',
   },
   bookButtonText: {
     color: '#FFF',
-    fontSize: 15,
+    fontSize: ms(15),
     fontWeight: '400',
-    marginLeft: 6,
+    marginLeft: scale(6),
   },
   disabledButton: {
     backgroundColor: '#CCC',
     opacity: 0.6,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: scale(16),
+    fontSize: ms(16),
     color: '#666',
-    fontWeight: '500'
+    fontWeight: '500',
   },
   errorText: {
-    fontSize: 18,
+    fontSize: ms(18),
     color: '#666',
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 20,
-    textAlign: 'center'
+    marginTop: scale(16),
+    marginBottom: scale(20),
+    textAlign: 'center',
   },
   goBackButton: {
     backgroundColor: '#057474',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20
+    paddingHorizontal: scale(24),
+    paddingVertical: scale(12),
+    borderRadius: scale(20),
   },
   goBackText: {
     color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600'
-  }
+    fontSize: ms(16),
+    fontWeight: '600',
+  },
 });
