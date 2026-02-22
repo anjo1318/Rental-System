@@ -47,6 +47,7 @@ router.put("/approve-request/:id", approveBookingRequest);
 router.put("/reject-request/:id", rejectBookingRequest);
 router.delete("/delete/:id", deleteBooking);
 
+//for notifications
 router.get("/notification/:userId", getUserNotifications);
 
 router.put("/notification/:notificationId/read", markAsRead);
