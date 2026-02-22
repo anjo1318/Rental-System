@@ -223,12 +223,20 @@ export default function ownerProfile() {
             </Pressable>
           </View>
 
-          {/* Logout Section */}
-          <Pressable style={styles.outContainer} onPress={handleLogout}>
-            <View style={styles.outRow}>
-              <Text style={styles.outText}>Log out</Text>
-            </View>
+            {/* ── Log Out Button — always sits just above the nav bar ── */}
+        <View style={styles.bottomArea}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.outContainer,
+              { borderColor: pressed ? "#FF2125" : "#007F7F" },
+            ]}
+            onPress={handleLogout}
+          >
+            <Text style={styles.outText}>Log out</Text>
           </Pressable>
+
+         
+        </View>
 
         </View>
       </ScrollView>
@@ -611,7 +619,7 @@ const styles = StyleSheet.create({
 
   outContainer: {
     width: "92%",
-    marginTop: 120,
+    marginTop: 150,
     marginBottom: 10,
     alignSelf: "center",
     alignItems: "center",
