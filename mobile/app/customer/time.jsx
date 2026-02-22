@@ -399,7 +399,7 @@ export default function TimeDuration({
             <Text style={styles.categoryText}>{item.category}</Text>
             <View style={isBooked ? styles.statusBooked : styles.statusOngoing}>
               <Text style={styles.statusText}>
-                {isBooked ? "Out for Delivery" : "Ongoing"}
+                {isBooked ? "For Pickup" : "Ongoing"}
               </Text>
             </View>
           </View>
@@ -518,21 +518,25 @@ export default function TimeDuration({
           <Text style={styles.paymentText}>{item.address}</Text>
         </View>
 
-        <Pressable
-          style={styles.pickUpButton}
-          onPress={() => takePickupPhoto(item.id)} // ✅ wire up
-        >
-          <MaterialIcons name="camera-alt" size={18} color="#fff" />
-          <Text style={styles.pickUpButtonText}>📸 Take Pickup Photo</Text>
-        </Pressable>
+        {isBooked && (
+          <Pressable
+            style={styles.pickUpButton}
+            onPress={() => takePickupPhoto(item.id)}
+          >
+            <MaterialIcons name="camera-alt" size={18} color="#fff" />
+            <Text style={styles.pickUpButtonText}>Take Pickup Photo</Text>
+          </Pressable>
+        )}
 
-        <Pressable
-          style={styles.returnButton}
-          onPress={() => takeReturnPhoto(item.id)} // ✅ wire up
-        >
-          <MaterialIcons name="camera-alt" size={18} color="#057474" />
-          <Text style={styles.returnButtonText}>📷 Take Return Photo</Text>
-        </Pressable>
+        {isOngoing && (
+          <Pressable
+            style={styles.returnButton}
+            onPress={() => takeReturnPhoto(item.id)}
+          >
+            <MaterialIcons name="camera-alt" size={18} color="#057474" />
+            <Text style={styles.returnButtonText}>Take Return Photo</Text>
+          </Pressable>
+        )}
       </View>
     );
   };

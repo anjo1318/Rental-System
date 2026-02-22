@@ -1,5 +1,6 @@
 import Books from "../models/Book.js";
 import Owner from "../models/Owner.js";
+import Customer from "../models/Customer.js";
 import Item from "../models/Item.js";
 import History from "../models/History.js";
 import BookPhoto from "../models/BookPhoto.js";
@@ -1729,6 +1730,30 @@ const bookItemUpdate = async (req, res) => {
 
     console.log("Incoming booking update:", req.body);
 
+    // ✅ Check if customer is already renting
+    const customer = await Customer.findOne({
+      where: { id: customerDetails.customerId },
+      attributes: ["id", "isRenting", "isActive", "isVerified"],
+      raw: true,
+    });
+
+    console.log("ito yung customer na nahanap gamit customer id", customer);
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found.",
+      });
+    }
+
+    if (customer.isRenting) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "You cannot rent another item while you have an ongoing rental. Please return your current item first.",
+      });
+    }
+
     const existingBooking = await Books.findOne({ where: { itemId } });
 
     if (!existingBooking) {
@@ -1811,6 +1836,9 @@ const bookItemUpdate = async (req, res) => {
       status: "booked",
       paymentMethod,
     });
+
+    // ✅ Mark customer as currently renting
+    await customer.update({ isRenting: true });
 
     const updatedBooking = existingBooking;
 
