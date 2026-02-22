@@ -472,9 +472,10 @@ useFocusEffect(
             numColumns={2}
             scrollEnabled={false}
             columnWrapperStyle={{
-  justifyContent: "flex-start",
-  marginBottom: 7,
-}}
+              justifyContent:
+              "flex-start",
+              marginBottom: 7, right: 12,
+            }}
            contentContainerStyle={{
     paddingHorizontal:
       filteredItems.length === 1 ? 7 : 20,

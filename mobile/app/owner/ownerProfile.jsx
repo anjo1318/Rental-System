@@ -118,126 +118,148 @@ export default function ownerProfile() {
   }
 
   return (
-  
     <ScreenWrapper>
-            <Header
-              title="Profile"
-              backgroundColor="#007F7F"
-            />
-            <ScrollView contentContainerStyle={{ paddingBottom: 150 }}>
-      <View style={styles.container}>
-    
-      {/* User Profile Section */}
-      <View style={styles.userContainer}>
-        <View style={styles.userRow}>
-          <Pressable onPress={pickImage} style={styles.userPressable}>
-            <View style={styles.avatarWrapper}>
-                <Image
-                  source={{ 
-                    uri: currentUser?.profileImage && currentUser.profileImage !== "N/A" 
-                      ? currentUser.profileImage 
-                      : "https://i.pravatar.cc/150?img=3" 
-                  }}
-                  style={styles.avatar}
-                />
-              <Pressable style={styles.cameraButton} onPress={pickImage}>
-                <Image
-                  source={require("../../assets/images/camera_icon.png")}
-                  style={styles.cameraImage}
-                  resizeMode="contain"
-                />
+      <Header
+        title="Profile"
+        backgroundColor="#007F7F"
+      />
+
+      {/* flex: 1 so ScrollView fills space between Header and OwnerBottomNav */}
+      <ScrollView
+        style={styles.scrollArea}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <View style={styles.container}>
+
+          {/* User Profile Section */}
+          <View style={styles.userContainer}>
+            <View style={styles.userRow}>
+              <Pressable onPress={pickImage} style={styles.userPressable}>
+                <View style={styles.avatarWrapper}>
+                  <Image
+                    source={{
+                      uri: currentUser?.profileImage && currentUser.profileImage !== "N/A"
+                        ? currentUser.profileImage
+                        : "https://i.pravatar.cc/150?img=3"
+                    }}
+                    style={styles.avatar}
+                  />
+                  <Pressable style={styles.cameraButton} onPress={pickImage}>
+                    <Image
+                      source={require("../../assets/images/camera_icon.png")}
+                      style={styles.cameraImage}
+                      resizeMode="contain"
+                    />
+                  </Pressable>
+                </View>
+
+                <View style={styles.nameContainer}>
+                  <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
+                  <Text style={styles.gmail}>{currentUser.email}</Text>
+                </View>
+              </Pressable>
+
+              <Pressable style={styles.editRow} onPress={() => router.push("owner/ownerEditProfile")}>
+                <Icon name="border-color" size={15} color="#7e7e7e" />
+                <Text style={styles.editText}>Edit Profile</Text>
               </Pressable>
             </View>
+          </View>
 
-            <View style={styles.nameContainer}>
-              <Text style={styles.username}>{currentUser.firstName} {currentUser.lastName}</Text>
-              <Text style={styles.gmail}>{currentUser.email}</Text>
-            </View>
+          {/* General Section */}
+          <View style={styles.historyContainer}>
+            <Text style={styles.generalText}>General</Text>
+            <Pressable style={styles.historyRow} onPress={() => router.push("owner/ownerHistory")}>
+              <View style={styles.historyPhotoWrapper}>
+                <Image
+                  source={require("../../assets/images/history.png")}
+                  style={styles.historyAvatar}
+                />
+              </View>
+              <Text style={styles.historyText}>History of Rent</Text>
+              <Icon name="arrow-forward-ios" style={styles.historyArrowIcon} />
+            </Pressable>
+          </View>
+
+          <View style={styles.notifContainer}>
+            <Pressable style={styles.notifRow} onPress={() => router.push("customer/notifications")}>
+              <View style={styles.notifPhotoWrapper}>
+                <Image
+                  source={require("../../assets/images/notifications.png")}
+                  style={styles.notifAvatar}
+                />
+              </View>
+              <Text style={styles.notifText}>Notifications</Text>
+              <Icon name="arrow-forward-ios" style={styles.notifArrowIcon} />
+            </Pressable>
+          </View>
+
+          {/* Support Section */}
+          <Text style={styles.supportText}>Support</Text>
+
+          <View style={styles.privacyContainer}>
+            <Pressable style={styles.privacyRow} onPress={() => router.push("/terms")}>
+              <View style={styles.privacyPhotoWrapper}>
+                <Image
+                  source={require("../../assets/images/privacy.png")}
+                  style={styles.privacyAvatar}
+                />
+              </View>
+              <Text style={styles.privacyText}>Privacy Policy</Text>
+              <Icon name="arrow-forward-ios" style={styles.privacyArrowIcon} />
+            </Pressable>
+          </View>
+
+          <View style={styles.chatContainer}>
+            <Pressable style={styles.chatRow} onPress={() => router.push("customer/chat")}>
+              <View style={styles.chatPhotoWrapper}>
+                <Image
+                  source={require("../../assets/images/chat.png")}
+                  style={styles.chatAvatar}
+                />
+              </View>
+              <Text style={styles.chatText}>Chat with EzRent</Text>
+              <Icon name="arrow-forward-ios" style={styles.chatArrowIcon} />
+            </Pressable>
+          </View>
+
+            {/* ── Log Out Button — always sits just above the nav bar ── */}
+        <View style={styles.bottomArea}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.outContainer,
+              { borderColor: pressed ? "#FF2125" : "#007F7F" },
+            ]}
+            onPress={handleLogout}
+          >
+            <Text style={styles.outText}>Log out</Text>
           </Pressable>
 
-          <Pressable style={styles.editRow} onPress={() => router.push("owner/ownerEditProfile")}>
-            <Icon name="border-color" size={15} color="#7e7e7e" />
-            <Text style={styles.editText}>Edit Profile</Text>
-          </Pressable>
+         
         </View>
-      </View>
 
-{/* General Section */}
-      <View style={styles.historyContainer}>
-        <Text style={styles.generalText}>General</Text>
-        <Pressable style={styles.historyRow} onPress={() => router.push("owner/ownerHistory")}>
-          <View style={styles.historyPhotoWrapper}>
-            <Image
-              source={require("../../assets/images/history.png")}
-              style={styles.historyAvatar}
-            />
-          </View>
-          <Text style={styles.historyText}>History of Rent</Text>
-          <Icon name="arrow-forward-ios" style={styles.historyArrowIcon} />
-        </Pressable>
-      </View>    
+        </View>
+      </ScrollView>
 
-      <View style={styles.notifContainer}>
-        <Pressable style={styles.notifRow} onPress={() => router.push("customer/notifications")}>
-          <View style={styles.notifPhotoWrapper}>
-            <Image
-              source={require("../../assets/images/notifications.png")}
-              style={styles.notifAvatar}
-            />
-          </View>
-          <Text style={styles.notifText}>Notifications</Text>
-          <Icon name="arrow-forward-ios" style={styles.notifArrowIcon} />
-        </Pressable>
-      </View>    
+      <OwnerBottomNav />
 
-      {/* Support Section */}
-        <Text style={styles.supportText}>Support</Text>
-        
-
-      <View style={styles.privacyContainer}>
-        <Pressable style={styles.privacyRow} onPress={() => router.push("/terms")}>
-          <View style={styles.privacyPhotoWrapper}>
-            <Image
-              source={require("../../assets/images/privacy.png")}
-              style={styles.privacyAvatar}
-            />
-          </View>
-          <Text style={styles.privacyText}>Privacy Policy</Text>
-          <Icon name="arrow-forward-ios" style={styles.privacyArrowIcon} />
-        </Pressable>
-      </View>    
-
-      <View style={styles.chatContainer}>
-        <Pressable style={styles.chatRow} onPress={() => router.push("customer/chat")}>
-          <View style={styles.chatPhotoWrapper}>
-            <Image
-              source={require("../../assets/images/chat.png")}
-              style={styles.chatAvatar}
-            />
-          </View>
-          <Text style={styles.chatText}>Chat with EzRent</Text>
-          <Icon name="arrow-forward-ios" style={styles.chatArrowIcon} />
-        </Pressable>
-      </View>    
-
-      {/* Logout Section */}
-      <Pressable style={styles.outContainer} onPress={handleLogout}>
-  <View style={styles.outRow}>
-    <Text style={styles.outText}>Log out</Text>
-  </View>
-</Pressable>
- </View>
- </ScrollView>
-
-    <OwnerBottomNav/>
-
-   
-   
     </ScreenWrapper>
   );
 }
 
 const styles = StyleSheet.create({
+  // scrollArea fills space between Header and OwnerBottomNav
+  scrollArea: {
+    flex: 1,
+    backgroundColor: "#FFF",
+  },
+
+  // modest paddingBottom — nav is a sibling, not floating over content
+  scrollContent: {
+    paddingBottom: 24,
+    flexGrow: 1,
+  },
+
   container: {
     flex: 1,
     backgroundColor: "#FFF",
@@ -351,8 +373,6 @@ const styles = StyleSheet.create({
     height: width * 0.09,
     overflow: "visible",
     marginLeft: 10,
-
-
   },
 
   historyAvatar: {
@@ -369,7 +389,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#CFE7E6", 
+    borderColor: "#CFE7E6",
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -383,7 +403,6 @@ const styles = StyleSheet.create({
     fontSize: width * 0.037,
     color: "#313131",
     fontWeight: "600",
-    
   },
 
   historyArrowIcon: {
@@ -391,7 +410,6 @@ const styles = StyleSheet.create({
     color: "#7e7e7e",
     marginLeft: 155,
   },
-
 
   notifContainer: {
     marginBottom: 15,
@@ -420,7 +438,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#CFE7E6", 
+    borderColor: "#CFE7E6",
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -471,23 +489,21 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
 
-settingsRow: {
-  flexDirection: "row",
-  alignItems: "center",
-  paddingHorizontal: 8,
-  paddingVertical: 8,
-  borderRadius: 15,
-  borderWidth: 1,
-  borderColor: "#CFE7E6", 
-  backgroundColor: "#FFFFFF",
-  shadowColor: "#000",
-  shadowOffset: { width: 0, height: 1 },
-  shadowOpacity: 0.15,
-  shadowRadius: 4,
-  elevation: 3,
-},
-
-
+  settingsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#CFE7E6",
+    backgroundColor: "#FFFFFF",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
 
   settingsText: {
     marginLeft: 10,
@@ -529,7 +545,7 @@ settingsRow: {
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#CFE7E6", 
+    borderColor: "#CFE7E6",
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -578,7 +594,7 @@ settingsRow: {
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#CFE7E6", 
+    borderColor: "#CFE7E6",
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
@@ -603,14 +619,15 @@ settingsRow: {
 
   outContainer: {
     width: "92%",
-    marginTop: 90,
+    marginTop: 150,
+    marginBottom: 10,
     alignSelf: "center",
     alignItems: "center",
     paddingHorizontal: 8,
     paddingVertical: 8,
     borderRadius: 15,
     borderWidth: 1,
-    borderColor: "#FF2125", 
+    borderColor: "#FF2125",
   },
 
   outPhotoWrapper: {
@@ -643,7 +660,6 @@ settingsRow: {
     color: "#313131",
     marginTop: 1,
     fontWeight: "600",
-    
   },
 
   outArrowIcon: {
@@ -652,10 +668,10 @@ settingsRow: {
     marginLeft: 208,
     marginTop: 1,
   },
-  navButton: { 
-    alignItems: "center", 
+  navButton: {
+    alignItems: "center",
     flex: 1,
-    zIndex: 10, 
+    zIndex: 10,
   },
 
   bottomNav: {
@@ -668,7 +684,7 @@ settingsRow: {
     left: 0,
     right: 0,
   },
-    
+
   navText: {
     color: "#fff",
     fontWeight: "bold",
@@ -676,9 +692,9 @@ settingsRow: {
     marginTop: height * 0.005,
   },
 
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center"
   },
 });

@@ -638,6 +638,12 @@ const styles = StyleSheet.create({
     borderTopColor: "#0574744D",
     bottom: scale(125),
   },
+  detailLine5: {
+    paddingTop: scale(12),
+    borderTopWidth: 0.3,
+    borderTopColor: '#0574744D',
+    bottom: scale(125),
+  },
   detailLine4: {
     paddingTop: scale(12),
     borderTopColor: "#0574744D",

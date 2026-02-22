@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   Pressable,
+  Dimensions,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,12 +17,21 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import OwnerItemImages from "./ownerItemImages";
-import Header from "../components/header";
+import Header from "../components/header4";
 import ScreenWrapper from "../components/screenwrapper";
+
+// ─── Responsive helpers ──────────────────────────────────────────────────────
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const BASE_WIDTH = 375;
+const scale = (size) =>
+  Math.round(Math.min(size * 1.4, Math.max(size * 0.7, (SCREEN_WIDTH / BASE_WIDTH) * size)));
+const ms = (size, factor = 0.5) =>
+  Math.round(size + (scale(size) - size) * factor);
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function OwnerItemDetail() {
   const router = useRouter();
-  const { id } = useLocalSearchParams(); // get item id from params
+  const { id } = useLocalSearchParams();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isBooking, setIsBooking] = useState(false);
@@ -41,7 +51,6 @@ export default function OwnerItemDetail() {
         console.error("Error loading owner:", err);
       }
     };
-
     loadOwner();
   }, []);
 
@@ -50,24 +59,21 @@ export default function OwnerItemDetail() {
       try {
         console.log("Fetching item with ID:", id);
         const res = await axios.get(`${API_URL}/api/item/${id}`);
-        
+
         if (res.data.success && res.data.data) {
           const itemData = res.data.data;
-          
-          // Parse itemImages - handle different formats
+
           if (itemData.itemImages && Array.isArray(itemData.itemImages)) {
             if (typeof itemData.itemImages[0] === 'string') {
               try {
-                // Try to parse as JSON first
                 const parsed = JSON.parse(itemData.itemImages[0]);
                 itemData.itemImages = Array.isArray(parsed) ? parsed : [itemData.itemImages[0]];
               } catch (e) {
-                // If parsing fails, it's already a URL string, keep as is
                 console.log("ItemImages is already in URL format");
               }
             }
           }
-          
+
           setItem(itemData);
           console.log("Item fetched successfully:", itemData);
         } else {
@@ -105,7 +111,6 @@ export default function OwnerItemDetail() {
 
       const customer = JSON.parse(userData);
 
-      // Build full address
       const fullAddress = [
         customer.houseNumber,
         customer.street,
@@ -116,7 +121,6 @@ export default function OwnerItemDetail() {
         customer.zipCode
       ].filter(Boolean).join(", ");
 
-      // Calculate dates
       const pickupDate = new Date().toISOString().split('T')[0];
       const returnDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
@@ -156,21 +160,21 @@ export default function OwnerItemDetail() {
       );
 
       console.log("Response data:", response.data);
-      router.push("/customer/book") 
+      router.push("/customer/book");
 
     } catch (error) {
       console.error("❌ Booking error:", error.message);
-      
+
       if (error.response?.data?.success) {
         Alert.alert("Success", "Item booked successfully!", [
-          { 
-            text: "View Bookings", 
-            onPress: () => router.push("/customer/book") 
+          {
+            text: "View Bookings",
+            onPress: () => router.push("/customer/book")
           }
         ]);
       } else {
         Alert.alert(
-          "Booking Error", 
+          "Booking Error",
           error.response?.data?.message || error.message || "Failed to book item"
         );
       }
@@ -180,11 +184,10 @@ export default function OwnerItemDetail() {
   };
 
   const editItem = (id) => {
-    console.log("Navigating to edit item:",item.id);
+    console.log("Navigating to edit item:", item.id);
     router.push(`owner/ownerEditItem?id=${item.id}`);
   };
 
-  // Loading state
   if (loading) {
     return (
       <View style={styles.center}>
@@ -194,11 +197,10 @@ export default function OwnerItemDetail() {
     );
   }
 
-  // Item not found
   if (!item) {
     return (
       <View style={styles.center}>
-        <Icon name="error-outline" size={64} color="#ccc" />
+        <Icon name="error-outline" size={scale(64)} color="#ccc" />
         <Text style={styles.errorText}>Item not found</Text>
         <TouchableOpacity onPress={() => router.back()} style={styles.goBackButton}>
           <Text style={styles.goBackText}>Go Back</Text>
@@ -207,7 +209,6 @@ export default function OwnerItemDetail() {
     );
   }
 
-  // Get owner name from item.Owner or fallback to stored owner data
   const ownerName = item.Owner?.firstName || owner?.firstName || owner?.name || 'Owner';
 
   return (
@@ -217,50 +218,72 @@ export default function OwnerItemDetail() {
         backgroundColor="#007F7F"
       />
 
-      <ScrollView 
-        style={styles.scrollContent} 
+      <ScrollView
+        style={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
         {/* Item Images */}
         <OwnerItemImages images={Array.isArray(item.itemImages) ? item.itemImages : []} />
 
-        {/* Price and Title Section */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040', bottom: 6, }]}/>      
+        {/* ── Price / Title / Owner / Category ── */}
+        <View style={styles.dividerBold} />
         <View style={styles.infoSection}>
+
           <View style={styles.priceRow}>
-            <Text style={{ fontSize: 20, color: "#057474" }}>₱</Text>
+            <Text style={{ fontSize: ms(20), color: "#057474" }}>₱</Text>
             <Text style={styles.price}>{parseFloat(item.pricePerDay).toFixed(2)}</Text>
             <Text style={styles.priceUnit}>per hour</Text>
             <View style={styles.ratingContainer}>
               <Text style={styles.rating}>5.0</Text>
-              <Icon name="star" size={16} color="#FFD700" />
+              <Icon name="star" size={scale(16)} color="#FFD700" />
             </View>
           </View>
 
           <Text style={styles.title}>{item.title}</Text>
 
-        
-          {/* Category/Brand */}
-          <Text style={styles.detailLabel}>Category</Text>
-          <Text style={styles.detailValue}>{item.category}</Text>
-        </View>
-        
-        <View style={styles.detailLine2}></View>
-        <View style={styles.detailLine4}></View>
-        <View style={styles.detailLine}></View>
+          {/* thin full-width line after title */}
+          <View style={styles.dividerThinFull} />
 
-        {/* Location */}
+          <View style={styles.ownerContainer}>
+            <Image
+              source={{ uri: "https://via.placeholder.com/40" }}
+              style={styles.avatar}
+            />
+            <View style={styles.ownerInfo}>
+              <Text style={styles.ownerText}>
+                Kenneth Senorin{" "}
+                <Icon name="verified" size={16} color="#3498db" />
+              </Text>
+              <Text style={styles.ownerAddress}>
+                Wawa, Pinamalayan, Mindoro
+              </Text>
+            </View>
+          </View>
+
+          {/* thin full-width line after owner */}
+          <View style={styles.dividerThinFull} />
+
+          <View style={styles.categoryRow}>
+            <Text style={styles.detailLabel}>Category:</Text>
+            <Text style={styles.detailValue}>{item.category}</Text>
+          </View>
+
+        </View>
+
+        {/* ── Location ── */}
+        <View style={styles.dividerBold} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Location</Text>
           <View style={styles.specItem}>
-            <Icon name="place" size={16} color="#666" style={{ marginRight: 8 }} />
+            <Icon name="place" size={scale(16)} color="#666" style={{ marginRight: scale(8) }} />
             <Text style={styles.specValue}>{item.location}</Text>
           </View>
         </View>
+             <View style={styles.dividerBold} />
 
-        {/* Availability */}
-        <View style={styles.detailLine}></View>
+        {/* ── Availability ── */}
+        <View style={styles.dividerBold} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Availability</Text>
           <View style={styles.specItem}>
@@ -275,17 +298,22 @@ export default function OwnerItemDetail() {
           </View>
         </View>
 
-        {/* Description */}
-        <View style={styles.detailLine}></View>
+        {/* ── Specifications ── */}
+        <View style={styles.dividerBold} />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Specifications</Text>
+          <Text style={styles.description}>{item.specification || "No specification provided"}</Text>
+        </View>
+
+        {/* ── Description ── */}
+        <View style={styles.dividerBold} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Description</Text>
           <Text style={styles.description}>{item.description}</Text>
         </View>
 
-        {/* Reviews */}
-        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]} />
-        <View style={[styles.detailLine, { borderTopColor: '#00000040' }]} />
-
+        {/* ── Reviews ── */}
+        <View style={styles.dividerBold} />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Review (1)</Text>
 
@@ -303,27 +331,28 @@ export default function OwnerItemDetail() {
               />
               <View style={styles.reviewHeaderText}>
                 <Text style={styles.reviewerName}>Mr. Kenneth</Text>
-
                 <View style={styles.stars}>
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star" size={14} color="#FFD700" />
-                  <Icon name="star-border" size={14} color="#FFD700" />
+                  <Icon name="star" size={scale(14)} color="#FFD700" />
+                  <Icon name="star" size={scale(14)} color="#FFD700" />
+                  <Icon name="star" size={scale(14)} color="#FFD700" />
+                  <Icon name="star" size={scale(14)} color="#FFD700" />
+                  <Icon name="star-border" size={scale(14)} color="#FFD700" />
                 </View>
               </View>
             </View>
-           
+            {/* thin line inside review card */}
+            <View style={styles.dividerThinInCard} />
             <Text style={styles.reviewText}>
               Great item! Very well maintained and works perfectly. Highly recommended for anyone looking to rent quality equipment.
             </Text>
           </Pressable>
         </View>
-        <View style={[styles.detailLine3, { borderTopColor: '#00000040' }]} />
+
+        <View style={styles.dividerBold} />
 
         <View style={styles.actionContainer}>
-          <TouchableOpacity 
-            style={[styles.bookButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]} 
+          <TouchableOpacity
+            style={[styles.bookButton, !item.availability && styles.disabledButton, isBooking && styles.disabledButton]}
             onPress={editItem}
             disabled={!item.availability || isBooking}
             activeOpacity={0.8}
@@ -344,239 +373,248 @@ export default function OwnerItemDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: "#fff" 
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
   },
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
+  center: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#F5F5F5",
-    padding: 20
+    padding: scale(20),
   },
   scrollContent: {
     flex: 1,
   },
   scrollContainer: {
-    paddingBottom: 150,
+    paddingBottom: scale(150),
   },
+
+  // ── Dividers ─────────────────────────────────────────────────────────────
+  // Bold teal line — separates major sections
+  dividerBold: {
+    borderTopWidth: .3,
+    borderTopColor: '#0574744D',
+  },
+  // Thin line inside infoSection — negative margin bleeds to screen edges
+  dividerThinFull: {
+    borderTopWidth: .3,
+    borderTopColor: '#00000025',
+    marginHorizontal: -scale(16),
+    marginVertical: scale(8),
+  },
+  // Thin line inside reviewCard — negative margin bleeds to card edges
+  dividerThinInCard: {
+    borderTopWidth: .3,
+    borderTopColor: '#00000025',
+    marginHorizontal: -scale(12),
+    marginBottom: scale(8),
+  },
+  // ─────────────────────────────────────────────────────────────────────────
+
   infoSection: {
     backgroundColor: '#FFF',
-    padding: 16,
-    bottom: 15,
+    padding: scale(16),
   },
   priceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: scale(6),
   },
   price: {
-    fontSize: 20,
+    fontSize: ms(15),
     fontWeight: '700',
     color: '#057474',
-    marginLeft: 4,
+    marginLeft: scale(4),
   },
   priceUnit: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    marginLeft: 4,
+    marginLeft: scale(4),
   },
   ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 'auto',
     backgroundColor: '#FFF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingHorizontal: scale(8),
+    paddingVertical: scale(4),
   },
   rating: {
-    fontSize: 14,
+    fontSize: ms(14),
     fontWeight: '600',
     color: '#333',
-    marginRight: 4,
+    marginRight: scale(4),
   },
   title: {
-    fontSize: 18,
+    fontSize: ms(15),
     fontWeight: '700',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: scale(4),
   },
   ownerContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    top: 25,
+    alignItems: 'flex-start',
+    marginTop: scale(4),
+    marginBottom: scale(4),
   },
   avatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     backgroundColor: '#E0E0E0',
-    marginRight: 8,
+    marginRight: scale(8),
+    top: 4,
+  },
+  ownerInfo: {
+    flex: 1,
   },
   ownerText: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#333',
     fontWeight: '500',
   },
-  detailLine: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#0574744D',
+  ownerAddress: {
+    fontSize: ms(12),
+    color: '#888',
+    marginTop: scale(2),
   },
-  detailLine2: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'white',
-    bottom: 105,
-  },
-  detailLine4: {
-    paddingTop: 12,
-    borderTopColor: '#0574744D',
-    bottom: 70,
-    borderTopWidth: 1,
-  },
-  detailLine3: {
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#0574744D',
-    top: 15,
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: scale(4),
   },
   detailLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: ms(14),
+    fontWeight: '800',
     color: '#333',
-    top: 33,
   },
   detailValue: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    top: 33,
-    left: 5,
+    marginLeft: scale(8),
   },
   section: {
     backgroundColor: '#FFF',
-    padding: 16,
-    marginBottom: 2,
+    padding: scale(16),
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: ms(16),
     fontWeight: '700',
     color: '#333',
-    marginBottom: 12,
+    marginBottom: scale(10),
   },
   specItem: {
     flexDirection: 'row',
-    marginBottom: 8,
     alignItems: 'center',
+    marginBottom: scale(4),
   },
   specKey: {
-    fontSize: 13,
+    fontSize: ms(13),
     fontWeight: '600',
     color: '#555',
-    width: 130,
+    width: scale(130),
   },
   specValue: {
     flex: 1,
-    fontSize: 13,
+    fontSize: ms(13),
     color: '#666',
-    lineHeight: 18,
+    lineHeight: ms(18),
   },
   description: {
-    fontSize: 14,
+    fontSize: ms(14),
     color: '#666',
-    lineHeight: 22,
+    lineHeight: ms(22),
   },
   reviewCard: {
     backgroundColor: '#F9F9F9',
-    padding: 12,
-    borderRadius: 12,
+    padding: scale(12),
+    borderRadius: scale(12),
   },
   reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: scale(8),
   },
   reviewAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: scale(32),
+    height: scale(32),
+    borderRadius: scale(16),
     backgroundColor: '#E0E0E0',
-    marginRight: 8,
+    marginRight: scale(8),
   },
   reviewHeaderText: {
     flex: 1,
   },
   reviewerName: {
-    fontSize: 14,
+    fontSize: ms(14),
     fontWeight: '600',
     color: '#333',
-    marginBottom: 2,
+    marginBottom: scale(2),
   },
   stars: {
     flexDirection: 'row',
-    gap: 2,
+    gap: scale(2),
   },
   reviewText: {
-    fontSize: 13,
+    fontSize: ms(13),
     color: '#555',
-    lineHeight: 20,
+    lineHeight: ms(20),
   },
   actionContainer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: scale(50),
     left: 0,
     right: 0,
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
+    paddingHorizontal: scale(16),
+    paddingVertical: scale(12),
+    gap: scale(12),
     backgroundColor: "#fff",
-    bottom: 50,
   },
   bookButton: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: scale(12),
+    borderRadius: scale(12),
     backgroundColor: '#057474',
   },
   bookButtonText: {
     color: '#FFF',
-    fontSize: 15,
+    fontSize: ms(15),
     fontWeight: '400',
-    marginLeft: 6,
+    marginLeft: scale(6),
   },
   disabledButton: {
     backgroundColor: '#CCC',
     opacity: 0.6,
   },
   loadingText: {
-    marginTop: 16,
-    fontSize: 16,
+    marginTop: scale(16),
+    fontSize: ms(16),
     color: '#666',
-    fontWeight: '500'
+    fontWeight: '500',
   },
   errorText: {
-    fontSize: 18,
+    fontSize: ms(18),
     color: '#666',
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 20,
-    textAlign: 'center'
+    marginTop: scale(16),
+    marginBottom: scale(20),
+    textAlign: 'center',
   },
   goBackButton: {
     backgroundColor: '#057474',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 20
+    paddingHorizontal: scale(24),
+    paddingVertical: scale(12),
+    borderRadius: scale(20),
   },
   goBackText: {
     color: '#FFF',
-    fontSize: 16,
-    fontWeight: '600'
-  }
+    fontSize: ms(16),
+    fontWeight: '600',
+  },
 });

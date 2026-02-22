@@ -209,6 +209,21 @@ export default function OwnerHome() {
       );
     }
 
+    const getColumnWrapperStyle = (index) => {
+  const totalItems = filteredItems.length;
+  const numColumns = 2;
+  
+  // Is this the last row?
+  const isLastRow = index >= totalItems - (totalItems % numColumns || numColumns);
+
+  // If last row has only 1 item
+  if (isLastRow && totalItems % numColumns === 1) {
+    return { justifyContent: 'flex-start', marginBottom: 7 };
+  }
+
+  return { justifyContent: 'center', marginBottom: 7 };
+};
+
     return filtered;
   };
 
@@ -402,7 +417,11 @@ export default function OwnerHome() {
               keyExtractor={(item) => item.id.toString()}
               renderItem={renderItem}
               numColumns={2}
-              columnWrapperStyle={{ justifyContent: "flex-start", marginBottom: 16 }}
+                columnWrapperStyle={{
+              justifyContent:
+              "flex-start",
+              marginBottom: 7, right: 4,
+            }}
               scrollEnabled={false}
               contentContainerStyle={{ paddingHorizontal: 16 }}
             />
@@ -627,6 +646,7 @@ badgeText: {
     elevation: 3,
     borderColor: "transparent",
     marginHorizontal: 3,
+  
     
   },
 
