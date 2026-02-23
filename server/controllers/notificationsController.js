@@ -41,97 +41,37 @@ const savePushToken = async (req, res) => {
 
 const notifyOwner = async (req, res) => {
   const { bookingId } = req.body;
-  let owner = null;
-  let ownerName = "";
 
   try {
     if (!bookingId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "bookingId is required." });
+      return res.status(400).json({ success: false, message: "bookingId is required." });
     }
 
     const booking = await Book.findOne({ where: { id: bookingId } });
     if (!booking) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Booking not found." });
+      return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
-    owner = await Owner.findOne({
+    const owner = await Owner.findOne({
       where: { id: booking.ownerId },
       attributes: ["id", "firstName", "middleName", "lastName", "email"],
     });
     if (!owner) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Owner not found." });
+      return res.status(404).json({ success: false, message: "Owner not found." });
     }
 
-    ownerName = [owner.firstName, owner.middleName, owner.lastName]
+    const ownerName = [owner.firstName, owner.middleName, owner.lastName]
       .filter(Boolean)
       .join(" ");
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: `Notification sent to ${ownerName} at ${owner.email}`,
+      message: `Notification sent to ${ownerName}`,
     });
 
-    const html = paymentPendingTemplate({
-      ownerName,
-      renterName: booking.name,
-      product: booking.product,
-      productImage: booking.itemImage ?? null,
-      rentalPrice: booking.grandTotal ?? 0,
-      totalAmount: booking.grandTotal ?? 0,
-      bookingDate: booking.created_at,
-      bookingId: booking.id,
-      deadlineHours: 24,
-    });
-
-    await sendMail({
-      to: owner.email,
-      subject: "⚠️ Payment Pending — Action Required Within 24 Hours",
-      html,
-    });
-
-    console.log(`✅ Email sent to ${owner.email}`);
-
-    await EmailNotificationLog.create({
-      bookingId: booking.id,
-      ownerId: owner.id,
-      ownerName,
-      ownerEmail: owner.email,
-      renterName: booking.name,
-      product: booking.product,
-      productImage: booking.itemImage ?? null,
-      rentalPrice: booking.grandTotal ?? 0,
-      totalAmount: booking.grandTotal ?? 0,
-      bookingDate: booking.created_at,
-      deadlineHours: 24,
-      subject: "⚠️ Payment Pending — Action Required Within 24 Hours",
-      status: "sent",
-      sentAt: new Date(),
-    });
   } catch (error) {
     console.error("❌ notifyOwner error:", error);
-    try {
-      await EmailNotificationLog.create({
-        bookingId: bookingId ?? null,
-        ownerId: owner?.id ?? null,
-        ownerName: ownerName || "Unknown",
-        ownerEmail: owner?.email ?? null,
-        status: "failed",
-        errorMessage: error.message,
-        deadlineHours: 24,
-        subject: "⚠️ Payment Pending — Action Required Within 24 Hours",
-      });
-    } catch (logError) {
-      console.error("❌ Failed to log email error:", logError.message);
-    }
-    if (!res.headersSent) {
-      return res.status(500).json({ success: false, message: error.message });
-    }
+    return res.status(500).json({ success: false, message: error.message });
   }
 };
 
