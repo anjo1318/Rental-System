@@ -41,18 +41,20 @@ const savePushToken = async (req, res) => {
 
 const notifyOwner = async (req, res) => {
   const { bookingId } = req.body;
+  let booking = null;
+  let owner = null;
 
   try {
     if (!bookingId) {
       return res.status(400).json({ success: false, message: "bookingId is required." });
     }
 
-    const booking = await Book.findOne({ where: { id: bookingId } });
+    booking = await Book.findOne({ where: { id: bookingId } });
     if (!booking) {
       return res.status(404).json({ success: false, message: "Booking not found." });
     }
 
-    const owner = await Owner.findOne({
+    owner = await Owner.findOne({
       where: { id: booking.ownerId },
       attributes: ["id", "firstName", "middleName", "lastName", "email"],
     });
@@ -64,9 +66,27 @@ const notifyOwner = async (req, res) => {
       .filter(Boolean)
       .join(" ");
 
+    // ✅ Save to database (no email sending)
+    await EmailNotificationLog.create({
+      bookingId: booking.id,
+      ownerId: owner.id,
+      ownerName,
+      ownerEmail: owner.email,
+      renterName: booking.name,
+      product: booking.product,
+      productImage: booking.itemImage ?? null,
+      rentalPrice: booking.grandTotal ?? 0,
+      totalAmount: booking.grandTotal ?? 0,
+      bookingDate: booking.created_at,
+      deadlineHours: 24,
+      subject: "⚠️ Payment Pending — Action Required Within 24 Hours",
+      status: "sent",
+      sentAt: new Date(),
+    });
+
     return res.status(200).json({
       success: true,
-      message: `Notification sent to ${ownerName}`,
+      message: `Notification logged for ${ownerName}`,
     });
 
   } catch (error) {
